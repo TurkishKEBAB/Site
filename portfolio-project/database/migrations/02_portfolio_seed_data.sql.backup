@@ -1,0 +1,296 @@
+-- ============================================
+-- SEED DATA FOR PORTFOLIO DATABASE
+-- Initial data based on Yiğit Okur CV
+-- ============================================
+
+-- ============================================
+-- ADMIN USER
+-- ============================================
+-- Password: YigitOkur2024! (will be hashed in application)
+INSERT INTO users (id, username, email, password_hash, created_at) VALUES
+('550e8400-e29b-41d4-a716-446655440000', 'yigitokur', 'yigitokur@ieee.org', 
+'$2b$12$placeholder_hash_will_be_generated_by_backend', CURRENT_TIMESTAMP);
+
+-- ============================================
+-- TECHNOLOGIES
+-- ============================================
+INSERT INTO technologies (name, slug, category, color, icon) VALUES
+-- Programming Languages
+('Java', 'java', 'language', '#007396', 'devicon-java-plain'),
+('Python', 'python', 'language', '#3776AB', 'devicon-python-plain'),
+('C++', 'cpp', 'language', '#00599C', 'devicon-cplusplus-plain'),
+('C#', 'csharp', 'language', '#239120', 'devicon-csharp-plain'),
+('R', 'r', 'language', '#276DC3', 'devicon-r-plain'),
+
+-- Frameworks
+('FastAPI', 'fastapi', 'framework', '#009688', 'devicon-fastapi-plain'),
+('React', 'react', 'framework', '#61DAFB', 'devicon-react-original'),
+('Tkinter', 'tkinter', 'framework', '#3776AB', null),
+
+-- Tools
+('Git', 'git', 'tool', '#F05032', 'devicon-git-plain'),
+('GitHub', 'github', 'tool', '#181717', 'devicon-github-original'),
+('Docker', 'docker', 'tool', '#2496ED', 'devicon-docker-plain'),
+
+-- Cloud & DevOps
+('AWS', 'aws', 'cloud', '#FF9900', 'devicon-amazonwebservices-plain'),
+('PostgreSQL', 'postgresql', 'database', '#4169E1', 'devicon-postgresql-plain'),
+('Redis', 'redis', 'database', '#DC382D', 'devicon-redis-plain'),
+
+-- Other
+('Linux', 'linux', 'tool', '#FCC624', 'devicon-linux-plain'),
+('Tailwind CSS', 'tailwind', 'framework', '#06B6D4', 'devicon-tailwindcss-plain');
+
+-- ============================================
+-- PROJECTS
+-- ============================================
+
+-- Schedule Optimizer
+INSERT INTO projects (id, slug, title, short_description, description, github_url, featured, display_order) VALUES
+('650e8400-e29b-41d4-a716-446655440001', 
+'schedule-optimizer',
+'Schedule Optimizer',
+'Intelligent course scheduling system with constraint-aware optimization',
+'Designed a modular, constraint-aware course scheduling system generating conflict-free timetables across rooms, programs, and instructors. Implemented intelligent course and section assignment using rule-based and heuristic methods. Built an optimization layer combining greedy and local search algorithms.',
+'https://github.com/TurkishKEBAB/schedule-optimizer',
+TRUE,
+1);
+
+-- Sarkan UAV
+INSERT INTO projects (id, slug, title, short_description, description, github_url, featured, display_order) VALUES
+('650e8400-e29b-41d4-a716-446655440002',
+'sarkan-uav',
+'Sarkan UAV Platform',
+'Anti-jamming UAV communication system with TÜBİTAK grant',
+'Led software development and cross-team coordination for the Sarkan UAV platform. Secured TÜBİTAK grant of ₺65,000 and sponsorship from Savronik Defense Industry. Managed two graduation projects focused on anti-jamming communication for UAV telemetry/control. Product owner is: Berk Haznedar',
+null,
+TRUE,
+2);
+
+-- Project Technologies (Many-to-Many)
+INSERT INTO project_technologies (project_id, technology_id) VALUES
+-- Schedule Optimizer uses Python
+('650e8400-e29b-41d4-a716-446655440001', (SELECT id FROM technologies WHERE slug = 'python')),
+('650e8400-e29b-41d4-a716-446655440001', (SELECT id FROM technologies WHERE slug = 'tkinter')),
+
+-- Sarkan UAV uses C++, Python
+('650e8400-e29b-41d4-a716-446655440002', (SELECT id FROM technologies WHERE slug = 'cpp')),
+('650e8400-e29b-41d4-a716-446655440002', (SELECT id FROM technologies WHERE slug = 'python'));
+
+-- Project Translations
+INSERT INTO project_translations (project_id, language, title, short_description, description) VALUES
+-- Schedule Optimizer - Turkish
+('650e8400-e29b-41d4-a716-446655440001', 'tr',
+'Ders Programı Optimize Edici',
+'Kısıt farkında akıllı ders programlama sistemi',
+'Modüler, kısıt farkında ders programlama sistemi tasarladım. Sınıflar, programlar ve öğretim görevlileri arasında çakışmasız ders programları oluşturur. Kural tabanlı ve sezgisel yöntemler kullanarak akıllı ders ve bölüm ataması gerçekleştirdim.'),
+
+-- Schedule Optimizer - German
+('650e8400-e29b-41d4-a716-446655440001', 'de',
+'Stundenplan-Optimierer',
+'Intelligentes Kurplanungssystem mit Constraint-Awareness',
+'Entwickelte ein modulares, constraint-bewusstes Kurplanungssystem zur Erstellung konfliktfreier Stundenpläne.'),
+
+-- Schedule Optimizer - French
+('650e8400-e29b-41d4-a716-446655440001', 'fr',
+'Optimiseur d''Emploi du Temps',
+'Système intelligent de planification de cours avec conscience des contraintes',
+'Conçu un système de planification de cours modulaire et conscient des contraintes générant des emplois du temps sans conflit.'),
+
+-- Sarkan UAV - Turkish
+('650e8400-e29b-41d4-a716-446655440002', 'tr',
+'Sarkan İHA Platformu',
+'TÜBİTAK hibeli anti-jamming İHA iletişim sistemi',
+'Sarkan İHA platformu için yazılım geliştirme ve takımlar arası koordinasyonu yönettim. TÜBİTAK''tan ₺65,000 hibe ve Savronik Savunma Sanayi sponsorluğu sağladım. İHA telemetri/kontrol için anti-jamming iletişim odaklı iki bitirme projesini yönettim.');
+
+-- ============================================
+-- SKILLS
+-- ============================================
+INSERT INTO skills (name, category, proficiency, display_order) VALUES
+-- Programming Languages
+('Java', 'Programming Languages', 85, 1),
+('C#', 'Programming Languages', 75, 2),
+('C++', 'Programming Languages', 80, 3),
+('Python', 'Programming Languages', 90, 4),
+('R', 'Programming Languages', 60, 5),
+
+-- Computer Science
+('Data Structures & Algorithms', 'Computer Science', 85, 1),
+('Object-Oriented Programming', 'Computer Science', 90, 2),
+('Software Design Patterns', 'Computer Science', 80, 3),
+('Software Architecture', 'Computer Science', 75, 4),
+('Cloud Computing', 'Computer Science', 70, 5),
+('Databases & SQL', 'Computer Science', 85, 6),
+
+-- Soft Skills
+('Leadership & Team Management', 'Soft Skills', 90, 1),
+('Cross-Functional Collaboration', 'Soft Skills', 85, 2),
+('Project Management', 'Soft Skills', 80, 3),
+('Problem Solving', 'Soft Skills', 95, 4),
+('Technical Communication', 'Soft Skills', 85, 5),
+
+-- Languages
+('Turkish', 'Languages', 100, 1),
+('English', 'Languages', 95, 2),
+('German', 'Languages', 30, 3),
+('French', 'Languages', 25, 4);
+
+-- ============================================
+-- EXPERIENCES - Education
+-- ============================================
+INSERT INTO experiences (title, organization, location, experience_type, start_date, is_current, description, display_order) VALUES
+('Bachelor of Software Engineering', 
+'Işık University', 
+'Istanbul/Şile', 
+'education', 
+'2023-09-01', 
+TRUE,
+'Member of Işık IEEE Student Branch - Project Coordinator & Vice President. Student Assistant in CSE Department for OOP. AdaLab assistant at The Academic Data Analytics Laboratory.',
+1),
+
+('Software & Electronics Department', 
+'Ergün Öner-Mehmet Öner Anatolian High School', 
+'Istanbul/Güngören', 
+'education',
+'2019-09-01',
+FALSE,
+'FRC (First Robotic Competition) EMONER 7840 Team Member. TÜBİTAK 4009 participant.',
+2);
+
+-- ============================================
+-- EXPERIENCES - Work & Activities
+-- ============================================
+INSERT INTO experiences (title, organization, location, experience_type, start_date, is_current, description, display_order) VALUES
+('Software Developer & Project Coordinator',
+'Sarkan UAV Project',
+'Işık University',
+'work',
+'2024-01-01',
+TRUE,
+'Leading software development for Sarkan UAV platform. Secured ₺65,000 TÜBİTAK grant. Managing anti-jamming communication systems.',
+1),
+
+('Vice President & Project Coordinator',
+'IEEE Işık University Student Branch',
+'Istanbul',
+'volunteer',
+'2023-09-01',
+TRUE,
+'Organized 35+ technical events. Coordinated IEEEXtreme''24 Camp with participants from multiple universities across Turkey.',
+2),
+
+('Environmental Volunteer',
+'WWF & TEMA',
+'Turkey',
+'volunteer',
+'2022-01-01',
+TRUE,
+'Supporting animal welfare and environmental protection initiatives.',
+3);
+
+-- ============================================
+-- SITE CONFIGURATION
+-- ============================================
+INSERT INTO site_config (key, value, description) VALUES
+('site_title', 'Yiğit Okur - Cloud & DevOps Engineer', 'Site title for SEO'),
+('site_description', 'Passionate Cloud & DevOps Engineering student with expertise in software development, system optimization, and technical leadership.', 'Meta description'),
+('contact_email', 'yigitokur@ieee.org', 'Primary contact email'),
+('linkedin_url', 'https://www.linkedin.com/in/yiğit-okur-050b5b278', 'LinkedIn profile'),
+('github_url', 'https://github.com/TurkishKEBAB', 'GitHub profile'),
+('github_username', 'TurkishKEBAB', 'GitHub username for API'),
+('cv_url', '/assets/cv/yigit-okur-cv.pdf', 'CV download link'),
+('default_language', 'tr', 'Default site language'),
+('theme_primary_color', '#3B82F6', 'Primary theme color (blue)'),
+('analytics_enabled', 'true', 'Enable simple analytics'),
+('github_cache_hours', '24', 'GitHub API cache duration in hours');
+
+-- ============================================
+-- UI TRANSLATIONS
+-- ============================================
+INSERT INTO translations (language, translation_key, value) VALUES
+-- Turkish
+('tr', 'nav.home', 'Ana Sayfa'),
+('tr', 'nav.projects', 'Projeler'),
+('tr', 'nav.blog', 'Blog'),
+('tr', 'nav.about', 'Hakkımda'),
+('tr', 'nav.contact', 'İletişim'),
+('tr', 'hero.title', 'Cloud & DevOps Mühendisi'),
+('tr', 'hero.subtitle', 'Yazılım geliştirme, sistem optimizasyonu ve teknik liderlik konularında tutkulu öğrenci'),
+('tr', 'projects.featured', 'Öne Çıkan Projeler'),
+('tr', 'contact.title', 'Benimle İletişime Geçin'),
+('tr', 'contact.submit', 'Gönder'),
+('tr', 'theme.light', 'Aydınlık Tema'),
+('tr', 'theme.dark', 'Karanlık Tema'),
+
+-- English
+('en', 'nav.home', 'Home'),
+('en', 'nav.projects', 'Projects'),
+('en', 'nav.blog', 'Blog'),
+('en', 'nav.about', 'About'),
+('en', 'nav.contact', 'Contact'),
+('en', 'hero.title', 'Cloud & DevOps Engineer'),
+('en', 'hero.subtitle', 'Passionate about software development, system optimization, and technical leadership'),
+('en', 'projects.featured', 'Featured Projects'),
+('en', 'contact.title', 'Get In Touch'),
+('en', 'contact.submit', 'Submit'),
+('en', 'theme.light', 'Light Theme'),
+('en', 'theme.dark', 'Dark Theme'),
+
+-- German
+('de', 'nav.home', 'Startseite'),
+('de', 'nav.projects', 'Projekte'),
+('de', 'nav.blog', 'Blog'),
+('de', 'nav.about', 'Über mich'),
+('de', 'nav.contact', 'Kontakt'),
+('de', 'hero.title', 'Cloud & DevOps Ingenieur'),
+('de', 'hero.subtitle', 'Leidenschaftlich für Softwareentwicklung, Systemoptimierung und technische Führung'),
+
+-- French
+('fr', 'nav.home', 'Accueil'),
+('fr', 'nav.projects', 'Projets'),
+('fr', 'nav.blog', 'Blog'),
+('fr', 'nav.about', 'À propos'),
+('fr', 'nav.contact', 'Contact'),
+('fr', 'hero.title', 'Ingénieur Cloud & DevOps'),
+('fr', 'hero.subtitle', 'Passionné par le développement logiciel, l''optimisation système et le leadership technique');
+
+-- ============================================
+-- SAMPLE BLOG POST
+-- ============================================
+INSERT INTO blog_posts (id, slug, title, content, excerpt, author_id, published, published_at, reading_time) VALUES
+('750e8400-e29b-41d4-a716-446655440001',
+'welcome-to-my-portfolio',
+'Welcome to My Portfolio',
+'# Welcome to My Portfolio
+
+This is my first blog post! I''m excited to share my journey in software engineering, cloud technologies, and DevOps.
+
+## What You Can Expect
+
+- Technical tutorials and insights
+- Project deep-dives
+- Career experiences and lessons learned
+- Thoughts on emerging technologies
+
+Stay tuned for more content!',
+'Introduction to my portfolio and what to expect from this blog.',
+'550e8400-e29b-41d4-a716-446655440000',
+TRUE,
+CURRENT_TIMESTAMP,
+2);
+
+INSERT INTO blog_translations (blog_post_id, language, title, content, excerpt) VALUES
+('750e8400-e29b-41d4-a716-446655440001', 'tr',
+'Portfolio''ma Hoş Geldiniz',
+'# Portfolio''ma Hoş Geldiniz
+
+Bu benim ilk blog yazım! Yazılım mühendisliği, bulut teknolojileri ve DevOps yolculuğumu paylaşmaktan heyecan duyuyorum.
+
+## Ne Bekleyebilirsiniz
+
+- Teknik eğitimler ve içgörüler
+- Proje detayları
+- Kariyer deneyimleri ve öğrenilenler
+- Yeni teknolojiler hakkında düşünceler
+
+Daha fazla içerik
