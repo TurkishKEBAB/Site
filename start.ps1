@@ -1,12 +1,3 @@
-<#
-start.ps1
-Simple starter script to open two PowerShell windows: one for the backend (FastAPI)
-and one for the frontend (Vite). It will create virtualenv / install deps if missing
-and copy `.env.example` to `.env` when appropriate.
-
-Usage: From repository root run `./start.ps1` in PowerShell (may require ExecutionPolicy
-override: `Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass`).
-#>
 
 $ErrorActionPreference = 'Stop'
 
