@@ -1,9 +1,6 @@
 import api, { apiEndpoints } from './api';
 import { BlogPost, BlogPostCreate, PaginatedResponse } from './types';
 
-const resolveLanguage = (language?: string) =>
-  language || localStorage.getItem('lang') || 'en';
-
 const normalizeBlogPost = (post: any): BlogPost => ({
   ...post,
   published: typeof post.published === 'boolean' ? post.published : Boolean(post.is_published),
@@ -36,10 +33,7 @@ export const blogService = {
     language?: string;
   }): Promise<PaginatedResponse<BlogPost>> {
     const response = await api.get(apiEndpoints.blog.list, {
-      params: {
-        ...params,
-        language: resolveLanguage(params?.language),
-      },
+      params
     });
     const payload = response.data as PaginatedResponse<BlogPost>;
 
@@ -53,7 +47,7 @@ export const blogService = {
 
   async getPost(slug: string, language?: string): Promise<BlogPost> {
     const response = await api.get(apiEndpoints.blog.detail(slug), {
-      params: { language: resolveLanguage(language) },
+      params: language ? { language } : undefined,
     });
     return normalizeBlogPost(response.data);
   },

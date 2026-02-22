@@ -4,7 +4,7 @@ Login and user management
 """
 from datetime import datetime, timedelta
 from typing import Annotated
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Request, status
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 from jose import jwt
@@ -13,6 +13,7 @@ from app.api.deps import get_db, get_current_user, require_admin
 from app.config import get_settings
 from app.schemas.user import UserLogin, UserCreate, UserResponse, Token
 from app.crud import user as user_crud
+from app.core.rate_limit import limiter
 from app.utils.security import create_access_token
 
 router = APIRouter()
@@ -54,7 +55,9 @@ async def login(
 
 
 @router.post("/login/json", response_model=Token)
+@limiter.limit("5/minute")
 async def login_json(
+    request: Request,
     credentials: UserLogin,
     db: Session = Depends(get_db)
 ):

@@ -9,11 +9,14 @@ from fastapi.exceptions import RequestValidationError
 from contextlib import asynccontextmanager
 from loguru import logger
 import time
+from slowapi import _rate_limit_exceeded_handler
+from slowapi.errors import RateLimitExceeded
 
 from app.config import settings
 from app.database import check_db_connection
 from app.services.cache_service import get_cache_service
 from app.utils.logger import setup_logging
+from app.core.rate_limit import limiter
 
 # Import API routes
 from app.api.v1 import api_router
@@ -62,6 +65,9 @@ app = FastAPI(
     redoc_url="/redoc" if settings.is_development else None,
     lifespan=lifespan
 )
+
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 
 # CORS Middleware

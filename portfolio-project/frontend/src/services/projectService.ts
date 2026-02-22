@@ -1,9 +1,6 @@
 import api, { apiEndpoints } from './api';
 import { PaginatedResponse, Project, ProjectCreate } from './types';
 
-const resolveLanguage = (language?: string) =>
-  language || localStorage.getItem('lang') || 'en';
-
 export const projectService = {
   async getProjects(params?: {
     skip?: number;
@@ -13,17 +10,14 @@ export const projectService = {
     language?: string;
   }): Promise<PaginatedResponse<Project>> {
     const response = await api.get(apiEndpoints.projects.list, {
-      params: {
-        ...params,
-        language: resolveLanguage(params?.language),
-      },
+      params
     });
     return response.data;
   },
 
   async getProject(slug: string, language?: string): Promise<Project> {
     const response = await api.get(apiEndpoints.projects.detail(slug), {
-      params: { language: resolveLanguage(language) },
+      params: language ? { language } : undefined,
     });
     return response.data;
   },
