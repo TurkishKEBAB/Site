@@ -11,9 +11,35 @@ const api: AxiosInstance = axios.create({
   },
 });
 
+const shouldAttachLanguage = (config: { method?: string; url?: string }) => {
+  const method = (config.method || 'get').toLowerCase();
+  if (method !== 'get') {
+    return false;
+  }
+
+  const url = config.url || '';
+  return !url.startsWith('/auth/');
+};
+
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('token');
+    const language = localStorage.getItem('lang') || 'en';
+
+    const skipLanguageHeader =
+      (config.headers as Record<string, unknown> | undefined)?.['X-Skip-Language'] === true;
+
+    if (!skipLanguageHeader && shouldAttachLanguage(config)) {
+      config.params = {
+        ...(config.params || {}),
+        language,
+      };
+    }
+
+    if (config.headers && 'X-Skip-Language' in config.headers) {
+      delete (config.headers as Record<string, unknown>)['X-Skip-Language'];
+    }
+
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }

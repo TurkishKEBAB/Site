@@ -9,6 +9,7 @@ from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
 
 from app.main import app
+import app.models as app_models  # noqa: F401
 from app.database import Base, get_db
 from app.crud import user as user_crud
 from app.schemas.user import UserCreate
@@ -16,7 +17,7 @@ from app.utils.security import create_access_token
 from datetime import timedelta
 
 # Create in-memory SQLite database for testing
-SQLALCHEMY_DATABASE_URL = "sqlite:///:memory:"
+SQLALCHEMY_DATABASE_URL = "sqlite://"
 
 engine = create_engine(
     SQLALCHEMY_DATABASE_URL,

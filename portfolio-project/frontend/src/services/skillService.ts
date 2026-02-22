@@ -1,13 +1,10 @@
 import api, { apiEndpoints } from './api';
 import { Skill, SkillCreate } from './types';
 
-const resolveLanguage = (language?: string) =>
-  language || localStorage.getItem('lang') || 'en';
-
 export const skillService = {
   async getSkills(language?: string): Promise<Skill[]> {
     const response = await api.get(apiEndpoints.skills.list, {
-      params: { language: resolveLanguage(language) },
+      params: language ? { language } : undefined,
     });
     return response.data.skills || response.data;
   },
