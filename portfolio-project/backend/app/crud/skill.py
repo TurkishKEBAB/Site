@@ -11,11 +11,29 @@ from app.models.skill import Skill, SkillTranslation
 from app.schemas.skill import SkillCreate, SkillUpdate
 
 
+def _apply_skill_translation(skill: Skill, language: Optional[str] = None) -> Skill:
+    """Apply requested translation to a skill with English fallback."""
+    if not language or language == "en":
+        return skill
+
+    translations = skill.translations or []
+    translated = next((item for item in translations if item.language == language), None)
+    fallback = next((item for item in translations if item.language == "en"), None)
+    source = translated or fallback
+
+    if source:
+        skill.name = source.name
+        skill.category = source.category
+
+    return skill
+
+
 def get_skills(
     db: Session, 
     skip: int = 0,
     limit: int = 100,
-    category: Optional[str] = None
+    category: Optional[str] = None,
+    language: Optional[str] = None,
 ) -> List[Skill]:
     """
     Get list of skills
@@ -35,8 +53,9 @@ def get_skills(
         query = query.filter(Skill.category == category)
     
     query = query.order_by(Skill.category, Skill.display_order, Skill.proficiency.desc())
-    
-    return query.offset(skip).limit(limit).all()
+    skills = query.offset(skip).limit(limit).all()
+
+    return [_apply_skill_translation(skill, language) for skill in skills]
 
 
 def get_skills_by_category(db: Session, language: Optional[str] = None) -> Dict[str, List[Skill]]:
@@ -46,7 +65,7 @@ def get_skills_by_category(db: Session, language: Optional[str] = None) -> Dict[
     Returns:
         Dictionary with categories as keys and skill lists as values
     """
-    skills = get_skills(db)
+    skills = get_skills(db, language=language)
     
     grouped = {}
     for skill in skills:
@@ -57,11 +76,20 @@ def get_skills_by_category(db: Session, language: Optional[str] = None) -> Dict[
     return grouped
 
 
-def get_skill_by_id(db: Session, skill_id: uuid.UUID) -> Optional[Skill]:
+def get_skill_by_id(
+    db: Session,
+    skill_id: uuid.UUID,
+    language: Optional[str] = None,
+) -> Optional[Skill]:
     """Get skill by ID with translations"""
-    return db.query(Skill).options(
+    skill = db.query(Skill).options(
         joinedload(Skill.translations)
     ).filter(Skill.id == skill_id).first()
+
+    if not skill:
+        return None
+
+    return _apply_skill_translation(skill, language)
 
 
 def create_skill(db: Session, skill: SkillCreate) -> Skill:

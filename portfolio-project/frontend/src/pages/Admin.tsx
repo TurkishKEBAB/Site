@@ -1,7 +1,8 @@
-import { useState, useEffect, useCallback, ChangeEvent, FormEvent } from 'react';
+import { useState, useEffect, useCallback, useRef, ChangeEvent, FormEvent } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import { AxiosError } from 'axios';
+import api from '../services/api';
 
 import { useAuth } from '../contexts/AuthContext';
 import { useToast } from '../components/Toast';
@@ -110,6 +111,18 @@ const defaultExperienceFormValues: ExperienceFormValues = {
   isCurrent: false,
   description: '',
 };
+
+const FOCUSABLE_SELECTOR =
+  'a[href], button:not([disabled]), textarea:not([disabled]), input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])';
+
+const getFocusableElements = (container: HTMLElement): HTMLElement[] =>
+  Array.from(container.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR)).filter(
+    (element) =>
+      !element.hasAttribute('disabled') &&
+      element.getAttribute('aria-hidden') !== 'true' &&
+      window.getComputedStyle(element).display !== 'none' &&
+      window.getComputedStyle(element).visibility !== 'hidden',
+  );
 
 interface ProjectFormProps {
   initialValues: ProjectFormValues;
@@ -785,6 +798,12 @@ export default function Admin() {
   const [messages, setMessages] = useState<ContactMessageResponse[]>([]);
   const [messagesLoading, setMessagesLoading] = useState(false);
   const [messageActionId, setMessageActionId] = useState<string | null>(null);
+  const previouslyFocusedElementRef = useRef<HTMLElement | null>(null);
+  const projectModalRef = useRef<HTMLDivElement>(null);
+  const skillModalRef = useRef<HTMLDivElement>(null);
+  const experienceModalRef = useRef<HTMLDivElement>(null);
+  const imageManagerModalRef = useRef<HTMLDivElement>(null);
+  const translationModalRef = useRef<HTMLDivElement>(null);
 
   const handleLogout = useCallback(() => {
     logout();
@@ -795,8 +814,14 @@ export default function Admin() {
     (error: unknown, fallbackMessage: string) => {
       console.error(fallbackMessage, error);
 
-      if (axios.isAxiosError(error)) {
-        const status = error.response?.status;
+      const isAxiosError =
+        typeof error === 'object' &&
+        error !== null &&
+        (error as AxiosError).isAxiosError === true;
+
+      if (isAxiosError) {
+        const typedError = error as AxiosError<{ detail?: unknown }>;
+        const status = typedError.response?.status;
 
         if (status === 401 || status === 403) {
           showToast('error', 'Oturum süreniz doldu. Lütfen tekrar giriş yapın.');
@@ -804,7 +829,7 @@ export default function Admin() {
           return;
         }
 
-        const detail = error.response?.data?.detail;
+        const detail = typedError.response?.data?.detail;
         if (typeof detail === 'string') {
           showToast('error', detail);
           return;
@@ -831,7 +856,7 @@ export default function Admin() {
       }
 
       try {
-        const response = await axios.get('/admin/stats');
+        const response = await api.get('/admin/stats');
         const data = response.data ?? {};
 
         setStats({
@@ -858,7 +883,7 @@ export default function Admin() {
     setProjectsLoading(true);
 
     try {
-      const response = await axios.get('/projects/', {
+      const response = await api.get('/projects/', {
         params: {
           limit: 100,
           skip: 0,
@@ -943,6 +968,149 @@ export default function Admin() {
     }
   }, [activeTab, loadProjects, loadSkills, loadExperiences, loadMessages]);
 
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key !== 'Escape') {
+        return;
+      }
+
+      if (translationModalOpen) {
+        setTranslationModalOpen(false);
+        setCurrentProjectForTranslations(null);
+        setCurrentTranslations({});
+        return;
+      }
+
+      if (imageManagerOpen) {
+        setImageManagerOpen(false);
+        setCurrentProjectForImages(null);
+        setProjectImages([]);
+        setUploadProgress(0);
+        return;
+      }
+
+      if (experienceModalOpen) {
+        if (!experienceFormSubmitting) {
+          setExperienceModalOpen(false);
+          setExperienceFormValues({ ...defaultExperienceFormValues });
+          setActiveExperience(null);
+        }
+        return;
+      }
+
+      if (skillModalOpen) {
+        if (!skillFormSubmitting) {
+          setSkillModalOpen(false);
+          setSkillFormValues({ ...defaultSkillFormValues });
+          setActiveSkill(null);
+        }
+        return;
+      }
+
+      if (projectModalOpen) {
+        if (!projectFormSubmitting) {
+          setProjectModalOpen(false);
+          setProjectFormValues({ ...defaultProjectFormValues });
+          setActiveProject(null);
+        }
+      }
+    };
+
+    document.addEventListener('keydown', onKeyDown);
+    return () => document.removeEventListener('keydown', onKeyDown);
+  }, [
+    experienceFormSubmitting,
+    experienceModalOpen,
+    imageManagerOpen,
+    projectFormSubmitting,
+    projectModalOpen,
+    skillFormSubmitting,
+    skillModalOpen,
+    translationModalOpen,
+  ]);
+
+  useEffect(() => {
+    const anyModalOpen =
+      projectModalOpen ||
+      skillModalOpen ||
+      experienceModalOpen ||
+      imageManagerOpen ||
+      translationModalOpen;
+
+    if (!anyModalOpen) {
+      previouslyFocusedElementRef.current?.focus();
+      previouslyFocusedElementRef.current = null;
+      return;
+    }
+
+    if (!previouslyFocusedElementRef.current) {
+      const activeElement = document.activeElement;
+      if (activeElement instanceof HTMLElement) {
+        previouslyFocusedElementRef.current = activeElement;
+      }
+    }
+
+    const activeModal =
+      (translationModalOpen && translationModalRef.current) ||
+      (imageManagerOpen && imageManagerModalRef.current) ||
+      (experienceModalOpen && experienceModalRef.current) ||
+      (skillModalOpen && skillModalRef.current) ||
+      (projectModalOpen && projectModalRef.current);
+
+    if (!activeModal) {
+      return;
+    }
+
+    const focusInitialElement = () => {
+      const focusableElements = getFocusableElements(activeModal);
+      (focusableElements[0] || activeModal).focus();
+    };
+
+    const animationFrameId = requestAnimationFrame(focusInitialElement);
+
+    const trapFocus = (event: KeyboardEvent) => {
+      if (event.key !== 'Tab') {
+        return;
+      }
+
+      const focusableElements = getFocusableElements(activeModal);
+      if (focusableElements.length === 0) {
+        event.preventDefault();
+        activeModal.focus();
+        return;
+      }
+
+      const firstElement = focusableElements[0];
+      const lastElement = focusableElements[focusableElements.length - 1];
+      const currentActive = document.activeElement as HTMLElement | null;
+
+      if (event.shiftKey) {
+        if (!currentActive || currentActive === firstElement || !activeModal.contains(currentActive)) {
+          event.preventDefault();
+          lastElement.focus();
+        }
+        return;
+      }
+
+      if (!currentActive || currentActive === lastElement || !activeModal.contains(currentActive)) {
+        event.preventDefault();
+        firstElement.focus();
+      }
+    };
+
+    activeModal.addEventListener('keydown', trapFocus);
+    return () => {
+      cancelAnimationFrame(animationFrameId);
+      activeModal.removeEventListener('keydown', trapFocus);
+    };
+  }, [
+    experienceModalOpen,
+    imageManagerOpen,
+    projectModalOpen,
+    skillModalOpen,
+    translationModalOpen,
+  ]);
+
   const normalizeOptional = (value: string) => {
     const trimmed = value.trim();
     return trimmed.length > 0 ? trimmed : null;
@@ -987,7 +1155,7 @@ export default function Admin() {
 
     try {
       if (projectFormMode === 'create') {
-        await axios.post('/projects/', {
+        await api.post('/projects/', {
           title: values.title.trim(),
           slug: normalizeOptional(values.slug),
           short_description: normalizeOptional(values.shortDescription),
@@ -1001,7 +1169,7 @@ export default function Admin() {
 
         showToast('success', 'Proje başarıyla oluşturuldu.');
       } else if (activeProject) {
-        await axios.put(`/projects/${activeProject.id}`, {
+        await api.put(`/projects/${activeProject.id}`, {
           title: values.title.trim(),
           short_description: normalizeOptional(values.shortDescription),
           description: values.description.trim(),
@@ -1034,7 +1202,7 @@ export default function Admin() {
     setProjectActionId(project.id);
 
     try {
-      await axios.delete(`/projects/${project.id}`);
+      await api.delete(`/projects/${project.id}`);
       showToast('success', 'Proje silindi.');
       await loadProjects();
       await loadStats();
@@ -1062,7 +1230,7 @@ export default function Admin() {
   const loadProjectImages = async (project: AdminProject) => {
     setImagesLoading(true);
     try {
-      const response = await axios.get(`/projects/${project.slug}`);
+      const response = await api.get(`/projects/${project.slug}`);
       const images = response.data?.images || [];
       setProjectImages(images.sort((a: ProjectImage, b: ProjectImage) => a.display_order - b.display_order));
     } catch (error) {
@@ -1087,7 +1255,7 @@ export default function Admin() {
         setUploadProgress((prev) => Math.min(prev + 10, 90));
       }, 200);
 
-      await axios.post(
+      await api.post(
         `/projects/${currentProjectForImages.id}/upload-image`,
         formData,
         {
@@ -1116,7 +1284,7 @@ export default function Admin() {
     if (!confirmed) return;
 
     try {
-      await axios.delete(`/projects/${currentProjectForImages.id}/images/${imageId}`);
+      await api.delete(`/projects/${currentProjectForImages.id}/images/${imageId}`);
       showToast('success', 'Resim silindi.');
   await loadProjectImages(currentProjectForImages);
     } catch (error) {
@@ -1128,7 +1296,7 @@ export default function Admin() {
     if (!currentProjectForImages) return;
 
     try {
-      await axios.put(
+      await api.put(
         `/projects/${currentProjectForImages.id}/images/${imageId}`,
         null,
         { params: { caption } }
@@ -1144,7 +1312,7 @@ export default function Admin() {
     if (!currentProjectForImages) return;
 
     try {
-      await axios.put(
+      await api.put(
         `/projects/${currentProjectForImages.id}/images/${imageId}`,
         null,
         { params: { display_order: displayOrder } }
@@ -1171,7 +1339,7 @@ export default function Admin() {
   const loadProjectTranslations = async (project: AdminProject) => {
     setTranslationsLoading(true);
     try {
-      const response = await axios.get(`/projects/${project.slug}`);
+      const response = await api.get(`/projects/${project.slug}`);
       const translations = response.data?.translations || [];
       
       // Convert array to object keyed by language
@@ -1192,7 +1360,7 @@ export default function Admin() {
     if (!currentProjectForTranslations) return;
 
     try {
-      await axios.post(`/projects/${currentProjectForTranslations.id}/translations`, {
+      await api.post(`/projects/${currentProjectForTranslations.id}/translations`, {
         language,
         title: data.title,
         short_description: data.short_description,
@@ -1956,8 +2124,13 @@ export default function Admin() {
       </div>
 
       {projectModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/70 px-4 py-8">
-          <div className="w-full max-w-3xl rounded-2xl bg-white p-6 shadow-2xl dark:bg-gray-900">
+        <div role="dialog" aria-modal="true" className="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/70 px-4 py-8">
+          <div
+            ref={projectModalRef}
+            tabIndex={-1}
+            data-admin-modal="project"
+            className="w-full max-w-3xl rounded-2xl bg-white p-6 shadow-2xl dark:bg-gray-900"
+          >
             <div className="mb-4 flex items-center justify-between">
               <h3 className="text-xl font-semibold text-gray-900 dark:text-white">
                 {projectFormMode === 'create' ? 'Yeni Proje Oluştur' : 'Projeyi Düzenle'}
@@ -1982,8 +2155,13 @@ export default function Admin() {
       )}
 
       {skillModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/70 px-4 py-8">
-          <div className="w-full max-w-2xl rounded-2xl bg-white p-6 shadow-2xl dark:bg-gray-900">
+        <div role="dialog" aria-modal="true" className="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/70 px-4 py-8">
+          <div
+            ref={skillModalRef}
+            tabIndex={-1}
+            data-admin-modal="skill"
+            className="w-full max-w-2xl rounded-2xl bg-white p-6 shadow-2xl dark:bg-gray-900"
+          >
             <div className="mb-4 flex items-center justify-between">
               <h3 className="text-xl font-semibold text-gray-900 dark:text-white">
                 {skillFormMode === 'create' ? 'Yeni Beceri Ekle' : 'Beceri Düzenle'}
@@ -2008,8 +2186,13 @@ export default function Admin() {
       )}
 
       {experienceModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/70 px-4 py-8">
-          <div className="w-full max-w-3xl rounded-2xl bg-white p-6 shadow-2xl dark:bg-gray-900">
+        <div role="dialog" aria-modal="true" className="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/70 px-4 py-8">
+          <div
+            ref={experienceModalRef}
+            tabIndex={-1}
+            data-admin-modal="experience"
+            className="w-full max-w-3xl rounded-2xl bg-white p-6 shadow-2xl dark:bg-gray-900"
+          >
             <div className="mb-4 flex items-center justify-between">
               <h3 className="text-xl font-semibold text-gray-900 dark:text-white">
                 {experienceFormMode === 'create' ? 'Yeni Deneyim Ekle' : 'Deneyim Düzenle'}
@@ -2034,8 +2217,13 @@ export default function Admin() {
       )}
 
       {imageManagerOpen && currentProjectForImages && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/70 p-4">
-          <div className="w-full max-w-5xl max-h-[90vh] overflow-y-auto rounded-2xl bg-white p-6 shadow-2xl dark:bg-gray-900">
+        <div role="dialog" aria-modal="true" className="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/70 p-4">
+          <div
+            ref={imageManagerModalRef}
+            tabIndex={-1}
+            data-admin-modal="image-manager"
+            className="w-full max-w-5xl max-h-[90vh] overflow-y-auto rounded-2xl bg-white p-6 shadow-2xl dark:bg-gray-900"
+          >
             <div className="mb-6 flex items-center justify-between">
               <div>
                 <h3 className="text-2xl font-bold text-gray-900 dark:text-white">
@@ -2190,8 +2378,13 @@ export default function Admin() {
 
       {/* Translation Manager Modal */}
       {translationModalOpen && currentProjectForTranslations && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/70 p-4">
-          <div className="w-full max-w-4xl max-h-[90vh] overflow-y-auto rounded-2xl bg-white p-6 shadow-2xl dark:bg-gray-900">
+        <div role="dialog" aria-modal="true" className="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/70 p-4">
+          <div
+            ref={translationModalRef}
+            tabIndex={-1}
+            data-admin-modal="translation"
+            className="w-full max-w-4xl max-h-[90vh] overflow-y-auto rounded-2xl bg-white p-6 shadow-2xl dark:bg-gray-900"
+          >
             <div className="mb-6 flex items-center justify-between">
               <div>
                 <h3 className="text-2xl font-bold text-gray-900 dark:text-white">
@@ -2246,8 +2439,6 @@ function TranslationEditor({ translations, onSave, loading }: TranslationEditorP
   const languages = [
     { code: 'en', name: 'English', flag: '🇬🇧' },
     { code: 'tr', name: 'Türkçe', flag: '🇹🇷' },
-    { code: 'de', name: 'Deutsch', flag: '🇩🇪' },
-    { code: 'fr', name: 'Français', flag: '🇫🇷' },
   ];
 
   // Load translation data when language changes
@@ -2367,3 +2558,6 @@ function TranslationEditor({ translations, onSave, loading }: TranslationEditorP
     </div>
   );
 }
+
+
+

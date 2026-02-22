@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
+import { useLanguage } from '../contexts/LanguageContext';
 import { blogService } from '../services';
 import { BlogPost } from '../services/types';
 import { mockPosts } from './blogMockData';
@@ -13,6 +14,7 @@ export default function Blog() {
   const [debouncedSearch, setDebouncedSearch] = useState<string>('');
   const [loading, setLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const { language } = useLanguage();
 
   // Debounce search query (300ms)
   useEffect(() => {
@@ -25,7 +27,7 @@ export default function Blog() {
 
   useEffect(() => {
     loadPosts();
-  }, []);
+  }, [language]);
 
   useEffect(() => {
     filterPosts();
@@ -34,7 +36,7 @@ export default function Blog() {
   const loadPosts = async () => {
     try {
       setLoading(true);
-      const response = await blogService.getPosts({ is_published: true });
+      const response = await blogService.getPosts({ published_only: true, language });
       const items = Array.isArray(response.items) ? response.items : [];
       setPosts(items);
       setErrorMessage(null);
@@ -92,14 +94,14 @@ export default function Blog() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-gray-900 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-primary-900 to-gray-900 flex items-center justify-center">
         <div className="text-white text-2xl">Loading blog posts...</div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-gray-900 py-20">
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-primary-900 to-gray-900 py-20">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <motion.div
@@ -109,7 +111,7 @@ export default function Blog() {
           className="text-center mb-16"
         >
           <h1 className="text-5xl font-bold text-white mb-4">
-            My <span className="text-purple-400">Blog</span>
+            My <span className="text-primary-400">Blog</span>
           </h1>
           <p className="text-xl text-gray-300 max-w-2xl mx-auto">
             Thoughts, tutorials, and insights about software development
@@ -130,7 +132,7 @@ export default function Blog() {
               placeholder="Search posts..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full px-6 py-4 bg-white/10 backdrop-blur-lg border border-white/20 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all"
+              className="w-full px-6 py-4 bg-white/10 backdrop-blur-lg border border-white/20 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500 transition-all"
             />
           </div>
 
@@ -142,7 +144,7 @@ export default function Blog() {
                 onClick={() => setSelectedTag(tag)}
                 className={`px-6 py-2 rounded-full font-medium transition-all capitalize ${
                   selectedTag === tag
-                    ? 'bg-purple-600 text-white shadow-lg shadow-purple-500/50'
+                    ? 'bg-primary-600 text-white shadow-lg shadow-primary-500/50'
                     : 'bg-white/10 text-gray-300 hover:bg-white/20'
                 }`}
               >
@@ -163,7 +165,7 @@ export default function Blog() {
               animate={{ opacity: 1, y: 0 }}
               className="mt-4 text-center"
             >
-              <span className="inline-flex items-center px-4 py-2 rounded-full bg-purple-600/20 border border-purple-500/30 text-purple-300 text-sm font-medium">
+              <span className="inline-flex items-center px-4 py-2 rounded-full bg-primary-600/20 border border-primary-500/30 text-primary-300 text-sm font-medium">
                 {filteredPosts.length} {filteredPosts.length === 1 ? 'result' : 'results'} found
               </span>
             </motion.div>
@@ -191,10 +193,10 @@ export default function Blog() {
                 key={post.id}
                 variants={itemVariants}
                 whileHover={{ y: -10, transition: { duration: 0.2 } }}
-                className="bg-white/10 backdrop-blur-lg rounded-2xl overflow-hidden border border-white/20 hover:border-purple-500/50 transition-all group"
+                className="bg-white/10 backdrop-blur-lg rounded-2xl overflow-hidden border border-white/20 hover:border-primary-500/50 transition-all group"
               >
                 {/* Post Image */}
-                <div className="relative h-48 overflow-hidden bg-gradient-to-br from-purple-600 to-pink-600">
+                <div className="relative h-48 overflow-hidden bg-gradient-to-br from-primary-600 to-pink-600">
                   {post.cover_image ? (
                     <img
                       src={post.cover_image}
@@ -221,7 +223,7 @@ export default function Blog() {
                       {post.tags.slice(0, 3).map((tag) => (
                         <span
                           key={tag}
-                          className="px-3 py-1 bg-purple-600/30 text-purple-300 rounded-full text-xs capitalize"
+                          className="px-3 py-1 bg-primary-600/30 text-primary-300 rounded-full text-xs capitalize"
                         >
                           {tag}
                         </span>
@@ -229,7 +231,7 @@ export default function Blog() {
                     </div>
                   )}
 
-                  <h2 className="text-2xl font-bold text-white mb-2 group-hover:text-purple-400 transition-colors line-clamp-2">
+                  <h2 className="text-2xl font-bold text-white mb-2 group-hover:text-primary-400 transition-colors line-clamp-2">
                     {post.title}
                   </h2>
                   
@@ -240,13 +242,13 @@ export default function Blog() {
                   {/* Meta Info */}
                   <div className="flex items-center justify-between text-sm text-gray-400 mb-4">
                     <span>{new Date(post.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
-                    <span>{post.read_time || '5'} min read</span>
+                    <span>{post.reading_time || post.read_time || '5'} min read</span>
                   </div>
 
                   {/* Read More Link */}
                   <Link
                     to={`/blog/${post.slug}`}
-                    className="inline-flex items-center text-purple-400 hover:text-purple-300 font-semibold transition-colors"
+                    className="inline-flex items-center text-primary-400 hover:text-primary-300 font-semibold transition-colors"
                   >
                     Read More →
                   </Link>
@@ -259,4 +261,5 @@ export default function Blog() {
     </div>
   );
 }
+
 

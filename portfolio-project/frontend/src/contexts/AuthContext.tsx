@@ -1,7 +1,13 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import axios from 'axios';
+import React, {
+  createContext,
+  ReactNode,
+  useContext,
+  useEffect,
+  useState,
+} from 'react';
+import { AxiosError } from 'axios';
 
-import { API_BASE_URL } from '../config';
+import api, { apiEndpoints } from '../services/api';
 
 interface User {
   id: string;
@@ -21,134 +27,64 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-axios.defaults.baseURL = API_BASE_URL;
-
-// Track if we're currently refreshing to prevent multiple simultaneous refresh attempts
-let isRefreshing = false;
-let refreshSubscribers: ((token: string) => void)[] = [];
-
-const subscribeTokenRefresh = (callback: (token: string) => void) => {
-  refreshSubscribers.push(callback);
-};
-
-const onTokenRefreshed = (token: string) => {
-  refreshSubscribers.forEach((callback) => callback(token));
-  refreshSubscribers = [];
-};
-
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [token, setToken] = useState<string | null>(localStorage.getItem('token'));
   const [isLoading, setIsLoading] = useState(true);
 
-  // Setup axios interceptor for automatic token refresh on 401
   useEffect(() => {
-    const interceptor = axios.interceptors.response.use(
-      (response) => response,
-      async (error) => {
-        const originalRequest = error.config;
-
-        // If error is 401 and we haven't tried to refresh yet
-        if (error.response?.status === 401 && !originalRequest._retry) {
-          if (isRefreshing) {
-            // Wait for the ongoing refresh to complete
-            return new Promise((resolve) => {
-              subscribeTokenRefresh((newToken: string) => {
-                originalRequest.headers['Authorization'] = `Bearer ${newToken}`;
-                resolve(axios(originalRequest));
-              });
-            });
-          }
-
-          originalRequest._retry = true;
-          isRefreshing = true;
-
-          try {
-            // Try to refresh the token
-            const response = await axios.post('/auth/refresh');
-            const { access_token } = response.data;
-
-            // Update token
-            localStorage.setItem('token', access_token);
-            setToken(access_token);
-            axios.defaults.headers.common['Authorization'] = `Bearer ${access_token}`;
-
-            // Notify all waiting requests
-            onTokenRefreshed(access_token);
-            isRefreshing = false;
-
-            // Retry the original request
-            originalRequest.headers['Authorization'] = `Bearer ${access_token}`;
-            return axios(originalRequest);
-          } catch (refreshError) {
-            // Refresh failed, logout user
-            isRefreshing = false;
-            logout();
-            return Promise.reject(refreshError);
-          }
-        }
-
-        return Promise.reject(error);
+    const verifyToken = async () => {
+      if (!token) {
+        setIsLoading(false);
+        return;
       }
-    );
 
-    return () => {
-      axios.interceptors.response.eject(interceptor);
+      try {
+        const response = await api.get<User>(apiEndpoints.auth.me);
+        setUser(response.data);
+      } catch (error) {
+        console.error('Token verification failed:', error);
+        localStorage.removeItem('token');
+        localStorage.removeItem('refresh_token');
+        setToken(null);
+        setUser(null);
+      } finally {
+        setIsLoading(false);
+      }
     };
-  }, []);
 
-  // Set axios default authorization header
-  useEffect(() => {
-    if (token) {
-      axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-      // Verify token and get user info
-      const verify = async () => {
-        try {
-          const response = await axios.get('/auth/me');
-          setUser(response.data);
-        } catch (error) {
-          console.error('Token verification failed:', error);
-          logout();
-        } finally {
-          setIsLoading(false);
-        }
-      };
-      void verify();
-    } else {
-      delete axios.defaults.headers.common['Authorization'];
-      setIsLoading(false);
-    }
+    void verifyToken();
   }, [token]);
 
   const login = async (email: string, password: string) => {
     try {
-      const response = await axios.post('/auth/login/json', {
-        email,
-        password,
-      });
+      const response = await api.post<{
+        access_token: string;
+        refresh_token?: string;
+      }>(apiEndpoints.auth.loginJson, { email, password });
 
-      const { access_token } = response.data;
-      
-      // Save token
-      localStorage.setItem('token', access_token);
-      setToken(access_token);
-      axios.defaults.headers.common['Authorization'] = `Bearer ${access_token}`;
+      const { access_token: accessToken, refresh_token: refreshToken } = response.data;
 
-      // Get user info
-      const userResponse = await axios.get('/auth/me');
+      localStorage.setItem('token', accessToken);
+      if (refreshToken) {
+        localStorage.setItem('refresh_token', refreshToken);
+      }
+      setToken(accessToken);
+
+      const userResponse = await api.get<User>(apiEndpoints.auth.me);
       setUser(userResponse.data);
     } catch (error) {
       console.error('Login failed:', error);
-      const message = error instanceof Error ? error.message : 'Login failed';
-      throw new Error(message);
+      const axiosError = error as AxiosError<{ detail?: string }>;
+      throw new Error(axiosError.response?.data?.detail || 'Login failed');
     }
   };
 
   const logout = () => {
     localStorage.removeItem('token');
+    localStorage.removeItem('refresh_token');
     setToken(null);
     setUser(null);
-    delete axios.defaults.headers.common['Authorization'];
   };
 
   const value = {
@@ -157,7 +93,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     login,
     logout,
     isLoading,
-    isAuthenticated: !!token && !!user,
+    isAuthenticated: Boolean(token && user),
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
@@ -165,7 +101,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
 export const useAuth = () => {
   const context = useContext(AuthContext);
-  if (context === undefined) {
+  if (!context) {
     throw new Error('useAuth must be used within an AuthProvider');
   }
   return context;

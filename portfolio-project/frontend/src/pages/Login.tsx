@@ -27,7 +27,7 @@ const Login: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-blue-900 to-gray-900 flex items-center justify-center px-4 py-12">
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-primary-900 to-gray-900 flex items-center justify-center px-4 py-12">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -61,8 +61,8 @@ const Login: React.FC = () => {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
-                className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
-                placeholder="yigitokur@ieee.org"
+                className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition"
+                placeholder="email@example.com"
                 autoComplete="email"
               />
             </div>
@@ -77,7 +77,7 @@ const Login: React.FC = () => {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
-                className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition"
                 placeholder="••••••••"
                 autoComplete="current-password"
               />
@@ -91,7 +91,7 @@ const Login: React.FC = () => {
               className={`w-full py-3 px-4 rounded-lg font-medium text-white transition-all duration-200 ${
                 isLoading
                   ? 'bg-gray-500 cursor-not-allowed'
-                  : 'bg-blue-600 hover:bg-blue-700 shadow-lg hover:shadow-blue-500/50'
+                  : 'bg-primary-600 hover:bg-primary-700 shadow-lg hover:shadow-primary-500/50'
               }`}
             >
               {isLoading ? (
@@ -108,11 +108,6 @@ const Login: React.FC = () => {
             </motion.button>
           </form>
 
-          <div className="mt-6 text-center">
-            <p className="text-gray-400 text-sm">
-              Test Bilgileri: yigitokur@ieee.org / admin123
-            </p>
-          </div>
         </div>
 
         <div className="mt-4 text-center">
@@ -129,3 +124,4 @@ const Login: React.FC = () => {
 };
 
 export default Login;
+

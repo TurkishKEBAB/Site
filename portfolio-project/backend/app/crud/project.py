@@ -13,6 +13,24 @@ from app.models.technology import Technology
 from app.schemas.project import ProjectCreate, ProjectUpdate, ProjectTranslationCreate
 
 
+def _apply_project_translation(project: Project, language: Optional[str] = "en") -> Project:
+    """Apply requested translation to a project object with English fallback."""
+    if not language or language == "en":
+        return project
+
+    translations = project.translations or []
+    translated = next((item for item in translations if item.language == language), None)
+    fallback = next((item for item in translations if item.language == "en"), None)
+    source = translated or fallback
+
+    if source:
+        project.title = source.title
+        project.short_description = source.short_description
+        project.description = source.description
+
+    return project
+
+
 def get_projects(
     db: Session,
     skip: int = 0,
@@ -50,8 +68,9 @@ def get_projects(
         )
     
     query = query.order_by(Project.display_order, Project.created_at.desc())
-    
-    return query.offset(skip).limit(limit).all()
+    projects = query.offset(skip).limit(limit).all()
+
+    return [_apply_project_translation(project, language) for project in projects]
 
 
 def get_project_by_id(db: Session, project_id: uuid.UUID) -> Optional[Project]:
@@ -65,11 +84,16 @@ def get_project_by_id(db: Session, project_id: uuid.UUID) -> Optional[Project]:
 
 def get_project_by_slug(db: Session, slug: str, language: Optional[str] = "en") -> Optional[Project]:
     """Get project by slug with all relations"""
-    return db.query(Project).options(
+    project = db.query(Project).options(
         joinedload(Project.translations),
         joinedload(Project.project_technologies).joinedload(ProjectTechnology.technology),
         joinedload(Project.images)
     ).filter(Project.slug == slug).first()
+
+    if not project:
+        return None
+
+    return _apply_project_translation(project, language)
 
 
 def create_project(db: Session, project: ProjectCreate) -> Project:
@@ -228,6 +252,25 @@ def get_project_count(db: Session, featured_only: bool = False) -> int:
         query = query.filter(Project.featured == True)
     
     return query.scalar()
+
+
+def get_projects_count(
+    db: Session,
+    featured_only: bool = False,
+    technology_slug: Optional[str] = None,
+) -> int:
+    """Get filtered project count for pagination."""
+    query = db.query(func.count(func.distinct(Project.id)))
+
+    if featured_only:
+        query = query.filter(Project.featured == True)
+
+    if technology_slug:
+        query = query.join(ProjectTechnology).join(Technology).filter(
+            Technology.slug == technology_slug
+        )
+
+    return int(query.scalar() or 0)
 
 
 def add_project_translation(

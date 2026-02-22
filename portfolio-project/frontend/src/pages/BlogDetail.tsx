@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import { useLanguage } from '../contexts/LanguageContext';
 import { blogService } from '../services';
 import { BlogPost } from '../services/types';
 import { mockPosts } from './blogMockData';
@@ -13,6 +14,7 @@ export default function BlogDetail() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const shareUrl = typeof window !== 'undefined' ? window.location.href : '';
+  const { language } = useLanguage();
 
   useEffect(() => {
     if (!slug) {
@@ -27,8 +29,8 @@ export default function BlogDetail() {
       try {
         setLoading(true);
         const [postResponse, postsResponse] = await Promise.all([
-          blogService.getPost(slug),
-          blogService.getPosts({ is_published: true })
+          blogService.getPost(slug, language),
+          blogService.getPosts({ published_only: true, language })
         ]);
         
         if (!ignore) {
@@ -60,7 +62,7 @@ export default function BlogDetail() {
     return () => {
       ignore = true;
     };
-  }, [slug]);
+  }, [language, slug]);
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -92,12 +94,12 @@ export default function BlogDetail() {
     : [];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-gray-900 py-20">
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-primary-900 to-gray-900 py-20">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <button
           type="button"
           onClick={handleBack}
-          className="mb-8 inline-flex items-center text-sm text-purple-300 hover:text-purple-100 transition-colors"
+          className="mb-8 inline-flex items-center text-sm text-primary-300 hover:text-primary-100 transition-colors"
         >
           ← Back
         </button>
@@ -109,7 +111,7 @@ export default function BlogDetail() {
             <p className="text-lg text-red-300 mb-6">{error}</p>
             <Link
               to="/blog"
-              className="inline-flex items-center justify-center px-5 py-3 rounded-lg bg-purple-600 hover:bg-purple-700 text-white transition-colors"
+              className="inline-flex items-center justify-center px-5 py-3 rounded-lg bg-primary-600 hover:bg-primary-700 text-white transition-colors"
             >
               View all posts
             </Link>
@@ -133,17 +135,17 @@ export default function BlogDetail() {
                     />
                   </div>
                 ) : (
-                  <div className="h-80 bg-gradient-to-br from-purple-600 to-pink-600 flex items-center justify-center">
+                  <div className="h-80 bg-gradient-to-br from-primary-600 to-pink-600 flex items-center justify-center">
                     <span className="text-6xl">📝</span>
                   </div>
                 )}
 
                 <div className="p-10 md:p-14 space-y-8">
                   <header className="space-y-4">
-                    <div className="flex flex-wrap items-center gap-3 text-sm text-purple-200">
+                    <div className="flex flex-wrap items-center gap-3 text-sm text-primary-200">
                       <span>{post.published_at ? new Date(post.published_at).toLocaleDateString() : new Date(post.created_at).toLocaleDateString()}</span>
-                      {post.read_time && <span>• {post.read_time} min read</span>}
-                      <span>• {post.view_count} views</span>
+                      {(post.reading_time || post.read_time) && <span>• {post.reading_time || post.read_time} min read</span>}
+                      <span>• {post.views ?? post.view_count ?? 0} views</span>
                     </div>
                     <h1 className="text-4xl md:text-5xl font-bold text-white leading-tight">{post.title}</h1>
 
@@ -152,7 +154,7 @@ export default function BlogDetail() {
                         {post.tags.map((tag) => (
                           <span
                             key={tag}
-                            className="px-3 py-1 rounded-full bg-purple-600/30 text-purple-200 text-xs uppercase tracking-wide"
+                            className="px-3 py-1 rounded-full bg-primary-600/30 text-primary-200 text-xs uppercase tracking-wide"
                           >
                             {tag}
                           </span>
@@ -184,7 +186,7 @@ export default function BlogDetail() {
                         href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(post.title)}&url=${encodeURIComponent(shareUrl)}`}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="inline-flex items-center justify-center px-5 py-2 rounded-lg bg-purple-600 hover:bg-purple-700 text-white transition-colors"
+                        className="inline-flex items-center justify-center px-5 py-2 rounded-lg bg-primary-600 hover:bg-primary-700 text-white transition-colors"
                       >
                         Share
                       </a>
@@ -216,7 +218,7 @@ export default function BlogDetail() {
                         className="block group"
                       >
                         <div className="flex gap-3">
-                          <div className="flex-shrink-0 w-16 h-16 rounded-lg bg-gradient-to-br from-purple-600 to-pink-600 overflow-hidden">
+                          <div className="flex-shrink-0 w-16 h-16 rounded-lg bg-gradient-to-br from-primary-600 to-pink-600 overflow-hidden">
                             {relatedPost.cover_image ? (
                               <img
                                 src={relatedPost.cover_image}
@@ -230,11 +232,11 @@ export default function BlogDetail() {
                             )}
                           </div>
                           <div className="flex-1 min-w-0">
-                            <h4 className="font-medium text-white text-sm line-clamp-2 group-hover:text-purple-300 transition-colors">
+                            <h4 className="font-medium text-white text-sm line-clamp-2 group-hover:text-primary-300 transition-colors">
                               {relatedPost.title}
                             </h4>
                             <p className="text-xs text-gray-400 mt-1">
-                              {relatedPost.read_time} min read
+                              {relatedPost.reading_time || relatedPost.read_time || 0} min read
                             </p>
                           </div>
                         </div>
@@ -264,7 +266,7 @@ export default function BlogDetail() {
                         className="block group"
                       >
                         <div className="flex gap-3">
-                          <div className="flex-shrink-0 w-16 h-16 rounded-lg bg-gradient-to-br from-purple-600 to-pink-600 overflow-hidden">
+                          <div className="flex-shrink-0 w-16 h-16 rounded-lg bg-gradient-to-br from-primary-600 to-pink-600 overflow-hidden">
                             {latestPost.cover_image ? (
                               <img
                                 src={latestPost.cover_image}
@@ -278,7 +280,7 @@ export default function BlogDetail() {
                             )}
                           </div>
                           <div className="flex-1 min-w-0">
-                            <h4 className="font-medium text-white text-sm line-clamp-2 group-hover:text-purple-300 transition-colors">
+                            <h4 className="font-medium text-white text-sm line-clamp-2 group-hover:text-primary-300 transition-colors">
                               {latestPost.title}
                             </h4>
                             <p className="text-xs text-gray-400 mt-1">
@@ -319,3 +321,4 @@ function BlogDetailSkeleton() {
     </div>
   );
 }
+

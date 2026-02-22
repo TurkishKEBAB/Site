@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { FiArrowRight, FiGithub, FiLinkedin, FiMail } from 'react-icons/fi'
 import { Link } from 'react-router-dom'
+import { useLanguage } from '../contexts/LanguageContext'
 import { projectService, skillService } from '../services'
 import { Project, Skill } from '../services/types'
 
@@ -9,17 +10,18 @@ export default function Home() {
   const [featuredProjects, setFeaturedProjects] = useState<Project[]>([])
   const [topSkills, setTopSkills] = useState<Skill[]>([])
   const [loading, setLoading] = useState(true)
+  const { language } = useLanguage()
 
   useEffect(() => {
     loadData()
-  }, [])
+  }, [language])
 
   const loadData = async () => {
     try {
       setLoading(true)
       const [projectsResponse, skillsData] = await Promise.all([
-        projectService.getProjects({ is_featured: true, limit: 3 }),
-        skillService.getSkills()
+        projectService.getProjects({ featured_only: true, limit: 3, language }),
+        skillService.getSkills(language)
       ])
       
       const projectItems = Array.isArray(projectsResponse.items)

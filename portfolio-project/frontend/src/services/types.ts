@@ -65,8 +65,7 @@ export interface ProjectCreate {
   demo_url?: string;
   github_url?: string;
   technology_ids: string[];
-  is_featured?: boolean;
-  is_published?: boolean;
+  featured?: boolean;
 }
 
 // Technology Types
@@ -88,9 +87,12 @@ export interface BlogPost {
   excerpt: string;
   cover_image?: string;
   tags?: string[];
-  is_published: boolean;
+  published: boolean;
+  is_published?: boolean;
   is_featured?: boolean;
-  view_count: number;
+  views: number;
+  view_count?: number;
+  reading_time?: number;
   read_time?: number;
   created_at: string;
   updated_at: string;
@@ -103,7 +105,7 @@ export interface BlogPostCreate {
   excerpt?: string;
   cover_image?: string;
   tags?: string[];
-  is_published?: boolean;
+  published?: boolean;
 }
 
 // Skill Types

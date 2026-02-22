@@ -1,5 +1,18 @@
 import api, { apiEndpoints } from './api';
 
+export interface ContactMessageCreateRequest {
+  name: string;
+  email: string;
+  subject: string;
+  message: string;
+}
+
+export interface ContactSubmitResponse {
+  success: boolean;
+  message: string;
+  message_id: string;
+}
+
 export interface ContactMessageResponse {
   id: string;
   name: string;
@@ -20,38 +33,36 @@ export interface ContactMessagesListResponse {
 }
 
 export const contactService = {
-  // İletişim formu gönder
-  async sendMessage(data: Omit<ContactMessageResponse, 'id' | 'is_read' | 'is_replied' | 'created_at'>): Promise<{ success: boolean; message: string }> {
+  async sendMessage(data: ContactMessageCreateRequest): Promise<ContactSubmitResponse> {
     const response = await api.post(apiEndpoints.contact.send, data);
     return response.data;
   },
 
-  // Admin: Tüm mesajları listele
-  async getMessages(params?: { skip?: number; limit?: number; unread_only?: boolean }): Promise<ContactMessagesListResponse> {
-    const response = await api.get('/contact/', { params });
+  async getMessages(params?: {
+    skip?: number;
+    limit?: number;
+    unread_only?: boolean;
+  }): Promise<ContactMessagesListResponse> {
+    const response = await api.get(apiEndpoints.contact.list, { params });
     return response.data;
   },
 
-  // Admin: Mesajı okundu olarak işaretle
   async markAsRead(messageId: string): Promise<ContactMessageResponse> {
-    const response = await api.patch(`/contact/${messageId}/read`);
+    const response = await api.patch(apiEndpoints.contact.markRead(messageId));
     return response.data;
   },
 
-  // Admin: Mesajı yanıtlandı olarak işaretle
   async markAsReplied(messageId: string): Promise<ContactMessageResponse> {
-    const response = await api.patch(`/contact/${messageId}/replied`);
+    const response = await api.patch(apiEndpoints.contact.markReplied(messageId));
     return response.data;
   },
 
-  // Admin: Mesajı sil
   async deleteMessage(messageId: string): Promise<void> {
-    await api.delete(`/contact/${messageId}`);
+    await api.delete(apiEndpoints.contact.delete(messageId));
   },
 
-  // Admin: Okunmamış mesaj sayısı
   async getUnreadCount(): Promise<number> {
-    const response = await api.get('/contact/unread-count');
+    const response = await api.get(apiEndpoints.contact.unreadCount);
     return response.data.unread_count;
   },
 };

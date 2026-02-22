@@ -13,6 +13,24 @@ from app.models.blog import BlogPost, BlogTranslation
 from app.schemas.blog import BlogPostCreate, BlogPostUpdate, BlogTranslationCreate
 
 
+def _apply_blog_translation(post: BlogPost, language: Optional[str] = None) -> BlogPost:
+    """Apply requested translation to a blog post with English fallback."""
+    if not language or language == "en":
+        return post
+
+    translations = post.translations or []
+    translated = next((item for item in translations if item.language == language), None)
+    fallback = next((item for item in translations if item.language == "en"), None)
+    source = translated or fallback
+
+    if source:
+        post.title = source.title
+        post.content = source.content
+        post.excerpt = source.excerpt
+
+    return post
+
+
 def get_blog_posts(
     db: Session,
     skip: int = 0,
@@ -39,8 +57,9 @@ def get_blog_posts(
         query = query.filter(BlogPost.published == True)
     
     query = query.order_by(BlogPost.published_at.desc())
-    
-    return query.offset(skip).limit(limit).all()
+    posts = query.offset(skip).limit(limit).all()
+
+    return [_apply_blog_translation(post, language) for post in posts]
 
 
 def get_blog_post_by_id(db: Session, post_id: uuid.UUID) -> Optional[BlogPost]:
@@ -56,9 +75,14 @@ def get_blog_post_by_slug(
     language: Optional[str] = None
 ) -> Optional[BlogPost]:
     """Get blog post by slug with translations"""
-    return db.query(BlogPost).options(
+    post = db.query(BlogPost).options(
         joinedload(BlogPost.translations)
     ).filter(BlogPost.slug == slug).first()
+
+    if not post:
+        return None
+
+    return _apply_blog_translation(post, language)
 
 
 def create_blog_post(db: Session, post: BlogPostCreate, author_id: uuid.UUID) -> BlogPost:
@@ -242,8 +266,10 @@ def search_blog_posts(
     
     if published_only:
         db_query = db_query.filter(BlogPost.published == True)
-    
-    return db_query.order_by(BlogPost.published_at.desc()).offset(skip).limit(limit).all()
+
+    posts = db_query.order_by(BlogPost.published_at.desc()).offset(skip).limit(limit).all()
+
+    return [_apply_blog_translation(post, language) for post in posts]
 
 
 def get_blog_count(db: Session, published_only: bool = True) -> int:

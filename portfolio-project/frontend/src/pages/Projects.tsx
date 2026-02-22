@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { motion } from 'framer-motion';
+import { useLanguage } from '../contexts/LanguageContext';
 import { projectService } from '../services';
 import { Project } from '../services/types';
 
@@ -15,6 +16,7 @@ export default function Projects() {
   const [hasMore, setHasMore] = useState(true);
   const [totalCount, setTotalCount] = useState<number | null>(null);
   const skipRef = useRef(0);
+  const { language } = useLanguage();
 
   const normalizeProjects = (items: unknown[]): Project[] => {
     return items.map((item) => {
@@ -49,6 +51,7 @@ export default function Projects() {
       const response = await projectService.getProjects({
         skip: skipRef.current,
         limit: PAGE_SIZE,
+        language,
       });
 
       const items = Array.isArray(response.items) ? response.items : [];
@@ -95,7 +98,7 @@ export default function Projects() {
         setLoadingMore(false);
       }
     }
-  }, []);
+  }, [language]);
 
   useEffect(() => {
     loadProjects({ reset: true });
@@ -142,7 +145,7 @@ export default function Projects() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-gray-900 py-20">
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-primary-900 to-gray-900 py-20">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <motion.div
@@ -152,7 +155,7 @@ export default function Projects() {
           className="text-center mb-16"
         >
           <h1 className="text-5xl font-bold text-white mb-4">
-            My <span className="text-purple-400">Projects</span>
+            My <span className="text-primary-400">Projects</span>
           </h1>
           <p className="text-xl text-gray-300 max-w-2xl mx-auto">
             A collection of my work showcasing various technologies and solutions
@@ -173,7 +176,7 @@ export default function Projects() {
               placeholder="Search projects by name, description, or technology..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full px-6 py-4 bg-white/10 backdrop-blur-lg border border-white/20 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all"
+              className="w-full px-6 py-4 bg-white/10 backdrop-blur-lg border border-white/20 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500 transition-all"
             />
           </div>
           <p className="text-sm text-center text-gray-400">
@@ -186,7 +189,7 @@ export default function Projects() {
               <button
                 type="button"
                 onClick={() => loadProjects({ reset: true })}
-                className="inline-flex items-center justify-center px-4 py-2 rounded-lg bg-purple-600 hover:bg-purple-700 text-white transition-colors"
+                className="inline-flex items-center justify-center px-4 py-2 rounded-lg bg-primary-600 hover:bg-primary-700 text-white transition-colors"
               >
                 Retry
               </button>
@@ -229,11 +232,11 @@ export default function Projects() {
                 <motion.div
                   key={project.id}
                   variants={itemVariants}
-                  className="group relative z-20 overflow-hidden rounded-2xl border border-purple-200 bg-white text-gray-900 shadow-2xl transition-all hover:-translate-y-2 hover:shadow-purple-400 dark:border-purple-500 dark:bg-slate-900 dark:text-gray-50 cursor-pointer"
+                  className="group relative z-20 overflow-hidden rounded-2xl border border-primary-200 bg-white text-gray-900 shadow-2xl transition-all hover:-translate-y-2 hover:shadow-primary-400 dark:border-primary-500 dark:bg-slate-900 dark:text-gray-50 cursor-pointer"
                   onClick={() => setSelectedProject(project)}
                 >
                 {/* Project Image */}
-                <div className="relative h-48 overflow-hidden bg-gradient-to-br from-purple-600 to-pink-600">
+                <div className="relative h-48 overflow-hidden bg-gradient-to-br from-primary-600 to-pink-600">
                   {project.cover_image ? (
                     <img
                       src={project.cover_image}
@@ -241,7 +244,7 @@ export default function Projects() {
                       className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                     />
                   ) : (
-                    <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-purple-700 via-purple-600 to-pink-600">
+                    <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-primary-700 via-primary-600 to-pink-600">
                       <span className="text-6xl">🚀</span>
                     </div>
                   )}
@@ -254,7 +257,7 @@ export default function Projects() {
 
                 {/* Project Info */}
                 <div className="space-y-4 p-6">
-                  <h3 className="text-2xl font-semibold text-gray-900 transition-colors group-hover:text-purple-600 dark:text-white dark:group-hover:text-purple-300">
+                  <h3 className="text-2xl font-semibold text-gray-900 transition-colors group-hover:text-primary-600 dark:text-white dark:group-hover:text-primary-300">
                     {project.title}
                   </h3>
                   <p className="line-clamp-3 text-gray-700 dark:text-gray-200">
@@ -266,7 +269,7 @@ export default function Projects() {
                     {techList.slice(0, 3).map((tech) => (
                       <span
                         key={tech.id}
-                        className="rounded-full bg-purple-600 px-3 py-1 text-sm font-medium text-white shadow"
+                        className="rounded-full bg-primary-600 px-3 py-1 text-sm font-medium text-white shadow"
                       >
                         {tech.name}
                       </span>
@@ -286,7 +289,7 @@ export default function Projects() {
                         target="_blank"
                         rel="noopener noreferrer"
                         onClick={(e) => e.stopPropagation()}
-                        className="flex-1 rounded-lg bg-purple-600 px-4 py-2 text-center font-medium text-white transition-colors hover:bg-purple-700"
+                        className="flex-1 rounded-lg bg-primary-600 px-4 py-2 text-center font-medium text-white transition-colors hover:bg-primary-700"
                       >
                         Demo
                       </a>
@@ -355,6 +358,54 @@ export default function Projects() {
 // Project Detail Modal Component
 const ProjectDetailModal = ({ project, onClose }: { project: Project; onClose: () => void }) => {
   const techList = Array.isArray(project.technologies) ? project.technologies : [];
+  const dialogRef = useRef<HTMLDivElement>(null);
+  const closeButtonRef = useRef<HTMLButtonElement>(null);
+
+  useEffect(() => {
+    const previousActiveElement = document.activeElement as HTMLElement | null;
+    closeButtonRef.current?.focus();
+
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        onClose();
+        return;
+      }
+
+      if (event.key !== 'Tab' || !dialogRef.current) {
+        return;
+      }
+
+      const focusableElements = Array.from(
+        dialogRef.current.querySelectorAll<HTMLElement>(
+          'a[href], button:not([disabled]), textarea, input, select, [tabindex]:not([tabindex="-1"])',
+        ),
+      ).filter((element) => !element.hasAttribute('disabled'));
+
+      if (focusableElements.length === 0) {
+        return;
+      }
+
+      const firstElement = focusableElements[0];
+      const lastElement = focusableElements[focusableElements.length - 1];
+      const activeElement = document.activeElement as HTMLElement;
+
+      if (event.shiftKey && activeElement === firstElement) {
+        event.preventDefault();
+        lastElement.focus();
+      } else if (!event.shiftKey && activeElement === lastElement) {
+        event.preventDefault();
+        firstElement.focus();
+      }
+    };
+
+    document.addEventListener('keydown', onKeyDown);
+    return () => {
+      document.removeEventListener('keydown', onKeyDown);
+      previousActiveElement?.focus();
+    };
+  }, [onClose]);
+
   return (
     <motion.div
       initial={{ opacity: 0 }}
@@ -367,13 +418,18 @@ const ProjectDetailModal = ({ project, onClose }: { project: Project; onClose: (
         initial={{ scale: 0.9, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         exit={{ scale: 0.9, opacity: 0 }}
-        className="bg-gradient-to-br from-gray-900 to-purple-900 rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto border border-purple-500/30"
+        role="dialog"
+        aria-modal="true"
+        ref={dialogRef}
+        className="bg-gradient-to-br from-gray-900 to-primary-900 rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto border border-primary-500/30"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="p-8">
           {/* Close Button */}
           <button
             onClick={onClose}
+            ref={closeButtonRef}
+            aria-label="Close project details"
             className="float-right text-white/60 hover:text-white text-3xl leading-none"
           >
             ×
@@ -403,7 +459,7 @@ const ProjectDetailModal = ({ project, onClose }: { project: Project; onClose: (
               {techList.map((tech) => (
                 <span
                   key={tech.id}
-                  className="px-4 py-2 bg-purple-600/30 text-purple-300 rounded-lg font-medium"
+                  className="px-4 py-2 bg-primary-600/30 text-primary-300 rounded-lg font-medium"
                 >
                   {tech.name}
                 </span>
@@ -418,7 +474,7 @@ const ProjectDetailModal = ({ project, onClose }: { project: Project; onClose: (
                 href={project.demo_url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="px-6 py-3 bg-purple-600 hover:bg-purple-700 text-white rounded-lg font-semibold transition-colors"
+                className="px-6 py-3 bg-primary-600 hover:bg-primary-700 text-white rounded-lg font-semibold transition-colors"
               >
                 View Demo →
               </a>
@@ -465,3 +521,4 @@ function ProjectsSkeleton({ count }: { count: number }) {
     </div>
   );
 }
+

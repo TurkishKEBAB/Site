@@ -142,7 +142,7 @@ export default function Contact() {
           animate={{ opacity: 1, y: 0 }}
           className="text-center mb-12"
         >
-          <h1 className="section-title bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+          <h1 className="section-title bg-gradient-to-r from-primary-600 to-primary-600 bg-clip-text text-transparent">
             Get In Touch
           </h1>
           <p className="text-xl text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
@@ -174,7 +174,7 @@ export default function Contact() {
                   ref={nameRef}
                   required
                   {...(errors.name && { 'aria-invalid': true, 'aria-describedby': 'name-error' })}
-                  className="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 focus:ring-2 focus:ring-blue-500 outline-none transition"
+                  className="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 focus:ring-2 focus:ring-primary-500 outline-none transition"
                   placeholder="Your name"
                 />
                 {errors.name && (
@@ -197,7 +197,7 @@ export default function Contact() {
                   ref={emailRef}
                   required
                   {...(errors.email && { 'aria-invalid': true, 'aria-describedby': 'email-error' })}
-                  className="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 focus:ring-2 focus:ring-blue-500 outline-none transition"
+                  className="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 focus:ring-2 focus:ring-primary-500 outline-none transition"
                   placeholder="your@email.com"
                 />
                 {errors.email && (
@@ -219,7 +219,7 @@ export default function Contact() {
                   onChange={handleChange}
                   ref={subjectRef}
                   {...(errors.subject && { 'aria-invalid': true, 'aria-describedby': 'subject-error' })}
-                  className="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 focus:ring-2 focus:ring-blue-500 outline-none transition"
+                  className="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 focus:ring-2 focus:ring-primary-500 outline-none transition"
                   placeholder="What's this about?"
                 />
                 {errors.subject && (
@@ -242,7 +242,7 @@ export default function Contact() {
                   ref={messageRef}
                   {...(errors.message && { 'aria-invalid': true, 'aria-describedby': 'message-error' })}
                   rows={6}
-                  className="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 focus:ring-2 focus:ring-blue-500 outline-none transition resize-none"
+                  className="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 focus:ring-2 focus:ring-primary-500 outline-none transition resize-none"
                   placeholder="Your message..."
                 />
                 {errors.message && (
@@ -285,28 +285,28 @@ export default function Contact() {
               
               <div className="space-y-4">
                 <div className="flex items-start space-x-4">
-                  <div className="bg-blue-100 dark:bg-blue-900 p-3 rounded-lg">
-                    <svg className="w-6 h-6 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <div className="bg-primary-100 dark:bg-primary-900 p-3 rounded-lg">
+                    <svg className="w-6 h-6 text-primary-600 dark:text-primary-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                     </svg>
                   </div>
                   <div>
                     <h3 className="font-medium">Email</h3>
-                    <a href="mailto:yigitokur@ieee.org" className="text-blue-600 dark:text-blue-400 hover:underline">
+                    <a href="mailto:yigitokur@ieee.org" className="text-primary-600 dark:text-primary-400 hover:underline">
                       yigitokur@ieee.org
                     </a>
                   </div>
                 </div>
 
                 <div className="flex items-start space-x-4">
-                  <div className="bg-purple-100 dark:bg-purple-900 p-3 rounded-lg">
-                    <svg className="w-6 h-6 text-purple-600 dark:text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <div className="bg-primary-100 dark:bg-primary-900 p-3 rounded-lg">
+                    <svg className="w-6 h-6 text-primary-600 dark:text-primary-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
                     </svg>
                   </div>
                   <div>
                     <h3 className="font-medium">Phone</h3>
-                    <a href="tel:+905355733873" className="text-purple-600 dark:text-purple-400 hover:underline">
+                    <a href="tel:+905355733873" className="text-primary-600 dark:text-primary-400 hover:underline">
                       +90 535 573 3873
                     </a>
                   </div>
@@ -339,7 +339,7 @@ export default function Contact() {
               </div>
             </div>
 
-            <div className="bg-gradient-to-br from-blue-600 to-purple-600 rounded-2xl shadow-xl p-8 text-white">
+            <div className="bg-gradient-to-br from-primary-600 to-primary-600 rounded-2xl shadow-xl p-8 text-white">
               <h3 className="text-xl font-bold mb-4">Birlikte Harika Projeler Geliştirelim!</h3>
               <p className="mb-6 opacity-90">
                 Yeni projeler, işbirlikleri ve kariyer fırsatları hakkında görüşmekten her zaman mutluluk duyarım.
@@ -363,3 +363,4 @@ export default function Contact() {
     </div>
   )
 }
+

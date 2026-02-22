@@ -3,7 +3,7 @@ Site Models
 Configuration, translations, and analytics
 """
 from sqlalchemy import Column, String, Text, DateTime
-from sqlalchemy.dialects.postgresql import UUID, INET
+from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.sql import func
 import uuid
 
@@ -59,7 +59,7 @@ class PageView(Base):
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     page_path = Column(String(500), nullable=False, index=True)
     referrer = Column(String(500), nullable=True)
-    ip_address = Column(INET, nullable=True)
+    ip_address = Column(String(45), nullable=True)
     user_agent = Column(Text, nullable=True)
     viewed_at = Column(DateTime(timezone=True), server_default=func.now(), index=True)
     

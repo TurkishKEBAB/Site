@@ -1,9 +1,22 @@
 import api, { apiEndpoints } from './api';
 import type { Experience, ExperienceCreate } from './types';
 
+const resolveLanguage = (language?: string) =>
+  language || localStorage.getItem('lang') || 'en';
+
 export const experienceService = {
-  async getExperiences(params?: { skip?: number; limit?: number; experience_type?: string }): Promise<Experience[]> {
-    const response = await api.get(apiEndpoints.experiences.list, { params });
+  async getExperiences(params?: {
+    skip?: number;
+    limit?: number;
+    experience_type?: string;
+    language?: string;
+  }): Promise<Experience[]> {
+    const response = await api.get(apiEndpoints.experiences.list, {
+      params: {
+        ...params,
+        language: resolveLanguage(params?.language),
+      },
+    });
     const experiences = response.data.experiences || response.data || [];
     return experiences;
   },

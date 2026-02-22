@@ -10,12 +10,35 @@ from app.models.experience import Experience, ExperienceTranslation
 from app.schemas.experience import ExperienceCreate, ExperienceUpdate
 
 
+def _apply_experience_translation(
+    experience: Experience,
+    language: Optional[str] = None,
+) -> Experience:
+    """Apply requested translation to an experience object with English fallback."""
+    if not language or language == "en":
+        return experience
+
+    translations = experience.translations or []
+    translated = next((item for item in translations if item.language == language), None)
+    fallback = next((item for item in translations if item.language == "en"), None)
+    source = translated or fallback
+
+    if source:
+        experience.title = source.title
+        experience.organization = source.organization
+        experience.location = source.location
+        experience.description = source.description
+
+    return experience
+
+
 def get_experiences(
     db: Session,
     skip: int = 0,
     limit: int = 100,
     experience_type: Optional[str] = None,
-    current_only: bool = False
+    current_only: bool = False,
+    language: Optional[str] = None,
 ) -> List[Experience]:
     """
     Get list of experiences
@@ -43,8 +66,9 @@ def get_experiences(
         Experience.is_current.desc(),
         Experience.start_date.desc()
     )
-    
-    return query.offset(skip).limit(limit).all()
+    experiences = query.offset(skip).limit(limit).all()
+
+    return [_apply_experience_translation(item, language) for item in experiences]
 
 
 def get_experiences_by_type(
@@ -53,7 +77,7 @@ def get_experiences_by_type(
     language: Optional[str] = None
 ) -> List[Experience]:
     """Get experiences filtered by type"""
-    return get_experiences(db, experience_type=experience_type)
+    return get_experiences(db, experience_type=experience_type, language=language)
 
 
 def get_experience_by_id(
@@ -62,9 +86,14 @@ def get_experience_by_id(
     language: Optional[str] = None
 ) -> Optional[Experience]:
     """Get experience by ID with translations"""
-    return db.query(Experience).options(
+    experience = db.query(Experience).options(
         joinedload(Experience.translations)
     ).filter(Experience.id == experience_id).first()
+
+    if not experience:
+        return None
+
+    return _apply_experience_translation(experience, language)
 
 
 def create_experience(db: Session, experience: ExperienceCreate) -> Experience:
