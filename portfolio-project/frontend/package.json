@@ -8,16 +8,23 @@
     "build": "tsc && vite build",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
     "type-check": "tsc --noEmit",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage"
   },
   "dependencies": {
     "axios": "^1.6.2",
     "framer-motion": "^10.16.16",
+    "highlight.js": "^11.11.1",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-hook-form": "^7.49.2",
     "react-icons": "^4.12.0",
+    "react-markdown": "^10.1.0",
     "react-router-dom": "^6.21.0"
+    ,"rehype-highlight": "^7.0.2"
+    ,"remark-gfm": "^4.0.1"
   },
   "devDependencies": {
     "@types/node": "^24.9.2",
@@ -33,6 +40,11 @@
     "postcss": "^8.4.32",
     "tailwindcss": "^3.4.0",
     "typescript": "^5.2.2",
-    "vite": "^5.0.8"
+    "vite": "^5.0.8",
+    "vitest": "^3.2.4",
+    "jsdom": "^26.1.0",
+    "@testing-library/react": "^16.3.0",
+    "@testing-library/jest-dom": "^6.9.1"
+    ,"@vitest/coverage-v8": "^3.2.4"
   }
 }

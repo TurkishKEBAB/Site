@@ -1,9 +1,10 @@
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
+
+import { useLanguage } from '../contexts/LanguageContext';
 import { blogService } from '../services';
 import { BlogPost } from '../services/types';
-import { mockPosts } from './blogMockData';
 
 export default function Blog() {
   const [posts, setPosts] = useState<BlogPost[]>([]);
@@ -13,8 +14,8 @@ export default function Blog() {
   const [debouncedSearch, setDebouncedSearch] = useState<string>('');
   const [loading, setLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const { language, t } = useLanguage();
 
-  // Debounce search query (300ms)
   useEffect(() => {
     const timer = setTimeout(() => {
       setDebouncedSearch(searchQuery);
@@ -24,8 +25,8 @@ export default function Blog() {
   }, [searchQuery]);
 
   useEffect(() => {
-    loadPosts();
-  }, []);
+    void loadPosts();
+  }, [language]);
 
   useEffect(() => {
     filterPosts();
@@ -34,14 +35,14 @@ export default function Blog() {
   const loadPosts = async () => {
     try {
       setLoading(true);
-      const response = await blogService.getPosts({ is_published: true });
+      const response = await blogService.getPosts({ published_only: true, language });
       const items = Array.isArray(response.items) ? response.items : [];
       setPosts(items);
       setErrorMessage(null);
     } catch (error) {
       console.error('Failed to load blog posts:', error);
-      setPosts(mockPosts);
-      setErrorMessage('Showing sample posts while the API is offline.');
+      setPosts([]);
+      setErrorMessage(t('blog_fetch_error'));
     } finally {
       setLoading(false);
     }
@@ -50,35 +51,33 @@ export default function Blog() {
   const filterPosts = () => {
     let filtered = [...posts];
 
-    // Tag filter
     if (selectedTag !== 'all') {
-      filtered = filtered.filter(post => post.tags?.includes(selectedTag));
+      filtered = filtered.filter((post) => post.tags?.includes(selectedTag));
     }
 
-    // Search filter (using debounced value)
     if (debouncedSearch) {
       const query = debouncedSearch.toLowerCase();
-      filtered = filtered.filter(post => 
-        post.title.toLowerCase().includes(query) ||
-        (post.excerpt && post.excerpt.toLowerCase().includes(query)) ||
-        post.tags?.some(tag => tag.toLowerCase().includes(query))
+      filtered = filtered.filter(
+        (post) =>
+          post.title.toLowerCase().includes(query) ||
+          (post.excerpt && post.excerpt.toLowerCase().includes(query)) ||
+          post.tags?.some((tag) => tag.toLowerCase().includes(query)),
       );
     }
 
     setFilteredPosts(filtered);
   };
 
-  // Extract all unique tags from posts
-  const allTags = ['all', ...new Set(posts.flatMap(post => post.tags || []))];
+  const allTags = ['all', ...new Set(posts.flatMap((post) => post.tags || []))];
 
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: {
       opacity: 1,
       transition: {
-        staggerChildren: 0.1
-      }
-    }
+        staggerChildren: 0.1,
+      },
+    },
   };
 
   const itemVariants = {
@@ -86,142 +85,142 @@ export default function Blog() {
     visible: {
       opacity: 1,
       y: 0,
-      transition: { duration: 0.5 }
-    }
+      transition: { duration: 0.5 },
+    },
   };
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-gray-900 flex items-center justify-center">
-        <div className="text-white text-2xl">Loading blog posts...</div>
+      <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-gray-900 via-primary-900 to-gray-900">
+        <div className="text-2xl text-white">{t('common_loading')}</div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-gray-900 py-20">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Header */}
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-primary-900 to-gray-900 py-20">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
-          className="text-center mb-16"
+          className="mb-16 text-center"
         >
-          <h1 className="text-5xl font-bold text-white mb-4">
-            My <span className="text-purple-400">Blog</span>
+          <h1 className="mb-4 text-5xl font-bold text-white">
+            {t('blog_title_prefix')} <span className="text-primary-400">{t('blog_title_highlight')}</span>
           </h1>
-          <p className="text-xl text-gray-300 max-w-2xl mx-auto">
-            Thoughts, tutorials, and insights about software development
-          </p>
+          <p className="mx-auto max-w-2xl text-xl text-gray-300">{t('blog_subtitle')}</p>
         </motion.div>
 
-        {/* Search and Filters */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.2 }}
           className="mb-12"
         >
-          {/* Search Bar */}
           <div className="mb-6">
             <input
               type="text"
-              placeholder="Search posts..."
+              placeholder={t('blog_search_placeholder')}
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full px-6 py-4 bg-white/10 backdrop-blur-lg border border-white/20 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all"
+              onChange={(event) => setSearchQuery(event.target.value)}
+              className="w-full rounded-xl border border-white/20 bg-white/10 px-6 py-4 text-white placeholder-gray-400 backdrop-blur-lg transition-all focus:outline-none focus:ring-2 focus:ring-primary-500"
             />
           </div>
 
-          {/* Tag Filters */}
-          <div className="flex flex-wrap gap-3 justify-center">
+          <div className="flex flex-wrap justify-center gap-3">
             {allTags.map((tag) => (
               <button
                 key={tag}
                 onClick={() => setSelectedTag(tag)}
-                className={`px-6 py-2 rounded-full font-medium transition-all capitalize ${
+                className={`rounded-full px-6 py-2 font-medium capitalize transition-all ${
                   selectedTag === tag
-                    ? 'bg-purple-600 text-white shadow-lg shadow-purple-500/50'
+                    ? 'bg-primary-600 text-white shadow-lg shadow-primary-500/50'
                     : 'bg-white/10 text-gray-300 hover:bg-white/20'
                 }`}
               >
-                {tag}
+                {tag === 'all' ? t('common_all') : tag}
               </button>
             ))}
           </div>
+
           {errorMessage && (
-            <p className="mt-4 text-center text-sm text-yellow-300">
-              {errorMessage}
-            </p>
+            <div className="mt-4 text-center">
+              <p className="text-sm text-red-300">{errorMessage}</p>
+              <button
+                type="button"
+                onClick={() => void loadPosts()}
+                className="mt-3 inline-flex items-center justify-center rounded-lg bg-primary-600 px-4 py-2 text-sm text-white transition-colors hover:bg-primary-700"
+              >
+                {t('common_retry')}
+              </button>
+            </div>
           )}
-          
-          {/* Result Count Badge */}
+
           {(searchQuery || selectedTag !== 'all') && (
             <motion.div
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
               className="mt-4 text-center"
             >
-              <span className="inline-flex items-center px-4 py-2 rounded-full bg-purple-600/20 border border-purple-500/30 text-purple-300 text-sm font-medium">
-                {filteredPosts.length} {filteredPosts.length === 1 ? 'result' : 'results'} found
+              <span className="inline-flex items-center rounded-full border border-primary-500/30 bg-primary-600/20 px-4 py-2 text-sm font-medium text-primary-300">
+                {filteredPosts.length} {filteredPosts.length === 1 ? t('blog_result') : t('blog_results')}{' '}
+                {t('blog_found')}
               </span>
             </motion.div>
           )}
         </motion.div>
 
-        {/* Blog Posts Grid */}
         {filteredPosts.length === 0 ? (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            className="text-center py-20"
+            className="py-20 text-center"
           >
-            <p className="text-2xl text-gray-400">No posts found</p>
+            <p className="text-2xl text-gray-400">{t('blog_empty')}</p>
           </motion.div>
         ) : (
           <motion.div
             variants={containerVariants}
             initial="hidden"
             animate="visible"
-            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
+            className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3"
           >
             {filteredPosts.map((post) => (
               <motion.article
                 key={post.id}
                 variants={itemVariants}
                 whileHover={{ y: -10, transition: { duration: 0.2 } }}
-                className="bg-white/10 backdrop-blur-lg rounded-2xl overflow-hidden border border-white/20 hover:border-purple-500/50 transition-all group"
+                className="group overflow-hidden rounded-2xl border border-white/20 bg-white/10 backdrop-blur-lg transition-all hover:border-primary-500/50"
               >
-                {/* Post Image */}
-                <div className="relative h-48 overflow-hidden bg-gradient-to-br from-purple-600 to-pink-600">
+                <div className="relative h-48 overflow-hidden bg-gradient-to-br from-primary-600 to-pink-600">
                   {post.cover_image ? (
                     <img
                       src={post.cover_image}
                       alt={post.title}
-                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                      loading="lazy"
+                      decoding="async"
+                      className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
                     />
                   ) : (
-                    <div className="w-full h-full flex items-center justify-center">
-                      <span className="text-6xl">📝</span>
+                    <div className="flex h-full w-full items-center justify-center">
+                      <span className="text-6xl">Blog</span>
                     </div>
                   )}
                   {post.is_featured && (
-                    <div className="absolute top-4 right-4 bg-yellow-500 text-black px-3 py-1 rounded-full text-sm font-semibold">
-                      Featured
+                    <div className="absolute right-4 top-4 rounded-full bg-yellow-500 px-3 py-1 text-sm font-semibold text-black">
+                      {t('blog_featured')}
                     </div>
                   )}
                 </div>
 
-                {/* Post Info */}
                 <div className="p-6">
-                  {/* Tags */}
                   {post.tags && post.tags.length > 0 && (
-                    <div className="flex flex-wrap gap-2 mb-3">
+                    <div className="mb-3 flex flex-wrap gap-2">
                       {post.tags.slice(0, 3).map((tag) => (
                         <span
                           key={tag}
-                          className="px-3 py-1 bg-purple-600/30 text-purple-300 rounded-full text-xs capitalize"
+                          className="rounded-full bg-primary-600/30 px-3 py-1 text-xs capitalize text-primary-300"
                         >
                           {tag}
                         </span>
@@ -229,26 +228,30 @@ export default function Blog() {
                     </div>
                   )}
 
-                  <h2 className="text-2xl font-bold text-white mb-2 group-hover:text-purple-400 transition-colors line-clamp-2">
+                  <h2 className="mb-2 line-clamp-2 text-2xl font-bold text-white transition-colors group-hover:text-primary-400">
                     {post.title}
                   </h2>
-                  
-                  <p className="text-gray-300 mb-4 line-clamp-3">
-                    {post.excerpt}
-                  </p>
 
-                  {/* Meta Info */}
-                  <div className="flex items-center justify-between text-sm text-gray-400 mb-4">
-                    <span>{new Date(post.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
-                    <span>{post.read_time || '5'} min read</span>
+                  <p className="mb-4 line-clamp-3 text-gray-300">{post.excerpt}</p>
+
+                  <div className="mb-4 flex items-center justify-between text-sm text-gray-400">
+                    <span>
+                      {new Date(post.created_at).toLocaleDateString(language === 'tr' ? 'tr-TR' : 'en-US', {
+                        month: 'short',
+                        day: 'numeric',
+                        year: 'numeric',
+                      })}
+                    </span>
+                    <span>
+                      {post.reading_time || post.read_time || '5'} {t('blog_min_read')}
+                    </span>
                   </div>
 
-                  {/* Read More Link */}
                   <Link
                     to={`/blog/${post.slug}`}
-                    className="inline-flex items-center text-purple-400 hover:text-purple-300 font-semibold transition-colors"
+                    className="inline-flex items-center font-semibold text-primary-400 transition-colors hover:text-primary-300"
                   >
-                    Read More →
+                    {t('blog_read_more')}
                   </Link>
                 </div>
               </motion.article>
@@ -259,4 +262,3 @@ export default function Blog() {
     </div>
   );
 }
-

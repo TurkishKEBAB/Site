@@ -8,7 +8,7 @@ from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.orm import Session
 import uuid
 
-from app.api.deps import get_db, require_admin, get_current_user_optional
+from app.api.deps import get_db, require_admin
 from app.schemas.blog import (
     BlogPostCreate,
     BlogPostUpdate,
@@ -25,13 +25,17 @@ router = APIRouter()
 async def get_blog_posts(
     skip: int = Query(0, ge=0),
     limit: int = Query(20, ge=1, le=100),
-    language: str = Query("en", regex="^(tr|en|de|fr)$"),
+    language: str = Query("en", regex="^(tr|en)$"),
     published_only: bool = True,
     db: Session = Depends(get_db)
 ):
     """
     Get list of blog posts with pagination
     """
+    total = blog_crud.get_blog_count(db, published_only=published_only)
+    pages = math.ceil(total / limit) if limit else 1
+    page = skip // limit + 1 if limit else 1
+
     posts = blog_crud.get_blog_posts(
         db,
         skip=skip,
@@ -39,11 +43,7 @@ async def get_blog_posts(
         language=language,
         published_only=published_only
     )
-    
-    total = blog_crud.get_blog_count(db, published_only=published_only)
-    pages = math.ceil(total / limit) if limit else 1
-    page = skip // limit + 1 if limit else 1
-    
+
     return {
         "items": posts,
         "total": total,
@@ -56,7 +56,7 @@ async def get_blog_posts(
 @router.get("/search", response_model=List[BlogPostResponse])
 async def search_blog_posts(
     q: str = Query(..., min_length=2),
-    language: str = Query("en", regex="^(tr|en|de|fr)$"),
+    language: str = Query("en", regex="^(tr|en)$"),
     limit: int = Query(10, ge=1, le=50),
     db: Session = Depends(get_db)
 ):
@@ -69,7 +69,7 @@ async def search_blog_posts(
 @router.get("/{slug}", response_model=BlogPostResponse)
 async def get_blog_post(
     slug: str,
-    language: str = Query("en", regex="^(tr|en|de|fr)$"),
+    language: str = Query("en", regex="^(tr|en)$"),
     db: Session = Depends(get_db)
 ):
     """
@@ -86,8 +86,15 @@ async def get_blog_post(
     
     # Increment view count
     blog_crud.increment_blog_views(db, post.id)
-    
-    return post
+
+    refreshed = blog_crud.get_blog_post_by_slug(db, slug=slug, language=language)
+    if not refreshed:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Blog post not found",
+        )
+
+    return refreshed
 
 
 @router.post("/", response_model=BlogPostResponse, status_code=status.HTTP_201_CREATED)
@@ -112,7 +119,7 @@ async def update_blog_post(
     """
     Update a blog post (admin only)
     """
-    updated_post = blog_crud.update_blog_post(db, post_id=post_id, post_data=post_data)
+    updated_post = blog_crud.update_blog_post(db, post_id=post_id, post_update=post_data)
     
     if not updated_post:
         raise HTTPException(
@@ -153,12 +160,19 @@ async def add_blog_translation(
     """
     Add or update translation for a blog post (admin only)
     """
-    updated_post = blog_crud.add_blog_translation(db, post_id=post_id, translation_data=translation_data)
+    updated_post = blog_crud.add_blog_translation(db, post_id=post_id, translation=translation_data)
     
     if not updated_post:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Blog post not found"
         )
-    
-    return updated_post
+
+    post = blog_crud.get_blog_post_by_id(db, post_id=post_id)
+    if not post:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Blog post not found",
+        )
+
+    return post

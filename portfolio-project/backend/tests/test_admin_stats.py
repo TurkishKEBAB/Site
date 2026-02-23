@@ -1,8 +1,7 @@
-"""
-Admin Stats Endpoint Tests
-Test admin dashboard statistics
-"""
-import pytest
+"""Admin stats endpoint tests."""
+
+from datetime import date
+
 from app.models.project import Project
 from app.models.skill import Skill
 from app.models.experience import Experience
@@ -42,7 +41,7 @@ def test_admin_stats_success(client, admin_headers, db_session):
         title="Developer",
         organization="Test Corp",
         experience_type="work",
-        start_date="2020-01-01",
+        start_date=date(2020, 1, 1),
         is_current=True,
         display_order=0
     )

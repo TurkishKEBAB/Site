@@ -1,9 +1,8 @@
-import axios, { AxiosInstance, AxiosError } from 'axios';
+import axios, { AxiosError, AxiosInstance } from 'axios';
 
-// API Base URL - Environment variable'dan oku veya fallback kullan
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api';
+const API_BASE_URL =
+  import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api/v1';
 
-// Axios instance oluştur
 const api: AxiosInstance = axios.create({
   baseURL: API_BASE_URL,
   timeout: 10000,
@@ -12,105 +11,142 @@ const api: AxiosInstance = axios.create({
   },
 });
 
-// Request interceptor - Her istekte token ekle
+const shouldAttachLanguage = (config: { method?: string; url?: string }) => {
+  const method = (config.method || 'get').toLowerCase();
+  if (method !== 'get') {
+    return false;
+  }
+
+  const url = config.url || '';
+  return !url.startsWith('/auth/');
+};
+
 api.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem('access_token');
+    const token = localStorage.getItem('token');
+    const language = localStorage.getItem('lang') || 'en';
+
+    const skipLanguageHeader =
+      (config.headers as Record<string, unknown> | undefined)?.['X-Skip-Language'] === true;
+
+    if (!skipLanguageHeader && shouldAttachLanguage(config)) {
+      config.params = {
+        ...(config.params || {}),
+        language,
+      };
+    }
+
+    if (config.headers && 'X-Skip-Language' in config.headers) {
+      delete (config.headers as Record<string, unknown>)['X-Skip-Language'];
+    }
+
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
     return config;
   },
-  (error) => {
-    return Promise.reject(error);
-  }
+  (error) => Promise.reject(error),
 );
 
-// Response interceptor - Hata yönetimi
 api.interceptors.response.use(
   (response) => response,
   (error: AxiosError) => {
-    if (error.response?.status === 401) {
-      // 401 hatası - Yetkilendirme hatası
-      console.error('Authorization error:', error.response.data);
-      
-      // Eğer /auth/me endpoint'i değilse (sonsuz loop önleme) logout yap
-      if (!error.config?.url?.includes('/auth/me')) {
-        // Token süresi dolmuş veya geçersiz, kullanıcıyı logout yap
-        localStorage.removeItem('access_token');
-        localStorage.removeItem('refresh_token');
-        
-        // Sadece admin panelindeyse login'e yönlendir
-        if (window.location.pathname.startsWith('/admin')) {
-          window.location.href = '/login';
-        }
+    const status = error.response?.status;
+    const skipGlobalErrorValue =
+      (error.config?.headers as Record<string, unknown> | undefined)?.['X-Skip-Global-Error'];
+    const shouldSkipGlobalError =
+      skipGlobalErrorValue === true || skipGlobalErrorValue === 'true';
+
+    if (status === 401 || status === 403) {
+      localStorage.removeItem('token');
+      localStorage.removeItem('refresh_token');
+
+      if (window.location.pathname.startsWith('/admin')) {
+        window.location.href = '/login';
       }
     }
+
+    if (!shouldSkipGlobalError) {
+      window.dispatchEvent(
+        new CustomEvent('api:error', {
+          detail: {
+            status,
+            message: error.message,
+          },
+        }),
+      );
+    }
+
     return Promise.reject(error);
-  }
+  },
 );
 
-// API Endpoint'leri
 export const apiEndpoints = {
-  // Auth
   auth: {
     login: '/auth/login',
+    loginJson: '/auth/login/json',
     register: '/auth/register',
     refresh: '/auth/refresh',
     me: '/auth/me',
   },
 
-  // Projects
   projects: {
-    list: '/projects',
-    detail: (id: string) => `/projects/${id}`,
-    create: '/projects',
+    list: '/projects/',
+    detail: (slug: string) => `/projects/${slug}`,
+    create: '/projects/',
     update: (id: string) => `/projects/${id}`,
     delete: (id: string) => `/projects/${id}`,
+    addTranslation: (id: string) => `/projects/${id}/translations`,
+    uploadImage: (id: string) => `/projects/${id}/upload-image`,
+    updateImage: (projectId: string, imageId: string) =>
+      `/projects/${projectId}/images/${imageId}`,
+    deleteImage: (projectId: string, imageId: string) =>
+      `/projects/${projectId}/images/${imageId}`,
   },
 
-  // Blog
   blog: {
-    list: '/blog',
+    list: '/blog/',
     detail: (slug: string) => `/blog/${slug}`,
-    create: '/blog',
-    update: (slug: string) => `/blog/${slug}`,
-    delete: (slug: string) => `/blog/${slug}`,
+    create: '/blog/',
+    update: (postId: string) => `/blog/${postId}`,
+    delete: (postId: string) => `/blog/${postId}`,
   },
 
-  // Skills
   skills: {
-    list: '/skills',
+    list: '/skills/',
     detail: (id: string) => `/skills/${id}`,
-    create: '/skills',
+    create: '/skills/',
     update: (id: string) => `/skills/${id}`,
     delete: (id: string) => `/skills/${id}`,
   },
 
-  // Experiences
   experiences: {
-    list: '/experiences',
+    list: '/experiences/',
     detail: (id: string) => `/experiences/${id}`,
-    create: '/experiences',
+    create: '/experiences/',
     update: (id: string) => `/experiences/${id}`,
     delete: (id: string) => `/experiences/${id}`,
   },
 
-  // Contact
   contact: {
-    send: '/contact',
+    send: '/contact/',
+    list: '/contact/',
+    unreadCount: '/contact/unread-count',
+    markRead: (id: string) => `/contact/${id}/read`,
+    markReplied: (id: string) => `/contact/${id}/replied`,
+    delete: (id: string) => `/contact/${id}`,
   },
 
-  // GitHub
   github: {
-    repos: '/github/repositories',
-    stats: '/github/statistics',
+    repos: '/github/repos',
+    sync: '/github/sync',
+    cacheStatus: '/github/cache-status',
   },
-  
-  // Translations
+
   translations: {
     list: '/translations',
+    byLanguage: (language: string) => `/translations/${language}`,
   },
-};
+} as const;
 
 export default api;

@@ -2,8 +2,10 @@ import api, { apiEndpoints } from './api';
 import { Skill, SkillCreate } from './types';
 
 export const skillService = {
-  async getSkills(): Promise<Skill[]> {
-    const response = await api.get(apiEndpoints.skills.list);
+  async getSkills(language?: string): Promise<Skill[]> {
+    const response = await api.get(apiEndpoints.skills.list, {
+      params: language ? { language } : undefined,
+    });
     return response.data.skills || response.data;
   },
 

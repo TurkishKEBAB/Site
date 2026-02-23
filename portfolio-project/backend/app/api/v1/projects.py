@@ -2,20 +2,17 @@
 Project Endpoints
 CRUD operations for projects
 """
-from typing import List
-from fastapi import APIRouter, Depends, HTTPException, status, Query, UploadFile, File
-from fastapi.encoders import jsonable_encoder
-from sqlalchemy.orm import Session
 import uuid
+
+from fastapi import APIRouter, Depends, File, HTTPException, Query, UploadFile, status
+from sqlalchemy.orm import Session
 
 from app.api.deps import get_db, require_admin
 from app.schemas.project import (
     ProjectCreate,
-    ProjectUpdate,
     ProjectResponse,
-    ProjectListResponse,
     ProjectTranslationCreate,
-    ProjectDetail
+    ProjectUpdate,
 )
 from app.crud import project as project_crud
 from app.services.storage_service import StorageService
@@ -23,11 +20,72 @@ from app.services.storage_service import StorageService
 router = APIRouter()
 
 
+def _serialize_project(project, language: str) -> dict:
+    translated = next(
+        (item for item in project.translations if item.language == language),
+        None,
+    )
+    fallback = next(
+        (item for item in project.translations if item.language == "en"),
+        None,
+    )
+    source = translated or fallback
+
+    title = source.title if source else project.title
+    short_description = source.short_description if source else project.short_description
+    description = source.description if source else project.description
+
+    return {
+        "id": str(project.id),
+        "slug": project.slug,
+        "title": title,
+        "short_description": short_description,
+        "description": description,
+        "cover_image": project.cover_image,
+        "github_url": project.github_url,
+        "demo_url": project.demo_url,
+        "featured": project.featured,
+        "display_order": project.display_order,
+        "created_at": project.created_at.isoformat() if project.created_at else None,
+        "updated_at": project.updated_at.isoformat() if project.updated_at else None,
+        "technologies": [
+            {
+                "id": str(tech.id),
+                "name": tech.name,
+                "slug": tech.slug,
+                "icon": tech.icon,
+                "color": tech.color,
+                "category": tech.category,
+            }
+            for tech in project.technologies
+        ],
+        "translations": [
+            {
+                "id": str(trans.id),
+                "language": trans.language,
+                "title": trans.title,
+                "short_description": trans.short_description,
+                "description": trans.description,
+            }
+            for trans in project.translations
+        ],
+        "images": [
+            {
+                "id": str(img.id),
+                "image_url": img.image_url,
+                "caption": img.caption,
+                "display_order": img.display_order,
+            }
+            for img in project.images
+        ],
+    }
+
+
 @router.get("/")
 async def get_projects(
     skip: int = Query(0, ge=0),
     limit: int = Query(20, ge=1, le=100),
-    language: str = Query("en", regex="^(tr|en|de|fr)$"),
+    language: str = Query("en", regex="^(tr|en)$"),
     featured_only: bool = False,
     technology_slug: str = None,
     db: Session = Depends(get_db)
@@ -35,6 +93,12 @@ async def get_projects(
     """
     Get list of projects with optional filtering
     """
+    total = project_crud.get_projects_count(
+        db,
+        featured_only=featured_only,
+        technology_slug=technology_slug,
+    )
+
     projects = project_crud.get_projects(
         db,
         skip=skip,
@@ -43,62 +107,7 @@ async def get_projects(
         featured_only=featured_only,
         technology_slug=technology_slug
     )
-    
-    total = len(project_crud.get_projects(
-        db,
-        language=language,
-        featured_only=featured_only,
-        technology_slug=technology_slug
-    ))
-    
-    # Serialize projects manually to avoid Pydantic validation issues
-    items = []
-    for project in projects:
-        item = {
-            "id": str(project.id),
-            "slug": project.slug,
-            "title": project.title,
-            "short_description": project.short_description,
-            "description": project.description,
-            "cover_image": project.cover_image,
-            "github_url": project.github_url,
-            "demo_url": project.demo_url,
-            "featured": project.featured,
-            "display_order": project.display_order,
-            "created_at": project.created_at.isoformat() if project.created_at else None,
-            "updated_at": project.updated_at.isoformat() if project.updated_at else None,
-            "technologies": [
-                {
-                    "id": str(tech.id),
-                    "name": tech.name,
-                    "slug": tech.slug,
-                    "icon": tech.icon,
-                    "color": tech.color,
-                    "category": tech.category
-                }
-                for tech in project.technologies
-            ],
-            "translations": [
-                {
-                    "id": str(trans.id),
-                    "language": trans.language,
-                    "title": trans.title,
-                    "short_description": trans.short_description,
-                    "description": trans.description
-                }
-                for trans in project.translations
-            ],
-            "images": [
-                {
-                    "id": str(img.id),
-                    "image_url": img.image_url,
-                    "caption": img.caption,
-                    "display_order": img.display_order
-                }
-                for img in project.images
-            ]
-        }
-        items.append(item)
+    items = [_serialize_project(project, language) for project in projects]
     
     return {
         "items": items,
@@ -112,7 +121,7 @@ async def get_projects(
 @router.get("/{slug}", response_model=ProjectResponse)
 async def get_project(
     slug: str,
-    language: str = Query("en", regex="^(tr|en|de|fr)$"),
+    language: str = Query("en", regex="^(tr|en)$"),
     db: Session = Depends(get_db)
 ):
     """
@@ -126,7 +135,7 @@ async def get_project(
             detail="Project not found"
         )
     
-    return project
+    return _serialize_project(project, language)
 
 
 @router.post("/", response_model=ProjectResponse, status_code=status.HTTP_201_CREATED)
@@ -368,4 +377,11 @@ async def add_project_translation(
             detail="Project not found"
         )
     
-    return updated_project
+    project = project_crud.get_project_by_id(db, project_id=project_id)
+    if not project:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Project not found",
+        )
+
+    return project

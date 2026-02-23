@@ -2,8 +2,15 @@ import api, { apiEndpoints } from './api';
 import type { Experience, ExperienceCreate } from './types';
 
 export const experienceService = {
-  async getExperiences(params?: { skip?: number; limit?: number; experience_type?: string }): Promise<Experience[]> {
-    const response = await api.get(apiEndpoints.experiences.list, { params });
+  async getExperiences(params?: {
+    skip?: number;
+    limit?: number;
+    experience_type?: string;
+    language?: string;
+  }): Promise<Experience[]> {
+    const response = await api.get(apiEndpoints.experiences.list, {
+      params
+    });
     const experiences = response.data.experiences || response.data || [];
     return experiences;
   },

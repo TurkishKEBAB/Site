@@ -2,11 +2,13 @@ import { useRef, useState } from 'react';
 import { motion } from 'framer-motion';
 import { contactService } from '../services';
 import { useToast } from '../components/Toast';
+import { useLanguage } from '../contexts/LanguageContext';
 
 export default function Contact() {
   type FieldName = 'name' | 'email' | 'subject' | 'message';
 
   const { showToast } = useToast();
+  const { language } = useLanguage();
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -15,10 +17,108 @@ export default function Contact() {
   });
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<Partial<Record<FieldName, string>>>({});
+
   const nameRef = useRef<HTMLInputElement>(null);
   const emailRef = useRef<HTMLInputElement>(null);
   const subjectRef = useRef<HTMLInputElement>(null);
   const messageRef = useRef<HTMLTextAreaElement>(null);
+
+  // --- ÇEVİRİ OBJESİ (TRANSLATIONS) ---
+  const t = {
+    tr: {
+      pageTitle: "İletişime Geçin",
+      pageSubtitle: "Yeni bir bulut mimarisi fikri konuşmak, açık kaynak projelere katkı sağlamak veya sadece 'Merhaba' demek için çekinmeden yazabilirsiniz.",
+      formTitle: "Bana Mesaj Gönder",
+      labels: {
+        name: "Adınız Soyadınız",
+        email: "E-posta Adresiniz",
+        subject: "Konu",
+        message: "Mesajınız"
+      },
+      placeholders: {
+        name: "Adınız Soyadınız",
+        email: "ornek@email.com",
+        subject: "Hangi konuda konuşmak istersiniz?",
+        message: "Mesajınızı buraya yazabilirsiniz..."
+      },
+      buttons: {
+        sending: "Gönderiliyor...",
+        send: "Mesajı Gönder"
+      },
+      validation: {
+        nameMin: "Lütfen en az 2 karakter girin.",
+        emailInvalid: "Lütfen geçerli bir e-posta adresi girin.",
+        subjectMin: "Konu en az 3 karakter olmalı veya boş bırakılmalıdır.",
+        messageMin: "Mesajınız en az 10 karakterden oluşmalıdır."
+      },
+      toast: {
+        fixErrors: "Lütfen göndermeden önce hatalı alanları düzeltin.",
+        success: "Mesajınız başarıyla gönderildi!",
+        errorFallback: "Mesaj gönderilemedi. Lütfen daha sonra tekrar deneyin."
+      },
+      info: {
+        title: "İletişim Bilgileri",
+        email: "E-posta",
+        phone: "Telefon",
+        location: "Konum",
+        locationValue: "İstanbul, Türkiye",
+        responseTime: "Dönüş Süresi",
+        responseTimeValue: "En geç 24 saat içinde dönüş yaparım."
+      },
+      promo: {
+        title: "Yeni Projeler İçin Buradayım!",
+        text: "Yazılım topluluklarında yer almayı, sektörden insanlarla tanışmayı ve network kurmayı her zaman çok sevmişimdir. Yeni bir iş birliği veya kahve eşliğinde teknoloji sohbeti için bana ulaşabilirsin."
+      }
+    },
+    en: {
+      pageTitle: "Get In Touch",
+      pageSubtitle: "Feel free to drop a message to discuss a new cloud architecture idea, contribute to open-source projects, or just say 'Hi'.",
+      formTitle: "Send Me a Message",
+      labels: {
+        name: "Full Name",
+        email: "Email Address",
+        subject: "Subject",
+        message: "Your Message"
+      },
+      placeholders: {
+        name: "John Doe",
+        email: "example@email.com",
+        subject: "What would you like to discuss?",
+        message: "Write your message here..."
+      },
+      buttons: {
+        sending: "Sending...",
+        send: "Send Message"
+      },
+      validation: {
+        nameMin: "Please enter at least 2 characters.",
+        emailInvalid: "Please enter a valid email address.",
+        subjectMin: "Subject must be at least 3 characters or left empty.",
+        messageMin: "Your message must be at least 10 characters long."
+      },
+      toast: {
+        fixErrors: "Please fix the highlighted errors before submitting.",
+        success: "Your message has been sent successfully!",
+        errorFallback: "Failed to send message. Please try again later."
+      },
+      info: {
+        title: "Contact Information",
+        email: "Email",
+        phone: "Phone",
+        location: "Location",
+        locationValue: "Istanbul, Turkey",
+        responseTime: "Response Time",
+        responseTimeValue: "I usually reply within 24 hours."
+      },
+      promo: {
+        title: "Open to New Projects!",
+        text: "I've always loved being part of software communities, meeting industry professionals, and networking. You can reach out to me for a new collaboration or a tech chat over coffee."
+      }
+    }
+  };
+
+  const currentLang = language === 'en' ? 'en' : 'tr';
+  const text = t[currentLang];
 
   const focusField = (field: FieldName) => {
     switch (field) {
@@ -45,22 +145,22 @@ export default function Contact() {
     switch (field) {
       case 'name':
         if (trimmed.length < 2) {
-          return 'Please enter at least 2 characters.';
+          return text.validation.nameMin;
         }
         break;
       case 'email':
         if (!/^[\w-.]+@([\w-]+\.)+[\w-]{2,}$/i.test(trimmed)) {
-          return 'Please enter a valid email address.';
+          return text.validation.emailInvalid;
         }
         break;
       case 'subject':
         if (trimmed && trimmed.length < 3) {
-          return 'Subject should be at least 3 characters or left blank.';
+          return text.validation.subjectMin;
         }
         break;
       case 'message':
         if (trimmed.length < 10) {
-          return 'Message should be at least 10 characters.';
+          return text.validation.messageMin;
         }
         break;
       default:
@@ -95,7 +195,7 @@ export default function Contact() {
       setErrors(formErrors);
       const firstErrorField = Object.keys(formErrors)[0] as FieldName;
       focusField(firstErrorField);
-      showToast('error', 'Please fix the highlighted fields before sending.');
+      showToast('error', text.toast.fixErrors);
       return;
     }
 
@@ -103,13 +203,13 @@ export default function Contact() {
 
     try {
       const response = await contactService.sendMessage(formData);
-      showToast('success', response.message || 'Message sent successfully!');
+      showToast('success', response.message || text.toast.success);
       setFormData({ name: '', email: '', subject: '', message: '' });
       setErrors({});
     } catch (error: any) {
       console.error('Contact form submission failed:', error);
       const apiMessage = error?.response?.data?.detail;
-      showToast('error', apiMessage || 'Failed to send message. Please try again.');
+      showToast('error', apiMessage || text.toast.errorFallback);
     } finally {
       setLoading(false);
     }
@@ -142,11 +242,11 @@ export default function Contact() {
           animate={{ opacity: 1, y: 0 }}
           className="text-center mb-12"
         >
-          <h1 className="section-title bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-            Get In Touch
+          <h1 className="section-title bg-gradient-to-r from-primary-600 to-primary-600 bg-clip-text text-transparent">
+            {text.pageTitle}
           </h1>
           <p className="text-xl text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
-            Have a question or want to work together? Drop me a message!
+            {text.pageSubtitle}
           </p>
         </motion.div>
 
@@ -158,12 +258,12 @@ export default function Contact() {
             transition={{ delay: 0.2 }}
             className="card"
           >
-            <h2 className="text-2xl font-bold mb-6">Send a Message</h2>
+            <h2 className="text-2xl font-bold mb-6">{text.formTitle}</h2>
 
             <form onSubmit={handleSubmit} className="space-y-6">
               <div>
                 <label htmlFor="name" className="block text-sm font-medium mb-2">
-                  Name
+                  {text.labels.name}
                 </label>
                 <input
                   type="text"
@@ -174,8 +274,8 @@ export default function Contact() {
                   ref={nameRef}
                   required
                   {...(errors.name && { 'aria-invalid': true, 'aria-describedby': 'name-error' })}
-                  className="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 focus:ring-2 focus:ring-blue-500 outline-none transition"
-                  placeholder="Your name"
+                  className="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 focus:ring-2 focus:ring-primary-500 outline-none transition"
+                  placeholder={text.placeholders.name}
                 />
                 {errors.name && (
                   <p id="name-error" className="mt-2 text-sm text-red-600 dark:text-red-400">
@@ -186,7 +286,7 @@ export default function Contact() {
 
               <div>
                 <label htmlFor="email" className="block text-sm font-medium mb-2">
-                  Email
+                  {text.labels.email}
                 </label>
                 <input
                   type="email"
@@ -197,8 +297,8 @@ export default function Contact() {
                   ref={emailRef}
                   required
                   {...(errors.email && { 'aria-invalid': true, 'aria-describedby': 'email-error' })}
-                  className="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 focus:ring-2 focus:ring-blue-500 outline-none transition"
-                  placeholder="your@email.com"
+                  className="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 focus:ring-2 focus:ring-primary-500 outline-none transition"
+                  placeholder={text.placeholders.email}
                 />
                 {errors.email && (
                   <p id="email-error" className="mt-2 text-sm text-red-600 dark:text-red-400">
@@ -209,7 +309,7 @@ export default function Contact() {
 
               <div>
                 <label htmlFor="subject" className="block text-sm font-medium mb-2">
-                  Subject
+                  {text.labels.subject}
                 </label>
                 <input
                   type="text"
@@ -219,8 +319,8 @@ export default function Contact() {
                   onChange={handleChange}
                   ref={subjectRef}
                   {...(errors.subject && { 'aria-invalid': true, 'aria-describedby': 'subject-error' })}
-                  className="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 focus:ring-2 focus:ring-blue-500 outline-none transition"
-                  placeholder="What's this about?"
+                  className="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 focus:ring-2 focus:ring-primary-500 outline-none transition"
+                  placeholder={text.placeholders.subject}
                 />
                 {errors.subject && (
                   <p id="subject-error" className="mt-2 text-sm text-red-600 dark:text-red-400">
@@ -231,7 +331,7 @@ export default function Contact() {
 
               <div>
                 <label htmlFor="message" className="block text-sm font-medium mb-2">
-                  Message
+                  {text.labels.message}
                 </label>
                 <textarea
                   id="message"
@@ -242,8 +342,8 @@ export default function Contact() {
                   ref={messageRef}
                   {...(errors.message && { 'aria-invalid': true, 'aria-describedby': 'message-error' })}
                   rows={6}
-                  className="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 focus:ring-2 focus:ring-blue-500 outline-none transition resize-none"
-                  placeholder="Your message..."
+                  className="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 focus:ring-2 focus:ring-primary-500 outline-none transition resize-none"
+                  placeholder={text.placeholders.message}
                 />
                 {errors.message && (
                   <p id="message-error" className="mt-2 text-sm text-red-600 dark:text-red-400">
@@ -264,10 +364,10 @@ export default function Contact() {
                       className="h-4 w-4 rounded-full border-2 border-white/60 border-t-transparent animate-spin"
                       aria-hidden="true"
                     />
-                    Sending...
+                    {text.buttons.sending}
                   </span>
                 ) : (
-                  'Send Message'
+                  text.buttons.send
                 )}
               </button>
             </form>
@@ -281,32 +381,32 @@ export default function Contact() {
             className="space-y-6"
           >
             <div className="card">
-              <h2 className="text-2xl font-bold mb-6">Contact Information</h2>
-              
+              <h2 className="text-2xl font-bold mb-6">{text.info.title}</h2>
+
               <div className="space-y-4">
                 <div className="flex items-start space-x-4">
-                  <div className="bg-blue-100 dark:bg-blue-900 p-3 rounded-lg">
-                    <svg className="w-6 h-6 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <div className="bg-primary-100 dark:bg-primary-900 p-3 rounded-lg">
+                    <svg className="w-6 h-6 text-primary-600 dark:text-primary-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                     </svg>
                   </div>
                   <div>
-                    <h3 className="font-medium">Email</h3>
-                    <a href="mailto:yigitokur@ieee.org" className="text-blue-600 dark:text-blue-400 hover:underline">
+                    <h3 className="font-medium">{text.info.email}</h3>
+                    <a href="mailto:yigitokur@ieee.org" className="text-primary-600 dark:text-primary-400 hover:underline">
                       yigitokur@ieee.org
                     </a>
                   </div>
                 </div>
 
                 <div className="flex items-start space-x-4">
-                  <div className="bg-purple-100 dark:bg-purple-900 p-3 rounded-lg">
-                    <svg className="w-6 h-6 text-purple-600 dark:text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <div className="bg-primary-100 dark:bg-primary-900 p-3 rounded-lg">
+                    <svg className="w-6 h-6 text-primary-600 dark:text-primary-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
                     </svg>
                   </div>
                   <div>
-                    <h3 className="font-medium">Phone</h3>
-                    <a href="tel:+905355733873" className="text-purple-600 dark:text-purple-400 hover:underline">
+                    <h3 className="font-medium">{text.info.phone}</h3>
+                    <a href="tel:+905355733873" className="text-primary-600 dark:text-primary-400 hover:underline">
                       +90 535 573 3873
                     </a>
                   </div>
@@ -320,8 +420,8 @@ export default function Contact() {
                     </svg>
                   </div>
                   <div>
-                    <h3 className="font-medium">Location</h3>
-                    <p className="text-gray-600 dark:text-gray-300">Bağcılar, İstanbul, Türkiye</p>
+                    <h3 className="font-medium">{text.info.location}</h3>
+                    <p className="text-gray-600 dark:text-gray-300">{text.info.locationValue}</p>
                   </div>
                 </div>
 
@@ -332,17 +432,17 @@ export default function Contact() {
                     </svg>
                   </div>
                   <div>
-                    <h3 className="font-medium">Response Time</h3>
-                    <p className="text-gray-600 dark:text-gray-300">Within 24 hours</p>
+                    <h3 className="font-medium">{text.info.responseTime}</h3>
+                    <p className="text-gray-600 dark:text-gray-300">{text.info.responseTimeValue}</p>
                   </div>
                 </div>
               </div>
             </div>
 
-            <div className="bg-gradient-to-br from-blue-600 to-purple-600 rounded-2xl shadow-xl p-8 text-white">
-              <h3 className="text-xl font-bold mb-4">Birlikte Harika Projeler Geliştirelim!</h3>
+            <div className="bg-gradient-to-br from-primary-600 to-primary-600 rounded-2xl shadow-xl p-8 text-white">
+              <h3 className="text-xl font-bold mb-4">{text.promo.title}</h3>
               <p className="mb-6 opacity-90">
-                Yeni projeler, işbirlikleri ve kariyer fırsatları hakkında görüşmekten her zaman mutluluk duyarım.
+                {text.promo.text}
               </p>
               <div className="flex space-x-4">
                 <a href="https://github.com/TurkishKEBAB" target="_blank" rel="noopener noreferrer" className="bg-white/20 hover:bg-white/30 p-3 rounded-lg transition" title="GitHub">
@@ -352,7 +452,7 @@ export default function Contact() {
                 </a>
                 <a href="https://www.linkedin.com/in/yiğit-okur-050b5b278" target="_blank" rel="noopener noreferrer" className="bg-white/20 hover:bg-white/30 p-3 rounded-lg transition" title="LinkedIn">
                   <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
+                    <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z" />
                   </svg>
                 </a>
               </div>

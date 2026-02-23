@@ -45,9 +45,65 @@
     @apply bg-clip-text text-transparent;
   }
   
-  .container-custom {
-    @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
-  }
+.container-custom {
+  @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
+}
+
+.blog-markdown h1,
+.blog-markdown h2,
+.blog-markdown h3,
+.blog-markdown h4 {
+  @apply mt-8 mb-3 font-semibold text-white;
+}
+
+.blog-markdown h1 {
+  @apply text-3xl;
+}
+
+.blog-markdown h2 {
+  @apply text-2xl;
+}
+
+.blog-markdown h3 {
+  @apply text-xl;
+}
+
+.blog-markdown p {
+  @apply mb-4 text-gray-200;
+}
+
+.blog-markdown a {
+  @apply text-primary-300 underline;
+}
+
+.blog-markdown ul,
+.blog-markdown ol {
+  @apply mb-4 ml-6 text-gray-200;
+}
+
+.blog-markdown ul {
+  @apply list-disc;
+}
+
+.blog-markdown ol {
+  @apply list-decimal;
+}
+
+.blog-markdown blockquote {
+  @apply my-4 border-l-4 border-primary-500/60 bg-white/5 py-2 pl-4 italic text-gray-300;
+}
+
+.blog-markdown code {
+  @apply rounded bg-black/40 px-1.5 py-0.5 text-sm text-primary-200;
+}
+
+.blog-markdown pre {
+  @apply my-6 overflow-x-auto rounded-lg border border-white/10 bg-black/50 p-4;
+}
+
+.blog-markdown pre code {
+  @apply bg-transparent p-0 text-sm text-gray-100;
+}
 }
 
 /* Custom scrollbar */
