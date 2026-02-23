@@ -1,5 +1,8 @@
 # 🔍 Kapsamlı Proje Analizi ve Yapılacaklar Listesi
 
+> Historical snapshot document.
+> Current sprint/status truth lives in `PROGRESS.md`.
+
 **Analiz Tarihi**: 30 Ekim 2025  
 **Proje**: Yiğit Okur Portfolio  
 **Durum**: Backend %100 Tamamlandı | Frontend %55 Tamamlandı
@@ -610,7 +613,7 @@ async def test_admin_access_blocked(async_client):
 
 #### 10. Testing
 
-- [ ] **Unit Tests Setup**
+- [x] **Unit Tests Setup**
   ```bash
   npm install --save-dev vitest @testing-library/react @testing-library/jest-dom
   ```
@@ -635,7 +638,7 @@ async def test_admin_access_blocked(async_client):
   - `.env.production` file
   - Backend API URL configuration
 
-- [ ] **Build Optimization**
+- [x] **Build Optimization**
   ```powershell
   npm run build
   # Check bundle size
@@ -671,9 +674,9 @@ async def test_admin_access_blocked(async_client):
 - [x] Testing setup
 
 **Hafta 4**:
-- [ ] Final testing
+- [x] Final testing
 - [ ] Deployment
-- [ ] Documentation
+- [x] Documentation
 
 ---
 
@@ -697,7 +700,7 @@ async def test_admin_access_blocked(async_client):
 - ⏳ Fast load times (<2s)
 
 ### Integration
-- ⏳ Frontend successfully fetching backend data
+- ✅ Frontend successfully fetching backend data
 - ⏳ Filters working correctly
 - ⏳ Search functionality working
 - ⏳ Form submissions working

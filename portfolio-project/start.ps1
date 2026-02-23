@@ -8,11 +8,21 @@ param(
     [int]$BackendPort = 8000,
     [int]$FrontendPort = 3000,
     [int]$PostgresPort = 5432,
-    [int]$RedisPort = 6379
+    [int]$RedisPort = 6379,
+    [string]$PostgresDataPath
 )
 
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
+
+if ([string]::IsNullOrWhiteSpace($PostgresDataPath)) {
+    if (-not [string]::IsNullOrWhiteSpace($env:LOCALAPPDATA)) {
+        $PostgresDataPath = Join-Path $env:LOCALAPPDATA 'portfolio-project\postgres-data'
+    }
+    else {
+        $PostgresDataPath = Join-Path $PSScriptRoot 'docker-data\postgres'
+    }
+}
 
 function Write-Section {
     param(
@@ -43,6 +53,58 @@ function Test-DockerDaemon {
     $ErrorActionPreference = $previousErrorAction
 
     return ($exitCode -eq 0)
+}
+
+function Get-EnvValue {
+    param(
+        [string]$FilePath,
+        [string]$Key
+    )
+
+    if (-not (Test-Path $FilePath)) {
+        return $null
+    }
+
+    $pattern = '^\s*' + [regex]::Escape($Key) + '\s*=\s*(.*)$'
+    foreach ($line in Get-Content -Path $FilePath) {
+        if ($line -match '^\s*#') {
+            continue
+        }
+
+        if ($line -match $pattern) {
+            return $matches[1].Trim()
+        }
+    }
+
+    return $null
+}
+
+function Test-BackendEnvironment {
+    param(
+        [string]$BackendEnvPath
+    )
+
+    if (-not (Test-Path $BackendEnvPath)) {
+        throw "Backend .env dosyasi bulunamadi: $BackendEnvPath. Lutfen backend/.env dosyasini olusturun."
+    }
+
+    $databaseUrl = Get-EnvValue -FilePath $BackendEnvPath -Key 'DATABASE_URL'
+    if ([string]::IsNullOrWhiteSpace($databaseUrl)) {
+        throw "DATABASE_URL tanimli degil. backend/.env icine gecerli bir PostgreSQL baglanti adresi ekleyin."
+    }
+
+    if ($databaseUrl -match 'username:password@') {
+        throw "DATABASE_URL placeholder degeri iceriyor (username:password). Gercek PostgreSQL kullanici/sifre bilgisi girin."
+    }
+
+    if ($databaseUrl -match '@postgres(:|/)') {
+        throw "DATABASE_URL host olarak 'postgres' kullaniyor. Local backend calisirken host localhost olmali (ornek: postgresql+psycopg://postgres:postgres@localhost:5432/portfolio)."
+    }
+
+    $adminEmails = Get-EnvValue -FilePath $BackendEnvPath -Key 'ADMIN_EMAILS'
+    if ([string]::IsNullOrWhiteSpace($adminEmails)) {
+        Write-Host "  -> Uyari: ADMIN_EMAILS tanimli degil. Admin giris yetkilendirmesi beklendigi gibi calismayabilir." -ForegroundColor Yellow
+    }
 }
 
 function Get-AvailablePort {
@@ -216,6 +278,7 @@ if ($BackendOnly -and $FrontendOnly) {
 
 $backendPath = Join-Path $PSScriptRoot 'backend'
 $frontendPath = Join-Path $PSScriptRoot 'frontend'
+$backendEnvPath = Join-Path $backendPath '.env'
 
 Write-Section -Title 'Portfolio Project Baslatiliyor' -Color ([ConsoleColor]::Cyan)
 
@@ -227,6 +290,8 @@ if (-not (Test-Path $frontendPath)) {
     throw "Frontend klasoru bulunamadi: $frontendPath"
 }
 
+Test-BackendEnvironment -BackendEnvPath $backendEnvPath
+
 if (-not $SkipDocker) {
     if (-not (Test-DockerDaemon)) {
         throw "Docker daemon erisilebilir degil. Docker Desktop'i baslatin veya scripti -SkipDocker ile calistirin."
@@ -234,18 +299,19 @@ if (-not $SkipDocker) {
 
     Write-Host '[1/3] Docker servisleri hazirlaniyor...' -ForegroundColor Yellow
 
-    $postgresDataPath = Join-Path $PSScriptRoot 'docker-data\postgres'
-    if (-not (Test-Path $postgresDataPath)) {
-        New-Item -ItemType Directory -Path $postgresDataPath | Out-Null
+    if (-not (Test-Path $PostgresDataPath)) {
+        New-Item -ItemType Directory -Path $PostgresDataPath -Force | Out-Null
     }
-    $postgresDataResolved = (Resolve-Path $postgresDataPath).Path
+    $postgresDataResolved = (Resolve-Path $PostgresDataPath).Path
+    $postgresDataDockerPath = $postgresDataResolved -replace '\\', '/'
+    Write-Host "  -> PostgreSQL data path: $postgresDataResolved" -ForegroundColor Gray
 
     $resolvedPostgresPort = $PostgresPort
     Ensure-DockerContainer -Name 'portfolio_postgres' -Image 'postgres:15-alpine' -PreferredHostPort $PostgresPort -ContainerPort 5432 -ExtraArgs @(
         '-e', 'POSTGRES_USER=postgres',
         '-e', 'POSTGRES_PASSWORD=postgres',
         '-e', 'POSTGRES_DB=portfolio',
-        '-v', "${postgresDataResolved}:/var/lib/postgresql/data"
+        '-v', "${postgresDataDockerPath}:/var/lib/postgresql/data"
     ) -ResolvedHostPort ([ref]$resolvedPostgresPort)
 
     $resolvedRedisPort = $RedisPort

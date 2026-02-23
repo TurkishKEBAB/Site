@@ -1,5 +1,6 @@
-# Local container database volume
-docker-data/postgres/
-
-# Local analysis cache
 .scannerwork/
+logs/
+frontend/coverage/
+.coverage
+backend/coverage.xml
+docker-data/postgres/
