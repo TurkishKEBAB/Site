@@ -114,7 +114,7 @@ export const LanguageProvider = ({ children }: { children: ReactNode }) => {
       try {
         const response = await api.get<TranslationMap>(
           apiEndpoints.translations.byLanguage(language),
-          { headers: { 'X-Skip-Language': true } },
+          { headers: { 'X-Skip-Language': true, 'X-Skip-Global-Error': true } },
         );
 
         if (!isActive) {

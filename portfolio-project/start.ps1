@@ -31,6 +31,20 @@ function Test-CommandAvailable {
     return [bool](Get-Command $Command -ErrorAction SilentlyContinue)
 }
 
+function Test-DockerDaemon {
+    if (-not (Test-CommandAvailable -Command 'docker')) {
+        return $false
+    }
+
+    $previousErrorAction = $ErrorActionPreference
+    $ErrorActionPreference = 'Continue'
+    docker info --format '{{json .ServerVersion}}' 2>$null | Out-Null
+    $exitCode = $LASTEXITCODE
+    $ErrorActionPreference = $previousErrorAction
+
+    return ($exitCode -eq 0)
+}
+
 function Get-AvailablePort {
     param(
         [int]$Preferred,
@@ -214,6 +228,10 @@ if (-not (Test-Path $frontendPath)) {
 }
 
 if (-not $SkipDocker) {
+    if (-not (Test-DockerDaemon)) {
+        throw "Docker daemon erisilebilir degil. Docker Desktop'i baslatin veya scripti -SkipDocker ile calistirin."
+    }
+
     Write-Host '[1/3] Docker servisleri hazirlaniyor...' -ForegroundColor Yellow
 
     $postgresDataPath = Join-Path $PSScriptRoot 'docker-data\postgres'
@@ -265,6 +283,8 @@ Write-Host ''
 Write-Host 'Backend baslatiliyor...' -ForegroundColor Yellow
 Write-Host 'Port: $BackendPort' -ForegroundColor White
 Write-Host ''
+`$env:PYTHONUTF8 = '1'
+`$env:PYTHONIOENCODING = 'utf-8'
 & '$backendPython' -m uvicorn app.main:app --reload --host 127.0.0.1 --port $BackendPort
 "@
     

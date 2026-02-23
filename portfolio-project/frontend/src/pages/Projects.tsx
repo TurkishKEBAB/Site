@@ -12,6 +12,7 @@ export default function Projects() {
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
+  const [imageLoadErrors, setImageLoadErrors] = useState<Record<string, boolean>>({});
   const [errorMessage, setErrorMessage] = useState('');
   const [hasMore, setHasMore] = useState(true);
   const [totalCount, setTotalCount] = useState<number | null>(null);
@@ -110,6 +111,9 @@ export default function Projects() {
 
       setTotalCount(typeof response.total === 'number' ? response.total : null);
       setErrorMessage('');
+      if (reset) {
+        setImageLoadErrors({});
+      }
 
       setProjects((prev) => {
         if (reset) {
@@ -271,12 +275,13 @@ export default function Projects() {
         ) : (
           <motion.div
             variants={containerVariants}
-            initial="hidden"
+            initial="visible"
             animate="visible"
             className="relative z-10 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
           >
             {filteredProjects.map((project) => {
               const techList = Array.isArray(project.technologies) ? project.technologies : [];
+              const showCoverImage = Boolean(project.cover_image) && !imageLoadErrors[project.id];
 
               return (
                 <motion.div
@@ -287,12 +292,18 @@ export default function Projects() {
                 >
                   {/* Project Image */}
                   <div className="relative h-48 overflow-hidden bg-gradient-to-br from-primary-600 to-pink-600">
-                    {project.cover_image ? (
+                    {showCoverImage ? (
                       <img
                         src={project.cover_image}
                         alt={project.title}
                         loading="lazy"
                         decoding="async"
+                        onError={() => {
+                          setImageLoadErrors((prev) => ({
+                            ...prev,
+                            [project.id]: true,
+                          }));
+                        }}
                         className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                       />
                     ) : (
@@ -399,6 +410,13 @@ export default function Projects() {
         {selectedProject && (
           <ProjectDetailModal
             project={selectedProject}
+            showCoverImage={!imageLoadErrors[selectedProject.id]}
+            onCoverError={() => {
+              setImageLoadErrors((prev) => ({
+                ...prev,
+                [selectedProject.id]: true,
+              }));
+            }}
             onClose={() => setSelectedProject(null)}
             text={text}
           />
@@ -411,10 +429,14 @@ export default function Projects() {
 // Project Detail Modal Component
 const ProjectDetailModal = ({
   project,
+  showCoverImage,
+  onCoverError,
   onClose,
   text
 }: {
   project: Project;
+  showCoverImage: boolean;
+  onCoverError: () => void;
   onClose: () => void;
   text: any;
 }) => {
@@ -497,13 +519,14 @@ const ProjectDetailModal = ({
           </button>
 
           {/* Project Cover Image */}
-          {project.cover_image && (
+          {project.cover_image && showCoverImage && (
             <div className="mb-6 rounded-xl overflow-hidden">
               <img
                 src={project.cover_image}
                 alt={project.title}
                 loading="lazy"
                 decoding="async"
+                onError={onCoverError}
                 className="w-full h-96 object-cover"
               />
             </div>

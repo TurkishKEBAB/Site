@@ -1,0 +1,5 @@
+# Local container database volume
+docker-data/postgres/
+
+# Local analysis cache
+.scannerwork/

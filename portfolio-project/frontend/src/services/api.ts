@@ -52,6 +52,10 @@ api.interceptors.response.use(
   (response) => response,
   (error: AxiosError) => {
     const status = error.response?.status;
+    const skipGlobalErrorValue =
+      (error.config?.headers as Record<string, unknown> | undefined)?.['X-Skip-Global-Error'];
+    const shouldSkipGlobalError =
+      skipGlobalErrorValue === true || skipGlobalErrorValue === 'true';
 
     if (status === 401 || status === 403) {
       localStorage.removeItem('token');
@@ -62,14 +66,16 @@ api.interceptors.response.use(
       }
     }
 
-    window.dispatchEvent(
-      new CustomEvent('api:error', {
-        detail: {
-          status,
-          message: error.message,
-        },
-      }),
-    );
+    if (!shouldSkipGlobalError) {
+      window.dispatchEvent(
+        new CustomEvent('api:error', {
+          detail: {
+            status,
+            message: error.message,
+          },
+        }),
+      );
+    }
 
     return Promise.reject(error);
   },

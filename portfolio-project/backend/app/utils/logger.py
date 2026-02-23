@@ -11,6 +11,9 @@ def setup_logging():
     """
     Configure application logging
     """
+    if hasattr(sys.stdout, "reconfigure"):
+        sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+
     # Remove default handler
     logger.remove()
     
