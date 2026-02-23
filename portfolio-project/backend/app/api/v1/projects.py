@@ -377,4 +377,11 @@ async def add_project_translation(
             detail="Project not found"
         )
     
-    return updated_project
+    project = project_crud.get_project_by_id(db, project_id=project_id)
+    if not project:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Project not found",
+        )
+
+    return project

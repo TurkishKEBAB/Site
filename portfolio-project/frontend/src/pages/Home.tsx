@@ -339,6 +339,8 @@ export default function Home() {
                       <img
                         src={project.cover_image}
                         alt={project.title}
+                        loading="lazy"
+                        decoding="async"
                         className="w-full h-48 object-cover transform group-hover:scale-110 transition-transform duration-300"
                       />
                     </div>

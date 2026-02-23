@@ -136,8 +136,8 @@ async def verify_token(
         "user": {
             "id": str(current_user.id),
             "email": current_user.email,
-            "full_name": current_user.full_name,
-            "is_admin": current_user.is_admin
+            "full_name": getattr(current_user, "username", current_user.email),
+            "is_admin": current_user.email.lower() in set(settings.admin_email_list),
         }
     }
 

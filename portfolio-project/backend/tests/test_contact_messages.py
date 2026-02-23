@@ -1,208 +1,112 @@
-"""
-Contact Messages Endpoint Tests
-Test contact form submission and admin message management.
-"""
+"""Contact endpoint tests."""
 
 
-def test_submit_contact_message_success(client):
-    """Test successful contact message submission."""
+def test_submit_contact_message_success(client, monkeypatch):
+    class DummyEmailService:
+        async def send_contact_form_confirmation(self, **kwargs):
+            return True
+
+        async def send_admin_notification(self, **kwargs):
+            return True
+
+    monkeypatch.setattr("app.api.v1.contact.EmailService", DummyEmailService)
+
     response = client.post(
-        '/api/v1/contact/',
+        "/api/v1/contact/",
         json={
-            'name': 'John Doe',
-            'email': 'john@example.com',
-            'subject': 'Test Subject',
-            'message': 'This is a test message',
+            "name": "John Doe",
+            "email": "john@example.com",
+            "subject": "Test Subject",
+            "message": "This is a test message",
         },
     )
 
     assert response.status_code == 201
-    data = response.json()
-
-    assert data['success'] is True
-    assert data['message'] == 'Your message has been sent successfully.'
-    assert 'message_id' in data
+    payload = response.json()
+    assert payload["success"] is True
+    assert payload["message"] == "Your message has been sent successfully."
 
 
-def test_submit_contact_message_validation(client):
-    """Test contact message validation."""
+def test_submit_contact_message_email_failure_is_non_blocking(client, monkeypatch):
+    class DummyEmailService:
+        async def send_contact_form_confirmation(self, **kwargs):
+            raise RuntimeError("smtp down")
+
+        async def send_admin_notification(self, **kwargs):
+            return True
+
+    monkeypatch.setattr("app.api.v1.contact.EmailService", DummyEmailService)
+
     response = client.post(
-        '/api/v1/contact/',
+        "/api/v1/contact/",
         json={
-            'name': '',
-            'email': 'invalid-email',
-            'message': '',
+            "name": "Jane Doe",
+            "email": "jane@example.com",
+            "subject": "Test Subject",
+            "message": "This is a test message",
         },
     )
 
+    assert response.status_code == 201
+
+
+def test_submit_contact_message_validation(client):
+    response = client.post(
+        "/api/v1/contact/",
+        json={"name": "", "email": "invalid-email", "message": ""},
+    )
     assert response.status_code == 422
 
 
-def test_get_messages_unauthorized(client):
-    """Test that getting messages requires authentication."""
-    response = client.get('/api/v1/contact/')
+def test_get_messages_requires_admin(client, user_headers):
+    unauth = client.get("/api/v1/contact/")
+    forbidden = client.get("/api/v1/contact/", headers=user_headers)
 
-    assert response.status_code == 401
-
-
-def test_get_messages_forbidden_regular_user(client, user_headers):
-    """Test that getting messages is forbidden for regular users."""
-    response = client.get('/api/v1/contact/', headers=user_headers)
-
-    assert response.status_code == 403
+    assert unauth.status_code == 401
+    assert forbidden.status_code == 403
 
 
-def test_get_messages_success(client, admin_headers, db_session):
-    """Test successful messages retrieval by admin."""
-    from app.models.contact import ContactMessage
+def test_get_messages_filters_and_unread_count(client, admin_headers, create_contact_message):
+    create_contact_message(name="User 1", is_read=False)
+    create_contact_message(name="User 2", is_read=True)
 
-    message1 = ContactMessage(
-        name='User 1',
-        email='user1@example.com',
-        subject='Subject 1',
-        message='Message 1',
-        is_read=False,
-    )
-    message2 = ContactMessage(
-        name='User 2',
-        email='user2@example.com',
-        subject='Subject 2',
-        message='Message 2',
-        is_read=True,
-    )
-    db_session.add_all([message1, message2])
-    db_session.commit()
+    all_messages = client.get("/api/v1/contact/", headers=admin_headers)
+    unread = client.get("/api/v1/contact/?unread_only=true", headers=admin_headers)
+    unread_count = client.get("/api/v1/contact/unread-count", headers=admin_headers)
 
-    response = client.get('/api/v1/contact/', headers=admin_headers)
-
-    assert response.status_code == 200
-    data = response.json()
-
-    assert data['total'] == 2
-    assert data['skip'] == 0
-    assert data['limit'] == 20
-    assert len(data['messages']) == 2
-    assert {item['name'] for item in data['messages']} == {'User 1', 'User 2'}
+    assert all_messages.status_code == 200
+    assert all_messages.json()["total"] == 2
+    assert unread.status_code == 200
+    assert unread.json()["total"] == 1
+    assert unread_count.status_code == 200
+    assert unread_count.json()["unread_count"] == 1
 
 
-def test_get_unread_messages_only(client, admin_headers, db_session):
-    """Test filtering for unread messages only."""
-    from app.models.contact import ContactMessage
+def test_get_single_mark_read_mark_replied_and_delete(client, admin_headers, create_contact_message):
+    message = create_contact_message(is_read=False, is_replied=False)
 
-    message1 = ContactMessage(
-        name='User 1',
-        email='user1@example.com',
-        subject='Subject 1',
-        message='Message 1',
-        is_read=False,
-    )
-    message2 = ContactMessage(
-        name='User 2',
-        email='user2@example.com',
-        subject='Subject 2',
-        message='Message 2',
-        is_read=True,
-    )
-    db_session.add_all([message1, message2])
-    db_session.commit()
+    get_single = client.get(f"/api/v1/contact/{message.id}", headers=admin_headers)
+    mark_read = client.patch(f"/api/v1/contact/{message.id}/read", headers=admin_headers)
+    mark_replied = client.patch(f"/api/v1/contact/{message.id}/replied", headers=admin_headers)
+    delete = client.delete(f"/api/v1/contact/{message.id}", headers=admin_headers)
+    get_deleted = client.get(f"/api/v1/contact/{message.id}", headers=admin_headers)
 
-    response = client.get('/api/v1/contact/?unread_only=true', headers=admin_headers)
-
-    assert response.status_code == 200
-    data = response.json()
-
-    assert data['total'] == 1
-    assert len(data['messages']) == 1
-    assert data['messages'][0]['is_read'] is False
+    assert get_single.status_code == 200
+    assert mark_read.status_code == 200
+    assert mark_read.json()["is_read"] is True
+    assert mark_replied.status_code == 200
+    assert mark_replied.json()["is_replied"] is True
+    assert delete.status_code == 204
+    assert get_deleted.status_code == 404
 
 
-def test_mark_message_as_read(client, admin_headers, db_session):
-    """Test marking a message as read."""
-    from app.models.contact import ContactMessage
+def test_contact_item_not_found_paths(client, admin_headers, invalid_uuid):
+    get_missing = client.get(f"/api/v1/contact/{invalid_uuid}", headers=admin_headers)
+    read_missing = client.patch(f"/api/v1/contact/{invalid_uuid}/read", headers=admin_headers)
+    replied_missing = client.patch(f"/api/v1/contact/{invalid_uuid}/replied", headers=admin_headers)
+    delete_missing = client.delete(f"/api/v1/contact/{invalid_uuid}", headers=admin_headers)
 
-    message = ContactMessage(
-        name='User',
-        email='user@example.com',
-        subject='Subject',
-        message='Message',
-        is_read=False,
-    )
-    db_session.add(message)
-    db_session.commit()
-    message_id = message.id
-
-    response = client.patch(f'/api/v1/contact/{message_id}/read', headers=admin_headers)
-
-    assert response.status_code == 200
-
-    db_session.expire_all()
-    updated_message = (
-        db_session.query(ContactMessage)
-        .filter(ContactMessage.id == message_id)
-        .first()
-    )
-    assert updated_message.is_read is True
-
-
-def test_delete_message_success(client, admin_headers, db_session):
-    """Test successful message deletion."""
-    from app.models.contact import ContactMessage
-
-    message = ContactMessage(
-        name='User',
-        email='user@example.com',
-        subject='Subject',
-        message='Message',
-        is_read=False,
-    )
-    db_session.add(message)
-    db_session.commit()
-    message_id = message.id
-
-    response = client.delete(f'/api/v1/contact/{message_id}', headers=admin_headers)
-
-    assert response.status_code == 204
-
-    db_session.expire_all()
-    deleted_message = (
-        db_session.query(ContactMessage)
-        .filter(ContactMessage.id == message_id)
-        .first()
-    )
-    assert deleted_message is None
-
-
-def test_get_unread_count(client, admin_headers, db_session):
-    """Test getting unread message count."""
-    from app.models.contact import ContactMessage
-
-    message1 = ContactMessage(
-        name='User 1',
-        email='user1@example.com',
-        subject='Subject 1',
-        message='Message 1',
-        is_read=False,
-    )
-    message2 = ContactMessage(
-        name='User 2',
-        email='user2@example.com',
-        subject='Subject 2',
-        message='Message 2',
-        is_read=False,
-    )
-    message3 = ContactMessage(
-        name='User 3',
-        email='user3@example.com',
-        subject='Subject 3',
-        message='Message 3',
-        is_read=True,
-    )
-    db_session.add_all([message1, message2, message3])
-    db_session.commit()
-
-    response = client.get('/api/v1/contact/unread-count', headers=admin_headers)
-
-    assert response.status_code == 200
-    data = response.json()
-
-    assert data['unread_count'] == 2
+    assert get_missing.status_code == 404
+    assert read_missing.status_code == 404
+    assert replied_missing.status_code == 404
+    assert delete_missing.status_code == 404

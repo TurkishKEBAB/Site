@@ -115,7 +115,7 @@ async def update_experience(
     updated_experience = experience_crud.update_experience(
         db,
         experience_id=experience_id,
-        experience_data=experience_data
+        experience_update=experience_data
     )
     
     if not updated_experience:

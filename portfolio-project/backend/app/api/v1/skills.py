@@ -102,7 +102,7 @@ async def update_skill(
     """
     Update a skill (admin only)
     """
-    updated_skill = skill_crud.update_skill(db, skill_id=skill_id, skill_data=skill_data)
+    updated_skill = skill_crud.update_skill(db, skill_id=skill_id, skill_update=skill_data)
     
     if not updated_skill:
         raise HTTPException(

@@ -6,7 +6,7 @@ interface ApiErrorEventDetail {
   status?: number;
 }
 
-const statusToMessage = (status?: number) => {
+export const statusToMessage = (status?: number) => {
   if (status === 401 || status === 403) {
     return 'Your session has expired. Please sign in again.';
   }

@@ -123,7 +123,7 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
 @app.exception_handler(Exception)
 async def general_exception_handler(request: Request, exc: Exception):
     """Handle general exceptions"""
-    logger.error(f"Unhandled exception on {request.url.path}: {exc}", exc_info=True)
+    logger.opt(exception=True).error("Unhandled exception on {}: {}", request.url.path, exc)
     
     # Don't expose internal errors in production
     if settings.is_production:

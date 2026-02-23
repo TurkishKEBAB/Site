@@ -666,9 +666,9 @@ async def test_admin_access_blocked(async_client):
 - [ ] Code quality improvements
 
 **Hafta 3**:
-- [ ] Performance optimization
-- [ ] SEO setup
-- [ ] Testing setup
+- [x] Performance optimization
+- [x] SEO setup
+- [x] Testing setup
 
 **Hafta 4**:
 - [ ] Final testing

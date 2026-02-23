@@ -119,7 +119,7 @@ async def update_blog_post(
     """
     Update a blog post (admin only)
     """
-    updated_post = blog_crud.update_blog_post(db, post_id=post_id, post_data=post_data)
+    updated_post = blog_crud.update_blog_post(db, post_id=post_id, post_update=post_data)
     
     if not updated_post:
         raise HTTPException(
@@ -160,12 +160,19 @@ async def add_blog_translation(
     """
     Add or update translation for a blog post (admin only)
     """
-    updated_post = blog_crud.add_blog_translation(db, post_id=post_id, translation_data=translation_data)
+    updated_post = blog_crud.add_blog_translation(db, post_id=post_id, translation=translation_data)
     
     if not updated_post:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Blog post not found"
         )
-    
-    return updated_post
+
+    post = blog_crud.get_blog_post_by_id(db, post_id=post_id)
+    if not post:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Blog post not found",
+        )
+
+    return post

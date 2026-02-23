@@ -2,6 +2,7 @@
 Technologies API endpoints
 """
 from typing import List
+import uuid
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
@@ -34,7 +35,7 @@ def get_technologies(
 
 @router.get("/{technology_id}", response_model=TechnologyResponse)
 def get_technology(
-    technology_id: str,
+    technology_id: uuid.UUID,
     db: Session = Depends(get_db)
 ):
     """
@@ -78,7 +79,7 @@ def create_technology(
 
 @router.put("/{technology_id}", response_model=TechnologyResponse)
 def update_technology(
-    technology_id: str,
+    technology_id: uuid.UUID,
     technology: TechnologyUpdate,
     db: Session = Depends(get_db),
     _: User = Depends(require_admin)
@@ -119,7 +120,7 @@ def update_technology(
 
 @router.delete("/{technology_id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_technology(
-    technology_id: str,
+    technology_id: uuid.UUID,
     db: Session = Depends(get_db),
     _: User = Depends(require_admin)
 ):

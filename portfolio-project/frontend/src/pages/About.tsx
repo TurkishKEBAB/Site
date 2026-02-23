@@ -530,6 +530,8 @@ export default function About() {
               <img
                 src={`https://github-readme-stats.vercel.app/api?username=TurkishKEBAB&show_icons=true&theme=radical&hide_border=true&bg_color=00000000&locale=${currentLang}`}
                 alt="GitHub Stats"
+                loading="lazy"
+                decoding="async"
                 className="w-full max-w-md rounded-lg"
               />
             </div>
@@ -538,6 +540,8 @@ export default function About() {
               <img
                 src={`https://github-readme-stats.vercel.app/api/top-langs/?username=TurkishKEBAB&layout=compact&theme=radical&hide_border=true&bg_color=00000000&locale=${currentLang}`}
                 alt="Top Languages"
+                loading="lazy"
+                decoding="async"
                 className="w-full max-w-md rounded-lg"
               />
             </div>
@@ -547,6 +551,8 @@ export default function About() {
             <img
               src={`https://github-readme-streak-stats.herokuapp.com/?user=TurkishKEBAB&theme=radical&hide_border=true&background=00000000&locale=${currentLang}`}
               alt="GitHub Streak"
+              loading="lazy"
+              decoding="async"
               className="w-full max-w-2xl rounded-lg"
             />
           </div>

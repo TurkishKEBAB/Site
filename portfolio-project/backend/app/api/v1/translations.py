@@ -114,6 +114,26 @@ async def set_translation(
     }
 
 
+@router.delete("/config/{key}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_config(
+    key: str,
+    db: Session = Depends(get_db),
+    _: None = Depends(require_admin)
+):
+    """
+    Delete a configuration (admin only)
+    """
+    success = site_crud.delete_site_config(db, key)
+
+    if not success:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Configuration not found"
+        )
+
+    return None
+
+
 @router.delete("/{language}/{key}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_translation(
     language: str = Path(..., regex="^(tr|en)$"),
@@ -190,21 +210,3 @@ async def set_config(
     }
 
 
-@router.delete("/config/{key}", status_code=status.HTTP_204_NO_CONTENT)
-async def delete_config(
-    key: str,
-    db: Session = Depends(get_db),
-    _: None = Depends(require_admin)
-):
-    """
-    Delete a configuration (admin only)
-    """
-    success = site_crud.delete_site_config(db, key)
-    
-    if not success:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Configuration not found"
-        )
-    
-    return None

@@ -7,7 +7,7 @@ from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_db, require_admin
-from app.schemas.github import GitHubRepoResponse, GitHubSyncResponse
+from app.schemas.github import GitHubRepo, GitHubSyncResponse
 from app.crud import github as github_crud
 from app.services.github_service import GitHubService
 from app.config import get_settings
@@ -16,7 +16,7 @@ router = APIRouter()
 settings = get_settings()
 
 
-@router.get("/repos", response_model=List[GitHubRepoResponse])
+@router.get("/repos", response_model=List[GitHubRepo])
 async def get_github_repos(
     limit: int = Query(20, ge=1, le=50),
     featured_only: bool = False,
@@ -34,7 +34,6 @@ async def get_github_repos(
         # Fetch fresh data from GitHub
         github_service = GitHubService()
         fresh_repos = await github_service.fetch_user_repos(
-            username=settings.GITHUB_USERNAME,
             force_refresh=force_refresh
         )
 
@@ -59,7 +58,6 @@ async def sync_github_repos(
 
     try:
         repos = await github_service.fetch_user_repos(
-            username=settings.GITHUB_USERNAME,
             force_refresh=True
         )
 
@@ -74,10 +72,13 @@ async def sync_github_repos(
 
         return {
             "success": True,
-            "synced_count": count,
+            "fetched": len(repos),
+            "updated": count,
             "message": f"Successfully synced {count} repositories"
         }
 
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,

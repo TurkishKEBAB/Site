@@ -152,7 +152,13 @@ export default function BlogDetail() {
               >
                 {post.cover_image ? (
                   <div className="h-80 bg-black/20">
-                    <img src={post.cover_image} alt={post.title} className="h-full w-full object-cover" />
+                    <img
+                      src={post.cover_image}
+                      alt={post.title}
+                      fetchPriority="high"
+                      decoding="async"
+                      className="h-full w-full object-cover"
+                    />
                   </div>
                 ) : (
                   <div className="flex h-80 items-center justify-center bg-gradient-to-br from-primary-600 to-pink-600">
@@ -246,6 +252,8 @@ export default function BlogDetail() {
                               <img
                                 src={relatedPost.cover_image}
                                 alt={relatedPost.title}
+                                loading="lazy"
+                                decoding="async"
                                 className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-110"
                               />
                             ) : (
@@ -287,6 +295,8 @@ export default function BlogDetail() {
                               <img
                                 src={latestPost.cover_image}
                                 alt={latestPost.title}
+                                loading="lazy"
+                                decoding="async"
                                 className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-110"
                               />
                             ) : (
