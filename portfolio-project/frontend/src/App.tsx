@@ -2,6 +2,7 @@ import { Routes, Route } from 'react-router-dom'
 import { AuthProvider } from './contexts/AuthContext'
 import { LanguageProvider } from './contexts/LanguageContext'
 import { ToastProvider } from './components/Toast'
+import GlobalApiErrorListener from './components/GlobalApiErrorListener'
 import ProtectedRoute from './components/ProtectedRoute'
 import Layout from './components/Layout'
 import Home from './pages/Home'
@@ -19,6 +20,7 @@ function App() {
     <ToastProvider>
       <LanguageProvider>
         <AuthProvider>
+          <GlobalApiErrorListener />
           <Routes>
             <Route path="/login" element={<Login />} />
             <Route path="/" element={<Layout />}>

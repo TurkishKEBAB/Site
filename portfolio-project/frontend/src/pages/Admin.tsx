@@ -1,16 +1,32 @@
-import { useState, useEffect, useCallback, useRef, ChangeEvent, FormEvent } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { AxiosError } from 'axios';
 import api from '../services/api';
 
 import { useAuth } from '../contexts/AuthContext';
+import { useLanguage } from '../contexts/LanguageContext';
 import { useToast } from '../components/Toast';
 import { skillService } from '../services/skillService';
 import { experienceService } from '../services/experienceService';
 import { contactService, ContactMessageResponse } from '../services/contactService';
 import { technologyService, Technology } from '../services/technologyService';
 import type { Skill, Experience } from '../services/types';
+import {
+  defaultExperienceFormValues,
+  defaultProjectFormValues,
+  defaultSkillFormValues,
+  ExperienceForm,
+  ExperienceFormValues,
+  ProjectForm,
+  ProjectFormValues,
+  ProjectImage,
+  ProjectTranslationData,
+  SkillForm,
+  SkillFormValues,
+  TranslationEditor,
+  AdminLanguage,
+} from '../components/admin/AdminForms';
 
 interface Stats {
   projects: number;
@@ -36,82 +52,6 @@ interface AdminProject {
   technologies?: Array<{ id: string; name: string; slug: string }>;
 }
 
-interface ProjectImage {
-  id: string;
-  image_url: string;
-  caption: string | null;
-  display_order: number;
-}
-
-interface ProjectTranslationData {
-  language: string;
-  title: string;
-  short_description: string;
-  description: string;
-}
-
-interface ProjectFormValues {
-  title: string;
-  slug: string;
-  shortDescription: string;
-  description: string;
-  coverImage: string;
-  githubUrl: string;
-  demoUrl: string;
-  displayOrder: number;
-  featured: boolean;
-  technology_ids: string[];
-}
-
-const defaultProjectFormValues: ProjectFormValues = {
-  title: '',
-  slug: '',
-  shortDescription: '',
-  description: '',
-  coverImage: '',
-  githubUrl: '',
-  demoUrl: '',
-  displayOrder: 0,
-  featured: false,
-  technology_ids: [],
-};
-
-interface SkillFormValues {
-  name: string;
-  category: string;
-  proficiency: number;
-  iconUrl: string;
-}
-
-const defaultSkillFormValues: SkillFormValues = {
-  name: '',
-  category: '',
-  proficiency: 50,
-  iconUrl: '',
-};
-
-interface ExperienceFormValues {
-  title: string;
-  organization: string;
-  location: string;
-  experienceType: 'education' | 'work' | 'volunteer' | 'activity';
-  startDate: string;
-  endDate: string;
-  isCurrent: boolean;
-  description: string;
-}
-
-const defaultExperienceFormValues: ExperienceFormValues = {
-  title: '',
-  organization: '',
-  location: '',
-  experienceType: 'work',
-  startDate: '',
-  endDate: '',
-  isCurrent: false,
-  description: '',
-};
-
 const FOCUSABLE_SELECTOR =
   'a[href], button:not([disabled]), textarea:not([disabled]), input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])';
 
@@ -124,603 +64,13 @@ const getFocusableElements = (container: HTMLElement): HTMLElement[] =>
       window.getComputedStyle(element).visibility !== 'hidden',
   );
 
-interface ProjectFormProps {
-  initialValues: ProjectFormValues;
-  onSubmit: (values: ProjectFormValues) => Promise<void>;
-  onCancel: () => void;
-  loading: boolean;
-  mode: 'create' | 'edit';
-}
-
-function ProjectForm({ initialValues, onSubmit, onCancel, loading, mode }: ProjectFormProps) {
-  const [values, setValues] = useState<ProjectFormValues>(initialValues);
-  const [technologies, setTechnologies] = useState<Technology[]>([]);
-  const [loadingTechnologies, setLoadingTechnologies] = useState(true);
-
-  useEffect(() => {
-    setValues(initialValues);
-  }, [initialValues]);
-
-  useEffect(() => {
-    const fetchTechnologies = async () => {
-      try {
-        const techs = await technologyService.getAll();
-        setTechnologies(techs);
-      } catch (error) {
-        console.error('Failed to load technologies:', error);
-      } finally {
-        setLoadingTechnologies(false);
-      }
-    };
-    fetchTechnologies();
-  }, []);
-
-  const handleChange = (
-    event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
-  ) => {
-    const { name, value, type } = event.target;
-
-    if (type === 'checkbox') {
-      const checked = (event.target as HTMLInputElement).checked;
-      setValues((prev) => ({ ...prev, [name]: checked }));
-      return;
-    }
-
-    if (name === 'displayOrder') {
-      setValues((prev) => ({ ...prev, [name]: Number(value) || 0 }));
-    } else {
-      setValues((prev) => ({ ...prev, [name]: value }));
-    }
-  };
-
-  const handleTechnologyToggle = (techId: string) => {
-    setValues((prev) => {
-      const isSelected = prev.technology_ids.includes(techId);
-      return {
-        ...prev,
-        technology_ids: isSelected
-          ? prev.technology_ids.filter((id) => id !== techId)
-          : [...prev.technology_ids, techId],
-      };
-    });
-  };
-
-  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    if (loading) {
-      return;
-    }
-    await onSubmit(values);
-  };
-
-  return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      <div className="grid gap-4 md:grid-cols-2">
-        <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-200">
-            Proje Başlığı
-          </label>
-          <input
-            name="title"
-            value={values.title}
-            onChange={handleChange}
-            required
-            className="mt-1 w-full rounded-lg border border-gray-300 bg-white p-2.5 text-gray-900 shadow-sm focus:border-primary-500 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100"
-            placeholder="Portfolio projesi"
-          />
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-200">
-            Slug
-          </label>
-          <input
-            name="slug"
-            value={values.slug}
-            onChange={handleChange}
-            className="mt-1 w-full rounded-lg border border-gray-300 bg-white p-2.5 text-gray-900 shadow-sm focus:border-primary-500 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100"
-            placeholder="yeni-portfolio-projesi"
-          />
-        </div>
-      </div>
-
-      <div className="grid gap-4 md:grid-cols-2">
-        <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-200">
-            Kısa Açıklama
-          </label>
-          <textarea
-            name="shortDescription"
-            value={values.shortDescription}
-            onChange={handleChange}
-            rows={2}
-            className="mt-1 w-full rounded-lg border border-gray-300 bg-white p-2.5 text-gray-900 shadow-sm focus:border-primary-500 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100"
-            placeholder="Öne çıkan cümle"
-          />
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-200">
-            Kapsayıcı Görsel URL
-          </label>
-          <input
-            name="coverImage"
-            value={values.coverImage}
-            onChange={handleChange}
-            className="mt-1 w-full rounded-lg border border-gray-300 bg-white p-2.5 text-gray-900 shadow-sm focus:border-primary-500 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100"
-            placeholder="https://..."
-          />
-        </div>
-      </div>
-
-      <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-200">
-          Açıklama
-        </label>
-        <textarea
-          name="description"
-          value={values.description}
-          onChange={handleChange}
-          required
-          rows={5}
-          className="mt-1 w-full rounded-lg border border-gray-300 bg-white p-2.5 text-gray-900 shadow-sm focus:border-primary-500 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100"
-          placeholder="Projeyi detaylandırın"
-        />
-      </div>
-
-      <div className="grid gap-4 md:grid-cols-3">
-        <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-200">
-            GitHub URL
-          </label>
-          <input
-            name="githubUrl"
-            value={values.githubUrl}
-            onChange={handleChange}
-            className="mt-1 w-full rounded-lg border border-gray-300 bg-white p-2.5 text-gray-900 shadow-sm focus:border-primary-500 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100"
-            placeholder="https://github.com/..."
-          />
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-200">
-            Demo URL
-          </label>
-          <input
-            name="demoUrl"
-            value={values.demoUrl}
-            onChange={handleChange}
-            className="mt-1 w-full rounded-lg border border-gray-300 bg-white p-2.5 text-gray-900 shadow-sm focus:border-primary-500 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100"
-            placeholder="https://demo.com"
-          />
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-200">
-            Gösterim Sırası
-          </label>
-          <input
-            type="number"
-            name="displayOrder"
-            value={values.displayOrder}
-            onChange={handleChange}
-            className="mt-1 w-full rounded-lg border border-gray-300 bg-white p-2.5 text-gray-900 shadow-sm focus:border-primary-500 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100"
-            placeholder="0"
-          />
-        </div>
-      </div>
-
-      <div className="flex items-center gap-3">
-        <input
-          id="featured"
-          type="checkbox"
-          name="featured"
-          checked={values.featured}
-          onChange={handleChange}
-          className="h-5 w-5 rounded border-gray-300 text-primary-600 focus:ring-primary-500"
-        />
-        <label htmlFor="featured" className="text-sm font-medium text-gray-700 dark:text-gray-200">
-          Öne çıkan proje olarak işaretle
-        </label>
-      </div>
-
-      {/* Technology Selection */}
-      <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
-          Teknolojiler
-        </label>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-2 max-h-60 overflow-y-auto border border-gray-300 dark:border-gray-600 rounded-lg p-3 bg-gray-50 dark:bg-gray-800">
-          {loadingTechnologies ? (
-            <p className="col-span-full text-sm text-gray-500 dark:text-gray-400">Teknolojiler yükleniyor...</p>
-          ) : technologies.length === 0 ? (
-            <p className="col-span-full text-sm text-gray-500 dark:text-gray-400">Henüz teknoloji eklenmemiş.</p>
-          ) : (
-            technologies.map((tech) => (
-              <div key={tech.id} className="flex items-center gap-2">
-                <input
-                  type="checkbox"
-                  id={`tech-${tech.id}`}
-                  checked={values.technology_ids.includes(tech.id)}
-                  onChange={() => handleTechnologyToggle(tech.id)}
-                  className="h-4 w-4 rounded border-gray-300 text-primary-600 focus:ring-primary-500"
-                />
-                <label
-                  htmlFor={`tech-${tech.id}`}
-                  className="text-sm text-gray-700 dark:text-gray-200 cursor-pointer"
-                >
-                  {tech.name}
-                </label>
-              </div>
-            ))
-          )}
-        </div>
-        <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-          {values.technology_ids.length} teknoloji seçildi
-        </p>
-      </div>
-
-      <div className="flex justify-end gap-3 pt-2">
-        <button
-          type="button"
-          onClick={onCancel}
-          className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-100 dark:border-gray-600 dark:text-gray-200 dark:hover:bg-gray-700"
-          disabled={loading}
-        >
-          İptal
-        </button>
-        <button
-          type="submit"
-          className="rounded-lg bg-primary-600 px-4 py-2 text-sm font-semibold text-white shadow transition hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-70"
-          disabled={loading}
-        >
-          {loading
-            ? 'Kaydediliyor...'
-            : mode === 'create'
-              ? 'Projeyi Oluştur'
-              : 'Değişiklikleri Kaydet'}
-        </button>
-      </div>
-    </form>
-  );
-}
-
-interface SkillFormProps {
-  initialValues: SkillFormValues;
-  onSubmit: (values: SkillFormValues) => Promise<void>;
-  onCancel: () => void;
-  loading: boolean;
-  mode: 'create' | 'edit';
-}
-
-function SkillForm({ initialValues, onSubmit, onCancel, loading, mode }: SkillFormProps) {
-  const [values, setValues] = useState<SkillFormValues>(initialValues);
-
-  useEffect(() => {
-    setValues(initialValues);
-  }, [initialValues]);
-
-  const handleChange = (
-    event: ChangeEvent<HTMLInputElement | HTMLSelectElement>,
-  ) => {
-    const { name, value } = event.target;
-
-    if (name === 'proficiency') {
-      setValues((prev) => ({ ...prev, [name]: Number(value) || 0 }));
-    } else {
-      setValues((prev) => ({ ...prev, [name]: value }));
-    }
-  };
-
-  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    if (loading) {
-      return;
-    }
-    await onSubmit(values);
-  };
-
-  return (
-    <form onSubmit={handleSubmit} className="space-y-6">
-      <div>
-        <h3 className="mb-4 text-xl font-bold text-gray-900 dark:text-white">
-          {mode === 'create' ? 'Yeni Beceri Ekle' : 'Beceri Düzenle'}
-        </h3>
-      </div>
-
-      <div className="space-y-4">
-        <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-200">
-            Beceri Adı <span className="text-red-500">*</span>
-          </label>
-          <input
-            name="name"
-            value={values.name}
-            onChange={handleChange}
-            required
-            className="mt-1 w-full rounded-lg border border-gray-300 bg-white p-2.5 text-gray-900 shadow-sm focus:border-primary-500 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100"
-            placeholder="Python"
-          />
-        </div>
-
-        <div>
-          <label htmlFor="skill-category" className="block text-sm font-medium text-gray-700 dark:text-gray-200">
-            Kategori <span className="text-red-500">*</span>
-          </label>
-          <select
-            id="skill-category"
-            name="category"
-            value={values.category}
-            onChange={handleChange}
-            required
-            className="mt-1 w-full rounded-lg border border-gray-300 bg-white p-2.5 text-gray-900 shadow-sm focus:border-primary-500 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100"
-          >
-            <option value="">Kategori Seçin</option>
-            <option value="Backend">Backend</option>
-            <option value="Frontend">Frontend</option>
-            <option value="Database">Database</option>
-            <option value="DevOps">DevOps</option>
-            <option value="Tools">Tools</option>
-            <option value="Other">Other</option>
-          </select>
-        </div>
-
-        <div>
-          <label htmlFor="skill-proficiency" className="block text-sm font-medium text-gray-700 dark:text-gray-200">
-            Yeterlilik (%) <span className="text-red-500">*</span>
-          </label>
-          <div className="flex items-center gap-4">
-            <input
-              id="skill-proficiency"
-              type="range"
-              name="proficiency"
-              min="0"
-              max="100"
-              step="5"
-              value={values.proficiency}
-              onChange={handleChange}
-              className="flex-1"
-              aria-label="Yeterlilik yüzdesi"
-            />
-            <span className="w-12 text-sm font-semibold text-gray-700 dark:text-gray-200">
-              {values.proficiency}%
-            </span>
-          </div>
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-200">
-            İkon URL
-          </label>
-          <input
-            name="iconUrl"
-            value={values.iconUrl}
-            onChange={handleChange}
-            className="mt-1 w-full rounded-lg border border-gray-300 bg-white p-2.5 text-gray-900 shadow-sm focus:border-primary-500 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100"
-            placeholder="https://cdn.example.com/icon.svg"
-          />
-        </div>
-      </div>
-
-      <div className="flex justify-end gap-3 pt-2">
-        <button
-          type="button"
-          onClick={onCancel}
-          className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-100 dark:border-gray-600 dark:text-gray-200 dark:hover:bg-gray-700"
-          disabled={loading}
-        >
-          İptal
-        </button>
-        <button
-          type="submit"
-          className="rounded-lg bg-primary-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-primary-700 disabled:opacity-50"
-          disabled={loading}
-        >
-          {loading ? 'Kaydediliyor...' : mode === 'create' ? 'Oluştur' : 'Güncelle'}
-        </button>
-      </div>
-    </form>
-  );
-}
-
-interface ExperienceFormProps {
-  initialValues: ExperienceFormValues;
-  onSubmit: (values: ExperienceFormValues) => Promise<void>;
-  onCancel: () => void;
-  loading: boolean;
-  mode: 'create' | 'edit';
-}
-
-function ExperienceForm({ initialValues, onSubmit, onCancel, loading, mode }: ExperienceFormProps) {
-  const [values, setValues] = useState<ExperienceFormValues>(initialValues);
-
-  useEffect(() => {
-    setValues(initialValues);
-  }, [initialValues]);
-
-  const handleChange = (
-    event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>,
-  ) => {
-    const { name, value, type } = event.target;
-
-    if (type === 'checkbox') {
-      const checked = (event.target as HTMLInputElement).checked;
-      setValues((prev) => ({ ...prev, [name]: checked }));
-      return;
-    }
-
-    setValues((prev) => ({ ...prev, [name]: value }));
-  };
-
-  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    if (loading) {
-      return;
-    }
-    await onSubmit(values);
-  };
-
-  return (
-    <form onSubmit={handleSubmit} className="space-y-6">
-      <div>
-        <h3 className="mb-4 text-xl font-bold text-gray-900 dark:text-white">
-          {mode === 'create' ? 'Yeni Deneyim Ekle' : 'Deneyim Düzenle'}
-        </h3>
-      </div>
-
-      <div className="space-y-4">
-        <div className="grid gap-4 md:grid-cols-2">
-          <div>
-            <label htmlFor="exp-title" className="block text-sm font-medium text-gray-700 dark:text-gray-200">
-              Pozisyon/Ünvan <span className="text-red-500">*</span>
-            </label>
-            <input
-              id="exp-title"
-              name="title"
-              value={values.title}
-              onChange={handleChange}
-              required
-              className="mt-1 w-full rounded-lg border border-gray-300 bg-white p-2.5 text-gray-900 shadow-sm focus:border-primary-500 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100"
-              placeholder="Senior Developer"
-            />
-          </div>
-
-          <div>
-            <label htmlFor="exp-organization" className="block text-sm font-medium text-gray-700 dark:text-gray-200">
-              Kuruluş <span className="text-red-500">*</span>
-            </label>
-            <input
-              id="exp-organization"
-              name="organization"
-              value={values.organization}
-              onChange={handleChange}
-              required
-              className="mt-1 w-full rounded-lg border border-gray-300 bg-white p-2.5 text-gray-900 shadow-sm focus:border-primary-500 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100"
-              placeholder="ABC Tech"
-            />
-          </div>
-        </div>
-
-        <div className="grid gap-4 md:grid-cols-2">
-          <div>
-            <label htmlFor="exp-location" className="block text-sm font-medium text-gray-700 dark:text-gray-200">
-              Konum
-            </label>
-            <input
-              id="exp-location"
-              name="location"
-              value={values.location}
-              onChange={handleChange}
-              className="mt-1 w-full rounded-lg border border-gray-300 bg-white p-2.5 text-gray-900 shadow-sm focus:border-primary-500 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100"
-              placeholder="İstanbul, Turkey"
-            />
-          </div>
-
-          <div>
-            <label htmlFor="exp-type" className="block text-sm font-medium text-gray-700 dark:text-gray-200">
-              Tür <span className="text-red-500">*</span>
-            </label>
-            <select
-              id="exp-type"
-              name="experienceType"
-              value={values.experienceType}
-              onChange={handleChange}
-              required
-              className="mt-1 w-full rounded-lg border border-gray-300 bg-white p-2.5 text-gray-900 shadow-sm focus:border-primary-500 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100"
-            >
-              <option value="work">İş</option>
-              <option value="education">Eğitim</option>
-              <option value="volunteer">Gönüllü</option>
-              <option value="activity">Aktivite</option>
-            </select>
-          </div>
-        </div>
-
-        <div className="grid gap-4 md:grid-cols-2">
-          <div>
-            <label htmlFor="exp-start-date" className="block text-sm font-medium text-gray-700 dark:text-gray-200">
-              Başlangıç Tarihi <span className="text-red-500">*</span>
-            </label>
-            <input
-              id="exp-start-date"
-              type="date"
-              name="startDate"
-              value={values.startDate}
-              onChange={handleChange}
-              required
-              className="mt-1 w-full rounded-lg border border-gray-300 bg-white p-2.5 text-gray-900 shadow-sm focus:border-primary-500 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100"
-            />
-          </div>
-
-          <div>
-            <label htmlFor="exp-end-date" className="block text-sm font-medium text-gray-700 dark:text-gray-200">
-              Bitiş Tarihi
-            </label>
-            <input
-              id="exp-end-date"
-              type="date"
-              name="endDate"
-              value={values.endDate}
-              onChange={handleChange}
-              disabled={values.isCurrent}
-              className="mt-1 w-full rounded-lg border border-gray-300 bg-white p-2.5 text-gray-900 shadow-sm focus:border-primary-500 focus:ring-primary-500 disabled:bg-gray-100 disabled:text-gray-500 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100 dark:disabled:bg-gray-800"
-            />
-          </div>
-        </div>
-
-        <div className="flex items-center gap-3">
-          <input
-            id="exp-is-current"
-            type="checkbox"
-            name="isCurrent"
-            checked={values.isCurrent}
-            onChange={handleChange}
-            className="h-5 w-5 rounded border-gray-300 text-primary-600 focus:ring-primary-500"
-          />
-          <label htmlFor="exp-is-current" className="text-sm font-medium text-gray-700 dark:text-gray-200">
-            Halen devam ediyor
-          </label>
-        </div>
-
-        <div>
-          <label htmlFor="exp-description" className="block text-sm font-medium text-gray-700 dark:text-gray-200">
-            Açıklama
-          </label>
-          <textarea
-            id="exp-description"
-            name="description"
-            value={values.description}
-            onChange={handleChange}
-            rows={4}
-            className="mt-1 w-full rounded-lg border border-gray-300 bg-white p-2.5 text-gray-900 shadow-sm focus:border-primary-500 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100"
-            placeholder="Görev ve sorumluluklar..."
-          />
-        </div>
-      </div>
-
-      <div className="flex justify-end gap-3 pt-2">
-        <button
-          type="button"
-          onClick={onCancel}
-          className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-100 dark:border-gray-600 dark:text-gray-200 dark:hover:bg-gray-700"
-          disabled={loading}
-        >
-          İptal
-        </button>
-        <button
-          type="submit"
-          className="rounded-lg bg-primary-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-primary-700 disabled:opacity-50"
-          disabled={loading}
-        >
-          {loading ? 'Kaydediliyor...' : mode === 'create' ? 'Oluştur' : 'Güncelle'}
-        </button>
-      </div>
-    </form>
-  );
-}
-
-function formatDate(value: string | null): string {
+function formatDate(value: string | null, locale: string): string {
   if (!value) {
     return '—';
   }
 
   try {
-    return new Intl.DateTimeFormat('tr-TR', {
+    return new Intl.DateTimeFormat(locale, {
       dateStyle: 'medium',
       timeStyle: 'short',
     }).format(new Date(value));
@@ -732,8 +82,43 @@ function formatDate(value: string | null): string {
 
 export default function Admin() {
   const { user, logout } = useAuth();
+  const { language } = useLanguage();
   const navigate = useNavigate();
   const { showToast } = useToast();
+  const adminLanguage: AdminLanguage = language === 'tr' ? 'tr' : 'en';
+  const dateLocale = adminLanguage === 'tr' ? 'tr-TR' : 'en-US';
+  const text = {
+    loading: adminLanguage === 'tr' ? 'Yukleniyor...' : 'Loading...',
+    adminPanel: adminLanguage === 'tr' ? 'Admin Panel' : 'Admin Panel',
+    welcome: adminLanguage === 'tr' ? 'Hos geldin' : 'Welcome',
+    logout: adminLanguage === 'tr' ? 'Cikis Yap' : 'Log Out',
+    dashboard: adminLanguage === 'tr' ? 'Dashboard' : 'Dashboard',
+    projects: adminLanguage === 'tr' ? 'Projeler' : 'Projects',
+    skills: adminLanguage === 'tr' ? 'Beceriler' : 'Skills',
+    experiences: adminLanguage === 'tr' ? 'Deneyimler' : 'Experiences',
+    messages: adminLanguage === 'tr' ? 'Mesajlar' : 'Messages',
+    yes: adminLanguage === 'tr' ? 'Evet' : 'Yes',
+    no: adminLanguage === 'tr' ? 'Hayir' : 'No',
+    unreadSuffix: adminLanguage === 'tr' ? 'okunmamis' : 'unread',
+    allViewed: adminLanguage === 'tr' ? 'Tumu goruntulendi' : 'All viewed',
+    welcomeUser: adminLanguage === 'tr' ? 'Hos geldin' : 'Welcome',
+    projectManagement: adminLanguage === 'tr' ? 'Projeler Yonetimi' : 'Projects Management',
+    skillManagement: adminLanguage === 'tr' ? 'Beceriler Yonetimi' : 'Skills Management',
+    experienceManagement: adminLanguage === 'tr' ? 'Deneyimler Yonetimi' : 'Experiences Management',
+    incomingMessages: adminLanguage === 'tr' ? 'Gelen Mesajlar' : 'Incoming Messages',
+    addProject: adminLanguage === 'tr' ? '+ Yeni Proje Ekle' : '+ Add New Project',
+    addSkill: adminLanguage === 'tr' ? '+ Yeni Beceri Ekle' : '+ Add New Skill',
+    addExperience: adminLanguage === 'tr' ? '+ Yeni Deneyim Ekle' : '+ Add New Experience',
+    edit: adminLanguage === 'tr' ? 'Duzenle' : 'Edit',
+    delete: adminLanguage === 'tr' ? 'Sil' : 'Delete',
+    deleting: adminLanguage === 'tr' ? 'Siliniyor...' : 'Deleting...',
+    translate: adminLanguage === 'tr' ? 'Ceviriler' : 'Translations',
+    images: adminLanguage === 'tr' ? 'Resimler' : 'Images',
+    sessionExpired:
+      adminLanguage === 'tr'
+        ? 'Oturum sureniz doldu. Lutfen tekrar giris yapin.'
+        : 'Your session has expired. Please sign in again.',
+  };
 
   const [stats, setStats] = useState<Stats>({
     projects: 0,
@@ -757,6 +142,8 @@ export default function Admin() {
   const [projectFormSubmitting, setProjectFormSubmitting] = useState(false);
   const [activeProject, setActiveProject] = useState<AdminProject | null>(null);
   const [projectActionId, setProjectActionId] = useState<string | null>(null);
+  const [technologies, setTechnologies] = useState<Technology[]>([]);
+  const [loadingTechnologies, setLoadingTechnologies] = useState(false);
 
   // Image Manager state
   const [imageManagerOpen, setImageManagerOpen] = useState(false);
@@ -824,7 +211,7 @@ export default function Admin() {
         const status = typedError.response?.status;
 
         if (status === 401 || status === 403) {
-          showToast('error', 'Oturum süreniz doldu. Lütfen tekrar giriş yapın.');
+          showToast('error', text.sessionExpired);
           handleLogout();
           return;
         }
@@ -844,7 +231,7 @@ export default function Admin() {
 
       showToast('error', fallbackMessage);
     },
-    [handleLogout, showToast],
+    [handleLogout, showToast, text.sessionExpired],
   );
 
   const loadStats = useCallback(
@@ -916,6 +303,18 @@ export default function Admin() {
     }
   }, [handleApiError]);
 
+  const loadTechnologies = useCallback(async () => {
+    setLoadingTechnologies(true);
+    try {
+      const techs = await technologyService.getAll();
+      setTechnologies(techs);
+    } catch (error) {
+      handleApiError(error, adminLanguage === 'tr' ? 'Teknolojiler yuklenemedi.' : 'Failed to load technologies.');
+    } finally {
+      setLoadingTechnologies(false);
+    }
+  }, [adminLanguage, handleApiError]);
+
   const loadSkills = useCallback(async () => {
     setSkillsLoading(true);
     try {
@@ -955,6 +354,10 @@ export default function Admin() {
   useEffect(() => {
     loadStats(true);
   }, [loadStats]);
+
+  useEffect(() => {
+    void loadTechnologies();
+  }, [loadTechnologies]);
 
   useEffect(() => {
     if (activeTab === 'projects') {
@@ -1580,40 +983,43 @@ export default function Admin() {
   if (loading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-gray-100 dark:bg-gray-900">
-        <div className="text-2xl text-gray-600 dark:text-gray-300">Yükleniyor...</div>
+        <div className="text-2xl text-gray-600 dark:text-gray-300">{text.loading}</div>
       </div>
     );
   }
 
   const statsCards = [
     {
-      label: 'Projeler',
+      label: text.projects,
       value: stats.projects,
       icon: '📁',
       color: 'border-blue-500',
       delay: 0,
     },
     {
-      label: 'Beceriler',
+      label: text.skills,
       value: stats.skills,
       icon: '⚡',
       color: 'border-green-500',
       delay: 0.1,
     },
     {
-      label: 'Deneyimler',
+      label: text.experiences,
       value: stats.experiences,
       icon: '💼',
       color: 'border-purple-500',
       delay: 0.2,
     },
     {
-      label: 'Mesajlar',
+      label: text.messages,
       value: stats.messages,
       icon: '✉️',
       color: 'border-orange-500',
       delay: 0.3,
-      subtitle: stats.unreadMessages > 0 ? `${stats.unreadMessages} okunmamış` : 'Tümü görüntülendi',
+      subtitle:
+        stats.unreadMessages > 0
+          ? `${stats.unreadMessages} ${text.unreadSuffix}`
+          : text.allViewed,
     },
   ];
 
@@ -1626,9 +1032,9 @@ export default function Admin() {
           className="mb-8 flex items-start justify-between"
         >
           <div>
-            <h1 className="mb-2 text-4xl font-bold text-gray-900 dark:text-white">Admin Panel</h1>
+            <h1 className="mb-2 text-4xl font-bold text-gray-900 dark:text-white">{text.adminPanel}</h1>
             <p className="text-gray-600 dark:text-gray-400">
-              Hoş geldin, {user?.username || 'Admin'} 👋
+              {text.welcome}, {user?.username || 'Admin'} 👋
             </p>
           </div>
           <button
@@ -1636,7 +1042,7 @@ export default function Admin() {
             className="flex items-center gap-2 rounded-lg bg-red-600 px-4 py-2 text-white transition hover:bg-red-700"
           >
             <span>🚪</span>
-            Çıkış Yap
+            {text.logout}
           </button>
         </motion.div>
 
@@ -1668,11 +1074,11 @@ export default function Admin() {
         <div className="mb-6 rounded-xl bg-white shadow-lg dark:bg-gray-800">
           <div className="flex border-b border-gray-200 dark:border-gray-700">
             {[
-              { id: 'dashboard', label: 'Dashboard', icon: '📊' },
-              { id: 'projects', label: 'Projeler', icon: '📁' },
-              { id: 'skills', label: 'Beceriler', icon: '⚡' },
-              { id: 'experiences', label: 'Deneyimler', icon: '💼' },
-              { id: 'messages', label: 'Mesajlar', icon: '✉️' },
+              { id: 'dashboard', label: text.dashboard, icon: '📊' },
+              { id: 'projects', label: text.projects, icon: '📁' },
+              { id: 'skills', label: text.skills, icon: '⚡' },
+              { id: 'experiences', label: text.experiences, icon: '💼' },
+              { id: 'messages', label: text.messages, icon: '✉️' },
             ].map((tab) => (
               <button
                 key={tab.id}
@@ -1695,7 +1101,7 @@ export default function Admin() {
             <div className="space-y-6">
               <div>
                 <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
-                  Hoş Geldin, {user?.username || 'Yiğit'}! 👋
+                  {text.welcomeUser}, {user?.username || 'Yigit'}! 👋
                 </h2>
                 <p className="mt-2 text-gray-600 dark:text-gray-400">
                   Backend bağlantısı aktif; projeler sekmesinden içerik oluşturabilir, istatistikleri anlık
@@ -1720,7 +1126,7 @@ export default function Admin() {
               <div className="flex flex-wrap items-center justify-between gap-4">
                 <div>
                   <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
-                    Projeler Yönetimi
+                    {text.projectManagement}
                   </h2>
                   <p className="text-sm text-gray-500 dark:text-gray-400">
                     Kayıtlı projeleri listele, yeni projeler ekle veya mevcutları güncelle.
@@ -1730,7 +1136,7 @@ export default function Admin() {
                   onClick={openCreateProjectModal}
                   className="rounded-lg bg-primary-600 px-4 py-2 text-sm font-semibold text-white shadow transition hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
                 >
-                  + Yeni Proje Ekle
+                  {text.addProject}
                 </button>
               </div>
 
@@ -1796,7 +1202,7 @@ export default function Admin() {
                           {project.displayOrder}
                         </td>
                         <td className="px-4 py-3 text-sm text-gray-600 dark:text-gray-300">
-                          {formatDate(project.updatedAt)}
+                          {formatDate(project.updatedAt, dateLocale)}
                         </td>
                         <td className="px-4 py-3 text-right text-sm">
                           <div className="flex justify-end gap-2">
@@ -1805,27 +1211,27 @@ export default function Admin() {
                               className="rounded-lg border border-blue-500 px-3 py-1.5 text-xs font-semibold text-blue-600 transition hover:bg-blue-50 dark:border-blue-400 dark:text-blue-300 dark:hover:bg-blue-900/40"
                               title="Çevirileri yönet"
                             >
-                              🌐 Çeviriler
+                              🌐 {text.translate}
                             </button>
                             <button
                               onClick={() => openImageManager(project)}
                               className="rounded-lg border border-purple-500 px-3 py-1.5 text-xs font-semibold text-purple-600 transition hover:bg-purple-50 dark:border-purple-400 dark:text-purple-300 dark:hover:bg-purple-900/40"
                               title="Proje resimlerini yönet"
                             >
-                              🖼️ Resimler
+                              🖼️ {text.images}
                             </button>
                             <button
                               onClick={() => openEditProjectModal(project)}
                               className="rounded-lg border border-gray-300 px-3 py-1.5 text-xs font-semibold text-gray-700 transition hover:bg-gray-100 dark:border-gray-600 dark:text-gray-200 dark:hover:bg-gray-700"
                             >
-                              Düzenle
+                              {text.edit}
                             </button>
                             <button
                               onClick={() => handleDeleteProject(project)}
                               className="rounded-lg border border-red-500 px-3 py-1.5 text-xs font-semibold text-red-600 transition hover:bg-red-50 dark:border-red-400 dark:text-red-300 dark:hover:bg-red-900/40"
                               disabled={projectActionId === project.id}
                             >
-                              {projectActionId === project.id ? 'Siliniyor...' : 'Sil'}
+                              {projectActionId === project.id ? text.deleting : text.delete}
                             </button>
                           </div>
                         </td>
@@ -1841,7 +1247,7 @@ export default function Admin() {
             <div className="space-y-6">
               <div className="flex flex-wrap items-center justify-between gap-4">
                 <div>
-                  <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Beceriler Yönetimi</h2>
+                  <h2 className="text-2xl font-bold text-gray-900 dark:text-white">{text.skillManagement}</h2>
                   <p className="text-sm text-gray-500 dark:text-gray-400">
                     Kayıtlı becerileri listele, düzenle veya sil.
                   </p>
@@ -1850,7 +1256,7 @@ export default function Admin() {
                   onClick={openCreateSkillModal}
                   className="rounded-lg bg-primary-600 px-4 py-2 text-sm font-semibold text-white shadow transition hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
                 >
-                  + Yeni Beceri Ekle
+                  {text.addSkill}
                 </button>
               </div>
 
@@ -1904,13 +1310,13 @@ export default function Admin() {
                               onClick={() => openEditSkillModal(skill)}
                               className="rounded-lg border border-gray-300 px-3 py-1.5 text-xs font-semibold text-gray-700 transition hover:bg-gray-100 dark:border-gray-600 dark:text-gray-200 dark:hover:bg-gray-700"
                             >
-                              Düzenle
+                              {text.edit}
                             </button>
                             <button
                               onClick={() => handleDeleteSkill(skill.id)}
                               className="rounded-lg border border-red-500 px-3 py-1.5 text-xs font-semibold text-red-600 transition hover:bg-red-50 dark:border-red-400 dark:text-red-300 dark:hover:bg-red-900/40"
                             >
-                              Sil
+                              {text.delete}
                             </button>
                           </div>
                         </td>
@@ -1926,7 +1332,7 @@ export default function Admin() {
             <div className="space-y-6">
               <div className="flex flex-wrap items-center justify-between gap-4">
                 <div>
-                  <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Deneyimler Yönetimi</h2>
+                  <h2 className="text-2xl font-bold text-gray-900 dark:text-white">{text.experienceManagement}</h2>
                   <p className="text-sm text-gray-500 dark:text-gray-400">
                     Kayıtlı deneyimleri listele, düzenle veya sil.
                   </p>
@@ -1935,7 +1341,7 @@ export default function Admin() {
                   onClick={openCreateExperienceModal}
                   className="rounded-lg bg-primary-600 px-4 py-2 text-sm font-semibold text-white shadow transition hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
                 >
-                  + Yeni Deneyim Ekle
+                  {text.addExperience}
                 </button>
               </div>
 
@@ -1989,8 +1395,14 @@ export default function Admin() {
                           </span>
                         </td>
                         <td className="px-4 py-3 text-sm text-gray-600 dark:text-gray-300">
-                          {new Date(experience.start_date).toLocaleDateString('tr-TR')}
-                          {experience.is_current ? ' - Devam ediyor' : experience.end_date ? ` - ${new Date(experience.end_date).toLocaleDateString('tr-TR')}` : ''}
+                          {new Date(experience.start_date).toLocaleDateString(dateLocale)}
+                          {experience.is_current
+                            ? adminLanguage === 'tr'
+                              ? ' - Devam ediyor'
+                              : ' - Ongoing'
+                            : experience.end_date
+                              ? ` - ${new Date(experience.end_date).toLocaleDateString(dateLocale)}`
+                              : ''}
                         </td>
                         <td className="px-4 py-3 text-right text-sm">
                           <div className="flex justify-end gap-2">
@@ -1998,13 +1410,13 @@ export default function Admin() {
                               onClick={() => openEditExperienceModal(experience)}
                               className="rounded-lg border border-gray-300 px-3 py-1.5 text-xs font-semibold text-gray-700 transition hover:bg-gray-100 dark:border-gray-600 dark:text-gray-200 dark:hover:bg-gray-700"
                             >
-                              Düzenle
+                              {text.edit}
                             </button>
                             <button
                               onClick={() => handleDeleteExperience(experience.id)}
                               className="rounded-lg border border-red-500 px-3 py-1.5 text-xs font-semibold text-red-600 transition hover:bg-red-50 dark:border-red-400 dark:text-red-300 dark:hover:bg-red-900/40"
                             >
-                              Sil
+                              {text.delete}
                             </button>
                           </div>
                         </td>
@@ -2019,7 +1431,7 @@ export default function Admin() {
           {activeTab === 'messages' && (
             <div className="space-y-6">
               <div>
-                <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Gelen Mesajlar</h2>
+                <h2 className="text-2xl font-bold text-gray-900 dark:text-white">{text.incomingMessages}</h2>
                 <p className="text-sm text-gray-500 dark:text-gray-400">
                   İletişim formundan gelen mesajları yönetin.
                 </p>
@@ -2091,7 +1503,7 @@ export default function Admin() {
                           )}
                         </td>
                         <td className="px-4 py-3 text-sm text-gray-600 dark:text-gray-300">
-                          {formatDate(message.created_at)}
+                          {formatDate(message.created_at, dateLocale)}
                         </td>
                         <td className="px-4 py-3 text-right text-sm">
                           <div className="flex justify-end gap-2">
@@ -2109,7 +1521,7 @@ export default function Admin() {
                               className="rounded-lg border border-red-500 px-3 py-1.5 text-xs font-semibold text-red-600 transition hover:bg-red-50 dark:border-red-400 dark:text-red-300 dark:hover:bg-red-900/40"
                               disabled={messageActionId === message.id}
                             >
-                              {messageActionId === message.id ? 'Siliniyor...' : 'Sil'}
+                              {messageActionId === message.id ? text.deleting : text.delete}
                             </button>
                           </div>
                         </td>
@@ -2149,6 +1561,9 @@ export default function Admin() {
               onCancel={() => closeProjectModal()}
               loading={projectFormSubmitting}
               mode={projectFormMode}
+              technologies={technologies}
+              loadingTechnologies={loadingTechnologies}
+              language={adminLanguage}
             />
           </div>
         </div>
@@ -2180,6 +1595,7 @@ export default function Admin() {
               onCancel={() => closeSkillModal()}
               loading={skillFormSubmitting}
               mode={skillFormMode}
+              language={adminLanguage}
             />
           </div>
         </div>
@@ -2211,6 +1627,7 @@ export default function Admin() {
               onCancel={() => closeExperienceModal()}
               loading={experienceFormSubmitting}
               mode={experienceFormMode}
+              language={adminLanguage}
             />
           </div>
         </div>
@@ -2411,6 +1828,7 @@ export default function Admin() {
                 translations={currentTranslations}
                 onSave={handleSaveTranslation}
                 loading={translationsLoading}
+                language={adminLanguage}
               />
             )}
           </div>
@@ -2420,144 +1838,6 @@ export default function Admin() {
   );
 }
 
-// Translation Editor Component
-interface TranslationEditorProps {
-  translations: Record<string, ProjectTranslationData>;
-  onSave: (language: string, data: Omit<ProjectTranslationData, 'language'>) => Promise<void>;
-  loading: boolean;
-}
-
-function TranslationEditor({ translations, onSave, loading }: TranslationEditorProps) {
-  const [activeLanguage, setActiveLanguage] = useState<string>('en');
-  const [formData, setFormData] = useState<Omit<ProjectTranslationData, 'language'>>({
-    title: '',
-    short_description: '',
-    description: '',
-  });
-  const [saving, setSaving] = useState(false);
-
-  const languages = [
-    { code: 'en', name: 'English', flag: '🇬🇧' },
-    { code: 'tr', name: 'Türkçe', flag: '🇹🇷' },
-  ];
-
-  // Load translation data when language changes
-  useEffect(() => {
-    const translation = translations[activeLanguage];
-    if (translation) {
-      setFormData({
-        title: translation.title || '',
-        short_description: translation.short_description || '',
-        description: translation.description || '',
-      });
-    } else {
-      setFormData({
-        title: '',
-        short_description: '',
-        description: '',
-      });
-    }
-  }, [activeLanguage, translations]);
-
-  const handleSubmit = async (e: FormEvent) => {
-    e.preventDefault();
-    setSaving(true);
-    try {
-      await onSave(activeLanguage, formData);
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
-  };
-
-  return (
-    <div className="space-y-6">
-      {/* Language Tabs */}
-      <div className="flex gap-2 border-b border-gray-200 dark:border-gray-700">
-        {languages.map((lang) => (
-          <button
-            key={lang.code}
-            onClick={() => setActiveLanguage(lang.code)}
-            className={`flex items-center gap-2 px-4 py-2 font-medium transition ${
-              activeLanguage === lang.code
-                ? 'border-b-2 border-primary-600 text-primary-600'
-                : 'text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white'
-            }`}
-          >
-            <span>{lang.flag}</span>
-            <span>{lang.name}</span>
-            {translations[lang.code] && (
-              <span className="rounded-full bg-green-100 px-2 py-0.5 text-xs text-green-700 dark:bg-green-900/40 dark:text-green-300">
-                ✓
-              </span>
-            )}
-          </button>
-        ))}
-      </div>
-
-      {/* Translation Form */}
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
-            Başlık
-          </label>
-          <input
-            type="text"
-            name="title"
-            value={formData.title}
-            onChange={handleChange}
-            required
-            className="w-full rounded-lg border border-gray-300 bg-white p-2.5 text-gray-900 shadow-sm focus:border-primary-500 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
-            placeholder={`Proje başlığı (${activeLanguage.toUpperCase()})`}
-          />
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
-            Kısa Açıklama
-          </label>
-          <textarea
-            name="short_description"
-            value={formData.short_description}
-            onChange={handleChange}
-            rows={2}
-            className="w-full rounded-lg border border-gray-300 bg-white p-2.5 text-gray-900 shadow-sm focus:border-primary-500 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
-            placeholder={`Kısa açıklama (${activeLanguage.toUpperCase()})`}
-          />
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
-            Açıklama
-          </label>
-          <textarea
-            name="description"
-            value={formData.description}
-            onChange={handleChange}
-            required
-            rows={8}
-            className="w-full rounded-lg border border-gray-300 bg-white p-2.5 text-gray-900 shadow-sm focus:border-primary-500 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
-            placeholder={`Detaylı açıklama (${activeLanguage.toUpperCase()})`}
-          />
-        </div>
-
-        <div className="flex justify-end pt-4">
-          <button
-            type="submit"
-            disabled={saving || loading}
-            className="rounded-lg bg-primary-600 px-6 py-2.5 text-sm font-semibold text-white shadow transition hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-70"
-          >
-            {saving ? 'Kaydediliyor...' : `${activeLanguage.toUpperCase()} Çevirisini Kaydet`}
-          </button>
-        </div>
-      </form>
-    </div>
-  );
-}
 
 
 

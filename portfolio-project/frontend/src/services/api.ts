@@ -51,7 +51,9 @@ api.interceptors.request.use(
 api.interceptors.response.use(
   (response) => response,
   (error: AxiosError) => {
-    if (error.response?.status === 401) {
+    const status = error.response?.status;
+
+    if (status === 401 || status === 403) {
       localStorage.removeItem('token');
       localStorage.removeItem('refresh_token');
 
@@ -59,6 +61,15 @@ api.interceptors.response.use(
         window.location.href = '/login';
       }
     }
+
+    window.dispatchEvent(
+      new CustomEvent('api:error', {
+        detail: {
+          status,
+          message: error.message,
+        },
+      }),
+    );
 
     return Promise.reject(error);
   },
