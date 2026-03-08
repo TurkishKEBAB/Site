@@ -1,5 +1,8 @@
 # 🎉 Backend API - TAMAMLANDI!
 
+> Historical milestone document.
+> Use `PROGRESS.md` for current project/sprint status.
+
 ## ✅ Tamamlanan Bileşenler
 
 ### 📁 Proje Yapısı

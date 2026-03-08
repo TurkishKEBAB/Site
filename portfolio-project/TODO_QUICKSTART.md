@@ -1,5 +1,8 @@
 # 🎯 TODO - Hızlı Başlangıç
 
+> Historical quickstart backlog.
+> Current sprint tasks and completion live in `PROGRESS.md`.
+
 **Son Güncelleme**: 2 Kasım 2025  
 **Proje Durumu**: Backend %100 ✅ | Frontend %55 ⚙️ | DevOps %40 🔄
 

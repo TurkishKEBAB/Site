@@ -32,7 +32,8 @@ A full-stack portfolio platform that highlights Cloud & DevOps projects, technic
 **Tooling & DevOps**
 - Docker & docker-compose for local stack
 - PowerShell helpers (`start.ps1`, `start_backend.ps1`)
-- Loguru logging, health checks, ready-to-enable CI/CD
+- Loguru logging, health checks, GitHub Actions CI baseline
+- Staging deployment workflows for Vercel preview and Railway staging
 
 ## ✨ Feature Snapshot
 
@@ -70,7 +71,9 @@ portfolio-project/
 │   ├── src/services
 │   └── README.md
 ├── database/                # SQL schema & seed scripts
-└── docs                     # Progress & analysis reports
+├── PROGRESS.md              # Canonical sprint/project status
+├── QUICKSTART.md            # Operational runbook
+└── *.md                     # Historical audits and reports
 ```
 
 ## 🚀 Getting Started
@@ -125,7 +128,7 @@ SMTP_HOST=smtp.gmail.com
 SMTP_USERNAME=...
 SMTP_PASSWORD=...
 REDIS_URL=redis://localhost:6379/0
-FRONTEND_URL=http://localhost:5173
+FRONTEND_URL=http://localhost:3000
 ENVIRONMENT=development
 ```
 
@@ -134,20 +137,22 @@ ENVIRONMENT=development
 - Backend health: `GET http://127.0.0.1:8000/health`
 - API docs: `http://127.0.0.1:8000/docs`
 - Run quick syntax check: `python -m compileall app`
-- Frontend dev server: `http://127.0.0.1:5173`
+- Frontend dev server: `http://127.0.0.1:3000`
 
-Unit tests (backlog item) will live under `backend/tests/` and `frontend/src/__tests__/`.
+Automated tests are available under `backend/tests/` and frontend Vitest suites under `frontend/src/`.
 
-## 📈 Current Status (Oct 2025)
+## 📈 Current Status (Feb 2026)
 
-- Backend ✅ 100% — production-ready, freshly hardened admin checks, activity-aware experiences endpoint, cleaned seed data
-- Frontend ⚙️ ~55% — core pages functional; pending blog detail view, admin CRUD wiring, accessibility polish
-- DevOps 🔄 ~40% — Docker works locally; CI/CD and production deployment templates are next
+- Sprint 1 ✅ completed (Weeks 1-4: stabilization, testing, perf/SEO, release-readiness)
+- Backend ✅ 100% (65 passing tests, coverage gate >=80)
+- Frontend ⚙️ strong baseline ready for Sprint 2 hardening and CI/CD integration
+- DevOps 🔄 local orchestration + quality scripts ready; deployment automation is next
 
 Active roadmap is tracked in:
-- `PROGRESS.md` – sprint-level snapshot
-- `COMPREHENSIVE_PROJECT_ANALYSIS.md` – prioritised backlog & troubleshooting log
-- `DETAILED_ANALYSIS_REPORT.md` – long-form audit and content checklist
+- `PROGRESS.md` - canonical sprint status
+- `QUICKSTART.md` - current operational runbook
+- `CI_CD_SETUP.md` - CI workflow and Sonar setup
+- `COMPREHENSIVE_PROJECT_ANALYSIS.md` - historical planning snapshot
 
 ## 🤝 Contributing / Next Steps
 

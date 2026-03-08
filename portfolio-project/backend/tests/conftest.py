@@ -1,6 +1,7 @@
 from datetime import date, timedelta
 from typing import Callable
 import uuid
+import os
 
 import pytest
 from fastapi.testclient import TestClient
@@ -27,6 +28,7 @@ from app.schemas.user import UserCreate
 from app.utils.security import create_access_token
 
 SQLALCHEMY_DATABASE_URL = "sqlite://"
+TEST_USER_SECRET = os.getenv("TEST_USER_SECRET", "test-user-secret")
 
 
 @pytest.fixture(scope="session")
@@ -108,14 +110,14 @@ def create_user(db_session: Session) -> Callable[..., object]:
         *,
         email: str,
         username: str,
-        password: str = "testpass123",
+        secret: str = TEST_USER_SECRET,
     ):
         return user_crud.create_user(
             db_session,
             UserCreate(
                 email=email,
                 username=username,
-                password=password,
+                password=secret,
             ),
         )
 

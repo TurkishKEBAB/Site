@@ -5,10 +5,16 @@ GitHub repository caching management
 from sqlalchemy.orm import Session
 from sqlalchemy import func
 from typing import List, Optional
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 import uuid
 
 from app.models.github import GitHubRepo
+
+
+def _normalize_utc(dt: datetime) -> datetime:
+    if dt.tzinfo is None:
+        return dt.replace(tzinfo=timezone.utc)
+    return dt.astimezone(timezone.utc)
 
 
 def get_github_repos(
@@ -60,13 +66,13 @@ def create_or_update_github_repo(db: Session, repo_data: dict) -> GitHubRepo:
         for key, value in repo_data.items():
             if key != "cached_at":  # Don't update cached_at from repo_data
                 setattr(existing, key, value)
-        existing.cached_at = datetime.utcnow()
+        existing.cached_at = datetime.now(timezone.utc)
         db.commit()
         db.refresh(existing)
         return existing
     else:
         # Create new repository
-        db_repo = GitHubRepo(**repo_data, cached_at=datetime.utcnow())
+        db_repo = GitHubRepo(**repo_data, cached_at=datetime.now(timezone.utc))
         db.add(db_repo)
         db.commit()
         db.refresh(db_repo)
@@ -108,8 +114,8 @@ def is_cache_valid(db: Session, cache_hours: int = 24) -> bool:
     if not latest:
         return False
     
-    expiry_time = latest.cached_at + timedelta(hours=cache_hours)
-    return datetime.utcnow() < expiry_time
+    expiry_time = _normalize_utc(latest.cached_at) + timedelta(hours=cache_hours)
+    return datetime.now(timezone.utc) < expiry_time
 
 
 def get_cache_age(db: Session) -> Optional[timedelta]:
@@ -124,7 +130,7 @@ def get_cache_age(db: Session) -> Optional[timedelta]:
     if not latest:
         return None
     
-    return datetime.utcnow() - latest.cached_at
+    return datetime.now(timezone.utc) - _normalize_utc(latest.cached_at)
 
 
 def clear_github_cache(db: Session) -> int:

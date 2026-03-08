@@ -1,5 +1,8 @@
 # 🎉 FRONTEND BAŞLADI! 🎉
 
+> Historical kickoff note.
+> Current frontend status is maintained in `PROGRESS.md`.
+
 ## ✅ Tamamlanan Frontend Kurulumu
 
 ### 📦 Oluşturulan Dosyalar (25+ dosya)

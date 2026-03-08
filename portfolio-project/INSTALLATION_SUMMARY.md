@@ -1,5 +1,8 @@
 # Backend Paketleri Kurulum Raporu ✅
 
+> Historical installation report.
+> For current progress and sprint completion, see `PROGRESS.md`.
+
 ## 📊 Kurulum Özeti
 
 **Durum:** ✅ BAŞARILI  

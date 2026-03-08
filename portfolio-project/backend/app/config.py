@@ -5,6 +5,10 @@ Loads environment variables and provides type-safe configuration
 from typing import Optional, List
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from functools import lru_cache
+from pathlib import Path
+
+
+ENV_FILE_PATH = Path(__file__).resolve().parents[1] / ".env"
 
 
 class Settings(BaseSettings):
@@ -14,6 +18,8 @@ class Settings(BaseSettings):
     API_V1_PREFIX: str = "/api/v1"
     PROJECT_NAME: str = "Yiğit Okur Portfolio API"
     VERSION: str = "1.0.0"
+    API_HOST: str = "127.0.0.1"
+    API_PORT: int = 8000
     ENVIRONMENT: str = "development"
     
     # Database
@@ -93,7 +99,7 @@ class Settings(BaseSettings):
 
     # Model configuration
     model_config = SettingsConfigDict(
-        env_file=".env",
+        env_file=str(ENV_FILE_PATH),
         env_file_encoding="utf-8",
         case_sensitive=True,
         extra="ignore"

@@ -8,27 +8,27 @@ DELETE FROM blog_translations WHERE blog_post_id = '750e8400-e29b-41d4-a716-4466
 DELETE FROM blog_posts WHERE id = '750e8400-e29b-41d4-a716-446655440001';
 
 -- Remove translations
-DELETE FROM translations;
+DELETE FROM translations WHERE TRUE;
 
 -- Remove site config
-DELETE FROM site_config;
+DELETE FROM site_config WHERE TRUE;
 
 -- Remove experiences
-DELETE FROM experience_translations;
-DELETE FROM experiences;
+DELETE FROM experience_translations WHERE TRUE;
+DELETE FROM experiences WHERE TRUE;
 
 -- Remove skills
-DELETE FROM skill_translations;
-DELETE FROM skills;
+DELETE FROM skill_translations WHERE TRUE;
+DELETE FROM skills WHERE TRUE;
 
 -- Remove projects and related data
-DELETE FROM project_images;
-DELETE FROM project_technologies;
-DELETE FROM project_translations;
-DELETE FROM projects;
+DELETE FROM project_images WHERE TRUE;
+DELETE FROM project_technologies WHERE TRUE;
+DELETE FROM project_translations WHERE TRUE;
+DELETE FROM projects WHERE TRUE;
 
 -- Remove technologies
-DELETE FROM technologies;
+DELETE FROM technologies WHERE TRUE;
 
 -- Remove admin user
 DELETE FROM users WHERE id = '550e8400-e29b-41d4-a716-446655440000';

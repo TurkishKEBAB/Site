@@ -1,5 +1,8 @@
 # Backend Paketleri Başarıyla Yüklendi ✅
 
+> Historical installation snapshot.
+> Use `PROGRESS.md` for current sprint and completion status.
+
 ## Yükleme Tarihi
 2025-10-30
 

@@ -18,7 +18,7 @@ RED='\033[0;31m'
 NC='\033[0m' # No Color
 
 # Check if .env file exists
-if [ ! -f .env ]; then
+if [[ ! -f .env ]]; then
     echo -e "${YELLOW}⚠ .env file not found!${NC}"
     echo "Creating .env from .env.example..."
     cp .env.example .env
@@ -90,7 +90,7 @@ run_migrations() {
     # Run migration script
     python3 migrate.py
     
-    if [ $? -eq 0 ]; then
+    if [[ $? -eq 0 ]]; then
         echo -e "${GREEN}✓ Migrations completed successfully${NC}"
     else
         echo -e "${RED}✗ Migration failed${NC}"
@@ -108,7 +108,7 @@ verify_setup() {
     
     echo "  Tables created: $TABLE_COUNT"
     
-    if [ $TABLE_COUNT -gt 0 ]; then
+    if [[ $TABLE_COUNT -gt 0 ]]; then
         echo -e "${GREEN}✓ Database setup verified${NC}"
     else
         echo -e "${RED}✗ No tables found${NC}"

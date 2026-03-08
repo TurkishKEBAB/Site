@@ -1,5 +1,8 @@
 # Portfolio Maintenance Plan — Implementation Audit
 
+> Historical audit snapshot.
+> For live sprint/project status, use `PROGRESS.md`.
+
 Date: 2026-02-22
 
 This audit reviews the current codebase against the revised maintenance/deploy/UIUX plan and identifies what is **done**, **partially done**, and **still missing**.

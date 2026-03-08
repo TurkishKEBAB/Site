@@ -2,8 +2,9 @@
 Storage Service
 Supabase Storage integration for file uploads
 """
+import asyncio
 from supabase import create_client, Client
-from typing import Optional, BinaryIO
+from typing import Optional
 from PIL import Image
 import io
 from loguru import logger
@@ -104,17 +105,21 @@ class StorageService:
                 file_data = self.optimize_image(file_data)
             
             # Upload to Supabase
-            response = self.supabase.storage.from_(self.bucket_name).upload(
+            await asyncio.to_thread(
+                self.supabase.storage.from_(self.bucket_name).upload,
                 file_path,
                 file_data,
                 {
                     "content-type": content_type,
                     "x-upsert": "true"  # Overwrite if exists
-                }
+                },
             )
             
             # Get public URL
-            public_url = self.supabase.storage.from_(self.bucket_name).get_public_url(file_path)
+            public_url = await asyncio.to_thread(
+                self.supabase.storage.from_(self.bucket_name).get_public_url,
+                file_path,
+            )
             
             logger.info(f"File uploaded successfully: {file_path}")
             return public_url
@@ -138,7 +143,10 @@ class StorageService:
             return False
         
         try:
-            self.supabase.storage.from_(self.bucket_name).remove([file_path])
+            await asyncio.to_thread(
+                self.supabase.storage.from_(self.bucket_name).remove,
+                [file_path],
+            )
             logger.info(f"File deleted successfully: {file_path}")
             return True
         
@@ -160,7 +168,10 @@ class StorageService:
             return None
         
         try:
-            return self.supabase.storage.from_(self.bucket_name).get_public_url(file_path)
+            return await asyncio.to_thread(
+                self.supabase.storage.from_(self.bucket_name).get_public_url,
+                file_path,
+            )
         
         except Exception as e:
             logger.error(f"Error getting file URL: {e}")

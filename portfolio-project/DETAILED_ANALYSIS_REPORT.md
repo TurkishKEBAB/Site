@@ -1,5 +1,8 @@
 # 📊 YİĞİT OKUR PORTFOLIO - DETAYLI ANALİZ RAPORU
 
+> Historical audit document.
+> Current, reconciled status is tracked in `PROGRESS.md`.
+
 **Tarih:** 30 Ekim 2025  
 **Hazırlayan:** AI Assistant  
 **Durum:** Sistem %70 Tamamlanmış

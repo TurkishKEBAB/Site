@@ -23,7 +23,7 @@ router = APIRouter()
 async def get_skills(
     skip: int = Query(0, ge=0),
     limit: int = Query(100, ge=1, le=200),
-    language: str = Query("en", regex="^(tr|en)$"),
+    language: str = Query("en", pattern="^(tr|en)$"),
     db: Session = Depends(get_db)
 ):
     """
@@ -50,7 +50,7 @@ async def get_skills(
 
 @router.get("/by-category", response_model=Dict[str, List[SkillResponse]])
 async def get_skills_by_category(
-    language: str = Query("en", regex="^(tr|en)$"),
+    language: str = Query("en", pattern="^(tr|en)$"),
     db: Session = Depends(get_db)
 ):
     """
@@ -63,7 +63,7 @@ async def get_skills_by_category(
 @router.get("/{skill_id}", response_model=SkillResponse)
 async def get_skill(
     skill_id: uuid.UUID,
-    language: str = Query("en", regex="^(tr|en)$"),
+    language: str = Query("en", pattern="^(tr|en)$"),
     db: Session = Depends(get_db)
 ):
     """

@@ -1,5 +1,8 @@
 # GÖREV 1: Backend Yapısal Analiz Raporu
 
+> Historical task analysis.
+> The active project state is tracked in `PROGRESS.md`.
+
 ## ✅ Durum: Güncel (Ekim 2025)
 
 ### Yapılan Kontroller:

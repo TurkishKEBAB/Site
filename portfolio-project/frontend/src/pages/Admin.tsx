@@ -1778,7 +1778,7 @@ export default function Admin() {
                         type="number"
                         value={image.display_order}
                         onChange={(e) => {
-                          const newOrder = parseInt(e.target.value) || 0;
+                          const newOrder = Number.parseInt(e.target.value, 10) || 0;
                           handleUpdateImageOrder(image.id, newOrder);
                         }}
                         className="w-16 rounded border border-gray-300 bg-white px-2 py-1 text-xs text-gray-900 focus:border-primary-500 focus:ring-1 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100"
