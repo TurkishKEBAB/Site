@@ -9,13 +9,19 @@ type Particle = {
   opacity: number
 }
 
+const getSecureRandom = (): number => {
+  const randomValues = new Uint32Array(1)
+  globalThis.crypto.getRandomValues(randomValues)
+  return randomValues[0] / 4294967296
+}
+
 const createParticle = (): Particle => ({
-  x: Math.random() * globalThis.innerWidth,
-  y: Math.random() * globalThis.innerHeight,
-  size: Math.random() * 3 + 1,
-  speedX: (Math.random() - 0.5) * 0.4,
-  speedY: (Math.random() - 0.5) * 0.4,
-  opacity: Math.random() * 0.4 + 0.2,
+  x: getSecureRandom() * globalThis.innerWidth,
+  y: getSecureRandom() * globalThis.innerHeight,
+  size: getSecureRandom() * 3 + 1,
+  speedX: (getSecureRandom() - 0.5) * 0.4,
+  speedY: (getSecureRandom() - 0.5) * 0.4,
+  opacity: getSecureRandom() * 0.4 + 0.2,
 })
 
 const updateParticle = (particle: Particle) => {
