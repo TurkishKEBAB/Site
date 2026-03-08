@@ -291,6 +291,35 @@ export default function About() {
     { type: 'achievement', label: text.filters.achievement, icon: <FiTarget /> },
   ];
 
+  const getDisplayTypeBadgeClass = (displayType: string): string => {
+    switch (displayType) {
+      case 'work':
+      case 'certification':
+        return 'bg-primary-600/30 text-primary-300';
+      case 'education':
+        return 'bg-green-600/30 text-green-300';
+      case 'volunteer':
+        return 'bg-yellow-600/30 text-yellow-300';
+      default:
+        return 'bg-pink-600/30 text-pink-300';
+    }
+  };
+
+  const getExperienceYearRange = (experience: any): string => {
+    const startDate = experience.start_date ? new Date(experience.start_date) : null;
+    const endDate = experience.end_date ? new Date(experience.end_date) : null;
+    const startYear = startDate && !Number.isNaN(startDate.getTime()) ? startDate.getFullYear() : text.unknown;
+
+    let endYear: string | number = text.unknown;
+    if (experience.is_current) {
+      endYear = text.present;
+    } else if (endDate && !Number.isNaN(endDate.getTime())) {
+      endYear = endDate.getFullYear();
+    }
+
+    return `${startYear} - ${endYear}`;
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-900 via-primary-900 to-gray-900 flex items-center justify-center">
@@ -447,25 +476,14 @@ export default function About() {
                             className="bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-lg rounded-xl p-6 border border-white/20 hover:border-primary-500/50 transition-all shadow-xl"
                           >
                             <div className={`flex items-center gap-2 mb-3 ${index % 2 === 0 ? 'md:justify-end' : ''}`}>
-                              <span className={`px-3 py-1 rounded-full text-xs font-semibold ${item.displayType === 'work' ? 'bg-primary-600/30 text-primary-300' :
-                                  item.displayType === 'education' ? 'bg-green-600/30 text-green-300' :
-                                    item.displayType === 'volunteer' ? 'bg-yellow-600/30 text-yellow-300' :
-                                      item.displayType === 'certification' ? 'bg-primary-600/30 text-primary-300' :
-                                        'bg-pink-600/30 text-pink-300'
-                                }`}>
+                              <span className={`px-3 py-1 rounded-full text-xs font-semibold ${getDisplayTypeBadgeClass(item.displayType)}`}>
                                 {text.filters[item.displayType as keyof typeof text.filters] || item.displayType}
                               </span>
                               <span className="text-gray-400 text-sm">
                                 {isExperience
                                   ? (() => {
                                     const exp = item as any;
-                                    const startDate = exp.start_date ? new Date(exp.start_date) : null;
-                                    const endDate = exp.end_date ? new Date(exp.end_date) : null;
-                                    const startYear = startDate && !Number.isNaN(startDate.getTime()) ? startDate.getFullYear() : text.unknown;
-                                    const endYear = exp.is_current
-                                      ? text.present
-                                      : (endDate && !Number.isNaN(endDate.getTime()) ? endDate.getFullYear() : text.unknown);
-                                    return `${startYear} - ${endYear}`;
+                                    return getExperienceYearRange(exp);
                                   })()
                                   : (item as any).date
                                 }

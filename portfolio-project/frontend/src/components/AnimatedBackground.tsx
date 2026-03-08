@@ -10,8 +10,8 @@ type Particle = {
 }
 
 const createParticle = (): Particle => ({
-  x: Math.random() * window.innerWidth,
-  y: Math.random() * window.innerHeight,
+  x: Math.random() * globalThis.innerWidth,
+  y: Math.random() * globalThis.innerHeight,
   size: Math.random() * 3 + 1,
   speedX: (Math.random() - 0.5) * 0.4,
   speedY: (Math.random() - 0.5) * 0.4,
@@ -22,10 +22,10 @@ const updateParticle = (particle: Particle) => {
   particle.x += particle.speedX
   particle.y += particle.speedY
 
-  if (particle.x > window.innerWidth) particle.x = 0
-  if (particle.x < 0) particle.x = window.innerWidth
-  if (particle.y > window.innerHeight) particle.y = 0
-  if (particle.y < 0) particle.y = window.innerHeight
+  if (particle.x > globalThis.innerWidth) particle.x = 0
+  if (particle.x < 0) particle.x = globalThis.innerWidth
+  if (particle.y > globalThis.innerHeight) particle.y = 0
+  if (particle.y < 0) particle.y = globalThis.innerHeight
 }
 
 const drawParticle = (ctx: CanvasRenderingContext2D, particle: Particle) => {
@@ -52,25 +52,25 @@ export default function AnimatedBackground() {
     }
 
     const ctx = context
-    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    const prefersReducedMotion = globalThis.matchMedia('(prefers-reduced-motion: reduce)').matches
 
     const setCanvasSize = () => {
-      const dpr = Math.min(window.devicePixelRatio || 1, 2)
-      canvas.width = window.innerWidth * dpr
-      canvas.height = window.innerHeight * dpr
-      canvas.style.width = `${window.innerWidth}px`
-      canvas.style.height = `${window.innerHeight}px`
+      const dpr = Math.min(globalThis.devicePixelRatio || 1, 2)
+      canvas.width = globalThis.innerWidth * dpr
+      canvas.height = globalThis.innerHeight * dpr
+      canvas.style.width = `${globalThis.innerWidth}px`
+      canvas.style.height = `${globalThis.innerHeight}px`
       ctx.setTransform(1, 0, 0, 1, 0, 0)
       ctx.scale(dpr, dpr)
     }
 
     const drawStaticBackground = () => {
-      const gradient = ctx.createLinearGradient(0, 0, window.innerWidth, window.innerHeight)
+      const gradient = ctx.createLinearGradient(0, 0, globalThis.innerWidth, globalThis.innerHeight)
       gradient.addColorStop(0, '#0f172a')
       gradient.addColorStop(0.5, '#0c4a6e')
       gradient.addColorStop(1, '#1e293b')
       ctx.fillStyle = gradient
-      ctx.fillRect(0, 0, window.innerWidth, window.innerHeight)
+      ctx.fillRect(0, 0, globalThis.innerWidth, globalThis.innerHeight)
     }
 
     setCanvasSize()
@@ -80,7 +80,7 @@ export default function AnimatedBackground() {
       return () => undefined
     }
 
-    const particleCount = window.innerWidth < 768 ? 15 : 30
+    const particleCount = globalThis.innerWidth < 768 ? 15 : 30
     const particles: Particle[] = Array.from({ length: particleCount }, createParticle)
 
     let gradientAngle = 0
@@ -91,15 +91,15 @@ export default function AnimatedBackground() {
       const gradient = ctx.createLinearGradient(
         0,
         0,
-        window.innerWidth * Math.cos(gradientAngle),
-        window.innerHeight * Math.sin(gradientAngle),
+        globalThis.innerWidth * Math.cos(gradientAngle),
+        globalThis.innerHeight * Math.sin(gradientAngle),
       )
       gradient.addColorStop(0, '#0f172a')
       gradient.addColorStop(0.5, '#0c4a6e')
       gradient.addColorStop(1, '#1e293b')
 
       ctx.fillStyle = gradient
-      ctx.fillRect(0, 0, window.innerWidth, window.innerHeight)
+      ctx.fillRect(0, 0, globalThis.innerWidth, globalThis.innerHeight)
 
       gradientAngle += 0.001
 
@@ -115,7 +115,7 @@ export default function AnimatedBackground() {
         for (let j = i + 1; j < particles.length; j += 1) {
           const dx = particles[i].x - particles[j].x
           const dy = particles[i].y - particles[j].y
-          const distance = Math.sqrt(dx * dx + dy * dy)
+          const distance = Math.hypot(dx, dy)
 
           if (distance < 120) {
             ctx.globalAlpha = 1 - distance / 120
@@ -159,13 +159,13 @@ export default function AnimatedBackground() {
     }
 
     document.addEventListener('visibilitychange', onVisibilityChange)
-    window.addEventListener('resize', onResize, { passive: true })
+    globalThis.addEventListener('resize', onResize, { passive: true })
 
     animationFrameId = requestAnimationFrame(loop)
 
     return () => {
       document.removeEventListener('visibilitychange', onVisibilityChange)
-      window.removeEventListener('resize', onResize)
+      globalThis.removeEventListener('resize', onResize)
       if (animationFrameId) {
         cancelAnimationFrame(animationFrameId)
       }
