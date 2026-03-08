@@ -24,7 +24,7 @@ async def get_experiences(
     skip: int = Query(0, ge=0),
     limit: int = Query(50, ge=1, le=100),
     experience_type: str = Query(None),
-    language: str = Query("en", regex="^(tr|en)$"),
+    language: str = Query("en", pattern="^(tr|en)$"),
     db: Session = Depends(get_db)
 ):
     """
@@ -55,7 +55,7 @@ async def get_experiences(
 
 @router.get("/by-type", response_model=Dict[str, List[ExperienceResponse]])
 async def get_experiences_grouped_by_type(
-    language: str = Query("en", regex="^(tr|en)$"),
+    language: str = Query("en", pattern="^(tr|en)$"),
     db: Session = Depends(get_db)
 ):
     """
@@ -73,7 +73,7 @@ async def get_experiences_grouped_by_type(
 @router.get("/{experience_id}", response_model=ExperienceResponse)
 async def get_experience(
     experience_id: uuid.UUID,
-    language: str = Query("en", regex="^(tr|en)$"),
+    language: str = Query("en", pattern="^(tr|en)$"),
     db: Session = Depends(get_db)
 ):
     """

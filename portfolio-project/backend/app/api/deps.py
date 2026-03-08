@@ -26,7 +26,7 @@ def get_db() -> Generator[Session, None, None]:
     yield from db_session()
 
 
-async def get_current_user(
+def get_current_user(
     credentials: HTTPAuthorizationCredentials = Depends(security),
     db: Session = Depends(get_db)
 ) -> User:
@@ -77,7 +77,7 @@ async def get_current_user(
     return user
 
 
-async def require_admin(
+def require_admin(
     current_user: User = Depends(get_current_user)
 ) -> User:
     """
@@ -112,7 +112,7 @@ async def require_admin(
 
 
 # Optional authentication (for endpoints that work with or without auth)
-async def get_current_user_optional(
+def get_current_user_optional(
     credentials: HTTPAuthorizationCredentials | None = Depends(HTTPBearer(auto_error=False)),
     db: Session = Depends(get_db)
 ) -> User | None:

@@ -5,7 +5,7 @@ Blog posts and translations management
 from sqlalchemy.orm import Session, joinedload
 from sqlalchemy import or_, func
 from typing import List, Optional
-from datetime import datetime
+from datetime import datetime, timezone
 import uuid
 from slugify import slugify
 
@@ -121,7 +121,7 @@ def create_blog_post(db: Session, post: BlogPostCreate, author_id: uuid.UUID) ->
         cover_image=str(post.cover_image) if post.cover_image else None,
         author_id=author_id,
         published=post.published,
-        published_at=datetime.utcnow() if post.published else None,
+        published_at=datetime.now(timezone.utc) if post.published else None,
         reading_time=reading_time
     )
     
@@ -172,7 +172,7 @@ def update_blog_post(
     # Handle published status change
     if "published" in update_data:
         if update_data["published"] and not db_post.published:
-            update_data["published_at"] = datetime.utcnow()
+            update_data["published_at"] = datetime.now(timezone.utc)
         elif not update_data["published"]:
             update_data["published_at"] = None
     

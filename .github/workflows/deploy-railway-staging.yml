@@ -1,0 +1,42 @@
+name: Deploy Backend Staging (Railway)
+
+on:
+  push:
+    branches:
+      - Codex_Implementation
+      - develop
+  workflow_dispatch:
+
+concurrency:
+  group: railway-staging-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  deploy-staging:
+    name: Railway Staging Deploy
+    runs-on: ubuntu-latest
+    if: ${{ secrets.RAILWAY_DEPLOY_HOOK_URL != '' }}
+
+    steps:
+      - name: Trigger Railway staging deployment
+        env:
+          RAILWAY_DEPLOY_HOOK_URL: ${{ secrets.RAILWAY_DEPLOY_HOOK_URL }}
+        run: |
+          echo "Triggering Railway staging deploy hook"
+          curl -fsSL -X POST "$RAILWAY_DEPLOY_HOOK_URL"
+
+      - name: Optional staging health check
+        if: ${{ vars.STAGING_API_HEALTH_URL != '' }}
+        run: |
+          echo "Checking staging health: ${{ vars.STAGING_API_HEALTH_URL }}"
+          for attempt in {1..20}; do
+            code=$(curl -s -o /dev/null -w "%{http_code}" "${{ vars.STAGING_API_HEALTH_URL }}")
+            if [ "$code" = "200" ]; then
+              echo "Staging health check passed"
+              exit 0
+            fi
+            echo "Attempt $attempt/20 failed with status $code, retrying..."
+            sleep 15
+          done
+          echo "Staging health check failed"
+          exit 1

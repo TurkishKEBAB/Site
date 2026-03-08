@@ -98,11 +98,11 @@ def update_last_login(db: Session, user_id: uuid.UUID) -> User:
     Returns:
         Updated user
     """
-    from datetime import datetime
+    from datetime import datetime, timezone
     
     user = get_user_by_id(db, user_id)
     if user:
-        user.last_login = datetime.utcnow()
+        user.last_login = datetime.now(timezone.utc)
         db.commit()
         db.refresh(user)
     

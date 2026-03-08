@@ -4,7 +4,6 @@ Fetches repository data with Redis caching (24h)
 """
 import httpx
 from typing import List, Optional, Dict, Any
-from datetime import datetime, timedelta
 from loguru import logger
 
 from app.config import settings
@@ -22,7 +21,7 @@ class GitHubService:
         self.cache_key = f"github_repos_{self.username}"
         self.cache_ttl = settings.GITHUB_CACHE_HOURS * 3600  # Convert hours to seconds
     
-    async def get_headers(self) -> Dict[str, str]:
+    def get_headers(self) -> Dict[str, str]:
         """Get headers for GitHub API requests"""
         headers = {
             "Accept": "application/vnd.github.v3+json",
@@ -53,7 +52,7 @@ class GitHubService:
         logger.info(f"Fetching GitHub repos for {self.username} from API")
         
         try:
-            headers = await self.get_headers()
+            headers = self.get_headers()
             
             async with httpx.AsyncClient() as client:
                 response = await client.get(
@@ -115,7 +114,7 @@ class GitHubService:
             Repository data dictionary or None
         """
         try:
-            headers = await self.get_headers()
+            headers = self.get_headers()
             
             async with httpx.AsyncClient() as client:
                 response = await client.get(

@@ -85,7 +85,7 @@ def _serialize_project(project, language: str) -> dict:
 async def get_projects(
     skip: int = Query(0, ge=0),
     limit: int = Query(20, ge=1, le=100),
-    language: str = Query("en", regex="^(tr|en)$"),
+    language: str = Query("en", pattern="^(tr|en)$"),
     featured_only: bool = False,
     technology_slug: str = None,
     db: Session = Depends(get_db)
@@ -121,7 +121,7 @@ async def get_projects(
 @router.get("/{slug}", response_model=ProjectResponse)
 async def get_project(
     slug: str,
-    language: str = Query("en", regex="^(tr|en)$"),
+    language: str = Query("en", pattern="^(tr|en)$"),
     db: Session = Depends(get_db)
 ):
     """

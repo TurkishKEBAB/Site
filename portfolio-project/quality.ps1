@@ -16,7 +16,7 @@ function Write-Section {
 
 $repoRoot = $PSScriptRoot
 
-Write-Section -Title 'Sprint 1 Quality Gate'
+Write-Section -Title 'Project Quality Gate'
 
 if (-not $SkipBackend) {
     Write-Host '[1/2] Backend tests + coverage' -ForegroundColor Yellow

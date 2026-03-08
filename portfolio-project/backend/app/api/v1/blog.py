@@ -25,7 +25,7 @@ router = APIRouter()
 async def get_blog_posts(
     skip: int = Query(0, ge=0),
     limit: int = Query(20, ge=1, le=100),
-    language: str = Query("en", regex="^(tr|en)$"),
+    language: str = Query("en", pattern="^(tr|en)$"),
     published_only: bool = True,
     db: Session = Depends(get_db)
 ):
@@ -56,7 +56,7 @@ async def get_blog_posts(
 @router.get("/search", response_model=List[BlogPostResponse])
 async def search_blog_posts(
     q: str = Query(..., min_length=2),
-    language: str = Query("en", regex="^(tr|en)$"),
+    language: str = Query("en", pattern="^(tr|en)$"),
     limit: int = Query(10, ge=1, le=50),
     db: Session = Depends(get_db)
 ):
@@ -69,7 +69,7 @@ async def search_blog_posts(
 @router.get("/{slug}", response_model=BlogPostResponse)
 async def get_blog_post(
     slug: str,
-    language: str = Query("en", regex="^(tr|en)$"),
+    language: str = Query("en", pattern="^(tr|en)$"),
     db: Session = Depends(get_db)
 ):
     """

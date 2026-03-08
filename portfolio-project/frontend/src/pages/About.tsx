@@ -268,8 +268,12 @@ export default function About() {
       const dateB = new Date(b.itemDate || '').getTime() || 0;
       return dateB - dateA;
     }
-    const yearA = a.isBackendData ? new Date(a.itemDate || '').getFullYear() : parseInt(a.itemDate?.split('-').pop() || '0');
-    const yearB = b.isBackendData ? new Date(b.itemDate || '').getFullYear() : parseInt(b.itemDate?.split('-').pop() || '0');
+    const yearA = a.isBackendData
+      ? new Date(a.itemDate || '').getFullYear()
+      : Number.parseInt(a.itemDate?.split('-').pop() || '0', 10);
+    const yearB = b.isBackendData
+      ? new Date(b.itemDate || '').getFullYear()
+      : Number.parseInt(b.itemDate?.split('-').pop() || '0', 10);
     return yearB - yearA;
   });
 
@@ -457,8 +461,10 @@ export default function About() {
                                     const exp = item as any;
                                     const startDate = exp.start_date ? new Date(exp.start_date) : null;
                                     const endDate = exp.end_date ? new Date(exp.end_date) : null;
-                                    const startYear = startDate && !isNaN(startDate.getTime()) ? startDate.getFullYear() : text.unknown;
-                                    const endYear = exp.is_current ? text.present : (endDate && !isNaN(endDate.getTime()) ? endDate.getFullYear() : text.unknown);
+                                    const startYear = startDate && !Number.isNaN(startDate.getTime()) ? startDate.getFullYear() : text.unknown;
+                                    const endYear = exp.is_current
+                                      ? text.present
+                                      : (endDate && !Number.isNaN(endDate.getTime()) ? endDate.getFullYear() : text.unknown);
                                     return `${startYear} - ${endYear}`;
                                   })()
                                   : (item as any).date

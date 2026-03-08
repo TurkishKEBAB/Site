@@ -2,11 +2,13 @@ from datetime import timedelta
 
 from app.utils.security import create_access_token
 
+TEST_LOGIN_SECRET = "test-user-secret"
+
 
 def test_login_json_success(client, admin_user):
     response = client.post(
         "/api/v1/auth/login/json",
-        json={"email": admin_user.email, "password": "testpass123"},
+        json={"email": admin_user.email, "password": TEST_LOGIN_SECRET},
     )
 
     assert response.status_code == 200
@@ -29,7 +31,7 @@ def test_login_json_invalid_credentials(client, admin_user):
 def test_login_form_success(client, admin_user):
     response = client.post(
         "/api/v1/auth/login",
-        data={"username": admin_user.email, "password": "testpass123"},
+        data={"username": admin_user.email, "password": TEST_LOGIN_SECRET},
     )
 
     assert response.status_code == 200
@@ -42,13 +44,13 @@ def test_login_json_rate_limit(client, admin_user):
     for _ in range(5):
         ok = client.post(
             "/api/v1/auth/login/json",
-            json={"email": admin_user.email, "password": "testpass123"},
+            json={"email": admin_user.email, "password": TEST_LOGIN_SECRET},
         )
         assert ok.status_code == 200
 
     blocked = client.post(
         "/api/v1/auth/login/json",
-        json={"email": admin_user.email, "password": "testpass123"},
+        json={"email": admin_user.email, "password": TEST_LOGIN_SECRET},
     )
 
     assert blocked.status_code == 429

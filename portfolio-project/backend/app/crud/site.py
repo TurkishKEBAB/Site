@@ -4,7 +4,7 @@ Site Configuration, Translations, and Analytics CRUD Operations
 from sqlalchemy.orm import Session
 from typing import List, Optional, Dict
 import uuid
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 from app.models.site import SiteConfig, Translation, PageView
 
@@ -197,7 +197,7 @@ def get_page_views_count(
         query = query.filter(PageView.page_path == page_path)
     
     if hours:
-        cutoff_time = datetime.utcnow() - timedelta(hours=hours)
+        cutoff_time = datetime.now(timezone.utc) - timedelta(hours=hours)
         query = query.filter(PageView.viewed_at >= cutoff_time)
     
     return query.scalar()

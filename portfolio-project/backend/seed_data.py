@@ -7,7 +7,7 @@ from sqlalchemy.orm import Session
 from app.database import engine, SessionLocal
 from app.models import *
 from app.utils.security import get_password_hash
-from datetime import datetime, date
+from datetime import datetime, date, timezone
 from slugify import slugify
 import uuid
 
@@ -716,7 +716,7 @@ A 24-hour competition requires stamina and strategy. More tips coming!""",
             published=post_data["published"],
             reading_time=post_data["reading_time"],
             views=post_data["views"],
-            published_at=datetime.utcnow() if post_data["published"] else None
+            published_at=datetime.now(timezone.utc) if post_data["published"] else None
         )
         db.add(post)
     

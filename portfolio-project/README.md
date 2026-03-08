@@ -32,7 +32,8 @@ A full-stack portfolio platform that highlights Cloud & DevOps projects, technic
 **Tooling & DevOps**
 - Docker & docker-compose for local stack
 - PowerShell helpers (`start.ps1`, `start_backend.ps1`)
-- Loguru logging, health checks, ready-to-enable CI/CD
+- Loguru logging, health checks, GitHub Actions CI baseline
+- Staging deployment workflows for Vercel preview and Railway staging
 
 ## ✨ Feature Snapshot
 
@@ -150,6 +151,7 @@ Automated tests are available under `backend/tests/` and frontend Vitest suites 
 Active roadmap is tracked in:
 - `PROGRESS.md` - canonical sprint status
 - `QUICKSTART.md` - current operational runbook
+- `CI_CD_SETUP.md` - CI workflow and Sonar setup
 - `COMPREHENSIVE_PROJECT_ANALYSIS.md` - historical planning snapshot
 
 ## 🤝 Contributing / Next Steps
