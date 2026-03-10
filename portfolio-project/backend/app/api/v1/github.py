@@ -6,11 +6,12 @@ from typing import List
 from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.orm import Session
 
-from app.api.deps import get_db, require_admin
+from app.api.deps import get_db, require_admin, get_current_user_optional
 from app.schemas.github import GitHubRepo, GitHubSyncResponse
 from app.crud import github as github_crud
 from app.services.github_service import GitHubService
 from app.config import get_settings
+from app.models.user import User
 
 router = APIRouter()
 settings = get_settings()
@@ -21,7 +22,8 @@ async def get_github_repos(
     limit: int = Query(20, ge=1, le=50),
     featured_only: bool = False,
     force_refresh: bool = False,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: User | None = Depends(get_current_user_optional),
 ):
     """
     Get GitHub repositories
@@ -29,6 +31,18 @@ async def get_github_repos(
     """
     # Check if cache is valid
     cache_valid = github_crud.is_cache_valid(db, cache_hours=24)
+
+    if force_refresh:
+        if not current_user:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Authentication required for force refresh",
+            )
+        if current_user.email.lower() not in set(settings.admin_email_list):
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Admin privileges required for force refresh",
+            )
 
     if not cache_valid or force_refresh:
         # Fetch fresh data from GitHub

@@ -5,6 +5,7 @@ export interface ContactMessageCreateRequest {
   email: string;
   subject: string;
   message: string;
+  captcha_token?: string;
 }
 
 export interface ContactSubmitResponse {

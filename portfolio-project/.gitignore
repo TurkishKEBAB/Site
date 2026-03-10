@@ -4,3 +4,4 @@ frontend/coverage/
 .coverage
 backend/coverage.xml
 docker-data/postgres/
+docker-data/postgres-backups/

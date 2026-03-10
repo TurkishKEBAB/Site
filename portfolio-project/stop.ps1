@@ -1,72 +1,102 @@
-# Yigit Okur Portfolio Project Durdurma Scripti
-# Bu script tum servisleri durdurur:
-# - Frontend ve Backend process'leri
-# - Docker containers (PostgreSQL + Redis)
+﻿param(
+    [switch]$ResetData
+)
 
-Write-Host "========================================" -ForegroundColor Cyan
-Write-Host "Portfolio Project Durduruluyor..." -ForegroundColor Cyan
-Write-Host "========================================" -ForegroundColor Cyan
-Write-Host ""
+Set-StrictMode -Version Latest
+$ErrorActionPreference = 'Stop'
 
-# 1. Backend ve Frontend process'lerini durdur
-Write-Host "[1/2] Backend ve Frontend process'leri durduruluyor..." -ForegroundColor Yellow
+$projectRoot = $PSScriptRoot
+$backendPath = Join-Path $projectRoot 'backend'
+$composeFile = Join-Path $backendPath 'docker-compose.yml'
+$frontendPort = 3000
 
-# Uvicorn (Backend) process'lerini bul ve durdur
-$uvicornProcesses = Get-Process -Name "python" -ErrorAction SilentlyContinue | Where-Object {
-    $_.CommandLine -like "*uvicorn*"
-}
-if ($uvicornProcesses) {
-    Write-Host "  -> Backend (Uvicorn) durduruluyor..." -ForegroundColor Green
-    $uvicornProcesses | Stop-Process -Force
-} else {
-    Write-Host "  -> Backend process bulunamadi" -ForegroundColor Gray
-}
+function Write-Section {
+    param(
+        [string]$Title,
+        [ConsoleColor]$Color = [ConsoleColor]::Cyan
+    )
 
-# Node (Frontend) process'lerini bul ve durdur
-$nodeProcesses = Get-Process -Name "node" -ErrorAction SilentlyContinue | Where-Object {
-    $_.CommandLine -like "*vite*"
-}
-if ($nodeProcesses) {
-    Write-Host "  -> Frontend (Vite) durduruluyor..." -ForegroundColor Green
-    $nodeProcesses | Stop-Process -Force
-} else {
-    Write-Host "  -> Frontend process bulunamadi" -ForegroundColor Gray
+    Write-Host ''
+    Write-Host ('=' * 52) -ForegroundColor $Color
+    Write-Host $Title -ForegroundColor $Color
+    Write-Host ('=' * 52) -ForegroundColor $Color
 }
 
-Write-Host ""
+function Test-CommandAvailable {
+    param([string]$Command)
 
-# 2. Docker container'lari durdur (opsiyonel)
-Write-Host "[2/2] Docker container'lar kontrol ediliyor..." -ForegroundColor Yellow
-$stopContainers = Read-Host "Docker container'lari da durdurmak ister misiniz? (E/H)"
-if ($stopContainers -eq "E" -or $stopContainers -eq "e") {
-    Write-Host ""
-    
-    # PostgreSQL durdur
-    $postgresRunning = docker ps --filter "name=portfolio_postgres" --filter "status=running" -q
-    if ($postgresRunning) {
-        Write-Host "  -> PostgreSQL durduruluyor..." -ForegroundColor Green
-        docker stop portfolio_postgres
-    } else {
-        Write-Host "  -> PostgreSQL zaten durmus" -ForegroundColor Gray
+    return [bool](Get-Command $Command -ErrorAction SilentlyContinue)
+}
+
+function Stop-FrontendProcess {
+    Write-Host 'Stopping local frontend process on port 3000 (if any)...' -ForegroundColor Yellow
+
+    $frontendPids = @()
+    try {
+        $frontendPids = @(
+            Get-NetTCPConnection -LocalPort $frontendPort -State Listen -ErrorAction SilentlyContinue |
+                Select-Object -ExpandProperty OwningProcess -Unique
+        )
     }
-    
-    # Redis durdur
-    $redisRunning = docker ps --filter "name=portfolio_redis" --filter "status=running" -q
-    if ($redisRunning) {
-        Write-Host "  -> Redis durduruluyor..." -ForegroundColor Green
-        docker stop portfolio_redis
-    } else {
-        Write-Host "  -> Redis zaten durmus" -ForegroundColor Gray
+    catch {
+        $frontendPids = @()
     }
-} else {
-    Write-Host "  -> Docker container'lar calismaya devam ediyor" -ForegroundColor Gray
+
+    if ($frontendPids.Count -eq 0) {
+        Write-Host '  -> No frontend process detected on port 3000.' -ForegroundColor Gray
+        return
+    }
+
+    foreach ($pidValue in $frontendPids) {
+        if ($pidValue -eq $PID) {
+            continue
+        }
+
+        try {
+            Stop-Process -Id $pidValue -Force -ErrorAction Stop
+            Write-Host "  -> Stopped PID $pidValue" -ForegroundColor Green
+        }
+        catch {
+            Write-Host "  -> Could not stop PID ${pidValue}: $($_.Exception.Message)" -ForegroundColor Yellow
+        }
+    }
 }
 
-Write-Host ""
-Write-Host "========================================" -ForegroundColor Green
-Write-Host "Islem tamamlandi!" -ForegroundColor Green
-Write-Host "========================================" -ForegroundColor Green
-Write-Host ""
-Write-Host "Ipucu: Projeyi yeniden baslatmak icin start.ps1" -ForegroundColor Yellow
-Write-Host "        scriptini calistirin" -ForegroundColor Yellow
-Write-Host ""
+function Stop-ComposeStack {
+    if (-not (Test-Path $composeFile)) {
+        Write-Host "Compose file not found: $composeFile" -ForegroundColor Yellow
+        return
+    }
+
+    if (-not (Test-CommandAvailable -Command 'docker')) {
+        Write-Host 'Docker command not found. Skipping compose shutdown.' -ForegroundColor Yellow
+        return
+    }
+
+    Write-Host 'Stopping docker compose stack...' -ForegroundColor Yellow
+
+    if ($ResetData) {
+        Write-Host '  -> ResetData enabled: containers, networks and volumes will be removed.' -ForegroundColor Yellow
+        docker compose -f $composeFile down -v --remove-orphans
+    }
+    else {
+        docker compose -f $composeFile down --remove-orphans
+    }
+
+    if ($LASTEXITCODE -ne 0) {
+        throw 'docker compose down failed.'
+    }
+
+    Write-Host '  -> Compose stack stopped.' -ForegroundColor Green
+}
+
+Write-Section -Title 'Portfolio Project Shutdown' -Color ([ConsoleColor]::Cyan)
+
+Stop-FrontendProcess
+Stop-ComposeStack
+
+Write-Section -Title 'Shutdown Complete' -Color ([ConsoleColor]::Green)
+Write-Host 'Start again: .\start.ps1' -ForegroundColor White
+if ($ResetData) {
+    Write-Host 'Data was reset. Next start will initialize a fresh database.' -ForegroundColor Yellow
+}

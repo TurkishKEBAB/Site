@@ -58,6 +58,59 @@ def test_submit_contact_message_validation(client):
     assert response.status_code == 422
 
 
+def test_submit_contact_message_rate_limited(client, monkeypatch):
+    class DummyEmailService:
+        async def send_contact_form_confirmation(self, **kwargs):
+            return True
+
+        async def send_admin_notification(self, **kwargs):
+            return True
+
+    monkeypatch.setattr("app.api.v1.contact.EmailService", DummyEmailService)
+
+    payload = {
+        "name": "Rate Test",
+        "email": "rate@example.com",
+        "subject": "Rate",
+        "message": "Message body long enough",
+    }
+
+    for _ in range(5):
+        ok = client.post("/api/v1/contact/", json=payload)
+        assert ok.status_code == 201
+
+    blocked = client.post("/api/v1/contact/", json=payload)
+    assert blocked.status_code == 429
+
+
+def test_submit_contact_requires_captcha_when_enabled(client, monkeypatch):
+    class DummyEmailService:
+        async def send_contact_form_confirmation(self, **kwargs):
+            return True
+
+        async def send_admin_notification(self, **kwargs):
+            return True
+
+    async def fake_verify_captcha_token(*args, **kwargs):
+        return False
+
+    monkeypatch.setattr("app.api.v1.contact.EmailService", DummyEmailService)
+    monkeypatch.setattr("app.api.v1.contact.settings.CAPTCHA_ENABLED", True)
+    monkeypatch.setattr("app.api.v1.contact.verify_captcha_token", fake_verify_captcha_token)
+
+    response = client.post(
+        "/api/v1/contact/",
+        json={
+            "name": "Captcha User",
+            "email": "captcha@example.com",
+            "subject": "Captcha",
+            "message": "This is a captcha protected message",
+        },
+    )
+    assert response.status_code == 400
+    assert response.json()["detail"] == "Captcha verification failed"
+
+
 def test_get_messages_requires_admin(client, user_headers):
     unauth = client.get("/api/v1/contact/")
     forbidden = client.get("/api/v1/contact/", headers=user_headers)

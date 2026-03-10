@@ -100,32 +100,49 @@ jobs:
           if-no-files-found: error
 
   sonarcloud:
-    name: SonarCloud Scan
+    name: SonarCloud Scan (Push)
     runs-on: ubuntu-latest
     needs:
       - backend-quality
       - frontend-quality
-    if: ${{ secrets.SONAR_TOKEN != '' && vars.SONAR_ORGANIZATION != '' }}
+    if: ${{ github.event_name == 'push' }}
 
     steps:
+      - name: Detect SonarCloud configuration
+        id: sonar_config
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_ORGANIZATION: ${{ vars.SONAR_ORGANIZATION }}
+        run: |
+          if [ -z "$SONAR_TOKEN" ] || [ -z "$SONAR_ORGANIZATION" ]; then
+            echo "enabled=false" >> "$GITHUB_OUTPUT"
+            echo "Skipping SonarCloud scan: SONAR_TOKEN or SONAR_ORGANIZATION is missing."
+          else
+            echo "enabled=true" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Checkout
+        if: ${{ steps.sonar_config.outputs.enabled == 'true' }}
         uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
         with:
           fetch-depth: 0
 
       - name: Download backend coverage artifact
+        if: ${{ steps.sonar_config.outputs.enabled == 'true' }}
         uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
         with:
           name: backend-coverage
           path: portfolio-project/backend
 
       - name: Download frontend coverage artifact
+        if: ${{ steps.sonar_config.outputs.enabled == 'true' }}
         uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
         with:
           name: frontend-coverage
           path: portfolio-project/frontend/coverage
 
       - name: SonarCloud scan
+        if: ${{ steps.sonar_config.outputs.enabled == 'true' }}
         uses: SonarSource/sonarqube-scan-action@2f77a1ec69fb1d595b06f35ab27e97605bdef703 # v5
         with:
           projectBaseDir: portfolio-project

@@ -5,7 +5,7 @@ from pathlib import Path
 # Add app directory to path
 sys.path.insert(0, str(Path(__file__).parent))
 
-from app.models import user, blog, project, skill, experience, contact, github, site
+from app.models import user, auth, blog, project, skill, experience, contact, github, site
 from app.database import engine, Base
 
 def init_database():

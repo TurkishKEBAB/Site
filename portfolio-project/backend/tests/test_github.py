@@ -20,14 +20,14 @@ def _mock_repo(name="repo-one", stars=10):
     }
 
 
-def test_get_repos_refreshes_cache_when_invalid(client, monkeypatch):
+def test_get_repos_refreshes_cache_when_invalid(client, monkeypatch, admin_headers):
     class DummyGitHubService:
         async def fetch_user_repos(self, force_refresh=False):
             return [_mock_repo("repo-one", 12), _mock_repo("repo-two", 3)]
 
     monkeypatch.setattr("app.api.v1.github.GitHubService", DummyGitHubService)
 
-    response = client.get("/api/v1/github/repos?force_refresh=true")
+    response = client.get("/api/v1/github/repos?force_refresh=true", headers=admin_headers)
 
     assert response.status_code == 200
     payload = response.json()
@@ -35,18 +35,26 @@ def test_get_repos_refreshes_cache_when_invalid(client, monkeypatch):
     assert payload[0]["repo_name"] == "repo-one"
 
 
-def test_get_repos_featured_filter(client, monkeypatch):
+def test_get_repos_featured_filter(client, monkeypatch, admin_headers):
     class DummyGitHubService:
         async def fetch_user_repos(self, force_refresh=False):
             return [_mock_repo("featured", 10), _mock_repo("small", 1)]
 
     monkeypatch.setattr("app.api.v1.github.GitHubService", DummyGitHubService)
-    client.get("/api/v1/github/repos?force_refresh=true")
+    client.get("/api/v1/github/repos?force_refresh=true", headers=admin_headers)
 
     featured_only = client.get("/api/v1/github/repos?featured_only=true")
     assert featured_only.status_code == 200
     assert len(featured_only.json()) == 1
     assert featured_only.json()[0]["repo_name"] == "featured"
+
+
+def test_force_refresh_requires_admin(client, user_headers):
+    unauth = client.get("/api/v1/github/repos?force_refresh=true")
+    forbidden = client.get("/api/v1/github/repos?force_refresh=true", headers=user_headers)
+
+    assert unauth.status_code == 401
+    assert forbidden.status_code == 403
 
 
 def test_sync_requires_admin(client, user_headers):
@@ -82,7 +90,7 @@ def test_cache_status_and_clear_cache(client, admin_headers, monkeypatch):
             return [_mock_repo("cached", 6)]
 
     monkeypatch.setattr("app.api.v1.github.GitHubService", DummyGitHubService)
-    client.get("/api/v1/github/repos?force_refresh=true")
+    client.get("/api/v1/github/repos?force_refresh=true", headers=admin_headers)
 
     cache_status = client.get("/api/v1/github/cache-status")
     clear = client.delete("/api/v1/github/cache", headers=admin_headers)

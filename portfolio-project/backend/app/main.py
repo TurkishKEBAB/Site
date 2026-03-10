@@ -35,6 +35,12 @@ async def lifespan(app: FastAPI):
     # Startup
     logger.info(f"Starting {settings.PROJECT_NAME} v{settings.VERSION}")
     logger.info(f"Environment: {settings.ENVIRONMENT}")
+
+    production_errors = settings.production_validation_errors()
+    if production_errors:
+        for issue in production_errors:
+            logger.error("Production configuration error: {}", issue)
+        raise RuntimeError("Invalid production configuration")
     
     # Check database connection
     if check_db_connection():
@@ -166,6 +172,42 @@ async def health_check():
             "cache": "connected" if cache_status else "disconnected"
         }
     }
+
+
+@app.get("/live", tags=["System"])
+async def liveness_check():
+    """
+    Liveness probe: process is running.
+    """
+    return {
+        "status": "alive",
+        "version": settings.VERSION,
+        "environment": settings.ENVIRONMENT,
+    }
+
+
+@app.get("/ready", tags=["System"])
+async def readiness_check():
+    """
+    Readiness probe: critical dependencies are available.
+    Returns 503 when database is unavailable.
+    """
+    db_status = check_db_connection()
+    cache_service = get_cache_service()
+    cache_status = cache_service.redis_client is not None
+
+    payload = {
+        "status": "ready" if db_status else "not_ready",
+        "version": settings.VERSION,
+        "environment": settings.ENVIRONMENT,
+        "services": {
+            "database": "connected" if db_status else "disconnected",
+            "cache": "connected" if cache_status else "disconnected",
+        },
+    }
+    if db_status:
+        return payload
+    return JSONResponse(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, content=payload)
 
 
 # Root endpoint

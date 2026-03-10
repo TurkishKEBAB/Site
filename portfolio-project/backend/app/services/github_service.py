@@ -7,7 +7,7 @@ from typing import List, Optional, Dict, Any
 from loguru import logger
 
 from app.config import settings
-from app.services.cache_service import CacheService
+from app.services.cache_service import get_cache_service
 
 
 class GitHubService:
@@ -17,7 +17,7 @@ class GitHubService:
         self.username = settings.GITHUB_USERNAME
         self.api_token = settings.GITHUB_API_TOKEN
         self.base_url = "https://api.github.com"
-        self.cache = CacheService()
+        self.cache = get_cache_service()
         self.cache_key = f"github_repos_{self.username}"
         self.cache_ttl = settings.GITHUB_CACHE_HOURS * 3600  # Convert hours to seconds
     

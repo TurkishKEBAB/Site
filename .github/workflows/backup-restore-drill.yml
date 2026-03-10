@@ -1,0 +1,79 @@
+name: Backup Restore Drill
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 4 * * 1"
+
+concurrency:
+  group: backup-restore-drill-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  drill:
+    name: PostgreSQL Backup + Restore Drill
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:15-alpine
+        env:
+          POSTGRES_DB: portfolio_drill
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d portfolio_drill"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 10
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+
+      - name: Install PostgreSQL client
+        run: sudo apt-get update && sudo apt-get install -y postgresql-client
+
+      - name: Run backup/restore drill
+        env:
+          PGPASSWORD: postgres
+          PGHOST: 127.0.0.1
+          PGPORT: 5432
+          PGUSER: postgres
+          PGDATABASE: portfolio_drill
+        run: |
+          set -euo pipefail
+          mkdir -p artifacts
+
+          psql -v ON_ERROR_STOP=1 -f portfolio-project/database/migrations/01_portfolio_db_schema.sql
+
+          psql -v ON_ERROR_STOP=1 <<'SQL'
+          INSERT INTO users (username, email, password_hash, is_active)
+          VALUES ('drill-admin', 'drill@example.com', 'hashed-password', TRUE);
+          SQL
+
+          pg_dump --format=custom --file=artifacts/portfolio_drill.dump "$PGDATABASE"
+
+          createdb portfolio_drill_restore
+          pg_restore --no-owner --no-privileges --dbname=portfolio_drill_restore artifacts/portfolio_drill.dump
+
+          ORIGINAL_USERS=$(psql -d portfolio_drill -t -A -c "SELECT COUNT(*) FROM users;")
+          RESTORED_USERS=$(psql -d portfolio_drill_restore -t -A -c "SELECT COUNT(*) FROM users;")
+
+          echo "original_users=$ORIGINAL_USERS" | tee artifacts/drill-summary.txt
+          echo "restored_users=$RESTORED_USERS" | tee -a artifacts/drill-summary.txt
+
+          if [ "$ORIGINAL_USERS" != "$RESTORED_USERS" ]; then
+            echo "Restore validation failed: user counts mismatch" | tee -a artifacts/drill-summary.txt
+            exit 1
+          fi
+
+          echo "Backup/restore drill passed." | tee -a artifacts/drill-summary.txt
+
+      - name: Upload drill artifacts
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: backup-restore-drill
+          path: artifacts
+          if-no-files-found: error

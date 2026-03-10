@@ -7,10 +7,16 @@ cd C:\Develop\Projects\Site\portfolio-project
 .\start.ps1
 ```
 
-If Docker is already running separately:
+Only backend stack (postgres + redis + api):
 
 ```powershell
-.\start.ps1 -SkipDocker
+.\start.ps1 -BackendOnly
+```
+
+Only frontend:
+
+```powershell
+.\start.ps1 -FrontendOnly
 ```
 
 ## 2) Verify health
@@ -49,10 +55,23 @@ cd ..
 .\stop.ps1
 ```
 
+Reset local docker database volumes:
+
+```powershell
+.\stop.ps1 -ResetData
+```
+
 Or run full quality gate in one command:
 
 ```powershell
 .\quality.ps1
+```
+
+Backup/restore drill (local PostgreSQL):
+
+```bash
+cd database
+bash backup_restore_drill.sh
 ```
 
 ## Notes

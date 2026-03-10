@@ -1,67 +1,76 @@
 """
-Database Migration Script for Portfolio
-Handles schema creation, updates, and rollbacks
+Database migration runner for portfolio schema SQL files.
 """
-import psycopg2
-from psycopg2 import sql
-from psycopg2.extensions import ISOLATION_LEVEL_AUTOCOMMIT
-import os
+from __future__ import annotations
+
+from dataclasses import dataclass
 from datetime import datetime
+from pathlib import Path
 import logging
+import os
+import time
+
+import psycopg
+
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+BASE_DIR = Path(__file__).resolve().parent
+
+
+@dataclass(frozen=True)
+class Migration:
+    version: str
+    description: str
+    file_name: str
+    optional: bool = False
+
+
+MIGRATIONS = [
+    Migration("001", "Initial schema creation", "migrations/01_portfolio_db_schema.sql"),
+    Migration("002", "Seed initial data", "migrations/02_portfolio_seed_data.sql", optional=True),
+]
+
+
 class DatabaseMigration:
-    def __init__(self, db_config):
-        """
-        Initialize database connection
-        db_config: dict with keys: host, port, database, user, password
-        """
-        self.config = db_config
-        self.conn = None
-        self.cursor = None
-        
-    def connect(self):
-        """Establish database connection"""
+    def __init__(self, database_url: str):
+        self.database_url = database_url
+        self.conn: psycopg.Connection | None = None
+
+    def connect(self) -> bool:
         try:
-            self.conn = psycopg2.connect(
-                host=self.config['host'],
-                port=self.config['port'],
-                database=self.config['database'],
-                user=self.config['user'],
-                password=self.config['password']
-            )
-            self.conn.set_isolation_level(ISOLATION_LEVEL_AUTOCOMMIT)
-            self.cursor = self.conn.cursor()
-            logger.info("✓ Database connection established")
+            self.conn = psycopg.connect(self.database_url, autocommit=True)
+            logger.info("OK: Database connection established")
             return True
-        except Exception as e:
-            logger.error(f"✗ Database connection failed: {e}")
+        except Exception as exc:
+            logger.error("ERROR: Database connection failed: %s", exc)
             return False
-    
+
     def disconnect(self):
-        """Close database connection"""
-        if self.cursor:
-            self.cursor.close()
         if self.conn:
             self.conn.close()
-        logger.info("✓ Database connection closed")
-    
-    def execute_sql_file(self, filepath):
-        """Execute SQL from file"""
-        try:
-            with open(filepath, 'r', encoding='utf-8') as file:
-                sql_commands = file.read()
-                self.cursor.execute(sql_commands)
-                logger.info(f"✓ Executed SQL file: {filepath}")
-                return True
-        except Exception as e:
-            logger.error(f"✗ Failed to execute {filepath}: {e}")
-            return False
-    
+            logger.info("OK: Database connection closed")
+
+    def _execute_sql(self, sql_text: str):
+        assert self.conn is not None
+        with self.conn.cursor() as cur:
+            cur.execute(sql_text)
+
+    def _resolve_migration_file(self, migration: Migration) -> Path | None:
+        file_path = BASE_DIR / migration.file_name
+        if file_path.exists():
+            return file_path
+
+        backup_path = Path(f"{file_path}.backup")
+        if backup_path.exists():
+            return backup_path
+
+        if migration.optional:
+            return None
+        raise FileNotFoundError(f"Required migration file not found: {file_path}")
+
     def create_migration_table(self):
-        """Create migrations tracking table"""
         sql_query = """
         CREATE TABLE IF NOT EXISTS schema_migrations (
             id SERIAL PRIMARY KEY,
@@ -71,184 +80,113 @@ class DatabaseMigration:
             execution_time_ms INTEGER
         );
         """
-        try:
-            self.cursor.execute(sql_query)
-            logger.info("✓ Migration tracking table ready")
-            return True
-        except Exception as e:
-            logger.error(f"✗ Failed to create migration table: {e}")
-            return False
-    
-    def check_migration_exists(self, version):
-        """Check if migration already executed"""
-        sql_query = "SELECT COUNT(*) FROM schema_migrations WHERE version = %s"
-        self.cursor.execute(sql_query, (version,))
-        count = self.cursor.fetchone()[0]
-        return count > 0
-    
-    def record_migration(self, version, description, execution_time_ms):
-        """Record successful migration"""
-        sql_query = """
-        INSERT INTO schema_migrations (version, description, execution_time_ms)
-        VALUES (%s, %s, %s)
-        """
-        self.cursor.execute(sql_query, (version, description, execution_time_ms))
-        logger.info(f"✓ Migration {version} recorded")
-    
-    def run_migration(self, version, description, sql_file):
-        """Run a single migration"""
-        if self.check_migration_exists(version):
-            logger.info(f"⊙ Migration {version} already applied, skipping")
-            return True
-        
-        logger.info(f"→ Running migration {version}: {description}")
-        start_time = datetime.now()
-        
-        success = self.execute_sql_file(sql_file)
-        
-        if success:
-            end_time = datetime.now()
-            execution_time = int((end_time - start_time).total_seconds() * 1000)
-            self.record_migration(version, description, execution_time)
-            logger.info(f"✓ Migration {version} completed in {execution_time}ms")
-        else:
-            logger.error(f"✗ Migration {version} failed")
-        
-        return success
-    
-    def run_all_migrations(self):
-        """Execute all pending migrations in order"""
-        migrations = [
-            {
-                'version': '001',
-                'description': 'Initial schema creation',
-                'file': 'migrations/001_initial_schema.sql'
-            },
-            {
-                'version': '002',
-                'description': 'Seed initial data',
-                'file': 'migrations/002_seed_data.sql'
-            }
-        ]
-        
-        logger.info("=" * 50)
-        logger.info("Starting database migration")
-        logger.info("=" * 50)
-        
-        for migration in migrations:
-            success = self.run_migration(
-                migration['version'],
-                migration['description'],
-                migration['file']
+        self._execute_sql(sql_query)
+        logger.info("OK: Migration tracking table ready")
+
+    def check_migration_exists(self, version: str) -> bool:
+        assert self.conn is not None
+        with self.conn.cursor() as cur:
+            cur.execute("SELECT COUNT(*) FROM schema_migrations WHERE version = %s", (version,))
+            return cur.fetchone()[0] > 0
+
+    def record_migration(self, version: str, description: str, execution_time_ms: int):
+        assert self.conn is not None
+        with self.conn.cursor() as cur:
+            cur.execute(
+                """
+                INSERT INTO schema_migrations (version, description, execution_time_ms)
+                VALUES (%s, %s, %s)
+                """,
+                (version, description, execution_time_ms),
             )
-            if not success:
-                logger.error("Migration failed, stopping")
-                return False
-        
+
+    def execute_sql_file(self, file_path: Path):
+        sql_text = file_path.read_text(encoding="utf-8")
+        self._execute_sql(sql_text)
+        logger.info("OK: Executed SQL file: %s", file_path)
+
+    def run_migration(self, migration: Migration) -> bool:
+        if self.check_migration_exists(migration.version):
+            logger.info("SKIP: Migration %s already applied", migration.version)
+            return True
+
+        try:
+            resolved_file = self._resolve_migration_file(migration)
+            if resolved_file is None:
+                logger.info("SKIP: Optional migration %s file not found", migration.version)
+                return True
+
+            logger.info("RUN: Migration %s - %s", migration.version, migration.description)
+            start = time.perf_counter()
+            self.execute_sql_file(resolved_file)
+            elapsed_ms = int((time.perf_counter() - start) * 1000)
+            self.record_migration(migration.version, migration.description, elapsed_ms)
+            logger.info("OK: Migration %s completed in %sms", migration.version, elapsed_ms)
+            return True
+        except Exception as exc:
+            logger.error("ERROR: Migration %s failed: %s", migration.version, exc)
+            return False
+
+    def run_all_migrations(self) -> bool:
         logger.info("=" * 50)
-        logger.info("All migrations completed successfully!")
+        logger.info("Starting database migrations")
+        logger.info("=" * 50)
+
+        for migration in MIGRATIONS:
+            if not self.run_migration(migration):
+                return False
+
+        logger.info("=" * 50)
+        logger.info("All migrations completed successfully")
         logger.info("=" * 50)
         return True
-    
-    def rollback_migration(self, version):
-        """Rollback a specific migration (if rollback file exists)"""
-        rollback_file = f'migrations/rollback_{version}.sql'
-        
-        if not os.path.exists(rollback_file):
-            logger.error(f"Rollback file not found: {rollback_file}")
-            return False
-        
-        logger.info(f"→ Rolling back migration {version}")
-        success = self.execute_sql_file(rollback_file)
-        
-        if success:
-            # Remove from migration tracking
-            sql_query = "DELETE FROM schema_migrations WHERE version = %s"
-            self.cursor.execute(sql_query, (version,))
-            logger.info(f"✓ Migration {version} rolled back")
-        
-        return success
-    
+
     def get_migration_status(self):
-        """Get list of applied migrations"""
-        sql_query = """
-        SELECT version, description, executed_at, execution_time_ms
-        FROM schema_migrations
-        ORDER BY executed_at DESC
-        """
-        self.cursor.execute(sql_query)
-        results = self.cursor.fetchall()
-        
-        if results:
-            logger.info("\nApplied Migrations:")
-            logger.info("-" * 80)
-            for row in results:
-                logger.info(f"  {row[0]} | {row[1]} | {row[2]} | {row[3]}ms")
-            logger.info("-" * 80)
+        assert self.conn is not None
+        with self.conn.cursor() as cur:
+            cur.execute(
+                """
+                SELECT version, description, executed_at, execution_time_ms
+                FROM schema_migrations
+                ORDER BY executed_at DESC
+                """
+            )
+            rows = cur.fetchall()
+
+        if rows:
+            logger.info("Applied migrations:")
+            for version, description, executed_at, execution_time_ms in rows:
+                logger.info("  %s | %s | %s | %sms", version, description, executed_at, execution_time_ms)
         else:
             logger.info("No migrations applied yet")
-        
-        return results
-    
-    def verify_database(self):
-        """Verify database structure"""
-        logger.info("\nVerifying database structure...")
-        
-        checks = [
-            ("Users table", "SELECT COUNT(*) FROM users"),
-            ("Technologies", "SELECT COUNT(*) FROM technologies"),
-            ("Projects", "SELECT COUNT(*) FROM projects"),
-            ("Skills", "SELECT COUNT(*) FROM skills"),
-            ("Blog posts", "SELECT COUNT(*) FROM blog_posts"),
-            ("Translations", "SELECT COUNT(*) FROM translations"),
-        ]
-        
-        for name, query in checks:
-            try:
-                self.cursor.execute(query)
-                count = self.cursor.fetchone()[0]
-                logger.info(f"  ✓ {name}: {count} records")
-            except Exception as e:
-                logger.error(f"  ✗ {name}: {e}")
-                return False
-        
-        return True
+
+
+def build_database_url() -> str:
+    database_url = os.getenv("DATABASE_URL")
+    if database_url:
+        return database_url
+
+    host = os.getenv("DB_HOST", "localhost")
+    port = os.getenv("DB_PORT", "5432")
+    database = os.getenv("DB_NAME", "portfolio")
+    user = os.getenv("DB_USER", "postgres")
+    password = os.getenv("DB_PASSWORD", "postgres")
+    return f"postgresql://{user}:{password}@{host}:{port}/{database}"
 
 
 def main():
-    """Main migration script"""
-    
-    # Database configuration from environment variables
-    db_config = {
-        'host': os.getenv('DB_HOST', 'localhost'),
-        'port': os.getenv('DB_PORT', '5432'),
-        'database': os.getenv('DB_NAME', 'portfolio'),
-        'user': os.getenv('DB_USER', 'postgres'),
-        'password': os.getenv('DB_PASSWORD', 'postgres')
-    }
-    
-    # Create migration instance
-    migration = DatabaseMigration(db_config)
-    
-    # Connect to database
+    migration = DatabaseMigration(build_database_url())
     if not migration.connect():
-        return
-    
-    # Create migration tracking table
-    migration.create_migration_table()
-    
-    # Check migration status
-    migration.get_migration_status()
-    
-    # Run all pending migrations
-    success = migration.run_all_migrations()
-    
-    if success:
-        # Verify database
-        migration.verify_database()
-    
-    # Disconnect
-    migration.disconnect()
+        raise SystemExit(1)
+
+    try:
+        migration.create_migration_table()
+        migration.get_migration_status()
+        success = migration.run_all_migrations()
+        if not success:
+            raise SystemExit(1)
+    finally:
+        migration.disconnect()
 
 
 if __name__ == "__main__":
