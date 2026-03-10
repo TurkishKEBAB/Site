@@ -14,6 +14,7 @@ from app.database import get_db as db_session
 from app.config import get_settings
 from app.models.user import User
 from app.crud import user as user_crud
+from app.crud import token as token_crud
 
 # Security scheme
 security = HTTPBearer()
@@ -57,10 +58,14 @@ def get_current_user(
             algorithms=[settings.JWT_ALGORITHM]
         )
         user_id_str: str = payload.get("sub")
-        
+        token_type: str = payload.get("type", "access")
+        token_jti: str | None = payload.get("jti")
+
         if user_id_str is None:
             raise credentials_exception
-        
+        if token_type != "access":
+            raise credentials_exception
+
         try:
             user_id = uuid.UUID(user_id_str)
         except ValueError:
@@ -68,7 +73,10 @@ def get_current_user(
             
     except JWTError:
         raise credentials_exception
-    
+
+    if token_crud.is_token_blacklisted(db, token_jti):
+        raise credentials_exception
+
     user = user_crud.get_user_by_id(db, user_id=user_id)
     
     if user is None:
@@ -138,17 +146,24 @@ def get_current_user_optional(
             algorithms=[settings.JWT_ALGORITHM]
         )
         user_id_str: str = payload.get("sub")
-        
+        token_type: str = payload.get("type", "access")
+        token_jti: str | None = payload.get("jti")
+
         if user_id_str is None:
             return None
-        
+        if token_type != "access":
+            return None
+
         try:
             user_id = uuid.UUID(user_id_str)
         except ValueError:
             return None
-            
+
     except JWTError:
         return None
-    
+
+    if token_crud.is_token_blacklisted(db, token_jti):
+        return None
+
     user = user_crud.get_user_by_id(db, user_id=user_id)
     return user

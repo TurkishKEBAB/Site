@@ -1,823 +1,828 @@
 """
-Seed Database with Yiğit Okur's CV Data
-This script populates the database with all CV information from the frontend mock data
+Seed database with CV v6 data for Yigit Okur.
 """
-import asyncio
-from sqlalchemy.orm import Session
-from app.database import engine, SessionLocal
-from app.models import *
-from app.utils.security import get_password_hash
-from datetime import datetime, date, timezone
-from slugify import slugify
-import uuid
 
-def seed_skills(db: Session):
-    """Add skills from CV to database"""
-    print("🔧 Adding skills from CV...")
-    
-    skills_data = [
-        # Programming Languages
-        {"name": "Java", "category": "Programming Languages", "proficiency": 95, "icon": "☕", "display_order": 1},
-        {"name": "Python", "category": "Programming Languages", "proficiency": 90, "icon": "🐍", "display_order": 2},
-        {"name": "C++", "category": "Programming Languages", "proficiency": 85, "icon": "⚙️", "display_order": 3},
-        {"name": "C#", "category": "Programming Languages", "proficiency": 85, "icon": "#️⃣", "display_order": 4},
-        {"name": "R", "category": "Programming Languages", "proficiency": 75, "icon": "📊", "display_order": 5},
-        {"name": "JavaScript/TypeScript", "category": "Programming Languages", "proficiency": 85, "icon": "📜", "display_order": 6},
-        {"name": "SQL", "category": "Programming Languages", "proficiency": 85, "icon": "🗄️", "display_order": 7},
-        
-        # Cloud & DevOps
-        {"name": "Cloud Computing", "category": "Cloud & DevOps", "proficiency": 85, "icon": "☁️", "display_order": 8},
-        {"name": "DevSecOps", "category": "Cloud & DevOps", "proficiency": 80, "icon": "🔒", "display_order": 9},
-    {"name": "Git/GitHub", "category": "Cloud & DevOps", "proficiency": 95, "icon": "🐙", "display_order": 10},
-        {"name": "CI/CD Pipelines", "category": "Cloud & DevOps", "proficiency": 80, "icon": "🔄", "display_order": 11},
-        {"name": "Docker", "category": "Cloud & DevOps", "proficiency": 80, "icon": "🐳", "display_order": 12},
-        {"name": "Kubernetes", "category": "Cloud & DevOps", "proficiency": 70, "icon": "☸️", "display_order": 13},
-        {"name": "Linux", "category": "Cloud & DevOps", "proficiency": 85, "icon": "🐧", "display_order": 14},
-        
-        # Software Engineering
-        {"name": "OOP & Design Patterns", "category": "Software Engineering", "proficiency": 90, "icon": "🏗️", "display_order": 15},
-        {"name": "Software Architecture", "category": "Software Engineering", "proficiency": 85, "icon": "🏛️", "display_order": 16},
-    {"name": "Data Structures & Algorithms", "category": "Software Engineering", "proficiency": 90, "icon": "🧮", "display_order": 17},
-        {"name": "Databases & JDBC", "category": "Software Engineering", "proficiency": 85, "icon": "🗄️", "display_order": 18},
-        {"name": "UML Modeling", "category": "Software Engineering", "proficiency": 80, "icon": "📐", "display_order": 19},
-        {"name": "Multithreading", "category": "Software Engineering", "proficiency": 85, "icon": "🧵", "display_order": 20},
-        
-        # Frontend Development
-        {"name": "React", "category": "Frontend", "proficiency": 85, "icon": "⚛️", "display_order": 21},
-        {"name": "Tailwind CSS", "category": "Frontend", "proficiency": 80, "icon": "🎨", "display_order": 22},
-        {"name": "HTML/CSS", "category": "Frontend", "proficiency": 90, "icon": "🌐", "display_order": 23},
-        
-        # Backend Development
-        {"name": "FastAPI", "category": "Backend", "proficiency": 85, "icon": "⚡", "display_order": 24},
-        {"name": "Django", "category": "Backend", "proficiency": 75, "icon": "🎸", "display_order": 25},
-    {"name": "REST APIs", "category": "Backend", "proficiency": 90, "icon": "🔌", "display_order": 26},
-        
-        # Data Science & ML
-        {"name": "Machine Learning", "category": "Data Science & AI", "proficiency": 75, "icon": "🤖", "display_order": 27},
-        {"name": "TensorFlow", "category": "Data Science & AI", "proficiency": 70, "icon": "🧠", "display_order": 28},
-        {"name": "Pandas", "category": "Data Science & AI", "proficiency": 80, "icon": "🐼", "display_order": 29},
-        {"name": "NumPy", "category": "Data Science & AI", "proficiency": 80, "icon": "🔢", "display_order": 30},
-        
-        # Other Technical Skills
-        {"name": "Logic Design", "category": "Other", "proficiency": 80, "icon": "🔌", "display_order": 31},
-    {"name": "Computer Organization", "category": "Other", "proficiency": 80, "icon": "🖥️", "display_order": 32},
-    {"name": "Microsoft Office", "category": "Other", "proficiency": 90, "icon": "📊", "display_order": 33},
-        {"name": "PostgreSQL", "category": "Other", "proficiency": 85, "icon": "🐘", "display_order": 34},
-        {"name": "Redis", "category": "Other", "proficiency": 75, "icon": "🔴", "display_order": 35},
+from datetime import date, datetime, timezone
+from typing import Dict, List, Optional
+import os
+import secrets
+
+from sqlalchemy.orm import Session
+from slugify import slugify
+
+from app.database import SessionLocal
+from app.models import (
+    BlogPost,
+    BlogTranslation,
+    ContactMessage,
+    Experience,
+    ExperienceTranslation,
+    GitHubRepo,
+    PageView,
+    Project,
+    ProjectImage,
+    ProjectTechnology,
+    ProjectTranslation,
+    RefreshTokenSession,
+    SiteConfig,
+    Skill,
+    SkillTranslation,
+    Technology,
+    TokenBlacklist,
+    Translation,
+    User,
+)
+from app.utils.security import get_password_hash
+
+
+def seed_admin_user(db: Session) -> User:
+    """Create portfolio owner user."""
+    seed_admin_password = os.getenv("SEED_ADMIN_PASSWORD")
+    if not seed_admin_password:
+        seed_admin_password = secrets.token_urlsafe(18)
+        print("SEED_ADMIN_PASSWORD not set. Generated one-time random admin password for seed run.")
+        print(f"Generated seed admin password: {seed_admin_password}")
+
+    user = User(
+        email="yigitokur@ieee.org",
+        username="yigitokur",
+        password_hash=get_password_hash(seed_admin_password),
+        is_active=True,
+    )
+    db.add(user)
+    db.commit()
+    db.refresh(user)
+    print("Added admin user")
+    return user
+
+
+def seed_technologies(db: Session) -> Dict[str, str]:
+    """Seed all technologies used by projects."""
+    print("Adding technologies...")
+    technologies_data: List[Dict[str, Optional[str]]] = [
+        {"name": "Java", "category": "language", "icon": "devicon-java-plain", "color": "#007396"},
+        {"name": "Spring Boot", "category": "framework", "icon": "devicon-spring-plain", "color": "#6DB33F"},
+        {"name": "Python", "category": "language", "icon": "devicon-python-plain", "color": "#3776AB"},
+        {"name": "FastAPI", "category": "framework", "icon": "devicon-fastapi-plain", "color": "#009688"},
+        {"name": "TypeScript", "category": "language", "icon": "devicon-typescript-plain", "color": "#3178C6"},
+        {"name": "JavaScript", "category": "language", "icon": "devicon-javascript-plain", "color": "#F7DF1E"},
+        {"name": "SQL", "category": "language", "icon": "devicon-azuresqldatabase-plain", "color": "#336791"},
+        {"name": "C#", "category": "language", "icon": "devicon-csharp-plain", "color": "#239120"},
+        {"name": "Docker", "category": "tool", "icon": "devicon-docker-plain", "color": "#2496ED"},
+        {"name": "Kubernetes", "category": "tool", "icon": "devicon-kubernetes-plain", "color": "#326CE5"},
+        {"name": "GitHub Actions", "category": "tool", "icon": "devicon-githubactions-plain", "color": "#2088FF"},
+        {"name": "AWS EC2", "category": "cloud", "icon": "devicon-amazonwebservices-plain-wordmark", "color": "#FF9900"},
+        {"name": "AWS S3", "category": "cloud", "icon": "devicon-amazonwebservices-plain-wordmark", "color": "#FF9900"},
+        {"name": "Spring Cloud Config", "category": "framework", "icon": "devicon-spring-plain", "color": "#6DB33F"},
+        {"name": "Zuul Gateway", "category": "framework", "icon": None, "color": "#0F172A"},
+        {"name": "SonarQube", "category": "tool", "icon": "devicon-sonarqube-plain", "color": "#4E9BCD"},
+        {"name": "ElasticSearch", "category": "database", "icon": "devicon-elasticsearch-plain", "color": "#005571"},
+        {"name": "Kibana", "category": "tool", "icon": None, "color": "#005571"},
+        {"name": "Redis", "category": "database", "icon": "devicon-redis-plain", "color": "#DC382D"},
+        {"name": "RabbitMQ", "category": "tool", "icon": "devicon-rabbitmq-plain", "color": "#FF6600"},
+        {"name": "PostgreSQL", "category": "database", "icon": "devicon-postgresql-plain", "color": "#4169E1"},
+        {"name": "Celery", "category": "tool", "icon": None, "color": "#37814A"},
+        {"name": "Vagrant", "category": "tool", "icon": "devicon-vagrant-plain", "color": "#1868F2"},
+        {"name": "Hibernate/JPA", "category": "framework", "icon": None, "color": "#59666C"},
+        {"name": "JSF/PrimeFaces", "category": "framework", "icon": None, "color": "#4B5563"},
+        {"name": "Vue.js", "category": "framework", "icon": "devicon-vuejs-plain", "color": "#4FC08D"},
+        {"name": "React", "category": "framework", "icon": "devicon-react-original", "color": "#61DAFB"},
+        {"name": "Next.js", "category": "framework", "icon": "devicon-nextjs-original", "color": "#111111"},
+        {"name": "Tailwind CSS", "category": "framework", "icon": "devicon-tailwindcss-plain", "color": "#06B6D4"},
+        {"name": "Electron", "category": "framework", "icon": "devicon-electron-original", "color": "#47848F"},
+        {"name": "LLMs", "category": "library", "icon": None, "color": "#7C3AED"},
+        {"name": "RAG", "category": "library", "icon": None, "color": "#9333EA"},
+        {"name": "Git", "category": "tool", "icon": "devicon-git-plain", "color": "#F05032"},
+        {"name": "GitLab", "category": "tool", "icon": "devicon-gitlab-plain", "color": "#FC6D26"},
+        {"name": "GitHub", "category": "tool", "icon": "devicon-github-original", "color": "#181717"},
+        {"name": "Maven", "category": "tool", "icon": "devicon-maven-plain", "color": "#C71A36"},
+        {"name": "Gradle", "category": "tool", "icon": "devicon-gradle-plain", "color": "#02303A"},
+        {"name": "Linux (Ubuntu)", "category": "tool", "icon": "devicon-linux-plain", "color": "#FCC624"},
+        {"name": "Azure DevOps", "category": "tool", "icon": "devicon-azure-plain", "color": "#0078D4"},
+        {"name": "PyQt6", "category": "framework", "icon": None, "color": "#41CD52"},
+        {"name": "Scrapy", "category": "framework", "icon": None, "color": "#60A839"},
+        {"name": "BeautifulSoup", "category": "library", "icon": None, "color": "#1D4ED8"},
+        {"name": "Pytest", "category": "tool", "icon": "devicon-pytest-plain", "color": "#0A9EDC"},
+        {"name": "JUnit", "category": "tool", "icon": None, "color": "#25A162"},
+        {"name": "JWT", "category": "tool", "icon": None, "color": "#F59E0B"},
+        {"name": "RBAC", "category": "tool", "icon": None, "color": "#D97706"},
+        {"name": "Supabase", "category": "cloud", "icon": "devicon-supabase-plain", "color": "#3ECF8E"},
+        {"name": "Vercel", "category": "cloud", "icon": "devicon-vercel-original", "color": "#111111"},
+        {"name": "Railway", "category": "cloud", "icon": None, "color": "#4C1D95"},
+        {"name": "Monaco Editor", "category": "framework", "icon": None, "color": "#3B82F6"},
     ]
-    
-    for skill_data in skills_data:
+    for tech_data in technologies_data:
+        db.add(
+            Technology(
+                name=tech_data["name"],
+                slug=slugify(tech_data["name"]),
+                category=tech_data["category"],
+                icon=tech_data["icon"],
+                color=tech_data["color"],
+            )
+        )
+    db.commit()
+    tech_map = {tech.name: str(tech.id) for tech in db.query(Technology).all()}
+    print(f"Added {len(tech_map)} technologies")
+    return tech_map
+
+
+def seed_skills(db: Session) -> None:
+    """Seed skills with TR/EN translations."""
+    print("Adding skills...")
+    category_tr = {
+        "Cloud & DevOps": "Bulut ve DevOps",
+        "Observability & Infra": "Gozlemlenebilirlik ve Altyapi",
+        "Backend": "Backend",
+        "Architecture": "Mimari",
+        "Testing & Automation": "Test ve Otomasyon",
+        "Frontend": "Frontend",
+        "Languages": "Diller",
+        "AI & Data": "Yapay Zeka ve Veri",
+        "Tooling": "Araclar",
+    }
+    skills_data = [
+        {"name": "Docker", "name_tr": "Docker", "category": "Cloud & DevOps", "proficiency": 90, "icon": "🐳"},
+        {"name": "Kubernetes", "name_tr": "Kubernetes", "category": "Cloud & DevOps", "proficiency": 75, "icon": "☸️"},
+        {"name": "GitHub Actions (CI/CD)", "name_tr": "GitHub Actions (CI/CD)", "category": "Cloud & DevOps", "proficiency": 86, "icon": "⚙️"},
+        {"name": "AWS (EC2, S3)", "name_tr": "AWS (EC2, S3)", "category": "Cloud & DevOps", "proficiency": 78, "icon": "☁️"},
+        {"name": "Spring Cloud Config", "name_tr": "Spring Cloud Config", "category": "Cloud & DevOps", "proficiency": 82, "icon": "🧩"},
+        {"name": "Zuul Gateway", "name_tr": "Zuul Gateway", "category": "Cloud & DevOps", "proficiency": 80, "icon": "🛣️"},
+        {"name": "SonarQube", "name_tr": "SonarQube", "category": "Cloud & DevOps", "proficiency": 84, "icon": "📈"},
+        {"name": "ElasticSearch", "name_tr": "ElasticSearch", "category": "Observability & Infra", "proficiency": 78, "icon": "🔍"},
+        {"name": "Kibana", "name_tr": "Kibana", "category": "Observability & Infra", "proficiency": 80, "icon": "📊"},
+        {"name": "Redis", "name_tr": "Redis", "category": "Observability & Infra", "proficiency": 82, "icon": "🟥"},
+        {"name": "RabbitMQ", "name_tr": "RabbitMQ", "category": "Observability & Infra", "proficiency": 76, "icon": "🐇"},
+        {"name": "PostgreSQL", "name_tr": "PostgreSQL", "category": "Observability & Infra", "proficiency": 88, "icon": "🐘"},
+        {"name": "Celery", "name_tr": "Celery", "category": "Observability & Infra", "proficiency": 74, "icon": "🌿"},
+        {"name": "Vagrant", "name_tr": "Vagrant", "category": "Observability & Infra", "proficiency": 70, "icon": "📦"},
+        {"name": "Java/Spring Boot", "name_tr": "Java/Spring Boot", "category": "Backend", "proficiency": 92, "icon": "☕"},
+        {"name": "Python/FastAPI", "name_tr": "Python/FastAPI", "category": "Backend", "proficiency": 90, "icon": "🐍"},
+        {"name": "REST APIs", "name_tr": "REST API'ler", "category": "Backend", "proficiency": 91, "icon": "🔌"},
+        {"name": "Hibernate/JPA", "name_tr": "Hibernate/JPA", "category": "Backend", "proficiency": 82, "icon": "🗄️"},
+        {"name": "JSF/PrimeFaces", "name_tr": "JSF/PrimeFaces", "category": "Backend", "proficiency": 76, "icon": "🧱"},
+        {"name": "Microservices", "name_tr": "Mikroservisler", "category": "Architecture", "proficiency": 86, "icon": "🧬"},
+        {"name": "Clean Architecture", "name_tr": "Clean Architecture", "category": "Architecture", "proficiency": 87, "icon": "🏛️"},
+        {"name": "JWT/RBAC", "name_tr": "JWT/RBAC", "category": "Architecture", "proficiency": 85, "icon": "🔐"},
+        {"name": "Constraint Optimization", "name_tr": "Kisit Optimizasyonu", "category": "Architecture", "proficiency": 88, "icon": "🧠"},
+        {"name": "JUnit", "name_tr": "JUnit", "category": "Testing & Automation", "proficiency": 84, "icon": "✅"},
+        {"name": "Pytest", "name_tr": "Pytest", "category": "Testing & Automation", "proficiency": 88, "icon": "🧪"},
+        {"name": "CI/CD Pipelines", "name_tr": "CI/CD Pipeline'lari", "category": "Testing & Automation", "proficiency": 86, "icon": "🔁"},
+        {"name": "Defect Tracking (Jira, GitLab)", "name_tr": "Hata Takibi (Jira, GitLab)", "category": "Testing & Automation", "proficiency": 83, "icon": "🗂️"},
+        {"name": "Test Automation", "name_tr": "Test Otomasyonu", "category": "Testing & Automation", "proficiency": 85, "icon": "🤖"},
+        {"name": "Vue.js", "name_tr": "Vue.js", "category": "Frontend", "proficiency": 78, "icon": "🟢"},
+        {"name": "React", "name_tr": "React", "category": "Frontend", "proficiency": 86, "icon": "⚛️"},
+        {"name": "Next.js", "name_tr": "Next.js", "category": "Frontend", "proficiency": 80, "icon": "▲"},
+        {"name": "JavaScript/TypeScript", "name_tr": "JavaScript/TypeScript", "category": "Frontend", "proficiency": 90, "icon": "📜"},
+        {"name": "Tailwind CSS", "name_tr": "Tailwind CSS", "category": "Frontend", "proficiency": 82, "icon": "🎨"},
+        {"name": "Electron", "name_tr": "Electron", "category": "Frontend", "proficiency": 70, "icon": "💡"},
+        {"name": "Java", "name_tr": "Java", "category": "Languages", "proficiency": 93, "icon": "☕"},
+        {"name": "Python", "name_tr": "Python", "category": "Languages", "proficiency": 92, "icon": "🐍"},
+        {"name": "TypeScript/JavaScript", "name_tr": "TypeScript/JavaScript", "category": "Languages", "proficiency": 90, "icon": "🧾"},
+        {"name": "SQL", "name_tr": "SQL", "category": "Languages", "proficiency": 86, "icon": "🗃️"},
+        {"name": "C#", "name_tr": "C#", "category": "Languages", "proficiency": 80, "icon": "#️⃣"},
+        {"name": "LLMs", "name_tr": "LLM'ler", "category": "AI & Data", "proficiency": 74, "icon": "🧠"},
+        {"name": "Retrieval-Augmented Generation (RAG)", "name_tr": "Retrieval-Augmented Generation (RAG)", "category": "AI & Data", "proficiency": 72, "icon": "📚"},
+        {"name": "Git/GitLab/GitHub", "name_tr": "Git/GitLab/GitHub", "category": "Tooling", "proficiency": 92, "icon": "🔧"},
+        {"name": "Maven/Gradle", "name_tr": "Maven/Gradle", "category": "Tooling", "proficiency": 82, "icon": "🏗️"},
+        {"name": "Linux (Ubuntu)", "name_tr": "Linux (Ubuntu)", "category": "Tooling", "proficiency": 88, "icon": "🐧"},
+        {"name": "Azure DevOps", "name_tr": "Azure DevOps", "category": "Tooling", "proficiency": 76, "icon": "📦"},
+    ]
+    for index, item in enumerate(skills_data, start=1):
         skill = Skill(
-            name=skill_data["name"],
-            category=skill_data["category"],
-            proficiency=skill_data["proficiency"],
-            icon=skill_data["icon"],
-            display_order=skill_data["display_order"]
+            name=item["name"],
+            category=item["category"],
+            proficiency=item["proficiency"],
+            icon=item["icon"],
+            display_order=index,
         )
         db.add(skill)
-    
+        db.flush()
+        db.add(
+            SkillTranslation(
+                skill_id=skill.id,
+                language="en",
+                name=item["name"],
+                category=item["category"],
+            )
+        )
+        db.add(
+            SkillTranslation(
+                skill_id=skill.id,
+                language="tr",
+                name=item["name_tr"],
+                category=category_tr[item["category"]],
+            )
+        )
     db.commit()
-    print(f"✅ Added {len(skills_data)} skills")
+    print(f"Added {len(skills_data)} skills with TR/EN translations")
 
 
-def seed_experiences(db: Session):
-    """Add experiences to database from Yiğit Okur's CV"""
-    print("💼 Adding experiences...")
-    
+def seed_experiences(db: Session) -> None:
+    """Seed education, work, leadership and community experiences."""
+    print("Adding experiences...")
     experiences_data = [
-        # EDUCATION
         {
-            "title": "Bachelor of Software Engineering",
-            "organization": "Işık University",
-            "location": "Istanbul/Şile, Turkey",
+            "title_en": "B.Sc. Software Engineering",
+            "title_tr": "Yazilim Muhendisligi Lisans Programi",
+            "organization_en": "Isik University",
+            "organization_tr": "Isik Universitesi",
+            "location_en": "Istanbul, Turkiye",
+            "location_tr": "Istanbul, Turkiye",
             "experience_type": "education",
             "start_date": date(2023, 9, 1),
-            "end_date": None,
+            "end_date": date(2027, 6, 1),
             "is_current": True,
-            "description": "Expected graduation: 2027. Member of Işık IEEE Student Branch (Vice President), Student Assistant in CSE Department (OOP), AdaLab Assistant at The Academic Data Analytics Laboratory.",
-            "display_order": 1
+            "description_en": "Third-year Software Engineering student. Expected graduation in 2027.",
+            "description_tr": "Ucuncu sinif Yazilim Muhendisligi ogrencisi. Beklenen mezuniyet: 2027.",
         },
         {
-            "title": "High School - Software & Electronics",
-            "organization": "Ergün Öner-Mehmet Öner Anatolian High School",
-            "location": "Istanbul/Güngören, Turkey",
+            "title_en": "High School Diploma",
+            "title_tr": "Lise Diplomasi",
+            "organization_en": "Ergun Oner-Mehmet Oner Anatolian High School",
+            "organization_tr": "Ergun Oner-Mehmet Oner Anadolu Lisesi",
+            "location_en": "Istanbul, Turkiye",
+            "location_tr": "Istanbul, Turkiye",
             "experience_type": "education",
             "start_date": date(2019, 9, 1),
             "end_date": date(2023, 6, 1),
             "is_current": False,
-            "description": "Software & Electronics Department. FRC (FIRST Robotics Competition) Team EMONER 7840 member. TÜBİTAK 4009 participant.",
-            "display_order": 2
-        },
-        
-        # WORK EXPERIENCE
-        {
-            "title": "Vice President",
-            "organization": "Işık University IEEE Student Branch",
-            "location": "Istanbul, Turkey",
-            "experience_type": "work",
-            "start_date": date(2024, 1, 1),
-            "end_date": None,
-            "is_current": True,
-            "description": "Leading student branch operations, organizing 35+ technical events and workshops. Managing cross-functional teams, coordinating with industry partners, and fostering technical community engagement.",
-            "display_order": 3
+            "description_en": "Software and electronics focused high school education.",
+            "description_tr": "Yazilim ve elektronik odakli lise egitimi.",
         },
         {
-            "title": "Student Assistant - OOP",
-            "organization": "CSE Department, Işık University",
-            "location": "Istanbul, Turkey",
+            "title_en": "Software Engineering Intern",
+            "title_tr": "Yazilim Muhendisligi Stajyeri",
+            "organization_en": "NETAS Telekomunikasyon A.S.",
+            "organization_tr": "NETAS Telekomunikasyon A.S.",
+            "location_en": "Istanbul, Turkiye",
+            "location_tr": "Istanbul, Turkiye",
             "experience_type": "work",
-            "start_date": date(2024, 9, 1),
-            "end_date": None,
-            "is_current": True,
-            "description": "Teaching assistant for Object-Oriented Programming courses. Mentoring students in C++, Java, design patterns, and software architecture. Holding office hours, grading assignments, and conducting lab sessions.",
-            "display_order": 4
-        },
-        {
-            "title": "Research Assistant",
-            "organization": "AdaLab - The Academic Data Analytics Laboratory",
-            "location": "Işık University",
-            "experience_type": "work",
-            "start_date": date(2024, 9, 1),
-            "end_date": None,
-            "is_current": True,
-            "description": "Conducting research on adaptive algorithms, data analytics, and machine learning applications. Collaborating on academic publications and research projects.",
-            "display_order": 5
-        },
-        {
-            "title": "Software & Electronics Team Member",
-            "organization": "FRC Team EMONER 7840",
-            "location": "Istanbul, Turkey",
-            "experience_type": "work",
-            "start_date": date(2019, 9, 1),
-            "end_date": date(2023, 6, 1),
+            "start_date": date(2026, 1, 1),
+            "end_date": date(2026, 2, 1),
             "is_current": False,
-            "description": "Developed autonomous robot control systems, programmed robot behaviors, and competed in international FIRST Robotics Competition. Gained hands-on experience in system optimization, teamwork under pressure, and technical leadership.",
-            "display_order": 6
+            "description_en": "Contributed production-grade code and tests to an enterprise Java microservices platform. Identified a critical v1/v2 timezone mismatch through YAML configuration and ELK analysis, and documented remediation with 600+ lines of tests.",
+            "description_tr": "Kurumsal Java mikroservis platformunda canli ortama giden kod ve test katkisi saglandi. YAML konfigurasyonu ve ELK analizi ile kritik v1/v2 timezone uyumsuzlugu tespit edilip 600+ satir test ile cozum dokumante edildi.",
         },
-        
-        # VOLUNTEER ACTIVITIES
         {
-            "title": "IEEEXtreme'24 Camp Organizer",
-            "organization": "Işık University",
-            "location": "Şile Campus, Istanbul",
-            "experience_type": "volunteer",
-            "start_date": date(2024, 7, 22),
-            "end_date": date(2024, 7, 26),
+            "title_en": "Project Management Intern (Remote)",
+            "title_tr": "Proje Yonetimi Stajyeri (Uzaktan)",
+            "organization_en": "Arch of Sigma",
+            "organization_tr": "Arch of Sigma",
+            "location_en": "Remote",
+            "location_tr": "Uzaktan",
+            "experience_type": "work",
+            "start_date": date(2025, 11, 1),
+            "end_date": date(2026, 1, 1),
             "is_current": False,
-            "description": "Organized Turkey-wide programming camp focused on algorithms and data structures. Hosted participants from multiple universities, coordinated logistics, and facilitated technical workshops.",
-            "display_order": 7
+            "description_en": "Supported cross-border architecture and engineering projects across Turkiye and the Balkans by coordinating documentation, deliverables, and milestone tracking.",
+            "description_tr": "Turkiye ve Balkanlar'daki sinir otesi mimarlik/muhendislik projelerinde dokumantasyon, teslimat ve kilometre tasi takibi koordinasyonu saglandi.",
         },
         {
-            "title": "Organization Committee Member",
-            "organization": "SIU 2025 Conference",
-            "location": "Turkey",
-            "experience_type": "volunteer",
-            "start_date": date(2024, 9, 1),
+            "title_en": "Student Assistant",
+            "title_tr": "Ogrenci Asistani",
+            "organization_en": "Isik University - CSE Department",
+            "organization_tr": "Isik Universitesi - CSE Bolumu",
+            "location_en": "Istanbul, Turkiye",
+            "location_tr": "Istanbul, Turkiye",
+            "experience_type": "work",
+            "start_date": date(2024, 2, 1),
             "end_date": None,
             "is_current": True,
-            "description": "Contributing to planning and coordination for the 2025 Signal Processing and Communications Applications Conference (SIU 2025).",
-            "display_order": 8
+            "description_en": "Mentors students in OOP lab sessions with focus on clean code and software design fundamentals.",
+            "description_tr": "OOP laboratuvarlarinda ogrencilere clean code ve yazilim tasarim temelleri uzerine mentorluk sagliyor.",
         },
         {
-            "title": "Environmental Volunteer",
-            "organization": "WWF & TEMA Foundation",
-            "location": "Turkey",
+            "title_en": "Research Assistant",
+            "title_tr": "Arastirma Asistani",
+            "organization_en": "AdaLab - Academic Data Analytics Lab",
+            "organization_tr": "AdaLab - Akademik Veri Analitigi Laboratuvari",
+            "location_en": "Istanbul, Turkiye",
+            "location_tr": "Istanbul, Turkiye",
+            "experience_type": "work",
+            "start_date": date(2025, 12, 1),
+            "end_date": None,
+            "is_current": True,
+            "description_en": "Supports AI and data analytics research with data processing pipelines and algorithmic evaluation.",
+            "description_tr": "Yapay zeka ve veri analitigi arastirmalarina veri isleme pipeline'lari ve algoritmik degerlendirme ile katkida bulunuyor.",
+        },
+        {
+            "title_en": "Vice President & Project Coordinator",
+            "title_tr": "Baskan Yardimcisi ve Proje Koordinatoru",
+            "organization_en": "IEEE Isik Student Branch",
+            "organization_tr": "IEEE Isik Ogrenci Kolu",
+            "location_en": "Istanbul, Turkiye",
+            "location_tr": "Istanbul, Turkiye",
+            "experience_type": "volunteer",
+            "start_date": date(2025, 11, 1),
+            "end_date": None,
+            "is_current": True,
+            "description_en": "Leads operations, workshops, hackathons, and industry networking events for 1,100+ students.",
+            "description_tr": "1.100+ ogrenciye ulasan teknik etkinlikler, hackathonlar ve sektor bulusmalari dahil operasyonlari yonetiyor.",
+        },
+        {
+            "title_en": "Organization Committee Member",
+            "title_tr": "Organizasyon Komitesi Uyesi",
+            "organization_en": "2025 IEEE Signal Processing & Communications Applications (SIU) Conference",
+            "organization_tr": "2025 IEEE Sinyal Isleme ve Iletisim Uygulamalari (SIU) Konferansi",
+            "location_en": "Turkiye",
+            "location_tr": "Turkiye",
+            "experience_type": "volunteer",
+            "start_date": date(2025, 11, 1),
+            "end_date": date(2025, 11, 30),
+            "is_current": False,
+            "description_en": "Coordinated venue logistics and technical session infrastructure for 300+ attendees.",
+            "description_tr": "300+ katilimci icin mekan lojistigi ve teknik oturum altyapisinin koordinasyonuna katkida bulundu.",
+        },
+        {
+            "title_en": "Lead Organizer",
+            "title_tr": "Bas Organizator",
+            "organization_en": "IEEEXtreme'24 Programming Camp",
+            "organization_tr": "IEEEXtreme'24 Programlama Kampi",
+            "location_en": "Istanbul, Turkiye",
+            "location_tr": "Istanbul, Turkiye",
+            "experience_type": "volunteer",
+            "start_date": date(2024, 7, 1),
+            "end_date": date(2024, 7, 31),
+            "is_current": False,
+            "description_en": "Directed a national programming bootcamp focused on competitive programming, algorithms, and data structures.",
+            "description_tr": "Rekabetci programlama, algoritma ve veri yapilari odakli ulusal capta bir programlama kampini yonetti.",
+        },
+        {
+            "title_en": "Environmental Volunteer",
+            "title_tr": "Cevre Gonullusu",
+            "organization_en": "TEMA Foundation & WWF Turkiye",
+            "organization_tr": "TEMA Vakfi ve WWF Turkiye",
+            "location_en": "Turkiye",
+            "location_tr": "Turkiye",
             "experience_type": "volunteer",
             "start_date": date(2022, 1, 1),
             "end_date": None,
             "is_current": True,
-            "description": "Active volunteer supporting animal welfare and environmental protection initiatives. Participated in reforestation projects and wildlife conservation programs.",
-            "display_order": 9
-        },
-        
-        # PROJECTS & ACTIVITIES
-        {
-            "title": "Project Lead & Software Developer",
-            "organization": "Sarkan UAV Project",
-            "location": "Işık University",
-            "experience_type": "activity",
-            "start_date": date(2024, 3, 1),
-            "end_date": None,
-            "is_current": True,
-            "description": "Leading software development and cross-team coordination for Sarkan UAV platform. Secured TÜBİTAK grant of ₺65,000 (2024) and Savronik sponsorship. Total project budget: ₺200,000. Supervising graduation projects on anti-jamming communication for UAV telemetry/control.",
-            "display_order": 10
+            "description_en": "Participates in reforestation, environmental protection, and wildlife awareness initiatives.",
+            "description_tr": "Agaclandirma, cevre koruma ve yaban hayati farkindalik calismalarina gonullu destek veriyor.",
         },
         {
-            "title": "Competitive Programmer",
-            "organization": "IEEEXtreme 18.0 Competition",
-            "location": "Global (Online)",
+            "title_en": "Software Lead",
+            "title_tr": "Yazilim Takim Lideri",
+            "organization_en": "Teknofest Sarkan UAV Defense Platform",
+            "organization_tr": "Teknofest Sarkan IHA Savunma Platformu",
+            "location_en": "Turkiye",
+            "location_tr": "Turkiye",
             "experience_type": "activity",
-            "start_date": date(2024, 10, 1),
-            "end_date": date(2024, 10, 1),
+            "start_date": date(2024, 5, 1),
+            "end_date": date(2025, 5, 1),
             "is_current": False,
-            "description": "Participated in 24-hour global programming competition focusing on algorithms, data structures, and problem-solving challenges.",
-            "display_order": 11
+            "description_en": "Led anti-jamming telemetry software and team coordination. Project ranked 3rd among 700+ proposals in preliminary evaluation.",
+            "description_tr": "Anti-jamming telemetri yazilimi ve ekip koordinasyonuna liderlik etti. Proje on degerlendirmede 700+ basvuru arasinda 3. oldu.",
+        },
+        {
+            "title_en": "FRC Houston World Championship Finalist",
+            "title_tr": "FRC Houston Dunya Sampiyonasi Finalisti",
+            "organization_en": "FIRST Robotics Competition - Team 7840 EMONER",
+            "organization_tr": "FIRST Robotics Competition - Team 7840 EMONER",
+            "location_en": "Houston, USA",
+            "location_tr": "Houston, ABD",
+            "experience_type": "activity",
+            "start_date": date(2019, 4, 1),
+            "end_date": date(2019, 4, 30),
+            "is_current": False,
+            "description_en": "Reached world championship finals with Team 7840 and gained competitive robotics experience.",
+            "description_tr": "Team 7840 ile dunya sampiyonasi finallerine katilarak rekabetci robotik deneyimi kazandi.",
         },
     ]
-    
-    for exp_data in experiences_data:
+    for index, item in enumerate(experiences_data, start=1):
         experience = Experience(
-            title=exp_data["title"],
-            organization=exp_data["organization"],
-            location=exp_data["location"],
-            experience_type=exp_data["experience_type"],
-            start_date=exp_data["start_date"],
-            end_date=exp_data["end_date"],
-            is_current=exp_data["is_current"],
-            description=exp_data["description"],
-            display_order=exp_data["display_order"]
+            title=item["title_en"],
+            organization=item["organization_en"],
+            location=item["location_en"],
+            experience_type=item["experience_type"],
+            start_date=item["start_date"],
+            end_date=item["end_date"],
+            is_current=item["is_current"],
+            description=item["description_en"],
+            display_order=index,
         )
         db.add(experience)
-    
+        db.flush()
+        db.add(
+            ExperienceTranslation(
+                experience_id=experience.id,
+                language="en",
+                title=item["title_en"],
+                organization=item["organization_en"],
+                location=item["location_en"],
+                description=item["description_en"],
+            )
+        )
+        db.add(
+            ExperienceTranslation(
+                experience_id=experience.id,
+                language="tr",
+                title=item["title_tr"],
+                organization=item["organization_tr"],
+                location=item["location_tr"],
+                description=item["description_tr"],
+            )
+        )
     db.commit()
-    print(f"✅ Added {len(experiences_data)} experiences (Education, Work, Volunteer, Activities)")
+    print(f"Added {len(experiences_data)} experiences with TR/EN translations")
 
 
-
-def seed_projects(db: Session):
-    """Add projects to database"""
-    print("🚀 Adding projects...")
-    
+def seed_projects(db: Session) -> List[Project]:
+    """Seed CV v6 projects with TR/EN translations."""
+    print("Adding projects...")
     projects_data = [
         {
-            "slug": "sarkan-uav",
-            "title": "Sarkan UAV Platform",
-            "short_description": "Autonomous UAV control and mission planning platform",
-            "description": """An advanced autonomous UAV (Unmanned Aerial Vehicle) control platform designed for real-time mission planning, 
-            autonomous flight control, and data processing. The platform integrates computer vision for object detection and tracking, 
-            supports multiple communication protocols, and includes a comprehensive ground control station.
-            
-            Key Features:
-            - Real-time flight control and telemetry
-            - Computer vision-based object detection
-            - Autonomous mission planning and execution
-            - Multi-drone coordination support
-            - Advanced data logging and analysis
-            - Web-based ground control interface""",
-            "cover_image": "/projects/sarkan-uav.jpg",
-            "github_url": "https://github.com/TurkishKEBAB/sarkan-uav",
-            "demo_url": None,
+            "slug": "isikschedule-platform",
+            "title_en": "IsikSchedule Platform",
+            "title_tr": "IsikSchedule Platformu",
+            "short_en": "Constraint-aware scheduling engine across desktop and web products",
+            "short_tr": "Masaustu ve web urunlerinde kisit farkinda ders programi motoru",
+            "description_en": (
+                "Dual-platform scheduling system with shared domain logic. "
+                "Desktop version serves around 1,000 active users. "
+                "Core engine includes 13 optimization algorithms such as Genetic, SA, Tabu, PSO, and Hybrid GA+SA. "
+                "Web architecture includes FastAPI, Next.js, PostgreSQL, Redis, Celery, JWT/RBAC, and Dockerized services."
+            ),
+            "description_tr": (
+                "Paylasilan alan mantigina sahip cift platformlu ders programlama sistemi. "
+                "Masaustu surumu yaklasik 1.000 aktif kullaniciya hizmet veriyor. "
+                "Genetik, SA, Tabu, PSO ve Hybrid GA+SA dahil 13 optimizasyon algoritmasi iceriyor. "
+                "Web mimarisinde FastAPI, Next.js, PostgreSQL, Redis, Celery, JWT/RBAC ve Dockerize servisler kullaniliyor."
+            ),
+            "github_url": "https://github.com/TurkishKEBAB/isikschedule-core",
+            "demo_url": "https://github.com/TurkishKEBAB/isikschedule-web",
             "featured": True,
-            "display_order": 1
+            "display_order": 1,
         },
         {
-            "slug": "schedule-optimizer",
-            "title": "Schedule Optimizer",
-            "short_description": "AI-powered university schedule optimization tool",
-            "description": """An intelligent scheduling system that optimizes university course schedules using genetic algorithms and constraint satisfaction.
-            The tool considers multiple factors including professor preferences, room availability, student conflicts, and time constraints.
-            
-            Key Features:
-            - Genetic algorithm-based optimization
-            - Constraint satisfaction problem solving
-            - Multi-objective optimization (minimize conflicts, balance workload)
-            - Interactive schedule visualization
-            - Export to various formats (PDF, Excel, iCal)
-            - Real-time conflict detection""",
-            "cover_image": "/projects/schedule-optimizer.jpg",
-            "github_url": "https://github.com/TurkishKEBAB/schedule-optimizer",
-            "demo_url": None,
-            "featured": True,
-            "display_order": 2
-        },
-        {
-            "slug": "frc-robot-2024",
-            "title": "FRC Robot Control System",
-            "short_description": "Competition robot control and autonomous system",
-            "description": """Advanced robot control system developed for FIRST Robotics Competition (FRC). 
-            Includes autonomous navigation, vision-based object tracking, and precise mechanical control.
-            
-            Key Features:
-            - Autonomous path planning and navigation
-            - Computer vision for game piece detection
-            - PID-based motor control
-            - Sensor fusion for accurate positioning
-            - Custom dashboard for driver feedback
-            - Competition-ready reliability and performance""",
-            "cover_image": "/projects/frc-robot.jpg",
-            "github_url": "https://github.com/TurkishKEBAB/frc-2024",
-            "demo_url": None,
-            "featured": True,
-            "display_order": 3
-        },
-        {
-            "slug": "ieeextreme-camp",
-            "title": "IEEEXtreme Programming Camp",
-            "short_description": "Intensive programming competition preparation program",
-            "description": """Organized and conducted a comprehensive programming camp to prepare students for the IEEEXtreme 24-hour programming competition.
-            The camp covered advanced algorithms, data structures, competitive programming techniques, and team collaboration strategies.
-            
-            Program Highlights:
-            - 2-week intensive training program
-            - 50+ participating students
-            - Daily algorithm challenges and contests
-            - Team formation and collaboration training
-            - Mock competition simulations
-            - Mentorship from experienced competitors""",
-            "cover_image": "/projects/ieeextreme-camp.jpg",
+            "slug": "agentic-ide-thesis-project",
+            "title_en": "Agentic IDE (Thesis Project)",
+            "title_tr": "Agentic IDE (Tez Projesi)",
+            "short_en": "Agent-first IDE architecture with human-in-the-loop controls",
+            "short_tr": "Insan onayli kontrol akisina sahip agent-first IDE mimarisi",
+            "description_en": (
+                "Early architectural phase of a modular AI-native IDE built with TypeScript, Electron, and Monaco. "
+                "The core loop is Observe -> Plan -> Approve -> Apply with prohibited command enforcement. "
+                "Hybrid LLM orchestration is designed for local latency-sensitive tasks and cloud-based complex planning."
+            ),
+            "description_tr": (
+                "TypeScript, Electron ve Monaco ile gelistirilen modul yapida AI-native IDE'nin erken mimari asamasi. "
+                "Temel dongu Observe -> Plan -> Approve -> Apply seklinde tasarlandi ve riskli komutlara kisit uygulanacak. "
+                "Hibrit LLM orkestrasyonu, gecikmeye hassas gorevlerde lokal; karmasik planlamada bulut modellerini hedefliyor."
+            ),
             "github_url": None,
             "demo_url": None,
-            "featured": False,
-            "display_order": 4
-        },
-        {
-            "slug": "ml-projects",
-            "title": "Machine Learning Projects Portfolio",
-            "short_description": "Collection of ML/AI projects and experiments",
-            "description": """A comprehensive portfolio of machine learning projects covering various domains including computer vision, 
-            natural language processing, and predictive analytics.
-            
-            Projects Include:
-            - Image classification with CNNs
-            - Sentiment analysis using transformers
-            - Time series forecasting
-            - Recommendation systems
-            - Anomaly detection
-            - Transfer learning applications""",
-            "cover_image": "/projects/ml-portfolio.jpg",
-            "github_url": "https://github.com/TurkishKEBAB/ml-projects",
-            "demo_url": None,
-            "featured": False,
-            "display_order": 5
-        },
-        {
-            "slug": "portfolio-website",
-            "title": "Personal Portfolio Website",
-            "short_description": "Modern full-stack portfolio with admin panel",
-            "description": """A professional portfolio website built with modern web technologies, featuring a complete admin panel for content management.
-            
-            Technical Stack:
-            - Frontend: React, TypeScript, Tailwind CSS
-            - Backend: FastAPI, SQLAlchemy, PostgreSQL
-            - Infrastructure: Docker, Redis
-            - Features: JWT authentication, RESTful API, responsive design
-            - Admin panel for dynamic content management""",
-            "cover_image": "/projects/portfolio.jpg",
-            "github_url": "https://github.com/TurkishKEBAB/portfolio",
-            "demo_url": "https://yigitokur.dev",
             "featured": True,
-            "display_order": 6
-        }
+            "display_order": 2,
+        },
+        {
+            "slug": "teknofest-sarkan-uav-defense-platform",
+            "title_en": "Teknofest Sarkan UAV Defense Platform",
+            "title_tr": "Teknofest Sarkan IHA Savunma Platformu",
+            "short_en": "Anti-jamming telemetry software for a defense UAV platform",
+            "short_tr": "Savunma odakli IHA platformu icin anti-jamming telemetri yazilimi",
+            "description_en": (
+                "Led software development for telemetry reliability and anti-jamming communication. "
+                "Ranked 3rd among 700+ projects in preliminary evaluation. "
+                "Managed a total 200,000 TL budget including a 165,000 TL TUBITAK R&D grant and Savronik sponsorship."
+            ),
+            "description_tr": (
+                "Telemetri guvenilirligi ve anti-jamming iletisim odakli yazilim gelistirme sureclerine liderlik edildi. "
+                "On degerlendirmede 700+ proje arasinda 3. sirada yer aldi. "
+                "165.000 TL TUBITAK Ar-Ge hibesi ve Savronik sponsorlugu dahil toplam 200.000 TL butce yonetildi."
+            ),
+            "github_url": None,
+            "demo_url": None,
+            "featured": True,
+            "display_order": 3,
+        },
+        {
+            "slug": "automated-web-crawler",
+            "title_en": "Automated Web Crawler",
+            "title_tr": "Otomatik Web Tarayici",
+            "short_en": "Concurrent scraping system with FastAPI and PostgreSQL backend",
+            "short_tr": "FastAPI ve PostgreSQL destekli eszamanli web tarama sistemi",
+            "description_en": (
+                "High-throughput concurrent scraper built with Scrapy and BeautifulSoup. "
+                "Backend services expose ingestion and monitoring endpoints via FastAPI + PostgreSQL. "
+                "Includes robots.txt compliance, retry policies, and fault-tolerance controls with 89.9% successful execution."
+            ),
+            "description_tr": (
+                "Scrapy ve BeautifulSoup ile gelistirilen yuksek throughput eszamanli tarama sistemi. "
+                "Backend tarafinda FastAPI + PostgreSQL ile veri alim ve izleme endpoint'leri sunuluyor. "
+                "robots.txt uyumlulugu, retry politikasi ve fault-tolerance mekanizmalari ile %89.9 basari orani saglandi."
+            ),
+            "github_url": None,
+            "demo_url": None,
+            "featured": True,
+            "display_order": 4,
+        },
+        {
+            "slug": "portfolio-platform-web-desktop",
+            "title_en": "Portfolio Platform (Web + Desktop)",
+            "title_tr": "Portfolyo Platformu (Web + Masaustu)",
+            "short_en": "Full-stack multi-platform portfolio with admin operations and CI/CD",
+            "short_tr": "Admin operasyonlari ve CI/CD iceren full-stack cok platformlu portfolyo sistemi",
+            "description_en": (
+                "Multi-platform system with 60+ API endpoints, JWT/RBAC auth, 24h GitHub API caching, "
+                "Supabase asset operations, SMTP notifications, and staged deployments to Vercel and Railway."
+            ),
+            "description_tr": (
+                "60+ API endpoint, JWT/RBAC kimlik dogrulama, 24 saatlik GitHub API cache, "
+                "Supabase varlik yonetimi, SMTP bildirimleri ve Vercel/Railway asamali dagitimlarini iceren cok platformlu sistem."
+            ),
+            "github_url": "https://github.com/TurkishKEBAB/Site",
+            "demo_url": None,
+            "featured": True,
+            "display_order": 5,
+        },
     ]
-    
-    for proj_data in projects_data:
+    created_projects: List[Project] = []
+    for item in projects_data:
         project = Project(
-            slug=proj_data["slug"],
-            title=proj_data["title"],
-            short_description=proj_data["short_description"],
-            description=proj_data["description"],
-            cover_image=proj_data["cover_image"],
-            github_url=proj_data["github_url"],
-            demo_url=proj_data["demo_url"],
-            featured=proj_data["featured"],
-            display_order=proj_data["display_order"]
+            slug=item["slug"],
+            title=item["title_en"],
+            short_description=item["short_en"],
+            description=item["description_en"],
+            cover_image=None,
+            github_url=item["github_url"],
+            demo_url=item["demo_url"],
+            featured=item["featured"],
+            display_order=item["display_order"],
         )
         db.add(project)
-    
+        db.flush()
+        db.add(
+            ProjectTranslation(
+                project_id=project.id,
+                language="en",
+                title=item["title_en"],
+                short_description=item["short_en"],
+                description=item["description_en"],
+            )
+        )
+        db.add(
+            ProjectTranslation(
+                project_id=project.id,
+                language="tr",
+                title=item["title_tr"],
+                short_description=item["short_tr"],
+                description=item["description_tr"],
+            )
+        )
+        created_projects.append(project)
     db.commit()
-    print(f"✅ Added {len(projects_data)} projects")
+    print(f"Added {len(created_projects)} projects with TR/EN translations")
+    return created_projects
 
 
-def seed_site_config(db: Session):
-    """Add site configuration"""
-    print("⚙️  Adding site configuration...")
-    
+def link_project_technologies(db: Session, tech_map: Dict[str, str], projects: List[Project]) -> None:
+    """Connect projects to technologies."""
+    print("Linking project technologies...")
+    mapping = {
+        "isikschedule-platform": [
+            "TypeScript",
+            "FastAPI",
+            "Next.js",
+            "PostgreSQL",
+            "Redis",
+            "Docker",
+            "PyQt6",
+            "Celery",
+            "JWT",
+            "RBAC",
+        ],
+        "agentic-ide-thesis-project": [
+            "TypeScript",
+            "Electron",
+            "Monaco Editor",
+            "LLMs",
+            "RAG",
+            "GitHub Actions",
+        ],
+        "teknofest-sarkan-uav-defense-platform": [
+            "Python",
+            "Git",
+            "PostgreSQL",
+        ],
+        "automated-web-crawler": [
+            "Python",
+            "Scrapy",
+            "BeautifulSoup",
+            "FastAPI",
+            "PostgreSQL",
+            "Pytest",
+        ],
+        "portfolio-platform-web-desktop": [
+            "FastAPI",
+            "React",
+            "PostgreSQL",
+            "Docker",
+            "Redis",
+            "JWT",
+            "RBAC",
+            "Supabase",
+            "Vercel",
+            "Railway",
+            "SonarQube",
+        ],
+    }
+    project_by_slug = {project.slug: project for project in projects}
+    links = 0
+    for slug, tech_names in mapping.items():
+        project = project_by_slug.get(slug)
+        if not project:
+            continue
+        for tech_name in tech_names:
+            tech_id = tech_map.get(tech_name)
+            if not tech_id:
+                continue
+            db.add(ProjectTechnology(project_id=project.id, technology_id=tech_id))
+            links += 1
+    db.commit()
+    print(f"Linked {links} project-technology pairs")
+
+
+def seed_site_config(db: Session) -> None:
+    """Seed site level configuration."""
+    print("Adding site config...")
     config_data = [
-        {"key": "site_name", "value": "Yiğit Okur", "description": "Site display name"},
-        {"key": "site_title", "value": "Yiğit Okur - Software Engineer & Computer Science Student", "description": "Page title"},
-        {"key": "site_description", "value": "Portfolio website of Yiğit Okur - Full-stack developer, ML enthusiast, and competitive programmer specializing in web development, robotics, and AI.", "description": "Meta description"},
-        {"key": "contact_email", "value": "yigitokur@ieee.org", "description": "Contact email address"},
-        {"key": "github_url", "value": "https://github.com/TurkishKEBAB", "description": "GitHub profile URL"},
-        {"key": "linkedin_url", "value": "https://www.linkedin.com/in/yiğit-okur-050b5b278", "description": "LinkedIn profile URL"},
-        {"key": "meta_keywords", "value": "Yiğit Okur, Software Engineer, Full Stack Developer, Machine Learning, Python, React, Portfolio", "description": "SEO keywords"},
-        {"key": "maintenance_mode", "value": "false", "description": "Maintenance mode flag"},
+        {"key": "site_name", "value": "Yigit Okur", "description": "Display name"},
+        {"key": "site_title", "value": "Yigit Okur | Software Engineer · Cloud & DevOps", "description": "SEO title"},
+        {
+            "key": "site_description",
+            "value": "Software Engineering student focused on enterprise backend systems, cloud-native architecture, and DevOps automation.",
+            "description": "SEO description",
+        },
+        {"key": "contact_email", "value": "yigitokur@ieee.org", "description": "Primary contact"},
+        {"key": "github_url", "value": "https://github.com/TurkishKEBAB", "description": "GitHub profile"},
+        {"key": "linkedin_url", "value": "https://www.linkedin.com/in/yigit-okur-050b5b278", "description": "LinkedIn profile"},
+        {
+            "key": "meta_keywords",
+            "value": "Yigit Okur, Software Engineer, Cloud, DevOps, Spring Boot, FastAPI, React, Portfolio",
+            "description": "SEO keywords",
+        },
+        {"key": "maintenance_mode", "value": "false", "description": "Maintenance flag"},
     ]
-    
-    for config_item in config_data:
-        config = SiteConfig(
-            key=config_item["key"],
-            value=config_item["value"],
-            description=config_item["description"]
-        )
-        db.add(config)
-    
+    for item in config_data:
+        db.add(SiteConfig(key=item["key"], value=item["value"], description=item["description"]))
     db.commit()
-    print(f"✅ Added {len(config_data)} site configuration items")
+    print(f"Added {len(config_data)} site config entries")
 
 
-def seed_technologies(db: Session):
-    """Add technologies to database"""
-    print("💻 Adding technologies...")
-    
-    technologies_data = [
-        # Programming Languages
-        {"name": "Python", "category": "language", "icon": "devicon-python-plain", "color": "#3776AB"},
-        {"name": "C++", "category": "language", "icon": "devicon-cplusplus-plain", "color": "#00599C"},
-        {"name": "Java", "category": "language", "icon": "devicon-java-plain", "color": "#007396"},
-        {"name": "JavaScript", "category": "language", "icon": "devicon-javascript-plain", "color": "#F7DF1E"},
-        {"name": "TypeScript", "category": "language", "icon": "devicon-typescript-plain", "color": "#3178C6"},
-        
-        # Frontend
-        {"name": "React", "category": "framework", "icon": "devicon-react-original", "color": "#61DAFB"},
-        {"name": "Vue.js", "category": "framework", "icon": "devicon-vuejs-plain", "color": "#4FC08D"},
-        {"name": "Tailwind CSS", "category": "framework", "icon": "devicon-tailwindcss-plain", "color": "#06B6D4"},
-        {"name": "HTML5", "category": "language", "icon": "devicon-html5-plain", "color": "#E34F26"},
-        {"name": "CSS3", "category": "language", "icon": "devicon-css3-plain", "color": "#1572B6"},
-        
-        # Backend
-        {"name": "FastAPI", "category": "framework", "icon": "devicon-fastapi-plain", "color": "#009688"},
-        {"name": "Django", "category": "framework", "icon": "devicon-django-plain", "color": "#092E20"},
-        {"name": "Node.js", "category": "framework", "icon": "devicon-nodejs-plain", "color": "#339933"},
-        {"name": "Express", "category": "framework", "icon": "devicon-express-original", "color": "#000000"},
-        
-        # Databases
-        {"name": "PostgreSQL", "category": "database", "icon": "devicon-postgresql-plain", "color": "#4169E1"},
-        {"name": "MongoDB", "category": "database", "icon": "devicon-mongodb-plain", "color": "#47A248"},
-        {"name": "Redis", "category": "database", "icon": "devicon-redis-plain", "color": "#DC382D"},
-        {"name": "MySQL", "category": "database", "icon": "devicon-mysql-plain", "color": "#4479A1"},
-        
-        # Cloud & DevOps
-        {"name": "Docker", "category": "tool", "icon": "devicon-docker-plain", "color": "#2496ED"},
-        {"name": "Git", "category": "tool", "icon": "devicon-git-plain", "color": "#F05032"},
-        {"name": "AWS", "category": "cloud", "icon": "devicon-amazonwebservices-original", "color": "#FF9900"},
-        {"name": "Linux", "category": "tool", "icon": "devicon-linux-plain", "color": "#FCC624"},
-        
-        # Data Science & ML
-        {"name": "PyTorch", "category": "framework", "icon": "devicon-pytorch-original", "color": "#EE4C2C"},
-        {"name": "TensorFlow", "category": "framework", "icon": "devicon-tensorflow-original", "color": "#FF6F00"},
-        {"name": "NumPy", "category": "library", "icon": "devicon-numpy-original", "color": "#013243"},
-        {"name": "Pandas", "category": "library", "icon": "devicon-pandas-original", "color": "#150458"},
-        {"name": "Scikit-learn", "category": "library", "icon": None, "color": "#F7931E"},
-        
-        # Other Tools
-        {"name": "ROS", "category": "framework", "icon": None, "color": "#22314E"},
-        {"name": "OpenCV", "category": "library", "icon": "devicon-opencv-plain", "color": "#5C3EE8"},
-        {"name": "Qt", "category": "framework", "icon": "devicon-qt-original", "color": "#41CD52"},
+def seed_ui_translations(db: Session) -> None:
+    """Seed minimal UI translations to avoid empty translation tables."""
+    print("Adding UI translations...")
+    entries = [
+        ("en", "nav_home", "Home"),
+        ("en", "nav_about", "About"),
+        ("en", "nav_projects", "Projects"),
+        ("en", "nav_blog", "Blog"),
+        ("en", "nav_contact", "Contact"),
+        ("tr", "nav_home", "Ana Sayfa"),
+        ("tr", "nav_about", "Hakkimda"),
+        ("tr", "nav_projects", "Projeler"),
+        ("tr", "nav_blog", "Blog"),
+        ("tr", "nav_contact", "Iletisim"),
     ]
-    
-    for tech_data in technologies_data:
-        tech = Technology(
-            name=tech_data["name"],
-            slug=slugify(tech_data["name"]),
-            category=tech_data["category"],
-            icon=tech_data["icon"],
-            color=tech_data["color"]
-        )
-        db.add(tech)
-    
+    for language, key, value in entries:
+        db.add(Translation(language=language, translation_key=key, value=value))
     db.commit()
-    print(f"✅ Added {len(technologies_data)} technologies")
-    
-    return {tech.name: tech.id for tech in db.query(Technology).all()}
+    print(f"Added {len(entries)} translation entries")
 
 
-def seed_blog_posts(db: Session):
-    """Add blog posts to database"""
-    print("📝 Adding blog posts...")
-    
-    # First, get or create an admin user for blog posts
-    admin_user = db.query(User).filter(User.email == "admin@portfolio.com").first()
-    if not admin_user:
-        admin_user = User(
-            email="admin@portfolio.com",
-            username="admin",
-            password_hash=get_password_hash("changethispassword"),
-            is_active=True
-        )
-        db.add(admin_user)
-        db.commit()
-        db.refresh(admin_user)
-    
-    blog_posts_data = [
+def seed_blog_posts(db: Session, author: User) -> None:
+    """Seed concise blog content aligned with portfolio topics."""
+    print("Adding blog posts...")
+    posts = [
         {
-            "title": "Getting Started with FastAPI and PostgreSQL",
-            "slug": "getting-started-fastapi-postgresql",
-            "excerpt": "Learn how to build a modern REST API using FastAPI and PostgreSQL with advanced features.",
-            "content": """# Getting Started with FastAPI and PostgreSQL
-
-FastAPI is a modern, fast web framework for building APIs with Python. In this tutorial, we'll explore how to create a production-ready API with PostgreSQL integration.
-
-## Why FastAPI?
-
-- **Fast**: Very high performance, on par with NodeJS and Go
-- **Easy**: Designed to be easy to use and learn
-- **Robust**: Production-ready code with automatic interactive documentation
-
-## Prerequisites
-
-- Python 3.8+
-- PostgreSQL database
-- Basic understanding of Python and REST APIs
-
-## Installation
-
-```bash
-pip install fastapi uvicorn sqlalchemy psycopg2-binary
-```
-
-## Building Your First API
-
-Let's create a simple API endpoint:
-
-```python
-from fastapi import FastAPI
-
-app = FastAPI()
-
-@app.get("/")
-async def root():
-    return {"message": "Hello World"}
-```
-
-This is just the beginning! Stay tuned for more advanced tutorials.""",
-            "cover_image": None,
-            "published": True,
-            "reading_time": 8,
-            "views": 0,
+            "slug": "neta-timezone-investigation",
+            "title": "Debugging a Silent Timezone Bug in Enterprise Microservices",
+            "excerpt": "A short case study on v1/v2 timezone mismatch detection with YAML and ELK traces.",
+            "content": (
+                "During my internship at NETAS, I investigated a silent date-boundary mismatch between "
+                "UTC and UTC+3 configurations. The issue was not detected by client-side validation. "
+                "I reproduced the defect through targeted logs and implemented a test matrix with 600+ lines "
+                "to document and prevent regressions."
+            ),
+            "reading_time": 5,
         },
         {
-            "title": "Building Scalable UAV Communication Systems",
-            "slug": "scalable-uav-communication-systems",
-            "excerpt": "Exploring anti-jamming techniques and secure telemetry for unmanned aerial vehicles.",
-            "content": """# Building Scalable UAV Communication Systems
-
-In my work on the Sarkan UAV project, I've learned valuable lessons about building robust communication systems for autonomous vehicles.
-
-## The Challenge
-
-UAVs require reliable, low-latency communication for:
-- Real-time telemetry
-- Command and control
-- Video streaming
-- Emergency protocols
-
-## Anti-Jamming Techniques
-
-We implemented several strategies:
-1. Frequency hopping
-2. Error correction codes
-3. Redundant communication channels
-4. Autonomous failover modes
-
-Stay tuned for more technical details!""",
-            "cover_image": None,
-            "published": True,
-            "reading_time": 12,
-            "views": 0,
+            "slug": "building-constraint-aware-schedulers",
+            "title": "Building Constraint-Aware Schedulers Across Desktop and Web",
+            "excerpt": "Notes from IsikSchedule architecture decisions and algorithmic tradeoffs.",
+            "content": (
+                "IsikSchedule combines hard constraints and preference optimization with a set of heuristic and "
+                "metaheuristic algorithms. This post summarizes architecture choices that made desktop and web "
+                "versions share the same core domain logic."
+            ),
+            "reading_time": 4,
         },
-        {
-            "title": "React + TypeScript Best Practices",
-            "slug": "react-typescript-best-practices",
-            "excerpt": "Essential patterns and tips for building type-safe React applications with TypeScript.",
-            "content": """# React + TypeScript Best Practices
-
-TypeScript brings type safety to React, making your code more maintainable and bug-free.
-
-## Key Benefits
-
-- **Type Safety**: Catch errors at compile time
-- **Better IDE Support**: Improved autocomplete and refactoring
-- **Documentation**: Types serve as inline documentation
-
-## Essential Patterns
-
-### 1. Typed Props
-
-```typescript
-interface ButtonProps {
-  label: string;
-  onClick: () => void;
-  disabled?: boolean;
-}
-
-const Button: React.FC<ButtonProps> = ({ label, onClick, disabled }) => (
-  <button onClick={onClick} disabled={disabled}>
-    {label}
-  </button>
-);
-```
-
-More patterns coming soon!""",
-            "cover_image": None,
-            "published": True,
-            "reading_time": 6,
-            "views": 0,
-        },
-        {
-            "title": "DevOps with Docker and Kubernetes",
-            "slug": "devops-docker-kubernetes",
-            "excerpt": "A comprehensive guide to containerization and orchestration for modern cloud applications.",
-            "content": """# DevOps with Docker and Kubernetes
-
-Modern cloud applications require efficient deployment and scaling strategies. Docker and Kubernetes are essential tools in this ecosystem.
-
-## Docker Basics
-
-Docker containers package your application with all its dependencies:
-
-```dockerfile
-FROM python:3.11-slim
-WORKDIR /app
-COPY requirements.txt .
-RUN pip install -r requirements.txt
-COPY . .
-CMD ["python", "app.py"]
-```
-
-## Kubernetes Orchestration
-
-Kubernetes manages your containers at scale:
-- Auto-scaling
-- Load balancing
-- Self-healing
-- Rolling updates
-
-More content coming soon!""",
-            "cover_image": None,
-            "published": True,
-            "reading_time": 10,
-            "views": 0,
-        },
-        {
-            "title": "Machine Learning with Python and scikit-learn",
-            "slug": "machine-learning-python-scikit-learn",
-            "excerpt": "Understanding supervised and unsupervised learning algorithms with practical examples.",
-            "content": """# Machine Learning with Python and scikit-learn
-
-Machine learning doesn't have to be complicated. Let's explore practical ML with Python and scikit-learn.
-
-## Supervised Learning
-
-Training models with labeled data:
-
-```python
-from sklearn.model_selection import train_test_split
-from sklearn.ensemble import RandomForestClassifier
-
-# Split data
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2)
-
-# Train model
-clf = RandomForestClassifier()
-clf.fit(X_train, y_train)
-
-# Evaluate
-accuracy = clf.score(X_test, y_test)
-print(f"Accuracy: {accuracy:.2f}")
-```
-
-## Unsupervised Learning
-
-Finding patterns without labels - stay tuned!""",
-            "cover_image": None,
-            "published": True,
-            "reading_time": 15,
-            "views": 0,
-        },
-        {
-            "title": "Competitive Programming Tips for IEEEXtreme",
-            "slug": "competitive-programming-tips-ieeextreme",
-            "excerpt": "Strategies and techniques for succeeding in 24-hour programming competitions.",
-            "content": """# Competitive Programming Tips for IEEEXtreme
-
-Having organized the IEEEXtreme camp and participated in the competition, here are my top tips:
-
-## Preparation
-
-1. **Master Data Structures**: Arrays, trees, graphs, heaps
-2. **Learn Algorithms**: Sorting, searching, dynamic programming
-3. **Practice**: Solve problems on Codeforces, LeetCode
-
-## During Competition
-
-- **Read all problems first**: Prioritize easier ones
-- **Team coordination**: Divide and conquer
-- **Don't get stuck**: Move on if you're blocked
-- **Test thoroughly**: Edge cases matter!
-
-## Time Management
-
-A 24-hour competition requires stamina and strategy. More tips coming!""",
-            "cover_image": None,
-            "published": True,
-            "reading_time": 7,
-            "views": 0,
-        }
     ]
-    
-    for post_data in blog_posts_data:
+    for item in posts:
         post = BlogPost(
-            title=post_data["title"],
-            slug=post_data["slug"],
-            excerpt=post_data["excerpt"],
-            content=post_data["content"],
-            cover_image=post_data["cover_image"],
-            author_id=admin_user.id,
-            published=post_data["published"],
-            reading_time=post_data["reading_time"],
-            views=post_data["views"],
-            published_at=datetime.now(timezone.utc) if post_data["published"] else None
+            slug=item["slug"],
+            title=item["title"],
+            content=item["content"],
+            excerpt=item["excerpt"],
+            cover_image=None,
+            author_id=author.id,
+            published=True,
+            published_at=datetime.now(timezone.utc),
+            reading_time=item["reading_time"],
+            views=0,
         )
         db.add(post)
-    
+        db.flush()
+        db.add(
+            BlogTranslation(
+                blog_post_id=post.id,
+                language="tr",
+                title=item["title"],
+                content=item["content"],
+                excerpt=item["excerpt"],
+            )
+        )
     db.commit()
-    print(f"✅ Added {len(blog_posts_data)} blog posts")
+    print(f"Added {len(posts)} blog posts")
 
 
-def link_project_technologies(db: Session, tech_ids: dict):
-    """Link technologies to projects"""
-    print("🔗 Linking technologies to projects...")
-    
-    from app.models.project import ProjectTechnology
-    
-    # Technology mapping for each project
-    project_tech_mapping = {
-        "sarkan-uav": ["Python", "C++", "ROS", "OpenCV", "Linux", "Qt"],
-        "schedule-optimizer": ["Python", "JavaScript", "FastAPI", "React", "PostgreSQL"],
-        "frc-robot-2024": ["Java", "Git", "Linux"],
-        "ieeextreme-camp": ["Python", "C++", "Java"],
-        "ml-projects": ["Python", "PyTorch", "TensorFlow", "NumPy", "Pandas", "Scikit-learn"],
-        "portfolio-website": ["TypeScript", "React", "FastAPI", "PostgreSQL", "Docker", "Redis", "Tailwind CSS"]
-    }
-    
-    for project_slug, tech_names in project_tech_mapping.items():
-        project = db.query(Project).filter(Project.slug == project_slug).first()
-        if project:
-            for tech_name in tech_names:
-                if tech_name in tech_ids:
-                    pt = ProjectTechnology(
-                        project_id=project.id,
-                        technology_id=tech_ids[tech_name]
-                    )
-                    db.add(pt)
-    
+def clear_existing_data(db: Session) -> None:
+    """Clear all mutable data in dependency-safe order."""
+    print("Clearing existing data...")
+    models_in_order = [
+        TokenBlacklist,
+        RefreshTokenSession,
+        ProjectTechnology,
+        ProjectImage,
+        ProjectTranslation,
+        BlogTranslation,
+        BlogPost,
+        ExperienceTranslation,
+        Experience,
+        SkillTranslation,
+        Skill,
+        Translation,
+        SiteConfig,
+        Technology,
+        GitHubRepo,
+        ContactMessage,
+        PageView,
+        User,
+    ]
+    for model in models_in_order:
+        db.query(model).delete(synchronize_session=False)
     db.commit()
-    
-    # Count total links created
-    link_count = db.query(ProjectTechnology).count()
-    print(f"✅ Created {link_count} project-technology links")
+    print("Existing records cleared")
 
 
-def main():
-    """Main seeding function"""
-    print("\n" + "="*60)
-    print("🌱 SEEDING DATABASE WITH YIĞIT OKUR'S CV DATA")
-    print("="*60 + "\n")
-    
+def main() -> None:
+    """Seed all portfolio data from CV v6."""
+    print("\n" + "=" * 60)
+    print("SEEDING DATABASE WITH CV V6 DATA")
+    print("=" * 60 + "\n")
     db = SessionLocal()
-    
     try:
-        # Check if data already exists
-        existing_skills = db.query(Skill).count()
-        existing_projects = db.query(Project).count()
-        
-        if existing_skills > 0 or existing_projects > 0:
-            print("⚠️  WARNING: Database already has data!")
-            print(f"  - Skills: {existing_skills}")
-            print(f"  - Experiences: {db.query(Experience).count()}")
-            print(f"  - Projects: {existing_projects}")
-            print("\n❓ Clearing existing data and re-seeding...")
-            
-            # Clear existing data (in correct order due to foreign keys)
-            db.query(ProjectTechnology).delete()
-            db.query(ProjectImage).delete()
-            db.query(ProjectTranslation).delete()
-            db.query(Project).delete()
-            db.query(Technology).delete()
-            db.query(BlogPost).delete()
-            db.query(ExperienceTranslation).delete()
-            db.query(Experience).delete()
-            db.query(Skill).delete()
-            db.query(SiteConfig).delete()
-            db.commit()
-            print("✅ Cleared existing data\n")
-        
-        # Seed data in order
+        existing_data = {
+            "skills": db.query(Skill).count(),
+            "experiences": db.query(Experience).count(),
+            "projects": db.query(Project).count(),
+        }
+        if any(existing_data.values()):
+            print("Existing data detected:")
+            for key, value in existing_data.items():
+                print(f"  - {key}: {value}")
+            clear_existing_data(db)
+
+        admin_user = seed_admin_user(db)
+        tech_map = seed_technologies(db)
         seed_skills(db)
         seed_experiences(db)
-        seed_projects(db)
-        seed_blog_posts(db)
-        tech_ids = seed_technologies(db)
-        link_project_technologies(db, tech_ids)
+        projects = seed_projects(db)
+        link_project_technologies(db, tech_map, projects)
         seed_site_config(db)
-        
-        print("\n" + "="*60)
-        print("✅ DATABASE SEEDING COMPLETED SUCCESSFULLY!")
-        print("="*60)
-        print("\n📊 Summary:")
-        print(f"  - Skills: {db.query(Skill).count()}")
-        print(f"  - Experiences: {db.query(Experience).count()}")
-        print(f"  - Projects: {db.query(Project).count()}")
-        print(f"  - Blog Posts: {db.query(BlogPost).count()}")
-        print(f"  - Technologies: {db.query(Technology).count()}")
-        print(f"  - Project-Technology Links: {db.query(ProjectTechnology).count()}")
-        print(f"  - Site Config: {db.query(SiteConfig).count()}")
+        seed_ui_translations(db)
+        seed_blog_posts(db, admin_user)
+
+        print("\n" + "=" * 60)
+        print("DATABASE SEEDING COMPLETED")
+        print("=" * 60)
         print(f"  - Users: {db.query(User).count()}")
-        print("\n🚀 Your database is now ready to use!")
-        print("\n")
-        
-    except Exception as e:
-        print(f"\n❌ Error during seeding: {str(e)}")
+        print(f"  - Skills: {db.query(Skill).count()}")
+        print(f"  - Skill translations: {db.query(SkillTranslation).count()}")
+        print(f"  - Experiences: {db.query(Experience).count()}")
+        print(f"  - Experience translations: {db.query(ExperienceTranslation).count()}")
+        print(f"  - Projects: {db.query(Project).count()}")
+        print(f"  - Project translations: {db.query(ProjectTranslation).count()}")
+        print(f"  - Project-technology links: {db.query(ProjectTechnology).count()}")
+        print(f"  - Technologies: {db.query(Technology).count()}")
+        print(f"  - Site config: {db.query(SiteConfig).count()}")
+        print(f"  - UI translations: {db.query(Translation).count()}")
+        print(f"  - Blog posts: {db.query(BlogPost).count()}")
+    except Exception:
+        print("\nError during seeding")
         db.rollback()
         raise
     finally:

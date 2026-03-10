@@ -16,15 +16,20 @@ from app.schemas.contact import (
     ContactMessageListResponse,
     ContactMessageResponse,
 )
+from app.core.rate_limit import limiter
+from app.config import get_settings
 from app.services.email_service import EmailService
+from app.services.captcha_service import verify_captcha_token
 
 router = APIRouter()
+settings = get_settings()
 
 
 @router.post('/', response_model=ContactMessageResponse, status_code=status.HTTP_201_CREATED)
+@limiter.limit(settings.CONTACT_RATE_LIMIT)
 async def submit_contact_message(
-    message_data: ContactMessageCreate,
     request: Request,
+    message_data: ContactMessageCreate,
     db: Session = Depends(get_db),
 ):
     """
@@ -33,6 +38,16 @@ async def submit_contact_message(
     """
     ip_address = request.client.host if request.client else None
     user_agent = request.headers.get('user-agent')
+    captcha_header = request.headers.get("X-Captcha-Token")
+    captcha_token = message_data.captcha_token or captcha_header
+
+    if settings.CAPTCHA_ENABLED:
+        captcha_ok = await verify_captcha_token(captcha_token=captcha_token, remote_ip=ip_address)
+        if not captcha_ok:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Captcha verification failed",
+            )
 
     message = contact_crud.create_contact_message(
         db,

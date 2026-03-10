@@ -1,7 +1,8 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useLanguage } from '../contexts/LanguageContext';
-import { skillService, experienceService, Skill, Experience } from '../services';
+import { useSkills } from '../hooks/useSkills';
+import { useExperiences } from '../hooks/useExperiences';
 import {
   FiBookOpen, FiShield, FiCode, FiAward, FiGlobe,
   FiCpu, FiTarget, FiUsers, FiActivity, FiBriefcase,
@@ -11,95 +12,83 @@ import {
 type FilterType = 'all' | 'education' | 'work' | 'volunteer' | 'activity' | 'certification' | 'achievement';
 
 export default function About() {
-  const [skills, setSkills] = useState<Skill[]>([]);
-  const [experiences, setExperiences] = useState<Experience[]>([]);
-  const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<FilterType>('all');
-
-  // Zaten projenizde olan LanguageContext'i kullanıyoruz.
-  // language değişkeninin 'tr' veya 'en' döndüğünü varsayıyoruz.
   const { language } = useLanguage();
 
-  useEffect(() => {
-    loadData();
-  }, [language]);
-
-  const loadData = async () => {
-    try {
-      setLoading(true);
-      const [skillsData, experiencesData] = await Promise.all([
-        skillService.getSkills(language),
-        experienceService.getExperiences({ language })
-      ]);
-      setSkills(skillsData);
-      setExperiences(Array.isArray(experiencesData) ? experiencesData : []);
-    } catch (error) {
-      console.error('Failed to load data:', error);
-      setSkills([]);
-      setExperiences([]);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const { data: skills = [], isLoading: skillsLoading } = useSkills(language);
+  const { data: experiencesData, isLoading: experiencesLoading } = useExperiences({ language });
+  const experiences = Array.isArray(experiencesData) ? experiencesData : [];
+  const loading = skillsLoading || experiencesLoading;
 
   // --- DİL OBJELERİ (TRANSLATIONS) ---
   // Metinleri ayrı dosyalara (örn: locales/tr.ts) taşıyıp buraya import edersen kodun daha temiz kalır.
   const t = {
     tr: {
-      pageTitle: "Hakkımda",
-      pageSubtitle: "Ölçeklenebilir sistemler, bulut mimarileri ve DevOps süreçleri inşa etme tutkusuyla çalışan bir yazılım mühendisi adayı.",
-      introTitle: "Kısaca Ben",
-      introP1: "Merhaba, ben <span class='text-primary-400 font-semibold'>Yiğit Okur</span>. Işık Üniversitesi Yazılım Mühendisliği 3. sınıf öğrencisi olarak eğitimime devam ediyor; bulut bilişim, DevOps ve yazılım mimarileri alanlarında kendimi geliştiriyorum.",
-      introP2: "Netaş'taki staj deneyimim, C# ve .NET ekosistemindeki çalışmalarım ve profesörümle yürüttüğüm <strong>\"Agentic IDE\"</strong> gibi akademik projelerim sayesinde teorik algoritmik bilgimi güçlü pratik uygulamalara dönüştürüyorum. Temel hedefim, modern otomasyon süreçleri kurmak ve sürdürülebilir altyapılar tasarlamak.",
-      introP3: "Yazılımın yanı sıra donanım ve otonom sistemlere de büyük bir ilgi duyuyorum. Savronik ve TÜBİTAK destekli, bütçesi 200.000 TL'ye ulaşan <strong>Sarkan İHA</strong> projesinin liderliğini yürütüyorum. Bu projede, FIRST Robotics Competition (FRC) geçmişimden edindiğim sistem optimizasyonu, kriz yönetimi ve teknik liderlik tecrübelerimi doğrudan sahaya yansıtıyorum.",
-      introP4: "Akademik ve teknik projelerimin dışında, Işık Üniversitesi <strong>IEEE Öğrenci Kolu Başkan Yardımcısı ve Sponsorluk Yöneticisi</strong> olarak teknoloji ekosistemine katkı sağlıyor, teknik etkinlikler düzenliyorum. Gelecekte şirketlerin dijital dönüşüm süreçlerinde güvenilir altyapılar kurarak kalıcı değerler yaratmayı hedefliyorum.",
-      skillsTitle: "Teknik Yetkinlikler",
-      noSkillsData: "Şu an için yetenek verisi bulunmamaktadır.",
-      timelineTitle: "Zaman Çizelgesi",
-      noTimelineData: "Bu filtreye uygun kayıt bulunamadı.",
-      interestsTitle: "İlgi Alanları ve Hobiler",
-      githubTitle: "GitHub Aktivitem",
-      githubBtn: "GitHub Profilime Göz At",
-      ctaTitle: "Birlikte Çalışalım",
-      ctaText: "Yeni teknolojiler üzerine konuşmak, açık kaynak bir projeye katkı sağlamak veya DevOps süreçleriyle ilgili fikir alışverişi yapmak istersen bana her zaman ulaşabilirsin.",
-      ctaBtn: "İletişime Geç →",
-      loading: "Yükleniyor...",
-      present: "Günümüz",
-      unknown: "Bilinmiyor",
+      pageTitle: 'Hakkimda',
+      pageSubtitle: 'Enterprise backend sistemleri, cloud-native mimari ve DevOps otomasyonu odaginda ureten bir yazilim muhendisi adayi.',
+      introTitle: 'Kisaca Ben',
+      introP1: "Merhaba, ben <span class='text-primary-400 font-semibold'>Yigit Okur</span>. Isik Universitesi'nde 3. sinif Yazilim Muhendisligi ogrencisiyim ve kurumsal backend, cloud ve otomasyon odakli calisiyorum.",
+      introP2: 'NETAS stajimda Java mikroservis platformuna katkida bulundum; YAML ve ELK analiziyle kritik bir timezone uyumsuzlugunu tespit ederek 600+ satir test ile dokumante ettim.',
+      introP3: "IsikSchedule, Agentic IDE ve Teknofest Sarkan UAV projelerinde mimari tasarim, algoritma optimizasyonu ve urunlestirme sureclerini yonettim.",
+      introP4: "IEEE Isik Ogrenci Kolu'nda baskan yardimciligi ve proje koordinasyonu yaparak 1.100+ ogrenciye ulasan teknik etkinliklerin organizasyonunu surduruyorum.",
+      skillsTitle: 'Teknik Yetkinlikler',
+      noSkillsData: 'Su an icin yetenek verisi bulunmamaktadir.',
+      timelineTitle: 'Zaman Cizelgesi',
+      noTimelineData: 'Bu filtreye uygun kayit bulunamadi.',
+      interestsTitle: 'Ilgi Alanlari',
+      githubTitle: 'GitHub Aktivitem',
+      githubBtn: 'GitHub Profilime Goz At',
+      ctaTitle: 'Birlikte Calisalim',
+      ctaText: 'Yazilim muhendisligi, cloud altyapi, optimizasyon ve AI-native urunler uzerine birlikte uretmek istersen ulasabilirsin.',
+      ctaBtn: 'Iletisime Gec ->',
+      loading: 'Yukleniyor...',
+      present: 'Gunumuz',
+      unknown: 'Bilinmiyor',
       filters: {
-        all: "Tümü", education: "Eğitim", work: "İş Deneyimi", volunteer: "Gönüllülük", activity: "Aktiviteler", certification: "Sertifikalar", achievement: "Başarılar"
+        all: 'Tumu',
+        education: 'Egitim',
+        work: 'Is Deneyimi',
+        volunteer: 'Gonulluluk',
+        activity: 'Aktiviteler',
+        certification: 'Sertifikalar',
+        achievement: 'Basarilar'
       },
-      hobbies: ['Şiir Yazmak', 'Sinema ve Dizi', 'Gitar ve Piyano', 'Çevre Gönüllülüğü', 'Yüzme ve Fitness', 'Satranç ve Strateji', 'Anadolu Rock', 'Sudoku ve Bulmacalar']
+      hobbies: ['Satranc', 'Gitar', 'Piyano', 'Vokal Egitimi', 'Fitness', 'Yuzme']
     },
     en: {
-      pageTitle: "About Me",
-      pageSubtitle: "A software engineering student passionate about building scalable systems, cloud architectures, and DevOps pipelines.",
-      introTitle: "Briefly About Me",
-      introP1: "Hi, I'm <span class='text-primary-400 font-semibold'>Yiğit Okur</span>. I'm currently a 3rd-year Software Engineering student at Işık University, constantly improving myself in cloud computing, DevOps, and software architectures.",
-      introP2: "Through my internship at Netaş, my work in the C#/.NET ecosystem, and academic projects like the <strong>\"Agentic IDE\"</strong> developed with my professor, I translate theoretical algorithmic knowledge into strong practical applications. My main goal is to build modern automation pipelines and design sustainable infrastructures.",
-      introP3: "Beyond software, I have a deep interest in hardware and autonomous systems. I am currently leading the <strong>Sarkan UAV</strong> project, which is supported by Savronik and TÜBİTAK with a budget reaching ₺200,000. In this project, I directly apply the system optimization, crisis management, and technical leadership skills I gained from my FIRST Robotics Competition (FRC) background.",
-      introP4: "Outside of academic and technical projects, I contribute to the technology ecosystem as the <strong>Vice President and Sponsorship Manager of the Işık University IEEE Student Branch</strong> by organizing technical events. In the future, I aim to create lasting value by building reliable infrastructures in companies' digital transformation processes.",
-      skillsTitle: "Technical Skills",
-      noSkillsData: "No skills data available at the moment.",
-      timelineTitle: "Timeline",
-      noTimelineData: "No records found for this filter.",
-      interestsTitle: "Interests & Hobbies",
-      githubTitle: "My GitHub Activity",
-      githubBtn: "View My GitHub Profile",
+      pageTitle: 'About Me',
+      pageSubtitle: 'A software engineering student focused on enterprise backend systems, cloud-native architecture, and DevOps automation.',
+      introTitle: 'Briefly About Me',
+      introP1: "Hi, I'm <span class='text-primary-400 font-semibold'>Yigit Okur</span>. I'm a 3rd-year Software Engineering student at Isik University, focusing on enterprise backend, cloud, and automation workflows.",
+      introP2: 'During my NETAS internship, I contributed to a Java microservices platform and identified a critical timezone mismatch through YAML and ELK analysis, then documented remediation with 600+ lines of tests.',
+      introP3: 'Through IsikSchedule, Agentic IDE, and Teknofest Sarkan UAV, I have worked on architecture, optimization algorithms, and productization.',
+      introP4: 'As IEEE Isik Student Branch Vice President and Project Coordinator, I continue organizing high-impact technical events for 1,100+ students.',
+      skillsTitle: 'Technical Skills',
+      noSkillsData: 'No skills data available at the moment.',
+      timelineTitle: 'Timeline',
+      noTimelineData: 'No records found for this filter.',
+      interestsTitle: 'Interests',
+      githubTitle: 'My GitHub Activity',
+      githubBtn: 'View My GitHub Profile',
       ctaTitle: "Let's Work Together",
-      ctaText: "If you want to talk about new technologies, contribute to an open-source project, or exchange ideas about DevOps processes, you can always reach out to me.",
-      ctaBtn: "Get In Touch →",
-      loading: "Loading...",
-      present: "Present",
-      unknown: "Unknown",
+      ctaText: 'If you want to collaborate on software engineering, cloud infrastructure, optimization, or AI-native products, feel free to reach out.',
+      ctaBtn: 'Get In Touch ->',
+      loading: 'Loading...',
+      present: 'Present',
+      unknown: 'Unknown',
       filters: {
-        all: "All", education: "Education", work: "Experience", volunteer: "Volunteer", activity: "Activities", certification: "Certifications", achievement: "Achievements"
+        all: 'All',
+        education: 'Education',
+        work: 'Experience',
+        volunteer: 'Volunteer',
+        activity: 'Activities',
+        certification: 'Certifications',
+        achievement: 'Achievements'
       },
-      hobbies: ['Poetry Writing', 'Cinema & Series', 'Guitar & Piano', 'Environmental Volunteer', 'Swimming & Fitness', 'Chess & Strategy', 'Anatolian Rock', 'Sudoku & Puzzles']
+      hobbies: ['Chess', 'Guitar', 'Piano', 'Vocal Training', 'Fitness', 'Swimming']
     }
   };
 
-  // Geçerli dil metinlerini bir değişkene atıyoruz (default 'tr' veya 'en')
   const currentLang = language === 'en' ? 'en' : 'tr';
   const text = t[currentLang];
 
@@ -107,145 +96,159 @@ export default function About() {
   // İçeriklerin de dile göre değişmesi gerekiyor
   const certifications = [
     {
-      id: 1, type: 'certification' as const,
-      title: currentLang === 'tr' ? 'Miuul Makine Öğrenmesi Bootcamp' : 'Miuul Machine Learning Bootcamp',
+      id: 1,
+      type: 'certification' as const,
+      title: currentLang === 'tr' ? 'Cloud ve DevOps Egitim Serisi' : 'Cloud and DevOps Learning Track',
+      organization: currentLang === 'tr' ? 'Udemy / Siber Kulupler Birligi' : 'Udemy / Cyber Clubs Union',
+      date: currentLang === 'tr' ? '2024 - 2025' : '2024 - 2025',
+      description: currentLang === 'tr'
+        ? 'Linux for Cloud & DevOps Engineers, Master System Design & Software Architecture, CCNA temelleri ve DevSecOps egitimleri tamamlandi.'
+        : 'Completed Linux for Cloud & DevOps Engineers, Master System Design & Software Architecture, networking fundamentals (CCNA), and DevSecOps trainings.',
+      icon: <FiShield />,
+    },
+    {
+      id: 2,
+      type: 'certification' as const,
+      title: currentLang === 'tr' ? 'Complete AI & Machine Learning Bootcamp' : 'Complete AI & Machine Learning Bootcamp',
       organization: 'Miuul',
-      date: currentLang === 'tr' ? 'Temmuz - Ağustos 2024' : 'July - August 2024',
-      description: currentLang === 'tr'
-        ? 'Makine öğrenmesi temelleri, gözetimli/gözetimsiz öğrenme, derin öğrenme algoritmaları ve scikit-learn ile Python tabanlı pratik uygulamaları kapsayan yoğun eğitim programı.'
-        : 'Intensive bootcamp covering machine learning fundamentals, supervised/unsupervised learning, deep learning algorithms, and practical applications with scikit-learn and Python.',
-      icon: <FiDatabase />
-    },
-    {
-      id: 2, type: 'certification' as const,
-      title: currentLang === 'tr' ? 'DevSecOps Sertifikası' : 'DevSecOps Certificate',
-      organization: currentLang === 'tr' ? 'Profesyonel Eğitim' : 'Professional Training',
       date: '2024',
       description: currentLang === 'tr'
-        ? 'Güvenlik odaklı DevOps pratikleri, CI/CD güvenliği, konteyner güvenliği ve güvenli yazılım geliştirme yaşam döngüsü (SDLC).'
-        : 'Security-focused DevOps practices, CI/CD security, container security, and secure software development lifecycle (SDLC).',
-      icon: <FiShield />
+        ? 'Makine ogrenmesi ve AI temellerini uygulamali olarak kapsayan yogun egitim programi.'
+        : 'Intensive hands-on program covering machine learning and AI fundamentals.',
+      icon: <FiDatabase />,
     },
     {
-      id: 3, type: 'certification' as const,
-      title: currentLang === 'tr' ? 'Nesne Yönelimli Programlama (OOP) Öğretim Asistanlığı' : 'OOP Teaching Assistantship',
-      organization: currentLang === 'tr' ? 'Işık Üniversitesi' : 'Işık University',
-      date: '2024',
+      id: 3,
+      type: 'certification' as const,
+      title: currentLang === 'tr' ? 'Master the Coding Interview: Data Structures + Algorithms' : 'Master the Coding Interview: Data Structures + Algorithms',
+      organization: 'Udemy',
+      date: '2025',
       description: currentLang === 'tr'
-        ? 'OOP dersleri için öğretim asistanlığı; öğrencilere ileri düzey programlama konseptleri, tasarım desenleri ve yazılım mimarisi konularında mentörlük.'
-        : 'Teaching assistant for OOP courses; mentoring students in advanced programming concepts, design patterns, and software architecture.',
-      icon: <FiBookOpen />
+        ? 'Veri yapilari ve algoritma odakli ileri seviye problem cozme egitimi.'
+        : 'Advanced problem-solving training focused on data structures and algorithms.',
+      icon: <FiCpu />,
     },
     {
-      id: 4, type: 'certification' as const,
+      id: 4,
+      type: 'certification' as const,
       title: 'TalentCoders TechCamp',
       organization: 'TalentCoders',
       date: '2024',
       description: currentLang === 'tr'
-        ? 'Modern yazılım geliştirme pratikleri ve güncel teknolojiler üzerine odaklanan yoğun programlama kampı.'
-        : 'Intensive programming bootcamp focused on modern software development practices and current technologies.',
-      icon: <FiCode />
+        ? 'Modern yazilim gelistirme pratikleri odakli teknik kamp.'
+        : 'Technical camp focused on modern software development practices.',
+      icon: <FiCode />,
     },
     {
-      id: 5, type: 'certification' as const,
-      title: currentLang === 'tr' ? 'C1 İngilizce Yetkinlik Sertifikası' : 'C1 English Proficiency Certificate',
-      organization: currentLang === 'tr' ? 'Amerikan Kültür' : 'American Culture Association',
+      id: 5,
+      type: 'certification' as const,
+      title: currentLang === 'tr' ? 'Ingilizce C1 Yeterlilik' : 'English C1 Proficiency',
+      organization: currentLang === 'tr' ? 'Cambridge & American Culture Institute' : 'Cambridge & American Culture Institute',
       date: '2023',
       description: currentLang === 'tr'
-        ? 'Profesyonel iş hayatında akıcılığı belgeleyen ileri düzey İngilizce yetkinlik sertifikası.'
-        : 'Advanced English proficiency certificate demonstrating fluency in professional business life.',
-      icon: <FiGlobe />
+        ? 'Profesyonel iletisim icin ileri seviye Ingilizce yeterlilik sertifikasi.'
+        : 'Advanced English proficiency certificate for professional communication.',
+      icon: <FiGlobe />,
     },
     {
-      id: 6, type: 'certification' as const,
-      title: currentLang === 'tr' ? 'Cambridge Uluslararası Eğitim Sertifikası' : 'Cambridge International Education Certificate',
-      organization: 'Cambridge',
+      id: 6,
+      type: 'certification' as const,
+      title: currentLang === 'tr' ? 'Diksiyon ve Etkili Konusma Egitimi' : 'Diction and Effective Public Speaking Training',
+      organization: currentLang === 'tr' ? 'Baskent Iletisim Akademisi' : 'Baskent Communication Academy',
       date: '2023',
       description: currentLang === 'tr'
-        ? 'Küresel çapta tanınan uluslararası İngilizce dil sertifikası.'
-        : 'Globally recognized international English language certificate.',
-      icon: <FiAward />
+        ? 'Sahne ve sunum odakli etkili iletisim yetkinligi kazandirildi.'
+        : 'Training focused on effective communication, stage presence, and presentation quality.',
+      icon: <FiBookOpen />,
     },
     {
-      id: 7, type: 'certification' as const,
-      title: currentLang === 'tr' ? 'Programlamaya Giriş ve C' : 'Introduction to Programming and C',
-      organization: currentLang === 'tr' ? 'C ve Sistem Programcıları Derneği' : 'Association of C and System Programmers',
+      id: 7,
+      type: 'certification' as const,
+      title: currentLang === 'tr' ? 'Java Programlama Egitimi' : 'Java Programming Training',
+      organization: currentLang === 'tr' ? 'C ve Sistem Programcilari Dernegi' : 'Association of C and System Programmers',
       date: '2022',
       description: currentLang === 'tr'
-        ? 'Temel programlama konseptleri, algoritmik düşünce yapısı ve C programlama dili yetkinliği.'
-        : 'Fundamental programming concepts, algorithmic thinking, and C programming language proficiency.',
-      icon: <FiTerminal />
+        ? 'Temel ve orta duzey Java programlama kazanimi.'
+        : 'Foundational and intermediate Java programming training.',
+      icon: <FiTerminal />,
     },
     {
-      id: 8, type: 'achievement' as const,
-      title: currentLang === 'tr' ? 'TÜBİTAK 2209-A Araştırma Projesi Hibesi' : 'TÜBİTAK 2209-A Research Grant',
-      organization: 'TÜBİTAK',
-      date: '2024',
+      id: 8,
+      type: 'achievement' as const,
+      title: currentLang === 'tr' ? 'FRC Houston Dunya Sampiyonasi Finalisti' : 'FRC Houston World Championship Finalist',
+      organization: 'FIRST Robotics Competition - Team 7840 EMONER',
+      date: '2019',
       description: currentLang === 'tr'
-        ? 'Sarkan İHA projesinde kullanılmak üzere, İHA telemetri ve kontrol sistemleri için anti-jamming iletişim altyapısı geliştirmeye yönelik 65.000 TL araştırma hibesi.'
-        : '₺65,000 research grant to develop an anti-jamming communication infrastructure for UAV telemetry and control systems, used in the Sarkan UAV project.',
-      icon: <FiTarget />
+        ? 'Team 7840 ile FRC Houston dunya sampiyonasi final asamasina ulasildi.'
+        : 'Reached the world championship finals in FRC Houston with Team 7840.',
+      icon: <FiActivity />,
     },
     {
-      id: 9, type: 'achievement' as const,
-      title: currentLang === 'tr' ? 'Savronik Kurumsal Ana Sponsorluğu' : 'Savronik Corporate Main Sponsorship',
-      organization: currentLang === 'tr' ? 'Savronik Savunma Sanayii' : 'Savronik Defense Industry',
-      date: '2024',
+      id: 9,
+      type: 'achievement' as const,
+      title: currentLang === 'tr' ? 'TUBITAK 4009 Arastirma Calismasi' : 'TUBITAK 4009 Research Work',
+      organization: 'TUBITAK',
+      date: '2022 - 2023',
       description: currentLang === 'tr'
-        ? 'Sarkan İHA projesi için toplamda 200.000 TL bütçe hedefine ulaşılmasını sağlayan ana kurumsal sponsorluk anlaşmasının yönetimi.'
-        : 'Management of the main corporate sponsorship agreement that enabled the Sarkan UAV project to reach its ₺200,000 budget goal.',
-      icon: <FiBriefcase />
+        ? 'Fizik, optik ve CRISPR-Cas9 odakli arastirma katkilari.'
+        : 'Contributed to research activities focused on physics, optics, and CRISPR-Cas9 technologies.',
+      icon: <FiTarget />,
     },
     {
-      id: 10, type: 'achievement' as const,
-      title: currentLang === 'tr' ? 'IEEEXtreme 18.0 Yarışmacısı' : 'IEEEXtreme 18.0 Competitor',
-      organization: 'IEEE',
-      date: currentLang === 'tr' ? 'Ekim 2024' : 'October 2024',
+      id: 10,
+      type: 'achievement' as const,
+      title: currentLang === 'tr' ? 'Teknofest Sarkan UAV Butce ve Takim Yonetimi' : 'Teknofest Sarkan UAV Budget and Team Leadership',
+      organization: currentLang === 'tr' ? 'Savronik & TUBITAK Destegi' : 'Savronik & TUBITAK Support',
+      date: '2024 - 2025',
       description: currentLang === 'tr'
-        ? 'Algoritmalar, veri yapıları ve rekabetçi problem çözme üzerine odaklanan 24 saatlik küresel programlama yarışması katılımı.'
-        : 'Participation in a 24-hour global programming competition focusing on algorithms, data structures, and competitive problem solving.',
-      icon: <FiCpu />
+        ? '165.000 TL TUBITAK Ar-Ge hibesi dahil toplam 200.000 TL proje butcesi yonetildi, anti-jamming telemetri gelistirildi.'
+        : 'Managed a total project budget of 200,000 TL (including a 165,000 TL TUBITAK R&D grant) and led anti-jamming telemetry development.',
+      icon: <FiBriefcase />,
     },
     {
-      id: 11, type: 'achievement' as const,
-      title: currentLang === 'tr' ? 'FIRST Robotics Competition (FRC) Deneyimi' : 'FIRST Robotics Competition (FRC) Experience',
-      organization: 'Team EMONER 7840',
-      date: '2019 - 2023',
+      id: 11,
+      type: 'achievement' as const,
+      title: currentLang === 'tr' ? 'IsikSchedule Uretim Olagunlugu' : 'IsikSchedule Production Maturity',
+      organization: 'IsikSchedule',
+      date: '2024 - Present',
       description: currentLang === 'tr'
-        ? 'Otonom sistemler, robot kontrol yazılımları geliştirme ve uluslararası yarışmalarda sistem optimizasyonu üzerine 4 yıllık rekabetçi robotik tecrübesi.'
-        : '4 years of competitive robotics experience developing autonomous systems, robot control software, and optimizing systems in international competitions.',
-      icon: <FiActivity />
+        ? 'Masaustu surumunde ~1.000 aktif kullaniciya ulasan sistem; web urunlestirme ve 13 algoritmali optimizasyon motoru.'
+        : 'Desktop release serving ~1,000 active users, with ongoing web productization and a 13-algorithm optimization engine.',
+      icon: <FiCpu />,
     },
     {
-      id: 12, type: 'achievement' as const,
-      title: currentLang === 'tr' ? 'Yapay Zeka ve Teknoloji Akademisi Hackathonu' : 'AI and Tech Academy Hackathon',
-      organization: 'EHS Hackathon 2023',
-      date: '2023',
+      id: 12,
+      type: 'achievement' as const,
+      title: currentLang === 'tr' ? 'Topluluk ve Teknik Aglar' : 'Communities and Technical Networks',
+      organization: currentLang === 'tr' ? 'IEEE AESS, CS, EMBS, RAS, KOK, T3, TJC' : 'IEEE AESS, CS, EMBS, RAS, KOK, T3, TJC',
+      date: '2022 - Present',
       description: currentLang === 'tr'
-        ? 'Yenilikçi teknoloji çözümleri geliştirmeye yönelik yapay zeka odaklı hackathon katılımı.'
-        : 'Participation in an AI-focused hackathon aimed at developing innovative technology solutions.',
-      icon: <FiCode />
+        ? 'Birden fazla teknik toplulukta aktif uye olarak teknik paylasim ve is birligi faaliyetleri surduruluyor.'
+        : 'Active contributor in multiple technical communities and collaborative engineering networks.',
+      icon: <FiUsers />,
     },
     {
-      id: 13, type: 'achievement' as const,
-      title: currentLang === 'tr' ? 'TEMA ve WWF Gönüllülüğü' : 'TEMA and WWF Volunteering',
-      organization: currentLang === 'tr' ? 'TEMA Vakfı & WWF Türkiye' : 'TEMA Foundation & WWF Turkey',
-      date: currentLang === 'tr' ? '2022 - Günümüz' : '2022 - Present',
+      id: 13,
+      type: 'achievement' as const,
+      title: currentLang === 'tr' ? 'TEMA ve WWF Gonullulugu' : 'TEMA and WWF Volunteering',
+      organization: currentLang === 'tr' ? 'TEMA Vakfi & WWF Turkiye' : 'TEMA Foundation & WWF Turkiye',
+      date: currentLang === 'tr' ? '2022 - Gunumuz' : '2022 - Present',
       description: currentLang === 'tr'
-        ? 'Çevre koruma, ağaçlandırma projeleri ve yaban hayatını koruma programlarında aktif gönüllülük.'
-        : 'Active volunteering in environmental protection, reforestation projects, and wildlife conservation programs.',
-      icon: <FiHeart />
+        ? 'Cevre koruma ve farkindalik projelerinde aktif gonulluluk.'
+        : 'Active volunteering for environmental protection and awareness programs.',
+      icon: <FiHeart />,
     },
     {
-      id: 14, type: 'achievement' as const,
-      title: currentLang === 'tr' ? 'IEEE Teknik Eğitimler ve Organizasyon' : 'IEEE Technical Training & Organization',
-      organization: currentLang === 'tr' ? 'Işık Üniversitesi IEEE Öğrenci Kolu' : 'Işık University IEEE Student Branch',
-      date: '2023 - 2024',
+      id: 14,
+      type: 'achievement' as const,
+      title: currentLang === 'tr' ? 'Profesyonel Referanslar (Talep Uzerine)' : 'Professional References (Upon Request)',
+      organization: currentLang === 'tr' ? 'Telekom, Bankacilik Teknolojileri ve Akademi' : 'Telecom, Banking Technology, and Academia',
+      date: '2026',
       description: currentLang === 'tr'
-        ? 'Yazılım geliştirme, bulut bilişim ve yeni nesil teknolojileri kapsayan 35\'ten fazla teknik etkinlik ve workshop organizasyonu.'
-        : 'Organized over 35 technical events and workshops covering software development, cloud computing, and next-generation technologies.',
-      icon: <FiUsers />
-    }
+        ? 'Referanslar, dogrudan yonetici ve teknik lider rolleri dahil ilgili kurumlar araciligiyla talep uzerine paylasilir.'
+        : 'References are available upon request from supervisory and technical leadership roles across relevant organizations.',
+      icon: <FiAward />,
+    },
   ];
 
   const timelineItems = [

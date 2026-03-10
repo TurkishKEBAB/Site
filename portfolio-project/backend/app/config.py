@@ -28,7 +28,9 @@ class Settings(BaseSettings):
     # Security & JWT
     SECRET_KEY: str
     JWT_ALGORITHM: str = "HS256"
-    JWT_EXPIRE_MINUTES: int = 10080  # 7 days
+    ACCESS_TOKEN_EXPIRE_MINUTES: Optional[int] = None
+    REFRESH_TOKEN_EXPIRE_DAYS: int = 14
+    JWT_EXPIRE_MINUTES: int = 15  # backward compatibility alias
     ADMIN_EMAILS: str = "yigitokur@ieee.org,admin@portfolio.com"
 
     # GitHub
@@ -53,27 +55,36 @@ class Settings(BaseSettings):
 
     # CORS
     FRONTEND_URL: str = "http://localhost:3000"
+    CORS_EXTRA_ORIGINS: str = ""
+
+    # Auth / Abuse protection
+    AUTH_LOGIN_RATE_LIMIT: str = "5/minute"
+    CONTACT_RATE_LIMIT: str = "5/minute"
+
+    # CAPTCHA
+    CAPTCHA_ENABLED: bool = False
+    CAPTCHA_PROVIDER: str = "turnstile"
+    CAPTCHA_SECRET_KEY: Optional[str] = None
+    CAPTCHA_VERIFY_URL: Optional[str] = None
+    CAPTCHA_REQUIRED_PATHS: str = "/api/v1/contact/"
 
     @property
     def ALLOWED_ORIGINS(self) -> List[str]:
         """Returns list of allowed CORS origins"""
-        # Always include common localhost variants to avoid CORS issues during dev
-        origins = {
-            self.FRONTEND_URL,
-            "http://localhost:3000",
-            "http://localhost:3001",
-            "http://localhost:5173",
-            "http://127.0.0.1:3000",
-            "http://127.0.0.1:3001",
-            "http://127.0.0.1:5173",
-        }
-
-        # Add production URLs if configured
-        if self.ENVIRONMENT == "production":
-            origins.update({
-                "https://yigitokur.vercel.app",
-                "https://www.yigitokur.com",  # If custom domain is added
-            })
+        if self.is_production:
+            origins = {self.FRONTEND_URL}
+            extra_origins = [origin.strip() for origin in self.CORS_EXTRA_ORIGINS.split(",") if origin.strip()]
+            origins.update(extra_origins)
+        else:
+            origins = {
+                self.FRONTEND_URL,
+                "http://localhost:3000",
+                "http://localhost:3001",
+                "http://localhost:5173",
+                "http://127.0.0.1:3000",
+                "http://127.0.0.1:3001",
+                "http://127.0.0.1:5173",
+            }
 
         return list(origins)
 
@@ -81,6 +92,29 @@ class Settings(BaseSettings):
     def admin_email_list(self) -> List[str]:
         """Return admin emails as normalized list"""
         return [email.strip().lower() for email in self.ADMIN_EMAILS.split(",") if email.strip()]
+
+    @property
+    def access_token_expire_minutes(self) -> int:
+        if self.ACCESS_TOKEN_EXPIRE_MINUTES and self.ACCESS_TOKEN_EXPIRE_MINUTES > 0:
+            return self.ACCESS_TOKEN_EXPIRE_MINUTES
+        return self.JWT_EXPIRE_MINUTES
+
+    @property
+    def captcha_verify_url(self) -> str:
+        """Resolve CAPTCHA verification endpoint by provider."""
+        if self.CAPTCHA_VERIFY_URL:
+            return self.CAPTCHA_VERIFY_URL
+
+        provider = self.CAPTCHA_PROVIDER.strip().lower()
+        if provider == "hcaptcha":
+            return "https://hcaptcha.com/siteverify"
+        if provider == "recaptcha":
+            return "https://www.google.com/recaptcha/api/siteverify"
+        return "https://challenges.cloudflare.com/turnstile/v0/siteverify"
+
+    @property
+    def captcha_required_paths(self) -> List[str]:
+        return [path.strip() for path in self.CAPTCHA_REQUIRED_PATHS.split(",") if path.strip()]
 
     # Rate Limiting
     RATE_LIMIT_PER_MINUTE: int = 60
@@ -114,6 +148,23 @@ class Settings(BaseSettings):
     def is_production(self) -> bool:
         """Check if running in production mode"""
         return self.ENVIRONMENT == "production"
+
+    def production_validation_errors(self) -> List[str]:
+        """Return configuration validation errors for production mode."""
+        if not self.is_production:
+            return []
+
+        errors: List[str] = []
+        frontend_url = self.FRONTEND_URL.lower()
+        if "localhost" in frontend_url or "127.0.0.1" in frontend_url:
+            errors.append("FRONTEND_URL cannot point to localhost in production.")
+        if len(self.SECRET_KEY.strip()) < 32:
+            errors.append("SECRET_KEY must be at least 32 characters in production.")
+        if not self.CAPTCHA_ENABLED:
+            errors.append("CAPTCHA_ENABLED must be true in production.")
+        if not self.CAPTCHA_SECRET_KEY:
+            errors.append("CAPTCHA_SECRET_KEY must be set in production.")
+        return errors
 
 
 @lru_cache()

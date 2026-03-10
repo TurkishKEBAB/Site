@@ -2,6 +2,7 @@
 SQLAlchemy Models Initialization
 """
 from app.models.user import User
+from app.models.auth import RefreshTokenSession, TokenBlacklist
 from app.models.blog import BlogPost, BlogTranslation
 from app.models.project import Project, ProjectTranslation, ProjectTechnology, ProjectImage
 from app.models.technology import Technology
@@ -13,6 +14,8 @@ from app.models.site import SiteConfig, Translation, PageView
 
 __all__ = [
     "User",
+    "RefreshTokenSession",
+    "TokenBlacklist",
     "BlogPost",
     "BlogTranslation",
     "Project",

@@ -28,6 +28,7 @@ class User(Base):
     
     # Relationships
     blog_posts = relationship("BlogPost", back_populates="author", cascade="all, delete-orphan")
+    refresh_tokens = relationship("RefreshTokenSession", back_populates="user", cascade="all, delete-orphan")
     
     def __repr__(self):
         return f"<User {self.username}>"

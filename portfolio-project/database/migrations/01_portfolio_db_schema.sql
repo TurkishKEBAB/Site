@@ -24,6 +24,42 @@ CREATE INDEX idx_users_email ON users(email);
 CREATE INDEX idx_users_username ON users(username);
 
 -- ============================================
+-- REFRESH TOKEN SESSIONS
+-- ============================================
+CREATE TABLE refresh_tokens (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    token_jti VARCHAR(64) UNIQUE NOT NULL,
+    expires_at TIMESTAMP WITH TIME ZONE NOT NULL,
+    revoked_at TIMESTAMP WITH TIME ZONE,
+    replaced_by_jti VARCHAR(64),
+    created_from_ip VARCHAR(45),
+    user_agent TEXT,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX idx_refresh_tokens_user_id ON refresh_tokens(user_id);
+CREATE INDEX idx_refresh_tokens_token_jti ON refresh_tokens(token_jti);
+CREATE INDEX idx_refresh_tokens_expires_at ON refresh_tokens(expires_at);
+CREATE INDEX idx_refresh_tokens_revoked_at ON refresh_tokens(revoked_at);
+
+-- ============================================
+-- TOKEN BLACKLIST
+-- ============================================
+CREATE TABLE token_blacklist (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    token_jti VARCHAR(64) UNIQUE NOT NULL,
+    token_type VARCHAR(16) NOT NULL,
+    reason VARCHAR(128),
+    expires_at TIMESTAMP WITH TIME ZONE,
+    revoked_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX idx_token_blacklist_jti ON token_blacklist(token_jti);
+CREATE INDEX idx_token_blacklist_type ON token_blacklist(token_type);
+CREATE INDEX idx_token_blacklist_expires_at ON token_blacklist(expires_at);
+
+-- ============================================
 -- BLOG POSTS
 -- ============================================
 CREATE TABLE blog_posts (

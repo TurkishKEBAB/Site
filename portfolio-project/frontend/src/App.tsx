@@ -1,5 +1,7 @@
 import { lazy, Suspense } from 'react'
 import { Routes, Route } from 'react-router-dom'
+import { QueryClientProvider } from '@tanstack/react-query'
+import { queryClient } from './lib/queryClient'
 import { AuthProvider } from './contexts/AuthContext'
 import { LanguageProvider } from './contexts/LanguageContext'
 import { ToastProvider } from './components/Toast'
@@ -29,36 +31,38 @@ function PageFallback() {
 
 function App() {
   return (
-    <ToastProvider>
-      <LanguageProvider>
-        <AuthProvider>
-          <GlobalApiErrorListener />
-          <RouteSeo />
-          <Suspense fallback={<PageFallback />}>
-            <Routes>
-              <Route path="/login" element={<Login />} />
-              <Route path="/" element={<Layout />}>
-                <Route index element={<Home />} />
-                <Route path="about" element={<About />} />
-                <Route path="projects" element={<Projects />} />
-                <Route path="blog" element={<Blog />} />
-                <Route path="blog/:slug" element={<BlogDetail />} />
-                <Route path="contact" element={<Contact />} />
-                <Route
-                  path="admin"
-                  element={(
-                    <ProtectedRoute>
-                      <Admin />
-                    </ProtectedRoute>
-                  )}
-                />
-                <Route path="*" element={<NotFound />} />
-              </Route>
-            </Routes>
-          </Suspense>
-        </AuthProvider>
-      </LanguageProvider>
-    </ToastProvider>
+    <QueryClientProvider client={queryClient}>
+      <ToastProvider>
+        <LanguageProvider>
+          <AuthProvider>
+            <GlobalApiErrorListener />
+            <RouteSeo />
+            <Suspense fallback={<PageFallback />}>
+              <Routes>
+                <Route path="/login" element={<Login />} />
+                <Route path="/" element={<Layout />}>
+                  <Route index element={<Home />} />
+                  <Route path="about" element={<About />} />
+                  <Route path="projects" element={<Projects />} />
+                  <Route path="blog" element={<Blog />} />
+                  <Route path="blog/:slug" element={<BlogDetail />} />
+                  <Route path="contact" element={<Contact />} />
+                  <Route
+                    path="admin"
+                    element={(
+                      <ProtectedRoute>
+                        <Admin />
+                      </ProtectedRoute>
+                    )}
+                  />
+                  <Route path="*" element={<NotFound />} />
+                </Route>
+              </Routes>
+            </Suspense>
+          </AuthProvider>
+        </LanguageProvider>
+      </ToastProvider>
+    </QueryClientProvider>
   )
 }
 

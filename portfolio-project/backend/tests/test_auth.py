@@ -99,13 +99,51 @@ def test_verify_token_success(client, admin_headers, admin_user):
     assert body["user"]["is_admin"] is True
 
 
-def test_refresh_token_success(client, admin_headers):
-    response = client.post("/api/v1/auth/refresh", headers=admin_headers)
+def test_refresh_token_success(client, admin_user):
+    login = client.post(
+        "/api/v1/auth/login/json",
+        json={"email": admin_user.email, "password": TEST_LOGIN_SECRET},
+    )
+    refresh_token = login.json()["refresh_token"]
+
+    response = client.post("/api/v1/auth/refresh", json={"refresh_token": refresh_token})
 
     assert response.status_code == 200
     body = response.json()
     assert body["token_type"] == "bearer"
     assert "access_token" in body
+    assert "refresh_token" in body
+
+
+def test_refresh_token_rotation_blocks_reuse(client, admin_user):
+    login = client.post(
+        "/api/v1/auth/login/json",
+        json={"email": admin_user.email, "password": TEST_LOGIN_SECRET},
+    )
+    old_refresh = login.json()["refresh_token"]
+
+    rotated = client.post("/api/v1/auth/refresh", json={"refresh_token": old_refresh})
+    assert rotated.status_code == 200
+    new_refresh = rotated.json()["refresh_token"]
+    assert new_refresh != old_refresh
+
+    reused = client.post("/api/v1/auth/refresh", json={"refresh_token": old_refresh})
+    assert reused.status_code == 401
+
+
+def test_login_form_rate_limit(client, admin_user):
+    for _ in range(5):
+        ok = client.post(
+            "/api/v1/auth/login",
+            data={"username": admin_user.email, "password": TEST_LOGIN_SECRET},
+        )
+        assert ok.status_code == 200
+
+    blocked = client.post(
+        "/api/v1/auth/login",
+        data={"username": admin_user.email, "password": TEST_LOGIN_SECRET},
+    )
+    assert blocked.status_code == 429
 
 
 def test_register_requires_authentication(client):

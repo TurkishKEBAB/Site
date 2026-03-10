@@ -20,8 +20,7 @@ class ContactMessageBase(BaseModel):
 
 class ContactMessageCreate(ContactMessageBase):
     """Contact message creation schema"""
-
-    pass
+    captcha_token: Optional[str] = Field(default=None, max_length=4096)
 
 
 class ContactMessage(ContactMessageBase):

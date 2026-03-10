@@ -7,6 +7,7 @@ from typing import Optional, Dict, Any
 from jose import JWTError, jwt
 from passlib.context import CryptContext
 from fastapi import HTTPException, status
+import uuid
 
 from app.config import settings
 
@@ -43,7 +44,8 @@ def get_password_hash(password: str) -> str:
 
 def create_access_token(
     data: Dict[str, Any],
-    expires_delta: Optional[timedelta] = None
+    expires_delta: Optional[timedelta] = None,
+    token_type: str = "access",
 ) -> str:
     """
     Create a JWT access token
@@ -61,8 +63,10 @@ def create_access_token(
     if expires_delta:
         expire = now_utc + expires_delta
     else:
-        expire = now_utc + timedelta(minutes=settings.JWT_EXPIRE_MINUTES)
-    
+        expire = now_utc + timedelta(minutes=settings.access_token_expire_minutes)
+
+    to_encode.setdefault("jti", str(uuid.uuid4()))
+    to_encode.setdefault("type", token_type)
     to_encode.update({"exp": expire, "iat": now_utc})
     
     encoded_jwt = jwt.encode(
@@ -103,7 +107,10 @@ def decode_access_token(token: str) -> Dict[str, Any]:
         ) from e
 
 
-def create_refresh_token(data: Dict[str, Any]) -> str:
+def create_refresh_token(
+    data: Dict[str, Any],
+    expires_delta: Optional[timedelta] = None,
+) -> str:
     """
     Create a refresh token with longer expiration
     
@@ -113,8 +120,12 @@ def create_refresh_token(data: Dict[str, Any]) -> str:
     Returns:
         str: Encoded JWT refresh token
     """
-    # Refresh token expires in 30 days
-    return create_access_token(data, expires_delta=timedelta(days=30))
+    refresh_expires = expires_delta or timedelta(days=settings.REFRESH_TOKEN_EXPIRE_DAYS)
+    return create_access_token(
+        data,
+        expires_delta=refresh_expires,
+        token_type="refresh",
+    )
 
 
 def verify_token(token: str, credentials_exception: HTTPException) -> Dict[str, Any]:

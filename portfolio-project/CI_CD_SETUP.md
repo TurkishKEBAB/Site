@@ -1,82 +1,140 @@
 # CI/CD Setup Guide
 
-This document explains the Sprint 2 CI and staging deployment baseline.
+This document describes the current CI/CD, branch governance, and production secret/variable standard.
 
-## CI Workflow
+## CI Workflows
 
-- File: `.github/workflows/ci.yml`
-- Triggers: push and pull_request on `main`, `Codex_Implementation`, `develop`
-- Jobs:
-  - `backend-quality`: installs backend dependencies and runs `python -m pytest -q`
-  - `frontend-quality`: runs `npm run lint`, `npm run test`, `npm run test:coverage`, `npm run build`
-  - `sonarcloud`: runs only when Sonar credentials are configured
+- `.github/workflows/ci.yml`
+  - `Backend Quality`
+  - `Frontend Quality`
+  - `SonarCloud Scan (Push)` (push-only, not required for PR merge)
+- `.github/workflows/sonar-pr-gate.yml`
+  - Required PR gate check: `Sonar PR Gate` (fork-safe `pull_request_target`)
 
-## Staging Deployment Workflows
+## Production Secret/Variable Scope
 
-- Frontend preview deploy: `.github/workflows/deploy-vercel-preview.yml`
-  - Triggers: PR to `main`/`Codex_Implementation`/`develop`, push to `Codex_Implementation`/`develop`, manual dispatch
-  - Deploy target: Vercel preview
-- Backend staging deploy: `.github/workflows/deploy-railway-staging.yml`
-  - Triggers: push to `Codex_Implementation`/`develop`, manual dispatch
-  - Deploy target: Railway via deploy hook
+All deploy/smoke keys must be stored under GitHub `production` environment.
 
-## Coverage Artifacts
+Helper script (optional):
 
-- Backend XML: `portfolio-project/backend/coverage.xml`
-- Frontend LCOV: `portfolio-project/frontend/coverage/lcov.info`
+```powershell
+cd portfolio-project
+.\set-production-env-github.ps1
+```
 
-These are uploaded as GitHub Actions artifacts and consumed by the SonarCloud job.
+### Environment Secrets (`production`)
 
-## Required GitHub Secrets and Variables
+- `RAILWAY_PRODUCTION_MIGRATION_HOOK_URL`
+- `RAILWAY_PRODUCTION_DEPLOY_HOOK_URL`
+- `VERCEL_TOKEN`
+- `VERCEL_ORG_ID`
+- `VERCEL_PROJECT_ID`
+- `PRODUCTION_SMOKE_ADMIN_EMAIL`
+- `PRODUCTION_SMOKE_ADMIN_PASSWORD`
 
-### Required for SonarCloud job
+### Environment Variables (`production`)
+
+- `PRODUCTION_API_ROOT_URL` (must start with `https://`, no trailing slash)
+- `PRODUCTION_FRONTEND_URL` (must start with `https://`, no trailing slash)
+
+Note: Sonar keys remain repo/org scoped:
 
 - Secret: `SONAR_TOKEN`
 - Variable: `SONAR_ORGANIZATION`
 
-If either is missing, the SonarCloud job is skipped while backend/frontend quality jobs still run.
+## Railway Production Runtime Contract
 
-### Required for Vercel preview workflow
+Set these values in Railway production service environment:
 
-- Secret: `VERCEL_TOKEN`
-- Secret: `VERCEL_ORG_ID`
-- Secret: `VERCEL_PROJECT_ID`
+### Required
 
-If any are missing, the Vercel preview job is skipped.
+- `ENVIRONMENT=production`
+- `DATABASE_URL`
+- `SECRET_KEY` (min 32 chars)
+- `FRONTEND_URL`
+- `ADMIN_EMAILS`
+- `SMTP_USERNAME`
+- `SMTP_PASSWORD`
+- `REDIS_URL`
+- `CAPTCHA_ENABLED=true`
+- `CAPTCHA_PROVIDER=turnstile`
+- `CAPTCHA_SECRET_KEY`
 
-### Required for Railway staging workflow
+### Recommended
 
-- Secret: `RAILWAY_DEPLOY_HOOK_URL`
+- `ACCESS_TOKEN_EXPIRE_MINUTES`
+- `REFRESH_TOKEN_EXPIRE_DAYS`
+- `AUTH_LOGIN_RATE_LIMIT`
+- `CONTACT_RATE_LIMIT`
+- `CORS_EXTRA_ORIGINS`
+- `GITHUB_API_TOKEN`
+- `SUPABASE_URL`
+- `SUPABASE_KEY`
 
-Optional:
+## Vercel Production Runtime Contract
 
-- Variable: `STAGING_API_HEALTH_URL` (example: `https://api-staging.example.com/health`)
+Set in Vercel production environment:
 
-If deploy hook is missing, Railway job is skipped.
+- `VITE_API_BASE_URL=https://<backend-domain>/api/v1`
 
-## Sonar Project Config
+## Production Deploy & Smoke Scope
 
-- File: `portfolio-project/sonar-project.properties`
-- Key points:
-  - Project key: `TurkishKEBAB_Site`
-  - Python coverage import path: `backend/coverage.xml`
-  - JS/TS coverage import path: `frontend/coverage/lcov.info`
+Workflow: `.github/workflows/deploy-production.yml`
 
-## Recommended Branch Protection
+- Deploy gates:
+  - `Backend Quality (Prod Gate)`
+  - `Frontend Quality (Prod Gate)`
+- Smoke checks include:
+  - `/live`
+  - `/health`
+  - `/ready`
+  - `/api/v1/auth/login/json`
+  - `/api/v1/admin/stats`
+  - Frontend root URL
+- `/api/v1/contact/` is intentionally excluded from deploy smoke because CAPTCHA is mandatory in production.
 
-For `main` branch, require these checks before merge:
+## Rotation Policy
 
-- `Backend Quality`
-- `Frontend Quality`
-- `SonarCloud Scan` (once secrets/vars are configured)
+- Rotate deploy/smoke secrets every 90 days at most.
+- After each rotation:
+  - trigger `Deploy Production` manually (`workflow_dispatch`)
+  - confirm `Production Smoke Checks` passes
+  - record rotation date and owner in internal ops notes
 
-For staging branches (`Codex_Implementation`, `develop`), recommended checks:
+## Validation Checklist
 
-- `Vercel Preview Deploy`
-- `Railway Staging Deploy`
+- Missing any required `production` secret/variable must fail deploy pipeline validation step.
+- Invalid URL format (`http://` or trailing slash) for `PRODUCTION_*_URL` must fail smoke config validation.
+- Invalid smoke admin credentials must fail login step and make deploy red.
 
-## Suggested Environment Mapping
+## CAPTCHA Functional Check (Manual / E2E)
 
-- `main`: production deploy gates only
-- `develop`: staging deploy target branch
-- `Codex_Implementation`: integration branch for iterative deployment verification
+- Run separately from deploy smoke.
+- Expected behavior:
+  - valid Turnstile token -> `POST /api/v1/contact/` returns `201`
+  - missing/invalid token -> `POST /api/v1/contact/` returns `400`
+
+## Manual GitHub Governance Settings
+
+These are UI/ruleset settings and are not versioned in git.
+
+### Main Branch Ruleset
+
+- Require pull request before merge
+- Require 2 approvals
+- Require review from Code Owners
+- Dismiss stale approvals
+- Require conversation resolution
+- Include administrators
+- Require branch up to date
+- Disable force push
+- Disable branch deletion
+- Required checks:
+  - `Backend Quality`
+  - `Frontend Quality`
+  - `Sonar PR Gate`
+
+### Production Environment
+
+- Required reviewers: none (automatic deploy)
+- Deployment branches: only `main`

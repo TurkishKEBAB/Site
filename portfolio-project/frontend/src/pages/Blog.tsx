@@ -1,20 +1,22 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 
 import { useLanguage } from '../contexts/LanguageContext';
-import { blogService } from '../services';
-import { BlogPost } from '../services/types';
+import { useBlogPosts } from '../hooks/useBlog';
 
 export default function Blog() {
-  const [posts, setPosts] = useState<BlogPost[]>([]);
-  const [filteredPosts, setFilteredPosts] = useState<BlogPost[]>([]);
   const [selectedTag, setSelectedTag] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [debouncedSearch, setDebouncedSearch] = useState<string>('');
-  const [loading, setLoading] = useState(true);
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const { language, t } = useLanguage();
+
+  const { data: postsResponse, isLoading: loading, error: fetchError, refetch } = useBlogPosts({ published_only: true, language });
+  const posts = useMemo(() => {
+    const items = postsResponse?.items;
+    return Array.isArray(items) ? items : [];
+  }, [postsResponse]);
+  const errorMessage = fetchError ? t('blog_fetch_error') : null;
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -24,31 +26,7 @@ export default function Blog() {
     return () => clearTimeout(timer);
   }, [searchQuery]);
 
-  useEffect(() => {
-    void loadPosts();
-  }, [language]);
-
-  useEffect(() => {
-    filterPosts();
-  }, [posts, selectedTag, debouncedSearch]);
-
-  const loadPosts = async () => {
-    try {
-      setLoading(true);
-      const response = await blogService.getPosts({ published_only: true, language });
-      const items = Array.isArray(response.items) ? response.items : [];
-      setPosts(items);
-      setErrorMessage(null);
-    } catch (error) {
-      console.error('Failed to load blog posts:', error);
-      setPosts([]);
-      setErrorMessage(t('blog_fetch_error'));
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const filterPosts = () => {
+  const filteredPosts = useMemo(() => {
     let filtered = [...posts];
 
     if (selectedTag !== 'all') {
@@ -65,8 +43,9 @@ export default function Blog() {
       );
     }
 
-    setFilteredPosts(filtered);
-  };
+    return filtered;
+  }, [posts, selectedTag, debouncedSearch]);
+
 
   const allTags = ['all', ...new Set(posts.flatMap((post) => post.tags || []))];
 
@@ -149,7 +128,7 @@ export default function Blog() {
               <p className="text-sm text-red-300">{errorMessage}</p>
               <button
                 type="button"
-                onClick={() => void loadPosts()}
+                onClick={() => void refetch()}
                 className="mt-3 inline-flex items-center justify-center rounded-lg bg-primary-600 px-4 py-2 text-sm text-white transition-colors hover:bg-primary-700"
               >
                 {t('common_retry')}

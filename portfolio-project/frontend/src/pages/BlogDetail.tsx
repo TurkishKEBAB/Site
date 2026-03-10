@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import ReactMarkdown from 'react-markdown';
@@ -7,72 +7,25 @@ import remarkGfm from 'remark-gfm';
 import 'highlight.js/styles/github-dark.css';
 
 import { useLanguage } from '../contexts/LanguageContext';
-import { blogService } from '../services';
-import { BlogPost } from '../services/types';
+import { useBlogPost, useBlogPosts } from '../hooks/useBlog';
 
 export default function BlogDetail() {
   const { slug } = useParams<{ slug: string }>();
   const navigate = useNavigate();
   const { language, t } = useLanguage();
 
-  const [post, setPost] = useState<BlogPost | null>(null);
-  const [allPosts, setAllPosts] = useState<BlogPost[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [reloadTick, setReloadTick] = useState(0);
+  const { data: post, isLoading: postLoading, error: postError, refetch: refetchPost } = useBlogPost(slug || '', language);
+  const { data: allPostsResponse } = useBlogPosts({ published_only: true, language });
+
+  const allPosts = useMemo(() => {
+    const items = allPostsResponse?.items;
+    return Array.isArray(items) ? items : [];
+  }, [allPostsResponse]);
+
+  const loading = postLoading;
+  const error = postError ? t('blog_post_load_failed') : null;
 
   const shareUrl = typeof window !== 'undefined' ? window.location.href : '';
-
-  useEffect(() => {
-    if (!slug) {
-      setError(t('blog_post_not_found'));
-      setLoading(false);
-      return;
-    }
-
-    let ignore = false;
-
-    const fetchPost = async () => {
-      try {
-        setLoading(true);
-        const postResponse = await blogService.getPost(slug, language);
-
-        if (!ignore) {
-          setPost(postResponse);
-          setError(null);
-        }
-
-        try {
-          const postsResponse = await blogService.getPosts({ published_only: true, language });
-          if (!ignore) {
-            setAllPosts(Array.isArray(postsResponse.items) ? postsResponse.items : []);
-          }
-        } catch (listError) {
-          console.error('Failed to load post list for sidebar:', listError);
-          if (!ignore) {
-            setAllPosts([]);
-          }
-        }
-      } catch (requestError) {
-        console.error('Failed to load blog post:', requestError);
-        if (!ignore) {
-          setPost(null);
-          setAllPosts([]);
-          setError(t('blog_post_load_failed'));
-        }
-      } finally {
-        if (!ignore) {
-          setLoading(false);
-        }
-      }
-    };
-
-    void fetchPost();
-
-    return () => {
-      ignore = true;
-    };
-  }, [language, reloadTick, slug, t]);
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -128,7 +81,7 @@ export default function BlogDetail() {
             <div className="flex items-center justify-center gap-3">
                 <button
                   type="button"
-                onClick={() => setReloadTick((prev) => prev + 1)}
+                onClick={() => void refetchPost()}
                 className="inline-flex items-center justify-center rounded-lg bg-primary-600 px-5 py-3 text-white transition-colors hover:bg-primary-700"
               >
                 {t('common_retry')}

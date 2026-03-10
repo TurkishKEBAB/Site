@@ -1,124 +1,104 @@
-import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { FiArrowRight, FiGithub, FiLinkedin, FiMail } from 'react-icons/fi'
 import { Link } from 'react-router-dom'
 import { useLanguage } from '../contexts/LanguageContext'
-import { projectService, skillService } from '../services'
-import { Project, Skill } from '../services/types'
+import { useFeaturedProjects } from '../hooks/useProjects'
+import { useSkills } from '../hooks/useSkills'
 
 export default function Home() {
-  const [featuredProjects, setFeaturedProjects] = useState<Project[]>([])
-  const [topSkills, setTopSkills] = useState<Skill[]>([])
-  const [loading, setLoading] = useState(true)
   const { language } = useLanguage()
+
+  const { data: projectsResponse, isLoading: projectsLoading } = useFeaturedProjects(language)
+  const { data: skillsData, isLoading: skillsLoading } = useSkills(language)
+
+  const loading = projectsLoading || skillsLoading
+  const featuredProjects = projectsResponse?.items ?? []
+  const topSkills = [...(skillsData ?? [])].sort((a, b) => b.proficiency - a.proficiency).slice(0, 8)
 
   // --- ÇEVİRİ OBJESİ (TRANSLATIONS) ---
   const t = {
     tr: {
       hero: {
-        greeting: "Merhaba, Ben ",
-        role: "Yazılım Mühendisliği 3. Sınıf Öğrencisi | Cloud & DevOps Tutkunu",
-        description: "Bulut bilişim ve DevOps dünyasında ölçeklenebilir altyapılar kurmaktan, yazılım mimarileri tasarlamaktan ve sistemleri otomatize etmekten keyif alıyorum. Şu anda Işık Üniversitesi'nde eğitimime devam ederken IEEE Öğrenci Kolu Başkan Yardımcılığı görevini yürütüyor; Java ve Python dillerinde uzmanlaşıyorum. Birlikte harika bir şeyler inşa edelim!",
+        greeting: 'Merhaba, ben ',
+        role: 'Yazilim Muhendisligi 3. Sinif Ogrencisi | Software Engineer - Cloud & DevOps',
+        description:
+          'Istanbul Isik Universitesi\'nde yazilim muhendisligi egitimime devam ederken enterprise backend, cloud-native mimari ve DevOps otomasyonu uzerine odaklaniyorum. NETAS stajimda kurumsal Java mikroservis platformuna katkida bulundum, kritik timezone tutarsizligini ELK ve test odakli analizle tespit ettim.',
       },
       about: {
-        title: "Hakkımda",
-        description: "Netaş'taki staj deneyimim ve \"Agentic IDE\" gibi akademik projelerimle yazılım mimarisi ve algoritma analizi yeteneklerimi sürekli geliştiriyorum. Ayrıca \"allwaves hardware\" laboratuvarının web sayfasını ve dijital altyapısını tasarlayarak modern web teknolojilerindeki deneyimimi pratiğe döktüm. Teknik liderlik yapmak, karmaşık problemleri çözmek ve açık kaynak dünyasına katkı sağlamak benim için bir tutku.",
-        btnMore: "Hakkımda Daha Fazlası"
+        title: 'Hakkimda',
+        description:
+          'IsikSchedule, Agentic IDE ve Teknofest Sarkan UAV gibi projelerde algoritma, sistem tasarimi ve urunlestirme deneyimi edindim. IEEE Isik Ogrenci Kolu\'nda teknik etkinlikler ve topluluk operasyonlari yurutterek hem teknik hem organizasyonel liderlik gelistiriyorum.',
+        btnMore: 'Hakkimda Daha Fazlasi',
       },
       skills: {
-        title: "Yetenekler ve Teknolojiler",
-        subtitle: "Ölçeklenebilir ve güvenilir sistemler inşa etmek için kullandığım teknolojiler",
-        empty: "Yetenek verisi bulunamadı."
+        title: 'Yetenekler ve Teknolojiler',
+        subtitle: 'Backend, cloud ve otomasyon odakli olarak aktif kullandigim teknoloji seti',
+        empty: 'Yetenek verisi bulunamadi.',
       },
       projects: {
-        title: "Öne Çıkan Projeler",
-        subtitle: "DevOps, web teknolojileri ve yazılım mimarileri alanındaki güncel çalışmalarım",
-        empty: "Öne çıkan proje bulunamadı.",
-        btnAll: "Tüm Projeleri Göster"
+        title: 'One Cikan Projeler',
+        subtitle: 'Gercek urun, arastirma ve muhendislik odakli guncel calismalarim',
+        empty: 'One cikan proje bulunamadi.',
+        btnAll: 'Tum Projeleri Goster',
       },
       cta: {
-        title: "Fikirleri Koda Dökelim mi?",
-        description: "Yeni bir açık kaynak proje üzerinde çalışmak, DevOps veya yazılım mimarileri hakkında sohbet etmek istersen bana her zaman yazabilirsin."
+        title: 'Birlikte Uretelim mi?',
+        description:
+          'Yazilim muhendisligi, cloud altyapi, optimizasyon veya AI-native urunler uzerine konusmak istersen benimle iletisime gecebilirsin.',
       },
       buttons: {
-        contact: "İletişime Geç",
-        viewProjects: "Projeleri İncele"
+        contact: 'Iletisime Gec',
+        viewProjects: 'Projeleri Incele',
       },
       aria: {
-        github: "GitHub profili",
-        linkedin: "LinkedIn profili",
-        email: "E-posta gönder"
-      }
+        github: 'GitHub profili',
+        linkedin: 'LinkedIn profili',
+        email: 'E-posta gonder',
+      },
     },
     en: {
       hero: {
         greeting: "Hi, I'm ",
-        role: "3rd-Year Software Engineering Student | Cloud & DevOps Enthusiast",
-        description: "I enjoy building scalable infrastructures, designing software architectures, and automating systems in the cloud computing and DevOps world. While continuing my education at Işık University, I serve as the IEEE Student Branch Vice President and specialize in Java and Python languages. Let's build something amazing together!",
+        role: '3rd-Year Software Engineering Student | Software Engineer - Cloud & DevOps',
+        description:
+          'I focus on enterprise backend systems, cloud-native architecture, and DevOps automation while studying Software Engineering at Isik University. During my NETAS internship, I contributed to production Java microservices and uncovered a critical timezone mismatch through ELK-driven investigation and test-first validation.',
       },
       about: {
-        title: "About Me",
-        description: "Through my internship at Netaş and academic projects like the \"Agentic IDE\", I continuously improve my software architecture and algorithm analysis skills. I also put my experience in modern web technologies into practice by designing the website and digital infrastructure of the \"allwaves hardware\" laboratory. Providing technical leadership, solving complex problems, and contributing to the open-source world is my passion.",
-        btnMore: "More About Me"
+        title: 'About Me',
+        description:
+          'I build and ship systems across scheduling optimization, AI-native tooling, and defense-grade telemetry projects. Through IEEE leadership at Isik University, I also coordinate technical events and community operations, combining delivery execution with technical leadership.',
+        btnMore: 'More About Me',
       },
       skills: {
-        title: "Skills & Technologies",
-        subtitle: "Technologies I use to build scalable and reliable systems",
-        empty: "No skills data available."
+        title: 'Skills & Technologies',
+        subtitle: 'Technology stack I actively use across backend, cloud, and automation workflows',
+        empty: 'No skills data available.',
       },
       projects: {
-        title: "Featured Projects",
-        subtitle: "My recent work in DevOps, web technologies, and software architectures",
-        empty: "No featured projects available.",
-        btnAll: "View All Projects"
+        title: 'Featured Projects',
+        subtitle: 'Current engineering work across product, research, and systems domains',
+        empty: 'No featured projects available.',
+        btnAll: 'View All Projects',
       },
       cta: {
-        title: "Let's Turn Ideas Into Code?",
-        description: "If you'd like to work on a new open-source project or chat about DevOps and software architectures, you can always write to me."
+        title: "Let's Build Together",
+        description:
+          'If you want to discuss software engineering, cloud architecture, optimization, or AI-native products, feel free to reach out.',
       },
       buttons: {
-        contact: "Get In Touch",
-        viewProjects: "View Projects"
+        contact: 'Get In Touch',
+        viewProjects: 'View Projects',
       },
       aria: {
-        github: "GitHub profile",
-        linkedin: "LinkedIn profile",
-        email: "Send an email"
-      }
-    }
+        github: 'GitHub profile',
+        linkedin: 'LinkedIn profile',
+        email: 'Send an email',
+      },
+    },
   }
 
   const currentLang = language === 'en' ? 'en' : 'tr'
   const text = t[currentLang]
-
-  useEffect(() => {
-    loadData()
-  }, [language])
-
-  const loadData = async () => {
-    try {
-      setLoading(true)
-      const [projectsResponse, skillsData] = await Promise.all([
-        projectService.getProjects({ featured_only: true, limit: 3, language }),
-        skillService.getSkills(language)
-      ])
-
-      const projectItems = Array.isArray(projectsResponse.items)
-        ? projectsResponse.items
-        : []
-      setFeaturedProjects(projectItems)
-      // Get top 8 skills sorted by proficiency
-      const sortedSkills = [...skillsData].sort((a, b) => b.proficiency - a.proficiency).slice(0, 8)
-      setTopSkills(sortedSkills)
-    } catch (error) {
-      console.error('Failed to load data:', error)
-      // Keep empty arrays on error
-      setFeaturedProjects([])
-      setTopSkills([])
-    } finally {
-      setLoading(false)
-    }
-  }
 
   return (
     <div className="pt-16 relative">
@@ -192,7 +172,7 @@ export default function Home() {
                   <FiGithub size={24} />
                 </a>
                 <a
-                  href="https://www.linkedin.com/in/yiğit-okur-050b5b278"
+                  href="https://www.linkedin.com/in/yigit-okur-050b5b278"
                   target="_blank"
                   rel="noopener noreferrer"
                   aria-label={text.aria.linkedin}

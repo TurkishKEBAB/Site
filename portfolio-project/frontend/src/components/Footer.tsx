@@ -4,7 +4,7 @@ import { motion } from 'framer-motion'
 
 const socialLinks = [
   { icon: FiGithub, href: 'https://github.com/TurkishKEBAB', label: 'GitHub' },
-  { icon: FiLinkedin, href: 'https://www.linkedin.com/in/yi%C4%9Fit-okur-050b5b278/', label: 'LinkedIn' },
+  { icon: FiLinkedin, href: 'https://www.linkedin.com/in/yigit-okur-050b5b278/', label: 'LinkedIn' },
   { icon: FiTwitter, href: 'https://x.com/biznedenokuruz', label: 'Twitter' },
   { icon: FiMail, href: 'mailto:yigitokur@ieee.org', label: 'Email' },
 ]
@@ -31,7 +31,7 @@ export default function Footer() {
               Yiğit Okur
             </motion.div>
             <p className="text-gray-600 dark:text-gray-400 mb-4">
-              Cloud/DevOps Engineer passionate about building scalable infrastructure and automation solutions.
+              Software engineer focused on enterprise backend systems, cloud-native architecture, and DevOps automation.
             </p>
             <div className="flex space-x-4">
               {socialLinks.map((social) => (
@@ -84,8 +84,8 @@ export default function Footer() {
                   yigitokur@ieee.org
                 </a>
               </li>
-              <li>Istanbul, Turkey 🇹🇷</li>
-              <li>Available for freelance work</li>
+              <li>Istanbul, Turkey</li>
+              <li>Open to engineering collaborations</li>
             </ul>
           </div>
         </div>
