@@ -172,7 +172,7 @@ export default function Home() {
                   <FiGithub size={24} />
                 </a>
                 <a
-                  href="https://www.linkedin.com/in/yigit-okur-050b5b278"
+                  href="https://www.linkedin.com/in/yiğit-okur-050b5b278"
                   target="_blank"
                   rel="noopener noreferrer"
                   aria-label={text.aria.linkedin}

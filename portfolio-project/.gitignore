@@ -5,3 +5,10 @@ frontend/coverage/
 backend/coverage.xml
 docker-data/postgres/
 docker-data/postgres-backups/
+
+# Environment variables
+.env
+.env.local
+.env.production
+!.env.example
+!.env.production.example

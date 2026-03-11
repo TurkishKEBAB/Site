@@ -204,3 +204,45 @@ def test_register_success(client, admin_headers):
     body = response.json()
     assert body["email"] == "new-user@test.com"
     assert body["username"] == "newuser"
+
+
+def test_logout_blacklists_access_token(client, admin_user):
+    login = client.post(
+        "/api/v1/auth/login/json",
+        json={"email": admin_user.email, "password": TEST_LOGIN_SECRET},
+    )
+    tokens = login.json()
+    headers = {"Authorization": f"Bearer {tokens['access_token']}"}
+
+    resp = client.post("/api/v1/auth/logout", headers=headers, json={})
+    assert resp.status_code == 204
+
+    me = client.get("/api/v1/auth/me", headers=headers)
+    assert me.status_code == 401
+
+
+def test_logout_revokes_refresh_token(client, admin_user):
+    login = client.post(
+        "/api/v1/auth/login/json",
+        json={"email": admin_user.email, "password": TEST_LOGIN_SECRET},
+    )
+    tokens = login.json()
+    headers = {"Authorization": f"Bearer {tokens['access_token']}"}
+
+    resp = client.post(
+        "/api/v1/auth/logout",
+        headers=headers,
+        json={"refresh_token": tokens["refresh_token"]},
+    )
+    assert resp.status_code == 204
+
+    refresh = client.post(
+        "/api/v1/auth/refresh",
+        json={"refresh_token": tokens["refresh_token"]},
+    )
+    assert refresh.status_code == 401
+
+
+def test_logout_without_auth_returns_401(client):
+    resp = client.post("/api/v1/auth/logout", json={})
+    assert resp.status_code == 401

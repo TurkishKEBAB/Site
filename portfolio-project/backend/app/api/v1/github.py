@@ -12,6 +12,7 @@ from app.crud import github as github_crud
 from app.services.github_service import GitHubService
 from app.config import get_settings
 from app.models.user import User
+from loguru import logger
 
 router = APIRouter()
 settings = get_settings()
@@ -94,9 +95,10 @@ async def sync_github_repos(
     except HTTPException:
         raise
     except Exception as e:
+        logger.error(f"GitHub sync failed: {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"GitHub sync failed: {str(e)}"
+            detail="GitHub sync failed"
         )
 
 

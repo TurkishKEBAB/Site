@@ -39,3 +39,17 @@ def test_production_with_valid_security_settings_has_no_errors():
     )
 
     assert settings.production_validation_errors() == []
+
+
+def test_production_rejects_known_insecure_secret_key():
+    settings = _build_settings(
+        ENVIRONMENT="production",
+        CAPTCHA_ENABLED=True,
+        CAPTCHA_SECRET_KEY="turnstile-secret",
+        SECRET_KEY="dev-secret-key-change-in-production",
+        FRONTEND_URL="https://portfolio.example.com",
+    )
+
+    errors = settings.production_validation_errors()
+
+    assert "SECRET_KEY contains a known insecure default value." in errors

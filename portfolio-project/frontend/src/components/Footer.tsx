@@ -4,7 +4,7 @@ import { motion } from 'framer-motion'
 
 const socialLinks = [
   { icon: FiGithub, href: 'https://github.com/TurkishKEBAB', label: 'GitHub' },
-  { icon: FiLinkedin, href: 'https://www.linkedin.com/in/yigit-okur-050b5b278/', label: 'LinkedIn' },
+  { icon: FiLinkedin, href: 'https://www.linkedin.com/in/yiğit-okur-050b5b278/', label: 'LinkedIn' },
   { icon: FiTwitter, href: 'https://x.com/biznedenokuruz', label: 'Twitter' },
   { icon: FiMail, href: 'mailto:yigitokur@ieee.org', label: 'Email' },
 ]

@@ -3,16 +3,16 @@ Authentication Endpoints
 Login and user management
 """
 from datetime import datetime, timedelta, timezone
-from typing import Annotated
+from typing import Annotated, Optional
 import uuid
 from fastapi import APIRouter, Depends, HTTPException, Request, status
-from fastapi.security import OAuth2PasswordRequestForm
+from fastapi.security import OAuth2PasswordRequestForm, HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.orm import Session
 from jose import JWTError, jwt
 
 from app.api.deps import get_db, get_current_user, require_admin
 from app.config import get_settings
-from app.schemas.user import UserLogin, UserCreate, UserResponse, Token, RefreshTokenRequest
+from app.schemas.user import UserLogin, UserCreate, UserResponse, Token, RefreshTokenRequest, LogoutRequest
 from app.crud import user as user_crud
 from app.crud import token as token_crud
 from app.core.rate_limit import limiter
@@ -122,7 +122,9 @@ async def read_users_me(
     """
     Get current authenticated user information
     """
-    return current_user
+    user_data = UserResponse.model_validate(current_user)
+    user_data.is_admin = current_user.email.lower() in set(settings.admin_email_list)
+    return user_data
 
 
 @router.post("/register", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
@@ -232,3 +234,66 @@ async def refresh_token(
     )
     user_crud.update_last_login(db, user.id)
     return tokens
+
+
+@router.post("/logout", status_code=status.HTTP_204_NO_CONTENT)
+async def logout(
+    request: Request,
+    payload: Optional[LogoutRequest] = None,
+    credentials: HTTPAuthorizationCredentials = Depends(HTTPBearer()),
+    db: Session = Depends(get_db),
+):
+    """Logout: blacklist access token, revoke refresh session if provided."""
+    # Blacklist the access token JTI
+    try:
+        token_payload = jwt.decode(
+            credentials.credentials,
+            settings.SECRET_KEY,
+            algorithms=[settings.JWT_ALGORITHM],
+        )
+        access_jti = token_payload.get("jti")
+        access_exp_ts = token_payload.get("exp")
+        if access_jti:
+            access_exp = (
+                datetime.fromtimestamp(access_exp_ts, tz=timezone.utc)
+                if isinstance(access_exp_ts, (int, float))
+                else None
+            )
+            token_crud.blacklist_token(
+                db,
+                token_jti=access_jti,
+                token_type="access",
+                expires_at=access_exp,
+                reason="logout",
+            )
+    except JWTError:
+        pass  # Token may already be expired, still proceed
+
+    # Revoke refresh session if provided
+    if payload and payload.refresh_token:
+        try:
+            refresh_payload = jwt.decode(
+                payload.refresh_token,
+                settings.SECRET_KEY,
+                algorithms=[settings.JWT_ALGORITHM],
+            )
+            refresh_jti = refresh_payload.get("jti")
+            if refresh_jti:
+                token_crud.revoke_refresh_token_session(db, token_jti=refresh_jti)
+                refresh_exp_ts = refresh_payload.get("exp")
+                refresh_exp = (
+                    datetime.fromtimestamp(refresh_exp_ts, tz=timezone.utc)
+                    if isinstance(refresh_exp_ts, (int, float))
+                    else None
+                )
+                token_crud.blacklist_token(
+                    db,
+                    token_jti=refresh_jti,
+                    token_type="refresh",
+                    expires_at=refresh_exp,
+                    reason="logout",
+                )
+        except JWTError:
+            pass  # Refresh token may be invalid
+
+    return None

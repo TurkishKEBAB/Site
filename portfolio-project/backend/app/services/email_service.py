@@ -2,10 +2,12 @@
 Email Service
 SMTP email sending for contact form and notifications
 """
+import html
 import aiosmtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from typing import List, Optional
+from urllib.parse import quote
 from loguru import logger
 
 from app.config import settings
@@ -13,13 +15,13 @@ from app.config import settings
 
 class EmailService:
     """Service for sending emails via SMTP"""
-    
+
     def __init__(self):
         self.smtp_host = settings.SMTP_HOST
         self.smtp_port = settings.SMTP_PORT
         self.smtp_username = settings.SMTP_USERNAME
         self.smtp_password = settings.SMTP_PASSWORD
-    
+
     async def send_email(
         self,
         to_email: str,
@@ -31,7 +33,7 @@ class EmailService:
     ) -> bool:
         """
         Send an email
-        
+
         Args:
             to_email: Recipient email address
             subject: Email subject
@@ -39,7 +41,7 @@ class EmailService:
             html_body: Optional HTML email body
             cc: Optional CC recipients
             bcc: Optional BCC recipients
-            
+
         Returns:
             True if email was sent successfully
         """
@@ -49,19 +51,19 @@ class EmailService:
             message["From"] = self.smtp_username
             message["To"] = to_email
             message["Subject"] = subject
-            
+
             if cc:
                 message["Cc"] = ", ".join(cc)
             if bcc:
                 message["Bcc"] = ", ".join(bcc)
-            
+
             # Add plain text part
             message.attach(MIMEText(body, "plain"))
-            
+
             # Add HTML part if provided
             if html_body:
                 message.attach(MIMEText(html_body, "html"))
-            
+
             # Send email
             await aiosmtplib.send(
                 message,
@@ -71,14 +73,14 @@ class EmailService:
                 password=self.smtp_password,
                 start_tls=True,
             )
-            
+
             logger.info(f"Email sent successfully to {to_email}")
             return True
-        
+
         except Exception as e:
             logger.error(f"Failed to send email to {to_email}: {e}")
             return False
-    
+
     async def send_contact_form_confirmation(
         self,
         user_email: str,
@@ -87,17 +89,20 @@ class EmailService:
     ) -> bool:
         """
         Send confirmation email to user who submitted contact form
-        
+
         Args:
             user_email: User's email address
             user_name: User's name
             message_content: Their message content
-            
+
         Returns:
             True if email was sent successfully
         """
         subject = "Thank you for contacting Yiğit Okur"
-        
+
+        safe_name = html.escape(user_name)
+        safe_message = html.escape(message_content)
+
         body = f"""
 Hi {user_name},
 
@@ -114,7 +119,7 @@ Cloud & DevOps Engineer
 ---
 This is an automated confirmation email.
         """.strip()
-        
+
         html_body = f"""
 <!DOCTYPE html>
 <html>
@@ -134,10 +139,10 @@ This is an automated confirmation email.
             <h2>Thank You for Contacting Me!</h2>
         </div>
         <div class="content">
-            <p>Hi <strong>{user_name}</strong>,</p>
+            <p>Hi <strong>{safe_name}</strong>,</p>
             <p>Thank you for reaching out! I've received your message:</p>
             <div class="message">
-                <em>"{message_content}"</em>
+                <em>"{safe_message}"</em>
             </div>
             <p>I'll get back to you as soon as possible.</p>
             <p>Best regards,<br>
@@ -151,9 +156,9 @@ This is an automated confirmation email.
 </body>
 </html>
         """
-        
+
         return await self.send_email(user_email, subject, body, html_body)
-    
+
     async def send_admin_notification(
         self,
         user_name: str,
@@ -162,19 +167,25 @@ This is an automated confirmation email.
         message_content: str
     ) -> bool:
         """
-        Send notification to admin (Yiğit) about new contact form submission
-        
+        Send notification to admin about new contact form submission
+
         Args:
             user_name: User's name
             user_email: User's email
             subject: Message subject
             message_content: Message content
-            
+
         Returns:
             True if email was sent successfully
         """
+        safe_name = html.escape(user_name)
+        safe_email = html.escape(user_email)
+        safe_subject = html.escape(subject)
+        safe_message = html.escape(message_content)
+        safe_subject_url = quote(f"Re: {subject}")
+
         admin_subject = f"New Contact Form Submission: {subject}"
-        
+
         body = f"""
 New contact form submission:
 
@@ -187,7 +198,7 @@ Message:
 ---
 Portfolio Contact Form Notification
         """.strip()
-        
+
         html_body = f"""
 <!DOCTYPE html>
 <html>
@@ -205,22 +216,22 @@ Portfolio Contact Form Notification
 <body>
     <div class="container">
         <div class="header">
-            <h2>📧 New Contact Form Submission</h2>
+            <h2>New Contact Form Submission</h2>
         </div>
         <div class="content">
             <div class="info">
-                <p><span class="label">From:</span> {user_name}</p>
-                <p><span class="label">Email:</span> <a href="mailto:{user_email}">{user_email}</a></p>
-                <p><span class="label">Subject:</span> {subject}</p>
+                <p><span class="label">From:</span> {safe_name}</p>
+                <p><span class="label">Email:</span> <a href="mailto:{safe_email}">{safe_email}</a></p>
+                <p><span class="label">Subject:</span> {safe_subject}</p>
             </div>
             <div class="message">
                 <p><span class="label">Message:</span></p>
-                <p>{message_content}</p>
+                <p>{safe_message}</p>
             </div>
             <p style="text-align: center; margin-top: 20px;">
-                <a href="mailto:{user_email}?subject=Re: {subject}" 
+                <a href="mailto:{safe_email}?subject={safe_subject_url}"
                    style="background-color: #3B82F6; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">
-                    Reply to {user_name}
+                    Reply to {safe_name}
                 </a>
             </p>
         </div>
@@ -228,7 +239,7 @@ Portfolio Contact Form Notification
 </body>
 </html>
         """
-        
+
         return await self.send_email(
             self.smtp_username,  # Send to admin (yourself)
             admin_subject,

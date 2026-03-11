@@ -31,7 +31,7 @@ class Settings(BaseSettings):
     ACCESS_TOKEN_EXPIRE_MINUTES: Optional[int] = None
     REFRESH_TOKEN_EXPIRE_DAYS: int = 14
     JWT_EXPIRE_MINUTES: int = 15  # backward compatibility alias
-    ADMIN_EMAILS: str = "yigitokur@ieee.org,admin@portfolio.com"
+    ADMIN_EMAILS: str = "yigitokur@ieee.org"
 
     # GitHub
     GITHUB_USERNAME: str = "TurkishKEBAB"
@@ -154,12 +154,21 @@ class Settings(BaseSettings):
         if not self.is_production:
             return []
 
+        _KNOWN_INSECURE_KEYS = [
+            "dev-secret-key-change-in-production",
+            "changeme",
+            "secret",
+            "ci-secret-key",
+        ]
+
         errors: List[str] = []
         frontend_url = self.FRONTEND_URL.lower()
         if "localhost" in frontend_url or "127.0.0.1" in frontend_url:
             errors.append("FRONTEND_URL cannot point to localhost in production.")
         if len(self.SECRET_KEY.strip()) < 32:
             errors.append("SECRET_KEY must be at least 32 characters in production.")
+        if self.SECRET_KEY.strip().lower() in _KNOWN_INSECURE_KEYS:
+            errors.append("SECRET_KEY contains a known insecure default value.")
         if not self.CAPTCHA_ENABLED:
             errors.append("CAPTCHA_ENABLED must be true in production.")
         if not self.CAPTCHA_SECRET_KEY:

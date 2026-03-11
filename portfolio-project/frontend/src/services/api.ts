@@ -1,7 +1,19 @@
 import axios, { AxiosError, AxiosInstance } from 'axios';
 
-const API_BASE_URL =
-  import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api/v1';
+declare module 'axios' {
+  export interface InternalAxiosRequestConfig {
+    _retry?: boolean;
+  }
+}
+
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL as string | undefined;
+
+if (!API_BASE_URL) {
+  throw new Error(
+    'VITE_API_BASE_URL environment variable is required. ' +
+    'Set it in .env (e.g. VITE_API_BASE_URL=http://localhost:8000/api/v1)',
+  );
+}
 
 const api: AxiosInstance = axios.create({
   baseURL: API_BASE_URL,
@@ -48,22 +60,101 @@ api.interceptors.request.use(
   (error) => Promise.reject(error),
 );
 
+// Token refresh queue to avoid concurrent refresh attempts
+let isRefreshing = false;
+let failedQueue: Array<{
+  resolve: (token: string) => void;
+  reject: (error: unknown) => void;
+}> = [];
+
+const processQueue = (error: unknown, token: string | null = null) => {
+  failedQueue.forEach((prom) => {
+    if (token) {
+      prom.resolve(token);
+    } else {
+      prom.reject(error);
+    }
+  });
+  failedQueue = [];
+};
+
+const clearAuthAndRedirect = () => {
+  localStorage.removeItem('token');
+  localStorage.removeItem('refresh_token');
+  if (window.location.pathname.startsWith('/admin')) {
+    window.location.href = '/login';
+  }
+};
+
 api.interceptors.response.use(
   (response) => response,
-  (error: AxiosError) => {
+  async (error: AxiosError) => {
+    const originalRequest = error.config;
     const status = error.response?.status;
     const skipGlobalErrorValue =
       (error.config?.headers as Record<string, unknown> | undefined)?.['X-Skip-Global-Error'];
     const shouldSkipGlobalError =
       skipGlobalErrorValue === true || skipGlobalErrorValue === 'true';
 
-    if (status === 401 || status === 403) {
-      localStorage.removeItem('token');
-      localStorage.removeItem('refresh_token');
-
-      if (window.location.pathname.startsWith('/admin')) {
-        window.location.href = '/login';
+    // Attempt token refresh on 401 for non-auth endpoints
+    if (
+      status === 401 &&
+      originalRequest &&
+      !originalRequest._retry &&
+      !originalRequest.url?.includes('/auth/')
+    ) {
+      if (isRefreshing) {
+        return new Promise((resolve, reject) => {
+          failedQueue.push({
+            resolve: (token: string) => {
+              originalRequest.headers.Authorization = `Bearer ${token}`;
+              resolve(api(originalRequest));
+            },
+            reject,
+          });
+        });
       }
+
+      originalRequest._retry = true;
+      isRefreshing = true;
+
+      const refreshToken = localStorage.getItem('refresh_token');
+
+      if (!refreshToken) {
+        isRefreshing = false;
+        processQueue(error, null);
+        clearAuthAndRedirect();
+        return Promise.reject(error);
+      }
+
+      try {
+        const { data } = await axios.post(`${API_BASE_URL}/auth/refresh`, {
+          refresh_token: refreshToken,
+        });
+
+        const newAccessToken: string = data.access_token;
+        const newRefreshToken: string | undefined = data.refresh_token;
+
+        localStorage.setItem('token', newAccessToken);
+        if (newRefreshToken) {
+          localStorage.setItem('refresh_token', newRefreshToken);
+        }
+
+        originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
+        processQueue(null, newAccessToken);
+        return api(originalRequest);
+      } catch (refreshError) {
+        processQueue(refreshError, null);
+        clearAuthAndRedirect();
+        return Promise.reject(refreshError);
+      } finally {
+        isRefreshing = false;
+      }
+    }
+
+    // Non-refreshable 401/403: clear auth
+    if ((status === 401 || status === 403) && !originalRequest?._retry) {
+      clearAuthAndRedirect();
     }
 
     if (!shouldSkipGlobalError) {
@@ -87,6 +178,7 @@ export const apiEndpoints = {
     loginJson: '/auth/login/json',
     register: '/auth/register',
     refresh: '/auth/refresh',
+    logout: '/auth/logout',
     me: '/auth/me',
   },
 

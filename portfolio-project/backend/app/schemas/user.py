@@ -31,7 +31,8 @@ class User(UserBase):
     created_at: datetime
     last_login: Optional[datetime] = None
     is_active: bool = True
-    
+    is_admin: bool = False
+
     class Config:
         from_attributes = True
 
@@ -52,6 +53,11 @@ class Token(BaseModel):
 class RefreshTokenRequest(BaseModel):
     """Refresh token request payload."""
     refresh_token: str
+
+
+class LogoutRequest(BaseModel):
+    """Logout request payload."""
+    refresh_token: Optional[str] = None
 
 
 class TokenData(BaseModel):

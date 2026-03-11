@@ -192,8 +192,8 @@ export default function Admin() {
   const imageManagerModalRef = useRef<HTMLDivElement>(null);
   const translationModalRef = useRef<HTMLDivElement>(null);
 
-  const handleLogout = useCallback(() => {
-    logout();
+  const handleLogout = useCallback(async () => {
+    await logout();
     navigate('/login');
   }, [logout, navigate]);
 

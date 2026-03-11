@@ -5,19 +5,18 @@ import { useToast } from './Toast';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
+  requireAdmin?: boolean;
 }
 
-const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
-  const { isAuthenticated, isLoading, user } = useAuth();
+const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, requireAdmin = false }) => {
+  const { isAuthenticated, isLoading, isAdmin, user } = useAuth();
   const { showToast } = useToast();
   const navigate = useNavigate();
 
   useEffect(() => {
-    // If finished loading and not authenticated, show error message
     if (!isLoading && !isAuthenticated) {
       showToast('error', 'Bu sayfayı görüntülemek için giriş yapmalısınız.');
-      
-      // Navigate to login after a short delay
+
       const timer = setTimeout(() => {
         navigate('/login', { replace: true });
       }, 1500);
@@ -25,11 +24,18 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
       return () => clearTimeout(timer);
     }
 
-    // If authenticated but not an admin (for admin routes)
     if (!isLoading && isAuthenticated && user && !user.is_active) {
       showToast('warning', 'Hesabınız aktif değil. Lütfen yönetici ile iletişime geçin.');
     }
-  }, [isLoading, isAuthenticated, user, showToast, navigate]);
+
+    if (!isLoading && isAuthenticated && requireAdmin && !isAdmin) {
+      showToast('error', 'Bu sayfaya erişim yetkiniz yok.');
+      const timer = setTimeout(() => {
+        navigate('/', { replace: true });
+      }, 1500);
+      return () => clearTimeout(timer);
+    }
+  }, [isLoading, isAuthenticated, isAdmin, requireAdmin, user, showToast, navigate]);
 
   if (isLoading) {
     return (
@@ -44,6 +50,10 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
 
   if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
+  }
+
+  if (requireAdmin && !isAdmin) {
+    return <Navigate to="/" replace />;
   }
 
   return <>{children}</>;

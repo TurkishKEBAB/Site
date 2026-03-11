@@ -658,7 +658,7 @@ def seed_site_config(db: Session) -> None:
         },
         {"key": "contact_email", "value": "yigitokur@ieee.org", "description": "Primary contact"},
         {"key": "github_url", "value": "https://github.com/TurkishKEBAB", "description": "GitHub profile"},
-        {"key": "linkedin_url", "value": "https://www.linkedin.com/in/yigit-okur-050b5b278", "description": "LinkedIn profile"},
+        {"key": "linkedin_url", "value": "https://www.linkedin.com/in/yiğit-okur-050b5b278", "description": "LinkedIn profile"},
         {
             "key": "meta_keywords",
             "value": "Yigit Okur, Software Engineer, Cloud, DevOps, Spring Boot, FastAPI, React, Portfolio",

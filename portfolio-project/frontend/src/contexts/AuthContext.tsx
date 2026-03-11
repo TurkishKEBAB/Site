@@ -14,15 +14,17 @@ interface User {
   username: string;
   email: string;
   is_active: boolean;
+  is_admin: boolean;
 }
 
 interface AuthContextType {
   user: User | null;
   token: string | null;
   login: (email: string, password: string) => Promise<void>;
-  logout: () => void;
+  logout: () => Promise<void>;
   isLoading: boolean;
   isAuthenticated: boolean;
+  isAdmin: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -80,11 +82,22 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
   };
 
-  const logout = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('refresh_token');
-    setToken(null);
-    setUser(null);
+  const logout = async () => {
+    try {
+      const refreshToken = localStorage.getItem('refresh_token');
+      await api.post(
+        apiEndpoints.auth.logout,
+        { refresh_token: refreshToken },
+        { headers: { 'X-Skip-Global-Error': true } },
+      );
+    } catch {
+      // Backend call may fail; always clear client-side state
+    } finally {
+      localStorage.removeItem('token');
+      localStorage.removeItem('refresh_token');
+      setToken(null);
+      setUser(null);
+    }
   };
 
   const value = {
@@ -94,6 +107,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     logout,
     isLoading,
     isAuthenticated: Boolean(token && user),
+    isAdmin: Boolean(user?.is_admin),
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
