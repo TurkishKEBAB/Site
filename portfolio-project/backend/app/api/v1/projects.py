@@ -4,6 +4,7 @@ CRUD operations for projects
 """
 import re
 import uuid
+import os
 
 from fastapi import APIRouter, Depends, File, HTTPException, Query, UploadFile, status
 from sqlalchemy.orm import Session
@@ -215,9 +216,12 @@ async def upload_project_image(
 
     file_content = bytes(file_buffer)
 
+    # Determine original filename with a consistent default (including extension)
+    original_filename = file.filename or "upload.jpg"
+
     # Validate file using actual content length
     is_valid, error_message = storage_service.validate_file(
-        file.filename or "upload.jpg",
+        original_filename,
         len(file_content),
         allowed_extensions=["jpg", "jpeg", "png", "gif", "webp"]
     )
@@ -228,9 +232,22 @@ async def upload_project_image(
             detail=error_message
         )
 
-    # Sanitize filename to prevent path traversal and injection
-    safe_filename = re.sub(r"[^\w\-.]", "_", file.filename or "upload")
-    safe_filename = safe_filename[:100]
+    # Sanitize filename to prevent path traversal and injection,
+    # while preserving the validated extension and overall length limit.
+    name_part, ext = os.path.splitext(original_filename)
+    # Fallback to a safe base name if the name part is empty
+    if not name_part:
+        name_part = "upload"
+    safe_name = re.sub(r"[^\w\-.]", "_", name_part)
+    # Ensure total length (base name + extension) does not exceed 100 chars
+    max_total_length = 100
+    remaining_for_name = max_total_length - len(ext)
+    if remaining_for_name < 1:
+        # In the unlikely event the extension itself is too long, fall back to no extension
+        ext = ""
+        remaining_for_name = max_total_length
+    safe_name = safe_name[:remaining_for_name]
+    safe_filename = f"{safe_name}{ext}"
 
     # Upload to storage
     file_path = f"projects/{project_id}/{safe_filename}"
