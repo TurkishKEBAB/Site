@@ -1,0 +1,39 @@
+name: Refactor Request
+description: Request a cleanup, architecture improvement, or technical debt reduction
+labels: [refactor]
+body:
+  - type: textarea
+    id: target
+    attributes:
+      label: Target Area
+      description: Which file, module, or system should be refactored?
+    validations:
+      required: true
+  - type: textarea
+    id: debt
+    attributes:
+      label: Current Technical Debt
+      description: What is wrong with the current implementation?
+    validations:
+      required: true
+  - type: textarea
+    id: desired
+    attributes:
+      label: Desired End State
+      description: What should the architecture or code look like after refactor?
+    validations:
+      required: true
+  - type: dropdown
+    id: risk
+    attributes:
+      label: Risk Level
+      options:
+        - low
+        - medium
+        - high
+    validations:
+      required: true
+  - type: textarea
+    id: constraints
+    attributes:
+      label: Constraints / Non-Goals

@@ -1,0 +1,57 @@
+backend:
+  - 'portfolio-project/backend/**'
+
+frontend:
+  - 'portfolio-project/frontend/**'
+
+ci:
+  - '.github/workflows/**'
+  - '.github/dependabot.yml'
+  - '.github/labeler.yml'
+  - '.github/pull_request_template.md'
+  - '.github/CODEOWNERS'
+
+infra:
+  - 'portfolio-project/docker-data/**'
+  - 'portfolio-project/database/**'
+  - 'portfolio-project/backend/Dockerfile'
+  - 'portfolio-project/backend/docker-compose.yml'
+  - 'start.ps1'
+  - 'portfolio-project/start.ps1'
+  - 'portfolio-project/status.ps1'
+  - 'portfolio-project/stop.ps1'
+
+security:
+  - 'portfolio-project/backend/app/api/deps.py'
+  - 'portfolio-project/backend/app/utils/security.py'
+  - 'portfolio-project/backend/app/config.py'
+  - 'portfolio-project/backend/app/core/rate_limit.py'
+  - 'portfolio-project/backend/app/services/captcha_service.py'
+  - 'portfolio-project/backend/app/services/email_service.py'
+
+api:
+  - 'portfolio-project/backend/app/api/**'
+  - 'portfolio-project/backend/app/crud/**'
+  - 'portfolio-project/backend/app/models/**'
+  - 'portfolio-project/backend/app/schemas/**'
+
+ui-ux:
+  - 'portfolio-project/frontend/src/components/**'
+  - 'portfolio-project/frontend/src/pages/**'
+  - 'portfolio-project/frontend/src/index.css'
+
+refactor:
+  - 'REFACTOR_PLAN.md'
+  - 'AGENTS.md'
+  - 'portfolio-project/CI_CD_SETUP.md'
+  - 'README.md'
+  - 'portfolio-project/README.md'
+  - 'portfolio-project/backend/README.md'
+  - 'portfolio-project/frontend/README.md'
+
+dependencies:
+  - 'package-lock.json'
+  - 'portfolio-project/frontend/package-lock.json'
+  - 'portfolio-project/frontend/package.json'
+  - 'portfolio-project/backend/requirements.txt'
+  - 'portfolio-project/backend/requirements-dev.txt'

@@ -118,6 +118,22 @@ Workflow: `.github/workflows/deploy-production.yml`
 
 These are UI/ruleset settings and are not versioned in git.
 
+## Recommended Branch Strategy
+
+- Permanent branches:
+  - `main`: production-ready branch only
+  - `Codex_Implementation`: active integration/development branch
+- Short-lived branches:
+  - `feat/*`, `fix/*`, `chore/*`, `docs/*`, `refactor/*`
+- PR flow:
+  - feature branch -> `Codex_Implementation`
+  - `Codex_Implementation` -> `main`
+- Merge strategy:
+  - squash merge only
+  - auto-delete head branches after merge
+  - no direct pushes to `main`
+  - no direct pushes to `Codex_Implementation` except emergency maintainer fixes
+
 ### Main Branch Ruleset
 
 - Require pull request before merge
@@ -133,6 +149,33 @@ These are UI/ruleset settings and are not versioned in git.
   - `Backend Quality`
   - `Frontend Quality`
   - `Sonar PR Gate`
+  - `PR Governance`
+
+### Codex_Implementation Branch Ruleset
+
+- Require pull request before merge
+- Require 1 approval
+- Require review from Code Owners
+- Dismiss stale approvals
+- Require conversation resolution
+- Include administrators
+- Require branch up to date
+- Disable force push
+- Disable branch deletion
+- Required checks:
+  - `Backend Quality`
+  - `Frontend Quality`
+  - `PR Governance`
+  - `PR Labeler`
+
+### Repository Settings
+
+- Enable auto-delete head branches
+- Disable merge commits
+- Disable rebase merges
+- Enable squash merges
+- Enable secret scanning and push protection if available
+- Keep default branch as `main`
 
 ### Production Environment
 

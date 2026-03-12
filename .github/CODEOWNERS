@@ -1,2 +1,16 @@
-# Global code owner
+# Default owner
 * @TurkishKEBAB
+
+# Backend
+/portfolio-project/backend/ @TurkishKEBAB
+
+# Frontend
+/portfolio-project/frontend/ @TurkishKEBAB
+
+# CI / governance
+/.github/ @TurkishKEBAB
+
+# Planning and operational docs
+/AGENTS.md @TurkishKEBAB
+/REFACTOR_PLAN.md @TurkishKEBAB
+/portfolio-project/CI_CD_SETUP.md @TurkishKEBAB

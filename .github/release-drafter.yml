@@ -1,0 +1,55 @@
+name-template: 'v$RESOLVED_VERSION'
+tag-template: 'v$RESOLVED_VERSION'
+change-template: '- $TITLE (#$NUMBER) @$AUTHOR'
+no-changes-template: '- No user-facing changes in this release.'
+
+categories:
+  - title: 'Features'
+    labels:
+      - feat
+      - frontend
+      - backend
+  - title: 'Fixes'
+    labels:
+      - fix
+  - title: 'Refactor & Cleanup'
+    labels:
+      - refactor
+      - chore
+      - ci
+  - title: 'Documentation'
+    labels:
+      - docs
+
+version-resolver:
+  major:
+    labels:
+      - breaking-change
+  minor:
+    labels:
+      - feat
+  patch:
+    labels:
+      - fix
+      - refactor
+      - chore
+      - docs
+      - ci
+  default: patch
+
+autolabeler:
+  - label: backend
+    files:
+      - 'portfolio-project/backend/**'
+  - label: frontend
+    files:
+      - 'portfolio-project/frontend/**'
+  - label: ci
+    files:
+      - '.github/**'
+      - 'portfolio-project/CI_CD_SETUP.md'
+
+template: |
+  ## Changes
+
+  $CHANGES
