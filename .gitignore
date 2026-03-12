@@ -10,6 +10,8 @@ Thumbs.db
 # Logs
 /logs/
 /logs/**
+**/logs/
+**/logs/**
 *.log
 
 # Python
@@ -24,6 +26,9 @@ __pycache__/
 coverage.xml
 .venv/
 venv/
+*.venv-test/
+.venv-test/
+**/.venv-test/
 
 # Node
 node_modules/
@@ -37,6 +42,10 @@ coverage/
 
 # Tooling artifacts
 .scannerwork/
+
+# Local backup artifacts
+**/docker-data/postgres-backups/
+**/docker-data/postgres-backups/**
 
 # Root accidental dumps
 /*.png

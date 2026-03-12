@@ -77,4 +77,4 @@ bash backup_restore_drill.sh
 ## Notes
 
 - Canonical project status: `PROGRESS.md`
-- Historical reports are preserved but not used as live status trackers.
+- Historical status documents were cleaned up from the repo to reduce clutter.

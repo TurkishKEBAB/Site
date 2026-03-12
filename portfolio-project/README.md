@@ -152,7 +152,6 @@ Active roadmap is tracked in:
 - `PROGRESS.md` - canonical sprint status
 - `QUICKSTART.md` - current operational runbook
 - `CI_CD_SETUP.md` - CI workflow and Sonar setup
-- `COMPREHENSIVE_PROJECT_ANALYSIS.md` - historical planning snapshot
 
 ## 🤝 Contributing / Next Steps
 
