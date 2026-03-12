@@ -4,10 +4,12 @@ CRUD operations for work experiences, education, and volunteering
 """
 from typing import List, Dict
 from fastapi import APIRouter, Depends, HTTPException, status, Query
+from sqlalchemy import func
 from sqlalchemy.orm import Session
 import uuid
 
 from app.api.deps import get_db, require_admin
+from app.models.experience import Experience
 from app.schemas.experience import (
     ExperienceCreate,
     ExperienceUpdate,
@@ -31,11 +33,10 @@ async def get_experiences(
     Get list of experiences with optional type filtering
     """
     # Get total count
-    total_query = experience_crud.get_experiences(db, skip=0, limit=1000)
+    count_query = db.query(func.count(Experience.id))
     if experience_type:
-        total = len([e for e in total_query if e.experience_type == experience_type])
-    else:
-        total = len(total_query)
+        count_query = count_query.filter(Experience.experience_type == experience_type)
+    total = count_query.scalar()
 
     experiences = experience_crud.get_experiences(
         db,
