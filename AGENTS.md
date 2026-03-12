@@ -1,62 +1,62 @@
-# AGENTS.md
+﻿# AGENTS.md
 
 This file provides guidance to AI agents (Claude Code, Codex, Warp, etc.) when working with code in this repository.
 
 ## Project Overview
 
-Full-stack portfolio site for Yigit Okur. The main application lives under `portfolio-project/` with a FastAPI backend and React/TypeScript frontend. The repo root contains CI/CD workflows in `.github/workflows/` and a convenience `start.ps1` launcher.
+Full-stack portfolio site for Yigit Okur (yigitokur.me). FastAPI backend + Next.js 15 App Router frontend (migration in progress from React/Vite). Repo root contains CI/CD workflows in `.github/workflows/` and a convenience `start.ps1` launcher.
 
-**Current status:** Preparing for production launch on `Codex_Implementation` branch. See `PRODUCTION_PLAN.md` for the full go-live plan with phases and acceptance criteria.
+**Current status:** Full refactor in progress on `feat/nextjs-rewrite`. See `REFACTOR_PLAN.md` for all architectural decisions, phase breakdown, and implementation steps. This is the single source of truth — do not rely on other historical `.md` files in `portfolio-project/`.
 
 ## Repository Structure
 
 ```
 Site/
 ├── .github/workflows/
-│   ├── ci.yml                      # PR/push quality gate (Backend Quality + Frontend Quality + Sonar)
-│   ├── deploy-production.yml       # Main merge -> Railway + Vercel deploy + smoke tests
-│   ├── deploy-railway-staging.yml  # Staging backend deploy
-│   ├── deploy-vercel-preview.yml   # Preview frontend deploy
-│   ├── sonar-pr-gate.yml           # SonarCloud PR analysis
-│   └── backup-restore-drill.yml    # Weekly PostgreSQL backup/restore drill
+│   ├── ci.yml                         # PR/push quality gate (Backend Quality + Frontend Quality + Sonar)
+│   ├── deploy-production.yml          # Main merge -> Railway + Vercel deploy + smoke tests
+│   ├── deploy-railway-staging.yml     # Staging backend deploy
+│   ├── deploy-vercel-preview.yml      # Preview frontend deploy
+│   ├── sonar-pr-gate.yml              # SonarCloud PR analysis
+│   └── backup-restore-drill.yml       # Weekly PostgreSQL backup/restore drill
 ├── portfolio-project/
-│   ├── backend/                    # FastAPI application
+│   ├── backend/                       # FastAPI application
 │   │   ├── app/
-│   │   │   ├── main.py             # App factory, lifespan, CORS, middleware
-│   │   │   ├── config.py           # pydantic-settings, production validation
-│   │   │   ├── database.py         # SQLAlchemy 2 engine + SessionLocal
+│   │   │   ├── main.py                # App factory, lifespan, CORS, middleware
+│   │   │   ├── config.py              # pydantic-settings, production validation
+│   │   │   ├── database.py            # SQLAlchemy 2 engine + SessionLocal
 │   │   │   ├── api/
-│   │   │   │   ├── v1/             # Versioned routers (auth, admin, blog, contact, github, etc.)
-│   │   │   │   └── deps.py         # Dependencies: get_current_user, require_admin, get_db
-│   │   │   ├── crud/               # DB operations per domain
-│   │   │   ├── models/             # SQLAlchemy ORM models
-│   │   │   ├── schemas/            # Pydantic v2 request/response schemas
-│   │   │   ├── services/           # cache, email, captcha, github, storage services
-│   │   │   ├── core/rate_limit.py  # slowapi Limiter instance
-│   │   │   └── utils/              # logger, security (JWT/bcrypt)
-│   │   ├── tests/                  # pytest suite (SQLite in-memory)
-│   │   ├── Dockerfile              # Python 3.13-slim, non-root user
-│   │   ├── docker-compose.yml      # PostgreSQL 15 + Redis 7 + API
-│   │   ├── requirements.txt        # Production dependencies
+│   │   │   │   ├── v1/                # Versioned routers (auth, admin, blog, contact, github, etc.)
+│   │   │   │   └── deps.py            # Dependencies: get_current_user, require_admin, get_db
+│   │   │   ├── crud/                  # DB operations per domain
+│   │   │   ├── models/                # SQLAlchemy ORM models
+│   │   │   ├── schemas/               # Pydantic v2 request/response schemas
+│   │   │   ├── services/              # cache, email, captcha, github, storage services
+│   │   │   ├── core/rate_limit.py     # slowapi Limiter instance
+│   │   │   └── utils/                 # logger, security (JWT/bcrypt)
+│   │   ├── alembic/                   # Versioned DB migrations (Faz 1 target)
+│   │   ├── tests/                     # pytest suite (SQLite in-memory)
+│   │   ├── Dockerfile                 # Python 3.13-slim, non-root user
+│   │   ├── docker-compose.yml         # PostgreSQL 15 + Redis 7 + API
+│   │   ├── requirements.txt           # Production dependencies
 │   │   └── .env.example
-│   ├── frontend/                   # React 18 + TypeScript + Vite
-│   │   ├── src/
-│   │   │   ├── App.tsx             # Provider hierarchy + lazy routes
-│   │   │   ├── services/api.ts     # Axios instance, JWT interceptor, refresh logic
-│   │   │   ├── contexts/           # AuthContext, LanguageContext
-│   │   │   ├── components/         # Layout, ProtectedRoute, Toast, SEO, etc.
-│   │   │   └── pages/              # Home, About, Projects, Blog, Contact, Admin, Login
-│   │   ├── package.json
-│   │   ├── vite.config.ts          # Path alias @->src, chunk splitting, proxy
-│   │   └── .env.example
-│   ├── database/migrations/        # Raw SQL (mounted in Docker initdb)
-│   ├── CI_CD_SETUP.md              # CI/CD documentation, secret contract, smoke scope
+│   ├── frontend/                      # Next.js 15 App Router + TypeScript + Tailwind + shadcn/ui
+│   │   ├── src/app/                   # App Router: (public), (protected)/admin, login, layout
+│   │   ├── src/components/            # ui/ (shadcn), layout/, sections/, admin/
+│   │   ├── src/contexts/              # AuthContext, LanguageContext
+│   │   ├── src/lib/                   # api.ts (Axios), motion.ts (Framer variants), utils.ts
+│   │   ├── src/services/              # Domain API call functions
+│   │   ├── next.config.ts
+│   │   └── .env.example              # NEXT_PUBLIC_API_BASE_URL required
+│   ├── database/migrations/           # Raw SQL schema reference (01_portfolio_db_schema.sql)
+│   ├── CI_CD_SETUP.md                 # CI/CD secret contract and smoke scope
 │   ├── set-production-env-github.ps1  # GitHub production secrets/vars helper
-│   ├── sonar-project.properties    # SonarCloud config
-│   └── pytest.ini                  # testpaths, pythonpath, coverage thresholds
-├── AGENTS.md                       # This file
-├── PRODUCTION_PLAN.md              # Go-live plan with phases and checklists
-└── start.ps1                       # Launches backend + frontend in separate shells
+│   ├── sonar-project.properties       # SonarCloud config
+│   └── pytest.ini                     # testpaths, pythonpath, coverage thresholds
+├── AGENTS.md                          # This file
+├── REFACTOR_PLAN.md                   # PRIMARY REFERENCE -- all tech decisions, phases, implementation steps
+├── README.md
+└── start.ps1                          # Launches backend + frontend in separate shells
 ```
 
 ## Build & Run Commands
@@ -69,7 +69,7 @@ All commands assume `portfolio-project/` as the working directory unless noted.
 ./start.ps1
 ```
 
-Boots both backend (uvicorn :8000) and frontend (Vite :5173) in separate shells, creating venvs and installing deps if needed.
+Boots both backend (uvicorn :8000) and frontend (Next.js :3000) in separate shells, creating venvs and installing deps if needed.
 
 ### Backend
 
@@ -87,6 +87,8 @@ Docker alternative (PostgreSQL 15, Redis 7, API):
 ```powershell
 cd portfolio-project/backend
 docker-compose up -d
+# Apply migrations:
+alembic upgrade head
 ```
 
 Seed data: `python seed_data.py` (from `backend/`).
@@ -96,10 +98,10 @@ Seed data: `python seed_data.py` (from `backend/`).
 ```powershell
 cd portfolio-project/frontend
 npm install
-npm run dev -- --host
+npm run dev
 ```
 
-Vite dev server proxies `/api` to `http://localhost:8000`.
+Next.js dev server on port 3000. Set `NEXT_PUBLIC_API_BASE_URL` in `.env.local` before first run.
 
 ### Environment Variables
 
@@ -108,7 +110,7 @@ Vite dev server proxies `/api` to `http://localhost:8000`.
 - Optional: `SUPABASE_URL`, `SUPABASE_KEY`, `GITHUB_API_TOKEN`, `REDIS_URL`
 - Production-required: `ENVIRONMENT=production`, `FRONTEND_URL`, `ADMIN_EMAILS`, `CAPTCHA_ENABLED=true`, `CAPTCHA_PROVIDER=turnstile`, `CAPTCHA_SECRET_KEY`
 
-**Frontend:** `VITE_API_BASE_URL` (required -- no default in production).
+**Frontend:** `NEXT_PUBLIC_API_BASE_URL` (required -- build fails without it in production).
 
 ## Testing
 
@@ -119,7 +121,7 @@ cd portfolio-project
 python -m pytest -q
 ```
 
-Root `pytest.ini` sets `testpaths = backend/tests`, `pythonpath = backend`, coverage threshold `--cov-fail-under=80` on `app.api.v1`, `app.crud`, `app.api.deps`.
+Root `pytest.ini` sets `testpaths = backend/tests`, `pythonpath = backend`, coverage threshold `--cov-fail-under=90` on `app.api.v1`, `app.crud`, `app.api.deps`.
 
 Tests use in-memory SQLite with `StaticPool`. `conftest.py` provides: `client`, `db_session`, `admin_user`, `admin_headers`, factory fixtures. Redis and DB health checks are monkeypatched out.
 
@@ -127,8 +129,8 @@ Tests use in-memory SQLite with `StaticPool`. `conftest.py` provides: `client`, 
 # Single file
 python -m pytest backend/tests/test_blog.py -q
 
-# Single test
-python -m pytest -k "test_create_blog_post" -q
+# With coverage report
+python -m pytest --cov=app.api.v1 --cov=app.crud --cov=app.api.deps --cov-report=term-missing -q
 ```
 
 ### Frontend Tests (Vitest)
@@ -137,7 +139,7 @@ python -m pytest -k "test_create_blog_post" -q
 cd portfolio-project/frontend
 npm run test            # single run
 npm run test:watch      # watch mode
-npm run test:coverage   # with v8 coverage
+npm run test:coverage   # with v8 coverage (target >= 90%)
 ```
 
 Environment: jsdom. Setup: `src/test/setup.ts`.
@@ -158,7 +160,7 @@ cd portfolio-project
 cd portfolio-project/frontend
 npm run lint           # ESLint (--max-warnings 0)
 npm run type-check     # tsc --noEmit
-npm run build          # tsc + vite build
+npm run build          # next build
 
 # Backend
 cd portfolio-project/backend
@@ -174,14 +176,15 @@ python -m flake8 app/
 Layered FastAPI application:
 
 - **`main.py`** -- App factory with lifespan events (DB check, Redis connect/disconnect), CORS, request logging middleware, rate limiting (slowapi), global exception handlers. System endpoints: `/health`, `/ready` (503 if DB down), `/live`.
-- **`config.py`** -- `pydantic-settings` `Settings` class. `production_validation_errors()` enforces: non-localhost `FRONTEND_URL`, SECRET_KEY >= 32 chars, CAPTCHA enabled with secret key. App crashes at startup if validation fails.
+- **`config.py`** -- `pydantic-settings` `Settings` class. `production_validation_errors()` enforces: non-localhost `FRONTEND_URL`, SECRET_KEY >= 32 chars with known-insecure-key rejection, CAPTCHA enabled with secret key.
 - **`database.py`** -- SQLAlchemy 2 engine + `SessionLocal` sessionmaker. `get_db()` yields sessions.
+- **`alembic/`** -- Versioned migrations. Run `alembic upgrade head` to apply schema. Do not use `init_db()` in production.
 - **`api/v1/`** -- Versioned routers under `/api/v1`: `auth`, `admin`, `blog`, `projects`, `skills`, `experiences`, `contact`, `github`, `translations`, `technologies`.
 - **`api/deps.py`** -- `get_current_user` (JWT + blacklist check), `require_admin` (email allowlist), `get_current_user_optional`.
 - **`crud/`** -- Database operations per domain.
 - **`models/`** -- SQLAlchemy ORM models.
-- **`schemas/`** -- Pydantic v2 request/response schemas.
-- **`services/`** -- `cache_service.py` (Redis singleton, graceful fallback), `email_service.py` (aiosmtplib), `captcha_service.py` (Turnstile/hCaptcha/reCAPTCHA), `github_service.py` (httpx + 24h cache), `storage_service.py` (Supabase).
+- **`schemas/`** -- Pydantic v2 request/response schemas. `/auth/me` returns `is_admin: bool`.
+- **`services/`** -- `cache_service.py` (Redis singleton, graceful fallback), `email_service.py` (aiosmtplib, all user input html.escape()'d), `captcha_service.py` (Turnstile/hCaptcha/reCAPTCHA), `github_service.py` (httpx + 24h cache), `storage_service.py` (Supabase).
 - **`core/rate_limit.py`** -- slowapi `Limiter` instance.
 - **`utils/`** -- `logger.py` (loguru), `security.py` (JWT creation, bcrypt hashing).
 
@@ -193,24 +196,27 @@ Layered FastAPI application:
 
 **Rate limits:** Login/refresh at `5/minute`, contact at `5/minute`. CAPTCHA required on `/contact/` in production.
 
-### Frontend (`portfolio-project/frontend/src/`)
+### Frontend (`portfolio-project/frontend/`)
 
-React 18 SPA with client-side routing (react-router-dom v6):
+Next.js 15 App Router SPA:
 
-- **`App.tsx`** -- Provider hierarchy: `QueryClientProvider` > `ToastProvider` > `LanguageProvider` > `AuthProvider` > `Routes`. All pages lazy-loaded. `/admin` wrapped in `ProtectedRoute`.
-- **`services/api.ts`** -- Axios instance. Request interceptor attaches JWT + language param. Response interceptor handles 401 with silent token refresh using refresh token queue pattern.
-- **`contexts/AuthContext.tsx`** -- Auth state (`isAuthenticated`, `user`, `login`, `logout`). Uses `/auth/login/json` for login, `/auth/me` for user info.
-- **`contexts/LanguageContext.tsx`** -- i18n via `/translations` API.
-- **`components/ProtectedRoute.tsx`** -- Guards `/admin`. Currently checks `isAuthenticated` only; admin RBAC is server-side.
-- **`pages/`** -- Home, About, Projects, Blog, BlogDetail, Contact, Login, Admin, NotFound.
-- **Path alias:** `@` maps to `./src`.
-- **Build:** Chunk splitting: `react-vendor`, `markdown-vendor`, `motion-vendor`.
+- **`app/layout.tsx`** -- Root layout: Geist fonts, Providers wrapper, metadata.
+- **`app/(public)/`** -- Public pages (Home, About, Projects, Blog, Contact) rendered with ISR/SSG.
+- **`app/(protected)/admin/`** -- Admin dashboard with auth guard layout. Full CRUD for projects/blog/skills/experiences/messages.
+- **`app/login/`** -- JWT login form (client component).
+- **`src/providers.tsx`** -- QueryClientProvider + AuthProvider + LanguageProvider.
+- **`src/lib/api.ts`** -- Axios instance. Request interceptor attaches JWT + language param. Response interceptor handles 401 with silent token refresh.
+- **`src/contexts/AuthContext.tsx`** -- Auth state: `isAuthenticated`, `user`, `isAdmin`, `login`, `logout`.
+- **`src/contexts/LanguageContext.tsx`** -- EN/TR i18n via backend `/translations` API.
+- **`src/components/ui/`** -- shadcn/ui components (button, card, badge, dialog, sheet, etc.).
+- **`src/lib/motion.ts`** -- Shared Framer Motion variants (fadeInUp, stagger, scaleIn).
+- **Design:** Dark minimalist tech aesthetic, accent color cyan `#06b6d4`, Geist Sans + Geist Mono fonts.
 
 ### CI/CD (`.github/workflows/`)
 
 | Workflow | Trigger | Jobs |
 |----------|---------|------|
-| `ci.yml` | Push/PR to main, Codex_Implementation, develop | Backend Quality, Frontend Quality, SonarCloud Scan |
+| `ci.yml` | Push/PR to main, Codex_Implementation | Backend Quality, Frontend Quality, SonarCloud Scan |
 | `deploy-production.yml` | Push to main + manual | Backend Quality -> Deploy Railway -> Frontend Quality -> Deploy Vercel -> Smoke Tests |
 | `deploy-railway-staging.yml` | Manual | Staging backend deploy |
 | `deploy-vercel-preview.yml` | PR | Preview frontend deploy |
@@ -223,43 +229,32 @@ React 18 SPA with client-side routing (react-router-dom v6):
 
 ### Database
 
-PostgreSQL 15 in production/docker. Tests use SQLite in-memory. Schema in `database/migrations/01_portfolio_db_schema.sql` (mounted into Docker initdb). No Alembic version tracking -- raw SQL migrations.
+PostgreSQL 15 in production/docker. Tests use SQLite in-memory. Schema managed via Alembic (`alembic/versions/`). Reference SQL in `database/migrations/01_portfolio_db_schema.sql`.
 
 ### Key Ports
 
 - Backend API: `8000`
-- Frontend dev: `5173` or `3000`
+- Frontend dev: `3000`
 - PostgreSQL: `5432`
 - Redis: `6379`
 
-## Production Go-Live Reference
-
-See `PRODUCTION_PLAN.md` for the complete plan. Quick summary of phases:
-
-1. **Faz 1:** Security hardening (code changes on Codex_Implementation)
-2. **Faz 2:** Commit, PR, CI validation
-3. **Faz 3:** GitHub/Railway/Vercel/Turnstile configuration
-4. **Faz 4:** Merge, deploy, smoke + CAPTCHA + backup drill verification
-5. **Faz 5:** Post-launch ops (token cleanup, monitoring, secret rotation)
-
 ## Known Issues & Technical Debt
 
-- Email templates use f-string HTML interpolation (XSS risk) -- fix in Faz 1
-- `token_blacklist` and `refresh_tokens` tables have no automatic cleanup
-- SQLite (tests) vs PostgreSQL (production) type mismatches (UUID, INET)
+- `token_blacklist` and `refresh_tokens` tables have no automatic cleanup (periodic purge needed)
+- SQLite (tests) vs PostgreSQL (production) type mismatches (UUID, INET) -- handled in conftest.py
 - Single Uvicorn worker (no Gunicorn process manager)
 - `gcc` left in production Docker image (should use multi-stage build)
 - GitHub API: no pagination, legacy `token` auth prefix
-- No Alembic -- manual SQL migrations only
 
 ## Agent Instructions
 
 When working on this project:
 
-1. **Always read `PRODUCTION_PLAN.md` first** to understand current phase and remaining work.
-2. **Backend changes:** Run `python -m pytest -q` from `portfolio-project/` to verify. Coverage must stay >= 80%.
+1. **Always read `REFACTOR_PLAN.md` first** to understand current phase and implementation steps. All tech decisions are documented there.
+2. **Backend changes:** Run `python -m pytest -q` from `portfolio-project/` to verify. Coverage must stay >= 90%.
 3. **Frontend changes:** Run `npm run lint && npm run test && npm run build` from `portfolio-project/frontend/`.
 4. **Never commit `.env` files or secrets.** Check `.gitignore` coverage.
 5. **Production config:** Any new env var must be added to `config.py`, `.env.example`, and `CI_CD_SETUP.md`.
-6. **CI workflow changes:** Test with `act` or push to a non-main branch first.
-7. **Security:** All public endpoints need rate limiting. User input in HTML must be escaped. Production validation in `config.py` must catch misconfigurations.
+6. **Database schema changes:** Add an Alembic migration (`alembic revision --autogenerate -m "description"`). Never edit existing migration files.
+7. **Security:** All public endpoints need rate limiting. User input in HTML must be escaped with `html.escape()`. Production validation in `config.py` must catch misconfigurations.
+8. **Do not reference** `PRODUCTION_PLAN.md`, `COMPREHENSIVE_PROJECT_ANALYSIS.md`, `IMPLEMENTATION_AUDIT.md`, `PROGRESS.md`, or other historical snapshot files -- they are outdated.
