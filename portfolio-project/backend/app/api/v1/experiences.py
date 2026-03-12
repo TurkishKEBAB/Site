@@ -63,12 +63,14 @@ async def get_experiences_grouped_by_type(
     Get experiences grouped by type (work, education, volunteer)
     Returns a dictionary with types as keys
     """
-    return {
-        "work": experience_crud.get_experiences_by_type(db, "work", language),
-        "education": experience_crud.get_experiences_by_type(db, "education", language),
-        "volunteer": experience_crud.get_experiences_by_type(db, "volunteer", language),
-        "activity": experience_crud.get_experiences_by_type(db, "activity", language)
-    }
+    all_experiences = experience_crud.get_experiences(db, language=language, skip=0, limit=10000)
+    grouped: dict = {}
+    for exp in all_experiences:
+        exp_type = getattr(exp, "experience_type", None)
+        if exp_type not in grouped:
+            grouped[exp_type] = []
+        grouped[exp_type].append(exp)
+    return grouped
 
 
 @router.get("/{experience_id}", response_model=ExperienceResponse)
