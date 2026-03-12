@@ -6,6 +6,91 @@ This file provides guidance to WARP (warp.dev) when working with code in this re
 
 Full-stack portfolio site for Yiğit Okur. The main application lives under `portfolio-project/` with a FastAPI backend and React/TypeScript frontend. The repo root contains a convenience `start.ps1` that launches both services in separate PowerShell windows.
 
+## Git Workflow
+
+Read `GIT_WORKFLOW.md` at the repo root for the full reference. The rules below are the mandatory subset every agent must follow before touching any code.
+
+### Before Starting Any Task
+
+1. Check the current branch and working tree state first:
+   ```powershell
+   git status --short --branch
+   git fetch origin
+   ```
+2. If not on `main` and not on an appropriate feature branch, switch to `main` and create a new branch:
+   ```powershell
+   git switch main
+   git reset --hard origin/main
+   git switch -c <type>/<scope>-<topic>
+   ```
+3. Never commit directly to `main`.
+4. Never continue work on `Codex_Implementation` — that branch no longer exists.
+
+### Branch Naming Rules
+
+Use the scope that matches the area of work:
+
+| Scope | When to use |
+|---|---|
+| `feature/backend-<topic>` | New backend endpoint, model, service, or CRUD |
+| `feature/frontend-<topic>` | New page, component, hook, or context |
+| `fix/backend-<topic>` | Backend bug fix |
+| `fix/frontend-<topic>` | Frontend bug fix |
+| `refactor/backend-<topic>` | Backend refactor without behavior change |
+| `refactor/frontend-<topic>` | Frontend refactor without behavior change |
+| `test/backend-<topic>` | Backend test additions or fixes |
+| `test/frontend-<topic>` | Frontend test additions or fixes |
+| `chore/github-<topic>` | GitHub workflows, issue templates, automation |
+| `chore/repo-<topic>` | Repository housekeeping, gitignore, tooling config |
+| `ci/<topic>` | CI/CD pipeline changes |
+| `docs/<topic>` | Documentation only |
+
+Examples:
+- `feature/backend-alembic-migrations`
+- `feature/frontend-public-pages`
+- `fix/backend-refresh-token`
+- `test/backend-admin-coverage`
+
+### Commit Convention
+
+Use Conventional Commits. Format: `type(scope): short summary`
+
+Allowed types: `feat`, `fix`, `refactor`, `chore`, `docs`, `test`, `ci`, `build`
+
+Examples:
+- `feat(backend): add Alembic migration for initial schema`
+- `fix(auth): handle expired refresh token`
+- `refactor(frontend): split query hooks by domain`
+- `test(backend): add coverage for admin project endpoints`
+- `chore(github): update stale workflow thresholds`
+
+Rules:
+- English only.
+- One commit = one logical change.
+- Do not use vague words like `update`, `improve`, `misc`, `fix stuff`.
+- Do not mix backend and frontend changes in a single commit unless they are inseparable.
+
+### Commit Frequency
+
+- Commit after each meaningful self-contained unit of work.
+- Do not accumulate a session's worth of changes into one commit.
+- If implementing a feature that has multiple layers (model → crud → route → schema), commit each layer separately.
+
+### Push and PR
+
+- Push the branch and open a PR targeting `main`.
+- PR title must follow the same Conventional Commits format as commits.
+- Prefer `Squash and merge` when merging unless the commit history is deliberately granular.
+
+### What Not To Do
+
+- Do not create tags manually; tags are for releases only.
+- Do not squash mid-session unless explicitly asked.
+- Do not force-push without explicit user confirmation.
+- Do not leave untracked `.idea/`, `logs/`, or `*.log` files — they are already in `.gitignore`.
+
+---
+
 ## Build & Run Commands
 
 All commands below assume `portfolio-project/` as the working directory unless noted otherwise.
@@ -158,7 +243,7 @@ Build splits chunks: `react-vendor`, `markdown-vendor`, `motion-vendor` (via `ma
 
 ### CI/CD (`.github/workflows/`)
 
-- **`ci.yml`** — Runs on push/PR to `main`, `Codex_Implementation`, `develop`. Two parallel jobs: backend (Python 3.13, pytest) and frontend (Node 20, lint + test + build). A third `sonarcloud` job runs if `SONAR_TOKEN` is configured.
+- **`ci.yml`** — Runs on push/PR to `main` and feature branches. Two parallel jobs: backend (Python 3.13, pytest) and frontend (Node 20, lint + test + build). A third `sonarcloud` job runs if `SONAR_TOKEN` is configured.
 - **`deploy-vercel-preview.yml`** / **`deploy-railway-staging.yml`** — Staging deployment workflows.
 
 ### Database
