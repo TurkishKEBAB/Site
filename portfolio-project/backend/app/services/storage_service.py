@@ -102,7 +102,7 @@ class StorageService:
         try:
             # Optimize images
             if optimize and content_type.startswith("image/"):
-                file_data = self.optimize_image(file_data)
+                file_data = await asyncio.to_thread(self.optimize_image, file_data)
             
             # Upload to Supabase
             await asyncio.to_thread(
