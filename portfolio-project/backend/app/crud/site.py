@@ -118,15 +118,22 @@ def set_translation(
 def bulk_set_translations(db: Session, language: str, translations: Dict[str, str]) -> int:
     """
     Set multiple translations at once
-    
+
     Returns:
         Number of translations set
     """
     count = 0
     for key, value in translations.items():
-        set_translation(db, language, key, value)
+        existing = db.query(Translation).filter(
+            Translation.language == language,
+            Translation.translation_key == key,
+        ).first()
+        if existing:
+            existing.value = value
+        else:
+            db.add(Translation(language=language, translation_key=key, value=value))
         count += 1
-    
+    db.commit()
     return count
 
 
