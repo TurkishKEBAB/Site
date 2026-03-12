@@ -4,6 +4,7 @@ GitHub repository fetching and caching
 """
 from typing import List
 from fastapi import APIRouter, Depends, HTTPException, status, Query
+from loguru import logger
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_db, require_admin, get_current_user_optional
@@ -94,6 +95,12 @@ async def sync_github_repos(
     except HTTPException:
         raise
     except Exception as e:
+        logger.error(f"GitHub sync failed: {e}")
+        if settings.is_production:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="GitHub sync failed"
+            )
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"GitHub sync failed: {str(e)}"

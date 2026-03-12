@@ -15,7 +15,7 @@ class ContactMessageBase(BaseModel):
     name: str = Field(..., min_length=1, max_length=255)
     email: EmailStr
     subject: str = Field(..., min_length=1, max_length=500)
-    message: str = Field(..., min_length=10)
+    message: str = Field(..., min_length=10, max_length=5000)
 
 
 class ContactMessageCreate(ContactMessageBase):
@@ -30,7 +30,7 @@ class ContactMessage(ContactMessageBase):
     is_read: bool = False
     is_replied: bool = False
     ip_address: Optional[str] = None
-    user_agent: Optional[str] = None
+    user_agent: Optional[str] = Field(None, max_length=512)
     created_at: datetime
 
     class Config:
