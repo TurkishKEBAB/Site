@@ -7,7 +7,6 @@ from app.utils.security import (
     create_access_token,
     create_refresh_token,
     decode_access_token,
-    verify_token,
 )
 from app.utils.logger import setup_logging
 
@@ -17,6 +16,5 @@ __all__ = [
     "create_access_token",
     "create_refresh_token",
     "decode_access_token",
-    "verify_token",
     "setup_logging",
 ]

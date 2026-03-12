@@ -126,31 +126,3 @@ def create_refresh_token(
         expires_delta=refresh_expires,
         token_type="refresh",
     )
-
-
-def verify_token(token: str, credentials_exception: HTTPException) -> Dict[str, Any]:
-    """
-    Verify token and return payload
-    
-    Args:
-        token: JWT token string
-        credentials_exception: Exception to raise if verification fails
-        
-    Returns:
-        dict: Token payload
-        
-    Raises:
-        HTTPException: If token is invalid
-    """
-    try:
-        payload = decode_access_token(token)
-        
-        # Check if token has expired
-        exp = payload.get("exp")
-        if exp and datetime.fromtimestamp(exp, tz=timezone.utc) < datetime.now(timezone.utc):
-            raise credentials_exception
-        
-        return payload
-    
-    except JWTError:
-        raise credentials_exception
