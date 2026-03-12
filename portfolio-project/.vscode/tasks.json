@@ -1,0 +1,139 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "Start Docker Services",
+			"type": "shell",
+			"command": "docker",
+			"args": [
+				"compose",
+				"-f",
+				"${workspaceFolder}/backend/docker-compose.yml",
+				"up",
+				"-d"
+			],
+			"options": {
+				"cwd": "${workspaceFolder}/backend"
+			},
+			"presentation": {
+				"reveal": "always",
+				"panel": "dedicated",
+				"group": "docker"
+			},
+			"problemMatcher": []
+		},
+		{
+			"label": "Start Backend",
+			"type": "shell",
+			"command": "${workspaceFolder}/backend/venv/Scripts/python.exe",
+			"args": [
+				"-m",
+				"uvicorn",
+				"app.main:app",
+				"--reload",
+				"--host",
+				"127.0.0.1",
+				"--port",
+				"8000"
+			],
+			"options": {
+				"cwd": "${workspaceFolder}/backend"
+			},
+			"presentation": {
+				"reveal": "always",
+				"panel": "dedicated",
+				"group": "servers"
+			},
+			"isBackground": true,
+			"problemMatcher": {
+				"pattern": {
+					"regexp": "^(.*)$",
+					"file": 1,
+					"location": 2,
+					"message": 3
+				},
+				"background": {
+					"activeOnStart": true,
+					"beginsPattern": "^.*Started server process.*$",
+					"endsPattern": "^.*Uvicorn running on.*$"
+				}
+			}
+		},
+		{
+			"label": "Start Frontend",
+			"type": "shell",
+			"command": "npm",
+			"args": [
+				"run",
+				"dev"
+			],
+			"options": {
+				"cwd": "${workspaceFolder}/frontend"
+			},
+			"presentation": {
+				"reveal": "always",
+				"panel": "dedicated",
+				"group": "servers"
+			},
+			"isBackground": true,
+			"problemMatcher": {
+				"pattern": {
+					"regexp": "^(.*)$",
+					"file": 1,
+					"location": 2,
+					"message": 3
+				},
+				"background": {
+					"activeOnStart": true,
+					"beginsPattern": "VITE",
+					"endsPattern": "ready in"
+				}
+			}
+		},
+		{
+			"label": "Start All Services",
+			"dependsOn": [
+				"Start Docker Services",
+				"Start Backend",
+				"Start Frontend"
+			],
+			"dependsOrder": "sequence",
+			"presentation": {
+				"reveal": "always",
+				"panel": "shared"
+			},
+			"problemMatcher": []
+		},
+		{
+			"label": "Stop Docker Services",
+			"type": "shell",
+			"command": "docker",
+			"args": [
+				"compose",
+				"-f",
+				"${workspaceFolder}/backend/docker-compose.yml",
+				"down"
+			],
+			"options": {
+				"cwd": "${workspaceFolder}/backend"
+			},
+			"presentation": {
+				"reveal": "always",
+				"panel": "dedicated"
+			},
+			"problemMatcher": []
+		},
+		{
+			"label": "🚀 Tüm Servisleri Başlat",
+			"type": "shell",
+			"command": "powershell",
+			"args": [
+				"-NoExit",
+				"-Command",
+				"Write-Host '=== Servisler Başlatılıyor ===' -ForegroundColor Cyan; Write-Host ''; Write-Host '1. Docker servisleri başlatılıyor...' -ForegroundColor Yellow; docker compose -f backend/docker-compose.yml up -d; Write-Host ''; Write-Host '2. Backend başlatılıyor (yeni terminal)...' -ForegroundColor Yellow; Start-Process powershell -ArgumentList '-NoExit', '-Command', 'cd backend; .\\venv\\Scripts\\python.exe -m uvicorn app.main:app --reload --host 127.0.0.1 --port 8000'; Write-Host ''; Write-Host '3. Frontend başlatılıyor (yeni terminal)...' -ForegroundColor Yellow; Start-Process powershell -ArgumentList '-NoExit', '-Command', 'cd frontend; npm run dev'; Write-Host ''; Write-Host '✅ Servisler başlatıldı!' -ForegroundColor Green; Write-Host ''; Write-Host 'Frontend: http://localhost:3000' -ForegroundColor Cyan; Write-Host 'Backend: http://127.0.0.1:8000' -ForegroundColor Cyan; Write-Host 'API Docs: http://127.0.0.1:8000/docs' -ForegroundColor Cyan"
+			],
+			"problemMatcher": [],
+			"group": "build"
+		}
+	]
+}

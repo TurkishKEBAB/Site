@@ -1,0 +1,248 @@
+from datetime import timedelta
+
+from app.utils.security import create_access_token
+
+TEST_LOGIN_SECRET = "test-user-secret"
+
+
+def test_login_json_success(client, admin_user):
+    response = client.post(
+        "/api/v1/auth/login/json",
+        json={"email": admin_user.email, "password": TEST_LOGIN_SECRET},
+    )
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert "access_token" in payload
+    assert payload["token_type"] == "bearer"
+    assert isinstance(payload.get("expires_in"), int)
+
+
+def test_login_json_invalid_credentials(client, admin_user):
+    response = client.post(
+        "/api/v1/auth/login/json",
+        json={"email": admin_user.email, "password": "wrong-password"},
+    )
+
+    assert response.status_code == 401
+    assert response.json()["detail"] == "Incorrect email or password"
+
+
+def test_login_form_success(client, admin_user):
+    response = client.post(
+        "/api/v1/auth/login",
+        data={"username": admin_user.email, "password": TEST_LOGIN_SECRET},
+    )
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["token_type"] == "bearer"
+    assert "access_token" in body
+
+
+def test_login_json_rate_limit(client, admin_user):
+    for _ in range(5):
+        ok = client.post(
+            "/api/v1/auth/login/json",
+            json={"email": admin_user.email, "password": TEST_LOGIN_SECRET},
+        )
+        assert ok.status_code == 200
+
+    blocked = client.post(
+        "/api/v1/auth/login/json",
+        json={"email": admin_user.email, "password": TEST_LOGIN_SECRET},
+    )
+
+    assert blocked.status_code == 429
+
+
+def test_get_current_user_success(client, admin_headers, admin_user):
+    response = client.get("/api/v1/auth/me", headers=admin_headers)
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["id"] == str(admin_user.id)
+    assert body["email"] == admin_user.email
+
+
+def test_get_current_user_invalid_token(client):
+    response = client.get(
+        "/api/v1/auth/me",
+        headers={"Authorization": "Bearer invalid-token"},
+    )
+
+    assert response.status_code == 401
+    assert response.json()["detail"] == "Could not validate credentials"
+
+
+def test_get_current_user_expired_token(client, admin_user):
+    expired_token = create_access_token(
+        data={"sub": str(admin_user.id)},
+        expires_delta=timedelta(minutes=-1),
+    )
+
+    response = client.get(
+        "/api/v1/auth/me",
+        headers={"Authorization": f"Bearer {expired_token}"},
+    )
+
+    assert response.status_code == 401
+
+
+def test_verify_token_success(client, admin_headers, admin_user):
+    response = client.post("/api/v1/auth/verify-token", headers=admin_headers)
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["valid"] is True
+    assert body["user"]["id"] == str(admin_user.id)
+    assert body["user"]["is_admin"] is True
+
+
+def test_refresh_token_success(client, admin_user):
+    login = client.post(
+        "/api/v1/auth/login/json",
+        json={"email": admin_user.email, "password": TEST_LOGIN_SECRET},
+    )
+    refresh_token = login.json()["refresh_token"]
+
+    response = client.post("/api/v1/auth/refresh", json={"refresh_token": refresh_token})
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["token_type"] == "bearer"
+    assert "access_token" in body
+    assert "refresh_token" in body
+
+
+def test_refresh_token_rotation_blocks_reuse(client, admin_user):
+    login = client.post(
+        "/api/v1/auth/login/json",
+        json={"email": admin_user.email, "password": TEST_LOGIN_SECRET},
+    )
+    old_refresh = login.json()["refresh_token"]
+
+    rotated = client.post("/api/v1/auth/refresh", json={"refresh_token": old_refresh})
+    assert rotated.status_code == 200
+    new_refresh = rotated.json()["refresh_token"]
+    assert new_refresh != old_refresh
+
+    reused = client.post("/api/v1/auth/refresh", json={"refresh_token": old_refresh})
+    assert reused.status_code == 401
+
+
+def test_login_form_rate_limit(client, admin_user):
+    for _ in range(5):
+        ok = client.post(
+            "/api/v1/auth/login",
+            data={"username": admin_user.email, "password": TEST_LOGIN_SECRET},
+        )
+        assert ok.status_code == 200
+
+    blocked = client.post(
+        "/api/v1/auth/login",
+        data={"username": admin_user.email, "password": TEST_LOGIN_SECRET},
+    )
+    assert blocked.status_code == 429
+
+
+def test_register_requires_authentication(client):
+    response = client.post(
+        "/api/v1/auth/register",
+        json={
+            "email": "new-user@test.com",
+            "username": "newuser",
+            "password": "newpass123",
+        },
+    )
+
+    assert response.status_code == 401
+
+
+def test_register_forbidden_for_regular_user(client, user_headers):
+    response = client.post(
+        "/api/v1/auth/register",
+        headers=user_headers,
+        json={
+            "email": "new-user@test.com",
+            "username": "newuser",
+            "password": "newpass123",
+        },
+    )
+
+    assert response.status_code == 403
+    assert response.json()["detail"] == "Not enough permissions. Admin access required."
+
+
+def test_register_duplicate_email(client, admin_headers, admin_user):
+    response = client.post(
+        "/api/v1/auth/register",
+        headers=admin_headers,
+        json={
+            "email": admin_user.email,
+            "username": "another-user",
+            "password": "newpass123",
+        },
+    )
+
+    assert response.status_code == 400
+    assert response.json()["detail"] == "Email already registered"
+
+
+def test_register_success(client, admin_headers):
+    response = client.post(
+        "/api/v1/auth/register",
+        headers=admin_headers,
+        json={
+            "email": "new-user@test.com",
+            "username": "newuser",
+            "password": "newpass123",
+        },
+    )
+
+    assert response.status_code == 201
+    body = response.json()
+    assert body["email"] == "new-user@test.com"
+    assert body["username"] == "newuser"
+
+
+def test_logout_blacklists_access_token(client, admin_user):
+    login = client.post(
+        "/api/v1/auth/login/json",
+        json={"email": admin_user.email, "password": TEST_LOGIN_SECRET},
+    )
+    tokens = login.json()
+    headers = {"Authorization": f"Bearer {tokens['access_token']}"}
+
+    resp = client.post("/api/v1/auth/logout", headers=headers, json={})
+    assert resp.status_code == 204
+
+    me = client.get("/api/v1/auth/me", headers=headers)
+    assert me.status_code == 401
+
+
+def test_logout_revokes_refresh_token(client, admin_user):
+    login = client.post(
+        "/api/v1/auth/login/json",
+        json={"email": admin_user.email, "password": TEST_LOGIN_SECRET},
+    )
+    tokens = login.json()
+    headers = {"Authorization": f"Bearer {tokens['access_token']}"}
+
+    resp = client.post(
+        "/api/v1/auth/logout",
+        headers=headers,
+        json={"refresh_token": tokens["refresh_token"]},
+    )
+    assert resp.status_code == 204
+
+    refresh = client.post(
+        "/api/v1/auth/refresh",
+        json={"refresh_token": tokens["refresh_token"]},
+    )
+    assert refresh.status_code == 401
+
+
+def test_logout_without_auth_returns_401(client):
+    resp = client.post("/api/v1/auth/logout", json={})
+    assert resp.status_code == 401

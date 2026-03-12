@@ -1,0 +1,180 @@
+/* stylelint-disable at-rule-no-unknown */
+/* Allow Tailwind at-rules (@tailwind, @apply, @variants, etc.) to avoid linter "Unknown at rule" errors */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --color-primary: 14 165 233;
+    --color-primary-dark: 3 105 161;
+  }
+
+  body {
+    @apply bg-white dark:bg-gray-950 text-gray-900 dark:text-gray-50;
+    @apply transition-colors duration-300;
+  }
+}
+
+@layer components {
+  /* ── Buttons ────────────────────────────────────────────── */
+  .btn-primary {
+    @apply px-6 py-3 bg-primary-600 hover:bg-primary-700 text-white rounded-xl;
+    @apply transition-all duration-300 transform hover:scale-[1.03] hover:-translate-y-0.5;
+    @apply font-medium shadow-md hover:shadow-lg;
+    @apply focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2;
+    @apply dark:focus:ring-offset-gray-900;
+  }
+
+  .btn-secondary {
+    @apply px-6 py-3 rounded-xl font-medium;
+    @apply bg-white dark:bg-dark-700 text-gray-800 dark:text-gray-100;
+    @apply border border-gray-300 dark:border-dark-600;
+    @apply hover:bg-gray-50 dark:hover:bg-dark-600 hover:border-gray-400 dark:hover:border-dark-500;
+    @apply transition-all duration-300 transform hover:scale-[1.03] hover:-translate-y-0.5;
+    @apply shadow-sm hover:shadow-md;
+    @apply focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2;
+    @apply dark:focus:ring-offset-gray-900;
+  }
+
+  /* ── Cards ──────────────────────────────────────────────── */
+  .card {
+    @apply bg-white dark:bg-dark-800 rounded-xl p-6;
+    @apply border border-gray-200/80 dark:border-dark-700;
+    @apply shadow-sm dark:shadow-none;
+    @apply transition-all duration-300;
+  }
+
+  .card-hover {
+    @apply card;
+    @apply hover:shadow-md dark:hover:shadow-lg dark:hover:shadow-black/20;
+    @apply hover:-translate-y-1;
+  }
+
+  /* ── Section Title ──────────────────────────────────────── */
+  .section-title {
+    @apply text-3xl md:text-4xl font-bold mb-8;
+    @apply bg-gradient-to-r from-primary-600 to-primary-400;
+    @apply bg-clip-text text-transparent;
+  }
+
+  /* ── Container ──────────────────────────────────────────── */
+  .container-custom {
+    @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
+  }
+
+  /* ── Content Container (max-w-6xl) ──────────────────────── */
+  .container-content {
+    @apply max-w-6xl mx-auto px-4 sm:px-6 lg:px-8;
+  }
+
+  /* ── Typography Scale ───────────────────────────────────── */
+  .heading-xl {
+    @apply text-4xl md:text-5xl lg:text-6xl font-bold;
+  }
+
+  .heading-lg {
+    @apply text-3xl md:text-4xl font-bold;
+  }
+
+  .heading-md {
+    @apply text-2xl md:text-3xl font-semibold;
+  }
+
+  .heading-sm {
+    @apply text-xl md:text-2xl font-semibold;
+  }
+
+  /* ── Gradient Text ──────────────────────────────────────── */
+  .gradient-text {
+    background: linear-gradient(135deg, theme('colors.primary.600'), theme('colors.pink.600'));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    color: theme('colors.primary.700');
+  }
+
+  /* ── Blog Markdown ──────────────────────────────────────── */
+  .blog-markdown h1,
+  .blog-markdown h2,
+  .blog-markdown h3,
+  .blog-markdown h4 {
+    @apply mt-8 mb-3 font-semibold text-gray-900 dark:text-white;
+  }
+
+  .blog-markdown h1 {
+    @apply text-3xl;
+  }
+
+  .blog-markdown h2 {
+    @apply text-2xl;
+  }
+
+  .blog-markdown h3 {
+    @apply text-xl;
+  }
+
+  .blog-markdown p {
+    @apply mb-4 text-gray-700 dark:text-gray-200;
+  }
+
+  .blog-markdown a {
+    @apply text-primary-600 dark:text-primary-300 underline;
+  }
+
+  .blog-markdown ul,
+  .blog-markdown ol {
+    @apply mb-4 ml-6 text-gray-700 dark:text-gray-200;
+  }
+
+  .blog-markdown ul {
+    @apply list-disc;
+  }
+
+  .blog-markdown ol {
+    @apply list-decimal;
+  }
+
+  .blog-markdown blockquote {
+    @apply my-4 border-l-4 border-primary-500/60 bg-gray-50 dark:bg-white/5 py-2 pl-4 italic text-gray-600 dark:text-gray-300;
+  }
+
+  .blog-markdown code {
+    @apply rounded bg-gray-100 dark:bg-black/40 px-1.5 py-0.5 text-sm text-primary-700 dark:text-primary-200;
+  }
+
+  .blog-markdown pre {
+    @apply my-6 overflow-x-auto rounded-lg border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-black/50 p-4;
+  }
+
+  .blog-markdown pre code {
+    @apply bg-transparent p-0 text-sm text-gray-800 dark:text-gray-100;
+  }
+}
+
+/* ── Custom Scrollbar ─────────────────────────────────────── */
+::-webkit-scrollbar {
+  width: 10px;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-gray-100 dark:bg-dark-800;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-gray-300 dark:bg-dark-600 rounded-full;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  @apply bg-gray-400 dark:bg-dark-500;
+}
+
+/* ── Smooth Scroll ────────────────────────────────────────── */
+html {
+  scroll-behavior: smooth;
+}
+
+/* ── Selection ────────────────────────────────────────────── */
+::selection {
+  @apply bg-primary-500 text-white;
+}

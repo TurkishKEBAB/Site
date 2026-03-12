@@ -1,0 +1,399 @@
+import { useMemo } from 'react'
+import { motion } from 'framer-motion'
+import { FiArrowRight, FiGithub, FiLinkedin, FiMail } from 'react-icons/fi'
+import { Link } from 'react-router-dom'
+import { useLanguage } from '../contexts/LanguageContext'
+import { useFeaturedProjects } from '../hooks/useProjects'
+import { useSkills } from '../hooks/useSkills'
+import CodeBlock from '../components/CodeBlock'
+
+const t = {
+  tr: {
+    hero: {
+      greeting: 'Merhaba, ben ',
+      role: 'Yazilim Muhendisligi 3. Sinif Ogrencisi | Software Engineer - Cloud & DevOps',
+      description:
+        'Istanbul Isik Universitesi\'nde yazilim muhendisligi egitimime devam ederken enterprise backend, cloud-native mimari ve DevOps otomasyonu uzerine odaklaniyorum. NETAS stajimda kurumsal Java mikroservis platformuna katkida bulundum, kritik timezone tutarsizligini ELK ve test odakli analizle tespit ettim.',
+    },
+    about: {
+      title: 'Hakkimda',
+      description:
+        'IsikSchedule, Agentic IDE ve Teknofest Sarkan UAV gibi projelerde algoritma, sistem tasarimi ve urunlestirme deneyimi edindim. IEEE Isik Ogrenci Kolu\'nda teknik etkinlikler ve topluluk operasyonlari yurutterek hem teknik hem organizasyonel liderlik gelistiriyorum.',
+      btnMore: 'Hakkimda Daha Fazlasi',
+    },
+    skills: {
+      title: 'Yetenekler ve Teknolojiler',
+      subtitle: 'Backend, cloud ve otomasyon odakli olarak aktif kullandigim teknoloji seti',
+      empty: 'Yakinda eklenecek — takipte kalin!',
+    },
+    projects: {
+      title: 'One Cikan Projeler',
+      subtitle: 'Gercek urun, arastirma ve muhendislik odakli guncel calismalarim',
+      empty: 'Yakinda eklenecek — takipte kalin!',
+      btnAll: 'Tum Projeleri Goster',
+    },
+    cta: {
+      title: 'Birlikte Uretelim mi?',
+      description:
+        'Yazilim muhendisligi, cloud altyapi, optimizasyon veya AI-native urunler uzerine konusmak istersen benimle iletisime gecebilirsin.',
+    },
+    buttons: {
+      contact: 'Iletisime Gec',
+      viewProjects: 'Projeleri Incele',
+    },
+    aria: {
+      github: 'GitHub profili',
+      linkedin: 'LinkedIn profili',
+      email: 'E-posta gonder',
+    },
+  },
+  en: {
+    hero: {
+      greeting: "Hi, I'm ",
+      role: '3rd-Year Software Engineering Student | Software Engineer - Cloud & DevOps',
+      description:
+        'I focus on enterprise backend systems, cloud-native architecture, and DevOps automation while studying Software Engineering at Isik University. During my NETAS internship, I contributed to production Java microservices and uncovered a critical timezone mismatch through ELK-driven investigation and test-first validation.',
+    },
+    about: {
+      title: 'About Me',
+      description:
+        'I build and ship systems across scheduling optimization, AI-native tooling, and defense-grade telemetry projects. Through IEEE leadership at Isik University, I also coordinate technical events and community operations, combining delivery execution with technical leadership.',
+      btnMore: 'More About Me',
+    },
+    skills: {
+      title: 'Skills & Technologies',
+      subtitle: 'Technology stack I actively use across backend, cloud, and automation workflows',
+      empty: 'Coming soon — stay tuned!',
+    },
+    projects: {
+      title: 'Featured Projects',
+      subtitle: 'Current engineering work across product, research, and systems domains',
+      empty: 'Coming soon — stay tuned!',
+      btnAll: 'View All Projects',
+    },
+    cta: {
+      title: "Let's Build Together",
+      description:
+        'If you want to discuss software engineering, cloud architecture, optimization, or AI-native products, feel free to reach out.',
+    },
+    buttons: {
+      contact: 'Get In Touch',
+      viewProjects: 'View Projects',
+    },
+    aria: {
+      github: 'GitHub profile',
+      linkedin: 'LinkedIn profile',
+      email: 'Send an email',
+    },
+  },
+} as const;
+
+export default function Home() {
+  const { language } = useLanguage()
+
+  const { data: projectsResponse, isLoading: projectsLoading } = useFeaturedProjects(language)
+  const { data: skillsData, isLoading: skillsLoading } = useSkills(language)
+
+  const loading = projectsLoading || skillsLoading
+  const featuredProjects = projectsResponse?.items ?? []
+  const topSkills = useMemo(
+    () => [...(skillsData ?? [])].sort((a, b) => b.proficiency - a.proficiency).slice(0, 8),
+    [skillsData],
+  )
+
+  const currentLang = language === 'en' ? 'en' : 'tr'
+  const text = t[currentLang]
+
+  const socialLinks = [
+    { icon: FiGithub, href: 'https://github.com/TurkishKEBAB', label: text.aria.github },
+    { icon: FiLinkedin, href: 'https://www.linkedin.com/in/yiğit-okur-050b5b278', label: text.aria.linkedin },
+    { icon: FiMail, href: 'mailto:yigitokur@ieee.org', label: text.aria.email },
+  ]
+
+  return (
+    <div className="relative -mt-16 md:-mt-20">
+      {/* ── Hero Section ────────────────────────────────────── */}
+      <section className="min-h-screen flex items-center relative z-10">
+        <div className="container-custom">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+            {/* Left — text content */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6 }}
+            >
+              <motion.h1
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.2 }}
+                className="text-5xl md:text-7xl font-bold mb-6 text-gray-900 dark:text-white"
+              >
+                {text.hero.greeting}
+                <span className="bg-gradient-to-r from-primary-600 to-primary-400 bg-clip-text text-transparent">
+                  Yiğit Okur
+                </span>
+              </motion.h1>
+
+              <motion.h2
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.3 }}
+                className="text-xl md:text-2xl font-medium text-gray-600 dark:text-gray-200 mb-6"
+              >
+                {text.hero.role}
+              </motion.h2>
+
+              <motion.p
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.4 }}
+                className="text-base md:text-lg text-gray-600 dark:text-gray-300 mb-8 leading-relaxed max-w-xl"
+              >
+                {text.hero.description}
+              </motion.p>
+
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.5 }}
+                className="flex flex-wrap gap-4 mb-8"
+              >
+                <Link to="/contact" className="btn-primary inline-flex items-center gap-2">
+                  <span>{text.buttons.contact}</span>
+                  <FiArrowRight />
+                </Link>
+                <Link to="/projects" className="btn-secondary inline-flex items-center gap-2">
+                  <span>{text.buttons.viewProjects}</span>
+                  <FiArrowRight className="opacity-60" />
+                </Link>
+              </motion.div>
+
+              {/* Social icons — rounded, smooth hover */}
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.6 }}
+                className="flex items-center gap-3"
+              >
+                {socialLinks.map((social) => (
+                  <a
+                    key={social.label}
+                    href={social.href}
+                    target={social.href.startsWith('mailto') ? undefined : '_blank'}
+                    rel="noopener noreferrer"
+                    aria-label={social.label}
+                    className="p-3 rounded-full bg-gray-100 dark:bg-dark-700/80 text-gray-600 dark:text-gray-300
+                               hover:bg-primary-600 hover:text-white dark:hover:bg-primary-600
+                               transition-all duration-300 transform hover:scale-110 hover:shadow-md"
+                  >
+                    <social.icon size={20} />
+                  </a>
+                ))}
+              </motion.div>
+            </motion.div>
+
+            {/* Right — code editor illustration */}
+            <div className="hidden lg:flex items-center justify-center">
+              <CodeBlock />
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ── Quick About Section ─────────────────────────────── */}
+      <section className="py-20 relative z-10">
+        <div className="container-custom">
+          <motion.div
+            initial={{ opacity: 0, y: 50 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="text-center max-w-3xl mx-auto"
+          >
+            <h2 className="section-title text-center">{text.about.title}</h2>
+            <p className="text-lg text-gray-600 dark:text-gray-300 leading-relaxed mb-8">
+              {text.about.description}
+            </p>
+            <Link to="/about" className="btn-primary inline-flex items-center gap-2">
+              <span>{text.about.btnMore}</span>
+              <FiArrowRight />
+            </Link>
+          </motion.div>
+        </div>
+      </section>
+
+      {/* ── Skills Section ──────────────────────────────────── */}
+      <section className="py-20 bg-gray-50/80 dark:bg-gray-900/30 relative z-10">
+        <div className="container-custom">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="text-center mb-12"
+          >
+            <h2 className="section-title">{text.skills.title}</h2>
+            <p className="text-lg text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
+              {text.skills.subtitle}
+            </p>
+          </motion.div>
+
+          {loading ? (
+            <div className="text-center py-12">
+              <div className="inline-block w-10 h-10 border-[3px] border-primary-600 border-t-transparent rounded-full animate-spin" />
+            </div>
+          ) : topSkills.length === 0 ? (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="text-center py-16"
+            >
+              <div className="text-5xl mb-4">🛠️</div>
+              <p className="text-gray-500 dark:text-gray-400 text-lg">
+                {text.skills.empty}
+              </p>
+            </motion.div>
+          ) : (
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 max-w-5xl mx-auto">
+              {topSkills.map((skill, index) => (
+                <motion.div
+                  key={skill.id}
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  whileInView={{ opacity: 1, scale: 1 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: index * 0.05 }}
+                  className="card text-center hover:shadow-md hover:-translate-y-1 transition-all duration-300"
+                >
+                  {skill.icon && <div className="text-4xl mb-3">{skill.icon}</div>}
+                  <h3 className="font-semibold text-gray-900 dark:text-gray-100 mb-2">{skill.name}</h3>
+                  <div className="w-full bg-gray-200 dark:bg-dark-700 rounded-full h-2">
+                    <motion.div
+                      initial={{ width: 0 }}
+                      whileInView={{ width: `${skill.proficiency}%` }}
+                      viewport={{ once: true }}
+                      transition={{ duration: 1, delay: index * 0.1 }}
+                      className="h-2 rounded-full bg-gradient-to-r from-primary-600 to-primary-400"
+                    />
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+          )}
+        </div>
+      </section>
+
+      {/* ── Featured Projects ───────────────────────────────── */}
+      <section className="py-20 relative z-10">
+        <div className="container-custom">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="text-center mb-12"
+          >
+            <h2 className="section-title">{text.projects.title}</h2>
+            <p className="text-lg text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
+              {text.projects.subtitle}
+            </p>
+          </motion.div>
+
+          {loading ? (
+            <div className="text-center py-12">
+              <div className="inline-block w-10 h-10 border-[3px] border-primary-600 border-t-transparent rounded-full animate-spin" />
+            </div>
+          ) : featuredProjects.length === 0 ? (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="text-center py-16"
+            >
+              <div className="text-5xl mb-4">🚀</div>
+              <p className="text-gray-500 dark:text-gray-400 text-lg">
+                {text.projects.empty}
+              </p>
+            </motion.div>
+          ) : (
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {featuredProjects.map((project, index) => (
+                <Link to="/projects" key={project.id} className="block">
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ delay: index * 0.1 }}
+                    className="card group hover:shadow-lg hover:-translate-y-1 transition-all duration-300 cursor-pointer h-full"
+                  >
+                    {project.cover_image && (
+                      <div className="relative overflow-hidden rounded-lg mb-4 -mx-6 -mt-6">
+                        <img
+                          src={project.cover_image}
+                          alt={project.title}
+                          loading="lazy"
+                          decoding="async"
+                          className="w-full h-48 object-cover transform group-hover:scale-105 transition-transform duration-500"
+                        />
+                      </div>
+                    )}
+                    <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-2 group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors">
+                      {project.title}
+                    </h3>
+                    <p className="text-gray-600 dark:text-gray-300 mb-4 line-clamp-3">
+                      {project.short_description || project.description}
+                    </p>
+                    {project.technologies && project.technologies.length > 0 && (
+                      <div className="flex flex-wrap gap-2">
+                        {project.technologies.map((tech) => (
+                          <span
+                            key={tech.id}
+                            className="px-3 py-1 bg-primary-50 dark:bg-primary-900/40 text-primary-700 dark:text-primary-300 rounded-full text-xs font-medium"
+                          >
+                            {tech.name}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                  </motion.div>
+                </Link>
+              ))}
+            </div>
+          )}
+
+          <motion.div
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
+            viewport={{ once: true }}
+            className="text-center mt-12"
+          >
+            <Link to="/projects" className="btn-primary inline-flex items-center gap-2">
+              <span>{text.projects.btnAll}</span>
+              <FiArrowRight />
+            </Link>
+          </motion.div>
+        </div>
+      </section>
+
+      {/* ── CTA Section ─────────────────────────────────────── */}
+      <section className="py-20 bg-gradient-to-r from-primary-600 to-primary-500 relative z-10">
+        <div className="container-custom">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="text-center text-white"
+          >
+            <h2 className="text-4xl font-bold mb-4">{text.cta.title}</h2>
+            <p className="text-xl mb-8 opacity-90 max-w-2xl mx-auto">
+              {text.cta.description}
+            </p>
+            <Link
+              to="/contact"
+              className="inline-flex items-center gap-2 bg-white text-primary-600 px-8 py-4 rounded-xl font-medium
+                         shadow-md hover:shadow-xl transform hover:-translate-y-1 hover:scale-[1.03] transition-all duration-300"
+            >
+              <span>{text.buttons.contact}</span>
+              <FiArrowRight />
+            </Link>
+          </motion.div>
+        </div>
+      </section>
+    </div>
+  )
+}
