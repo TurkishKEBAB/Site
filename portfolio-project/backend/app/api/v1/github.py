@@ -95,7 +95,7 @@ async def sync_github_repos(
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"GitHub sync failed: {e}")
+        logger.exception(f"GitHub sync failed: {e}")
         if settings.is_production:
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
