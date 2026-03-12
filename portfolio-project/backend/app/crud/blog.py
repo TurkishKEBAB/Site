@@ -13,6 +13,11 @@ from app.models.blog import BlogPost, BlogTranslation
 from app.schemas.blog import BlogPostCreate, BlogPostUpdate, BlogTranslationCreate
 
 
+def _escape_ilike(value: str) -> str:
+    """Escape special ILIKE wildcard characters to prevent unintended matches."""
+    return value.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
+
+
 def _apply_blog_translation(post: BlogPost, language: Optional[str] = None) -> BlogPost:
     """Apply requested translation to a blog post with English fallback."""
     if not language or language == "en":
@@ -254,13 +259,13 @@ def search_blog_posts(
     Returns:
         List of matching blog posts
     """
-    search = f"%{search_query}%"
-    
+    search = f"%{_escape_ilike(search_query)}%"
+
     db_query = db.query(BlogPost).filter(
         or_(
-            BlogPost.title.ilike(search),
-            BlogPost.content.ilike(search),
-            BlogPost.excerpt.ilike(search)
+            BlogPost.title.ilike(search, escape="\\"),
+            BlogPost.content.ilike(search, escape="\\"),
+            BlogPost.excerpt.ilike(search, escape="\\")
         )
     )
     
