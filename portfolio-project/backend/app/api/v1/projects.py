@@ -2,6 +2,7 @@
 Project Endpoints
 CRUD operations for projects
 """
+import re
 import uuid
 
 from fastapi import APIRouter, Depends, File, HTTPException, Query, UploadFile, status
@@ -193,25 +194,29 @@ async def upload_project_image(
             detail="Project not found"
         )
     
-    # Validate file
+    # Read file content first for accurate size validation (avoids Content-Length bypass)
+    file_content = await file.read()
+
+    # Validate file using actual content length
     storage_service = StorageService()
     is_valid, error_message = storage_service.validate_file(
         file.filename or "upload.jpg",
-        file.size or 0,
+        len(file_content),
         allowed_extensions=["jpg", "jpeg", "png", "gif", "webp"]
     )
-    
+
     if not is_valid:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=error_message
         )
-    
-    # Read file content
-    file_content = await file.read()
-    
+
+    # Sanitize filename to prevent path traversal and injection
+    safe_filename = re.sub(r"[^\w\-.]", "_", file.filename or "upload")
+    safe_filename = safe_filename[:100]
+
     # Upload to storage
-    file_path = f"projects/{project_id}/{file.filename}"
+    file_path = f"projects/{project_id}/{safe_filename}"
     public_url = await storage_service.upload_file(
         file_path=file_path,
         file_data=file_content,
