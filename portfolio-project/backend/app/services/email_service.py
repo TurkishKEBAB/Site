@@ -2,6 +2,7 @@
 Email Service
 SMTP email sending for contact form and notifications
 """
+import html
 import aiosmtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
@@ -115,6 +116,9 @@ Cloud & DevOps Engineer
 This is an automated confirmation email.
         """.strip()
         
+        safe_name = html.escape(user_name or "")
+        safe_message = html.escape(message_content or "").replace("\n", "<br>")
+
         html_body = f"""
 <!DOCTYPE html>
 <html>
@@ -134,10 +138,10 @@ This is an automated confirmation email.
             <h2>Thank You for Contacting Me!</h2>
         </div>
         <div class="content">
-            <p>Hi <strong>{user_name}</strong>,</p>
+            <p>Hi <strong>{safe_name}</strong>,</p>
             <p>Thank you for reaching out! I've received your message:</p>
             <div class="message">
-                <em>"{message_content}"</em>
+                <em>"{safe_message}"</em>
             </div>
             <p>I'll get back to you as soon as possible.</p>
             <p>Best regards,<br>
@@ -188,6 +192,11 @@ Message:
 Portfolio Contact Form Notification
         """.strip()
         
+        safe_name = html.escape(user_name or "")
+        safe_email = html.escape(user_email or "")
+        safe_subject = html.escape(subject or "")
+        safe_message = html.escape(message_content or "").replace("\n", "<br>")
+
         html_body = f"""
 <!DOCTYPE html>
 <html>
@@ -209,18 +218,18 @@ Portfolio Contact Form Notification
         </div>
         <div class="content">
             <div class="info">
-                <p><span class="label">From:</span> {user_name}</p>
-                <p><span class="label">Email:</span> <a href="mailto:{user_email}">{user_email}</a></p>
-                <p><span class="label">Subject:</span> {subject}</p>
+                <p><span class="label">From:</span> {safe_name}</p>
+                <p><span class="label">Email:</span> <a href="mailto:{safe_email}">{safe_email}</a></p>
+                <p><span class="label">Subject:</span> {safe_subject}</p>
             </div>
             <div class="message">
                 <p><span class="label">Message:</span></p>
-                <p>{message_content}</p>
+                <p>{safe_message}</p>
             </div>
             <p style="text-align: center; margin-top: 20px;">
-                <a href="mailto:{user_email}?subject=Re: {subject}" 
+                <a href="mailto:{safe_email}?subject=Re: {safe_subject}"
                    style="background-color: #3B82F6; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">
-                    Reply to {user_name}
+                    Reply to {safe_name}
                 </a>
             </p>
         </div>
