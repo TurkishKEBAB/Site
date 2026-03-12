@@ -8,6 +8,7 @@ from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from typing import List, Optional
 from loguru import logger
+import urllib.parse
 
 from app.config import settings
 
@@ -197,6 +198,9 @@ Portfolio Contact Form Notification
         safe_subject = html.escape(subject or "")
         safe_message = html.escape(message_content or "").replace("\n", "<br>")
 
+        reply_subject = f"Re: {subject or ''}"
+        encoded_reply_subject = urllib.parse.quote(reply_subject, safe="")
+
         html_body = f"""
 <!DOCTYPE html>
 <html>
@@ -227,7 +231,7 @@ Portfolio Contact Form Notification
                 <p>{safe_message}</p>
             </div>
             <p style="text-align: center; margin-top: 20px;">
-                <a href="mailto:{safe_email}?subject=Re: {safe_subject}"
+                <a href="mailto:{safe_email}?subject={encoded_reply_subject}"
                    style="background-color: #3B82F6; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">
                     Reply to {safe_name}
                 </a>
