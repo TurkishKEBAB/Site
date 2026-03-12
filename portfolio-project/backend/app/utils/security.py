@@ -4,7 +4,7 @@ JWT token generation, password hashing, and authentication helpers
 """
 from datetime import datetime, timedelta, timezone
 from typing import Optional, Dict, Any
-from jose import JWTError, jwt
+import jwt
 from passlib.context import CryptContext
 from fastapi import HTTPException, status
 import uuid
@@ -99,7 +99,7 @@ def decode_access_token(token: str) -> Dict[str, Any]:
         )
         return payload
     
-    except JWTError as e:
+    except jwt.PyJWTError as e:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Could not validate credentials",
@@ -152,5 +152,5 @@ def verify_token(token: str, credentials_exception: HTTPException) -> Dict[str, 
         
         return payload
     
-    except JWTError:
+    except jwt.PyJWTError:
         raise credentials_exception
