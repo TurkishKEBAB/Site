@@ -20,6 +20,9 @@ from app.services.storage_service import StorageService
 
 router = APIRouter()
 
+# Maximum allowed upload size for project images (10 MB)
+MAX_PROJECT_IMAGE_UPLOAD_SIZE = 10 * 1024 * 1024
+
 
 def _serialize_project(project, language: str) -> dict:
     translated = next(
@@ -194,11 +197,25 @@ async def upload_project_image(
             detail="Project not found"
         )
     
-    # Read file content first for accurate size validation (avoids Content-Length bypass)
-    file_content = await file.read()
+    # Read file content in chunks and enforce a maximum size limit
+    storage_service = StorageService()
+    chunk_size = 1024 * 1024  # 1 MB
+    file_buffer = bytearray()
+
+    while True:
+        chunk = await file.read(chunk_size)
+        if not chunk:
+            break
+        file_buffer.extend(chunk)
+        if len(file_buffer) > MAX_PROJECT_IMAGE_UPLOAD_SIZE:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Uploaded file is too large."
+            )
+
+    file_content = bytes(file_buffer)
 
     # Validate file using actual content length
-    storage_service = StorageService()
     is_valid, error_message = storage_service.validate_file(
         file.filename or "upload.jpg",
         len(file_content),
