@@ -100,8 +100,8 @@ Recommended action:
 
 Use these branches instead of `Codex_Implementation`:
 
-1. `chore/github-governance-automation`
-   Purpose: GitHub governance, issue templates, release drafter, stale workflow, labeler, CODEOWNERS, and related repository process changes.
+1. `chore/repo-git-cleanup`
+   Purpose: clean replacement for the old integration branch history. It contains the repository governance updates, the Git workflow guide, and the ignore cleanup for local IDE artifacts and logs.
 2. New branches from `main` for any additional work:
    - `feature/frontend-public-pages`
    - `fix/backend-auth-refresh`
@@ -165,7 +165,7 @@ git commit -m "chore(scope): short summary"
 
 ## Recommended Current Action
 
-1. Keep `Codex_Implementation` unchanged as historical reference.
-2. Continue GitHub automation work from `chore/github-governance-automation`.
+1. Keep `Codex_Implementation` unchanged as historical reference unless you later decide to replace it with a force push.
+2. Use `chore/repo-git-cleanup` as the clean replacement branch for the Git and repository-process fixes.
 3. Create all new implementation branches directly from `main`.
 4. Use squash merge when merging those branches.
