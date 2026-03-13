@@ -2,7 +2,7 @@
 Skill Models
 Skills with proficiency levels and translations
 """
-from sqlalchemy import Column, String, Integer, DateTime, ForeignKey
+from sqlalchemy import Column, String, Integer, DateTime, ForeignKey, UniqueConstraint
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
@@ -41,7 +41,8 @@ class SkillTranslation(Base):
     Skill translations for multi-language support
     """
     __tablename__ = "skill_translations"
-    
+    __table_args__ = (UniqueConstraint("skill_id", "language", name="uq_skill_translations"),)
+
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     skill_id = Column(UUID(as_uuid=True), ForeignKey("skills.id", ondelete="CASCADE"), nullable=False, index=True)
     language = Column(String(5), nullable=False, index=True)

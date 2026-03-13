@@ -2,8 +2,9 @@
 Site Models
 Configuration, translations, and analytics
 """
-from sqlalchemy import Column, String, Text, DateTime
-from sqlalchemy.dialects.postgresql import UUID
+import sqlalchemy as sa
+from sqlalchemy import Column, String, Text, DateTime, UniqueConstraint
+from sqlalchemy.dialects.postgresql import UUID, INET as PG_INET
 from sqlalchemy.sql import func
 import uuid
 
@@ -35,7 +36,8 @@ class Translation(Base):
     Supports: TR, EN, DE, FR
     """
     __tablename__ = "translations"
-    
+    __table_args__ = (UniqueConstraint("language", "translation_key", name="uq_translations"),)
+
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     language = Column(String(5), nullable=False, index=True)
     translation_key = Column(String(255), nullable=False, index=True)
@@ -59,7 +61,7 @@ class PageView(Base):
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     page_path = Column(String(500), nullable=False, index=True)
     referrer = Column(String(500), nullable=True)
-    ip_address = Column(String(45), nullable=True)
+    ip_address = Column(sa.String(45).with_variant(PG_INET, "postgresql"), nullable=True)
     user_agent = Column(Text, nullable=True)
     viewed_at = Column(DateTime(timezone=True), server_default=func.now(), index=True)
     

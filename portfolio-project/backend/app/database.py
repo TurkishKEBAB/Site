@@ -3,8 +3,7 @@ Database Configuration and Session Management
 SQLAlchemy setup with connection pooling
 """
 from sqlalchemy import create_engine, event, text
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker, Session
+from sqlalchemy.orm import sessionmaker, Session, DeclarativeBase
 from typing import Generator
 import logging
 
@@ -30,7 +29,8 @@ SessionLocal = sessionmaker(
 )
 
 # Base class for all models
-Base = declarative_base()
+class Base(DeclarativeBase):
+    pass
 
 
 def get_db() -> Generator[Session, None, None]:

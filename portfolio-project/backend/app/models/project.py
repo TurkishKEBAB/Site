@@ -2,7 +2,7 @@
 Project Models
 Portfolio projects with translations and technologies
 """
-from sqlalchemy import Column, String, Text, Boolean, Integer, DateTime, ForeignKey, Table
+from sqlalchemy import Column, String, Text, Boolean, Integer, DateTime, ForeignKey, Table, UniqueConstraint
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
@@ -53,7 +53,8 @@ class ProjectTranslation(Base):
     Project translations for multi-language support
     """
     __tablename__ = "project_translations"
-    
+    __table_args__ = (UniqueConstraint("project_id", "language", name="uq_project_translations"),)
+
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     project_id = Column(UUID(as_uuid=True), ForeignKey("projects.id", ondelete="CASCADE"), nullable=False, index=True)
     language = Column(String(5), nullable=False, index=True)

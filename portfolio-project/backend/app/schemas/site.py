@@ -1,7 +1,7 @@
 """
 Site Configuration, Translations, and Analytics Schemas
 """
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 from typing import Optional, Dict, Any
 from datetime import datetime
 import uuid
@@ -24,8 +24,7 @@ class SiteConfig(SiteConfigBase):
     id: uuid.UUID
     updated_at: datetime
     
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class SiteConfigResponse(BaseModel):
@@ -37,7 +36,7 @@ class TranslationBase(BaseModel):
     """Base translation schema"""
     language: str = Field(..., min_length=2, max_length=5, pattern="^(tr|en|de|fr)$")
     translation_key: str = Field(..., min_length=1, max_length=255)
-    value: str
+    value: str = Field(..., min_length=0, max_length=10000)
 
 
 class TranslationCreate(TranslationBase):
@@ -51,8 +50,7 @@ class Translation(TranslationBase):
     created_at: datetime
     updated_at: datetime
     
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class TranslationResponse(BaseModel):
@@ -74,8 +72,7 @@ class PageView(PageViewCreate):
     user_agent: Optional[str] = None
     viewed_at: datetime
     
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class AnalyticsSummary(BaseModel):

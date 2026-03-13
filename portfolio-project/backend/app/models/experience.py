@@ -2,7 +2,7 @@
 Experience Models
 Education, work, volunteer activities with translations
 """
-from sqlalchemy import Column, String, Text, Boolean, Date, Integer, DateTime, ForeignKey
+from sqlalchemy import Column, String, Text, Boolean, Date, Integer, DateTime, ForeignKey, UniqueConstraint
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
@@ -46,7 +46,8 @@ class ExperienceTranslation(Base):
     Experience translations for multi-language support
     """
     __tablename__ = "experience_translations"
-    
+    __table_args__ = (UniqueConstraint("experience_id", "language", name="uq_experience_translations"),)
+
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     experience_id = Column(UUID(as_uuid=True), ForeignKey("experiences.id", ondelete="CASCADE"), nullable=False, index=True)
     language = Column(String(5), nullable=False, index=True)

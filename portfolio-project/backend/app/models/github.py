@@ -2,8 +2,9 @@
 GitHub Repository Model
 Cached GitHub repository data
 """
+import sqlalchemy as sa
 from sqlalchemy import Column, String, Text, Integer, Boolean, DateTime, JSON
-from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.dialects.postgresql import UUID, ARRAY
 from sqlalchemy.sql import func
 import uuid
 
@@ -27,7 +28,7 @@ class GitHubRepo(Base):
     forks = Column(Integer, default=0)
     watchers = Column(Integer, default=0)
     language = Column(String(50), nullable=True)
-    topics = Column(JSON, nullable=True)  # Portable list-like storage across DB engines
+    topics = Column(sa.JSON().with_variant(ARRAY(Text), "postgresql"), nullable=True)  # Portable list-like storage across DB engines
     last_updated = Column(DateTime(timezone=True), nullable=True)
     cached_at = Column(DateTime(timezone=True), server_default=func.now(), index=True)
     is_featured = Column(Boolean, default=False, index=True)
