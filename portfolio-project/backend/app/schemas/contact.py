@@ -6,7 +6,7 @@ from datetime import datetime
 from typing import Optional
 import uuid
 
-from pydantic import BaseModel, EmailStr, Field
+from pydantic import BaseModel, EmailStr, Field, ConfigDict
 
 
 class ContactMessageBase(BaseModel):
@@ -33,8 +33,7 @@ class ContactMessage(ContactMessageBase):
     user_agent: Optional[str] = Field(None, max_length=512)
     created_at: datetime
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class ContactMessageResponse(BaseModel):

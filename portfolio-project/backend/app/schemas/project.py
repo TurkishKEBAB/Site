@@ -2,7 +2,7 @@
 Project Schemas
 Portfolio projects with translations and technologies
 """
-from pydantic import BaseModel, Field, HttpUrl, model_validator
+from pydantic import BaseModel, Field, HttpUrl, model_validator, ConfigDict
 from typing import Optional, List, Any
 from datetime import datetime
 import uuid
@@ -28,8 +28,7 @@ class ProjectTranslation(ProjectTranslationBase):
     created_at: datetime
     updated_at: datetime
     
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class ProjectImageBase(BaseModel):
@@ -50,8 +49,7 @@ class ProjectImage(ProjectImageBase):
     project_id: uuid.UUID
     created_at: datetime
     
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class TechnologyRef(BaseModel):
@@ -63,8 +61,7 @@ class TechnologyRef(BaseModel):
     color: Optional[str] = None
     category: Optional[str] = None
     
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class ProjectBase(BaseModel):
@@ -107,8 +104,7 @@ class Project(ProjectBase):
     created_at: datetime
     updated_at: datetime
     
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class ProjectDetail(Project):
@@ -117,8 +113,7 @@ class ProjectDetail(Project):
     technologies: List[TechnologyRef] = []
     images: List[ProjectImage] = []
     
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 # Aliases for backward compatibility

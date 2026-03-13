@@ -2,7 +2,7 @@
 User Schemas
 Authentication and user management
 """
-from pydantic import BaseModel, EmailStr, Field
+from pydantic import BaseModel, EmailStr, Field, ConfigDict
 from typing import Optional
 from datetime import datetime
 import uuid
@@ -32,8 +32,7 @@ class User(UserBase):
     last_login: Optional[datetime] = None
     is_active: bool = True
     
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 # Alias for backward compatibility

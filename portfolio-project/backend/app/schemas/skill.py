@@ -2,7 +2,7 @@
 Skill Schemas
 Skills with proficiency levels and translations
 """
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 from typing import Optional, List
 from datetime import datetime
 import uuid
@@ -26,8 +26,7 @@ class SkillTranslation(SkillTranslationBase):
     skill_id: uuid.UUID
     created_at: datetime
     
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class SkillBase(BaseModel):
@@ -59,8 +58,7 @@ class Skill(SkillBase):
     created_at: datetime
     translations: List[SkillTranslation] = []
     
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 # Alias for backward compatibility

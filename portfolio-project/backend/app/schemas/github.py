@@ -2,7 +2,7 @@
 GitHub Repository Schemas
 GitHub API integration and caching
 """
-from pydantic import BaseModel, HttpUrl
+from pydantic import BaseModel, HttpUrl, ConfigDict
 from typing import Optional, List
 from datetime import datetime
 import uuid
@@ -29,8 +29,7 @@ class GitHubRepo(GitHubRepoBase):
     id: uuid.UUID
     cached_at: datetime
     
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class GitHubRepoResponse(BaseModel):

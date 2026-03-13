@@ -2,7 +2,7 @@
 Blog Schemas
 Blog posts and translations
 """
-from pydantic import BaseModel, Field, HttpUrl
+from pydantic import BaseModel, Field, HttpUrl, ConfigDict
 from typing import Optional, List
 from datetime import datetime
 import uuid
@@ -28,8 +28,7 @@ class BlogTranslation(BlogTranslationBase):
     created_at: datetime
     updated_at: datetime
     
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class BlogPostBase(BaseModel):
@@ -69,8 +68,7 @@ class BlogPost(BlogPostBase):
     created_at: datetime
     updated_at: datetime
     
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class BlogPostDetail(BlogPost):
@@ -78,8 +76,7 @@ class BlogPostDetail(BlogPost):
     translations: List[BlogTranslation] = []
     author_username: Optional[str] = None
     
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 # Aliases for backward compatibility
