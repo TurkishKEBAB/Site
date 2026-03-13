@@ -6,7 +6,7 @@ import uuid
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
-from app.api.deps import get_db, get_current_user, require_admin
+from app.api.deps import get_db, require_admin
 from app.models.user import User
 from app.models.technology import Technology
 from app.schemas.technology import TechnologyCreate, TechnologyUpdate, TechnologyResponse

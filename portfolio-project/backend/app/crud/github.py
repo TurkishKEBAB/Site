@@ -82,19 +82,27 @@ def create_or_update_github_repo(db: Session, repo_data: dict) -> GitHubRepo:
 def bulk_create_or_update_repos(db: Session, repos_data: List[dict]) -> int:
     """
     Create or update multiple GitHub repositories
-    
+
     Args:
         db: Database session
         repos_data: List of repository data dictionaries
-        
+
     Returns:
         Number of repositories processed
     """
     count = 0
+    now = datetime.now(timezone.utc)
     for repo_data in repos_data:
-        create_or_update_github_repo(db, repo_data)
+        existing = get_github_repo_by_name(db, repo_data["repo_name"])
+        if existing:
+            for key, value in repo_data.items():
+                if key != "cached_at":
+                    setattr(existing, key, value)
+            existing.cached_at = now
+        else:
+            db.add(GitHubRepo(**repo_data, cached_at=now))
         count += 1
-    
+    db.commit()
     return count
 
 

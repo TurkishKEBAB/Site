@@ -3,10 +3,8 @@ Site Configuration, Translations, and Analytics CRUD Operations
 """
 from sqlalchemy.orm import Session
 from typing import List, Optional, Dict
-import uuid
-from datetime import datetime, timedelta, timezone
 
-from app.models.site import SiteConfig, Translation, PageView
+from app.models.site import SiteConfig, Translation
 
 
 # Site Configuration
@@ -118,15 +116,22 @@ def set_translation(
 def bulk_set_translations(db: Session, language: str, translations: Dict[str, str]) -> int:
     """
     Set multiple translations at once
-    
+
     Returns:
         Number of translations set
     """
     count = 0
     for key, value in translations.items():
-        set_translation(db, language, key, value)
+        existing = db.query(Translation).filter(
+            Translation.language == language,
+            Translation.translation_key == key,
+        ).first()
+        if existing:
+            existing.value = value
+        else:
+            db.add(Translation(language=language, translation_key=key, value=value))
         count += 1
-    
+    db.commit()
     return count
 
 
@@ -148,73 +153,3 @@ def delete_translation(db: Session, language: str, translation_key: str) -> bool
 def get_available_languages(db: Session) -> List[str]:
     """Get list of available languages"""
     return [lang[0] for lang in db.query(Translation.language).distinct().all()]
-
-
-# Page Views (Analytics)
-def create_page_view(
-    db: Session,
-    page_path: str,
-    referrer: Optional[str] = None,
-    ip_address: Optional[str] = None,
-    user_agent: Optional[str] = None
-) -> PageView:
-    """Record a page view"""
-    db_view = PageView(
-        page_path=page_path,
-        referrer=referrer,
-        ip_address=ip_address,
-        user_agent=user_agent
-    )
-    
-    db.add(db_view)
-    db.commit()
-    db.refresh(db_view)
-    
-    return db_view
-
-
-def get_page_views_count(
-    db: Session,
-    page_path: Optional[str] = None,
-    hours: Optional[int] = None
-) -> int:
-    """
-    Get count of page views
-    
-    Args:
-        db: Database session
-        page_path: Filter by specific page path
-        hours: Only count views within last N hours
-        
-    Returns:
-        Number of page views
-    """
-    from sqlalchemy import func
-    
-    query = db.query(func.count(PageView.id))
-    
-    if page_path:
-        query = query.filter(PageView.page_path == page_path)
-    
-    if hours:
-        cutoff_time = datetime.now(timezone.utc) - timedelta(hours=hours)
-        query = query.filter(PageView.viewed_at >= cutoff_time)
-    
-    return query.scalar()
-
-
-def get_popular_pages(db: Session, limit: int = 10) -> List[tuple]:
-    """
-    Get most popular pages
-    
-    Returns:
-        List of tuples (page_path, view_count)
-    """
-    from sqlalchemy import func
-    
-    return db.query(
-        PageView.page_path,
-        func.count(PageView.id).label('count')
-    ).group_by(PageView.page_path).order_by(
-        func.count(PageView.id).desc()
-    ).limit(limit).all()

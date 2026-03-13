@@ -69,21 +69,6 @@ def receive_checkout(dbapi_conn, connection_record, connection_proxy):
     logger.debug("Database connection checked out from pool")
 
 
-def init_db():
-    """
-    Initialize database tables
-    This will create all tables if they don't exist
-    
-    Note: In production, use Alembic migrations instead
-    """
-    try:
-        Base.metadata.create_all(bind=engine)
-        logger.info("Database tables created successfully")
-    except Exception as e:
-        logger.error(f"Failed to create database tables: {e}")
-        raise
-
-
 def check_db_connection() -> bool:
     """
     Check if database connection is working

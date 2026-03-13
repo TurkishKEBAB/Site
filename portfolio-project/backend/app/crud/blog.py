@@ -3,7 +3,7 @@ Blog CRUD Operations
 Blog posts and translations management
 """
 from sqlalchemy.orm import Session, joinedload
-from sqlalchemy import or_, func
+from sqlalchemy import or_, func, update
 from typing import List, Optional
 from datetime import datetime, timezone
 import uuid
@@ -216,26 +216,27 @@ def delete_blog_post(db: Session, post_id: uuid.UUID) -> bool:
     return True
 
 
-def increment_blog_views(db: Session, post_id: uuid.UUID) -> bool:
+def increment_blog_views(db: Session, post_id: uuid.UUID) -> Optional[BlogPost]:
     """
-    Increment blog post view count
-    
+    Atomically increment blog post view count
+
     Args:
         db: Database session
         post_id: Blog post ID
-        
+
     Returns:
-        True if successful
+        Updated BlogPost or None if not found
     """
-    db_post = get_blog_post_by_id(db, post_id)
-    
-    if not db_post:
-        return False
-    
-    db_post.views += 1
+    db.execute(
+        update(BlogPost)
+        .where(BlogPost.id == post_id)
+        .values(views=BlogPost.views + 1)
+    )
     db.commit()
-    
-    return True
+    db_post = db.query(BlogPost).filter(BlogPost.id == post_id).first()
+    if db_post:
+        db.refresh(db_post)
+    return db_post
 
 
 def search_blog_posts(
