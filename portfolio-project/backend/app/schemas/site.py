@@ -36,7 +36,7 @@ class TranslationBase(BaseModel):
     """Base translation schema"""
     language: str = Field(..., min_length=2, max_length=5, pattern="^(tr|en|de|fr)$")
     translation_key: str = Field(..., min_length=1, max_length=255)
-    value: str
+    value: str = Field(..., min_length=0, max_length=10000)
 
 
 class TranslationCreate(TranslationBase):
