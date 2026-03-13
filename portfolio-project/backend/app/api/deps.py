@@ -5,7 +5,7 @@ Authentication and database dependencies
 from typing import Generator
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
-from jose import JWTError, jwt
+import jwt
 from sqlalchemy.orm import Session
 import uuid
 from loguru import logger
@@ -71,7 +71,7 @@ def get_current_user(
         except ValueError:
             raise credentials_exception
             
-    except JWTError:
+    except jwt.PyJWTError:
         raise credentials_exception
 
     if token_crud.is_token_blacklisted(db, token_jti):
@@ -159,7 +159,7 @@ def get_current_user_optional(
         except ValueError:
             return None
 
-    except JWTError:
+    except jwt.PyJWTError:
         return None
 
     if token_crud.is_token_blacklisted(db, token_jti):

@@ -4,10 +4,12 @@ CRUD operations for skills
 """
 from typing import List, Dict
 from fastapi import APIRouter, Depends, HTTPException, status, Query
+from sqlalchemy import func
 from sqlalchemy.orm import Session
 import uuid
 
 from app.api.deps import get_db, require_admin
+from app.models.skill import Skill
 from app.schemas.skill import (
     SkillCreate,
     SkillUpdate,
@@ -30,8 +32,7 @@ async def get_skills(
     Get list of all skills
     """
     # Get total count
-    total_skills = skill_crud.get_skills(db, skip=0, limit=1000)
-    total = len(total_skills)
+    total = db.query(func.count(Skill.id)).scalar()
 
     skills = skill_crud.get_skills(
         db,

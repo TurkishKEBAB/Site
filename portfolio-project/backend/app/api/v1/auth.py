@@ -8,7 +8,7 @@ import uuid
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
-from jose import JWTError, jwt
+import jwt
 
 from app.api.deps import get_db, get_current_user, require_admin
 from app.config import get_settings
@@ -198,7 +198,7 @@ async def refresh_token(
         if token_type != "refresh" or not user_id_str or not token_jti:
             raise credentials_exception
         user_id = uuid.UUID(user_id_str)
-    except (JWTError, ValueError):
+    except (jwt.PyJWTError, ValueError):
         raise credentials_exception
 
     if token_crud.is_token_blacklisted(db, token_jti):

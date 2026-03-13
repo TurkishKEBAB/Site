@@ -5,6 +5,7 @@ Authentication and user management
 from sqlalchemy.orm import Session
 from sqlalchemy import or_
 from typing import Optional
+from datetime import datetime, timezone
 import uuid
 
 from app.models.user import User
@@ -98,8 +99,6 @@ def update_last_login(db: Session, user_id: uuid.UUID) -> User:
     Returns:
         Updated user
     """
-    from datetime import datetime, timezone
-    
     user = get_user_by_id(db, user_id)
     if user:
         user.last_login = datetime.now(timezone.utc)

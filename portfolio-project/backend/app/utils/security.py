@@ -4,7 +4,7 @@ JWT token generation, password hashing, and authentication helpers
 """
 from datetime import datetime, timedelta, timezone
 from typing import Optional, Dict, Any
-from jose import JWTError, jwt
+import jwt
 from passlib.context import CryptContext
 from fastapi import HTTPException, status
 import uuid
@@ -99,7 +99,7 @@ def decode_access_token(token: str) -> Dict[str, Any]:
         )
         return payload
     
-    except JWTError as e:
+    except jwt.PyJWTError as e:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Could not validate credentials",
@@ -126,31 +126,3 @@ def create_refresh_token(
         expires_delta=refresh_expires,
         token_type="refresh",
     )
-
-
-def verify_token(token: str, credentials_exception: HTTPException) -> Dict[str, Any]:
-    """
-    Verify token and return payload
-    
-    Args:
-        token: JWT token string
-        credentials_exception: Exception to raise if verification fails
-        
-    Returns:
-        dict: Token payload
-        
-    Raises:
-        HTTPException: If token is invalid
-    """
-    try:
-        payload = decode_access_token(token)
-        
-        # Check if token has expired
-        exp = payload.get("exp")
-        if exp and datetime.fromtimestamp(exp, tz=timezone.utc) < datetime.now(timezone.utc):
-            raise credentials_exception
-        
-        return payload
-    
-    except JWTError:
-        raise credentials_exception

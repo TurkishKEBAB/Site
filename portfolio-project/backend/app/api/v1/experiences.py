@@ -4,10 +4,12 @@ CRUD operations for work experiences, education, and volunteering
 """
 from typing import List, Dict
 from fastapi import APIRouter, Depends, HTTPException, status, Query
+from sqlalchemy import func
 from sqlalchemy.orm import Session
 import uuid
 
 from app.api.deps import get_db, require_admin
+from app.models.experience import Experience
 from app.schemas.experience import (
     ExperienceCreate,
     ExperienceUpdate,
@@ -31,11 +33,10 @@ async def get_experiences(
     Get list of experiences with optional type filtering
     """
     # Get total count
-    total_query = experience_crud.get_experiences(db, skip=0, limit=1000)
+    count_query = db.query(func.count(Experience.id))
     if experience_type:
-        total = len([e for e in total_query if e.experience_type == experience_type])
-    else:
-        total = len(total_query)
+        count_query = count_query.filter(Experience.experience_type == experience_type)
+    total = count_query.scalar()
 
     experiences = experience_crud.get_experiences(
         db,
@@ -62,12 +63,14 @@ async def get_experiences_grouped_by_type(
     Get experiences grouped by type (work, education, volunteer)
     Returns a dictionary with types as keys
     """
-    return {
-        "work": experience_crud.get_experiences_by_type(db, "work", language),
-        "education": experience_crud.get_experiences_by_type(db, "education", language),
-        "volunteer": experience_crud.get_experiences_by_type(db, "volunteer", language),
-        "activity": experience_crud.get_experiences_by_type(db, "activity", language)
-    }
+    all_experiences = experience_crud.get_experiences(db, language=language, skip=0, limit=10000)
+    grouped: dict = {}
+    for exp in all_experiences:
+        exp_type = getattr(exp, "experience_type", None)
+        if exp_type not in grouped:
+            grouped[exp_type] = []
+        grouped[exp_type].append(exp)
+    return grouped
 
 
 @router.get("/{experience_id}", response_model=ExperienceResponse)

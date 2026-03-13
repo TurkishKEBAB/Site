@@ -6,10 +6,12 @@ import uuid
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
 from loguru import logger
+from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_db, require_admin
 from app.crud import contact as contact_crud
+from app.models.contact import ContactMessage as ContactMessageModel
 from app.schemas.contact import (
     ContactMessage,
     ContactMessageCreate,
@@ -98,7 +100,10 @@ async def get_contact_messages(
         unread_only=unread_only,
     )
 
-    total = len(contact_crud.get_contact_messages(db, unread_only=unread_only))
+    count_query = db.query(func.count(ContactMessageModel.id))
+    if unread_only:
+        count_query = count_query.filter(ContactMessageModel.is_read == False)  # noqa: E712
+    total = count_query.scalar()
 
     return {
         'messages': messages,
