@@ -80,10 +80,6 @@ jobs:
         working-directory: portfolio-project/frontend
         run: npm run lint
 
-      - name: Run frontend tests
-        working-directory: portfolio-project/frontend
-        run: npm run test
-
       - name: Generate frontend coverage report
         working-directory: portfolio-project/frontend
         run: npm run test:coverage
