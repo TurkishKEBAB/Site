@@ -6,7 +6,7 @@ services:
     restart: unless-stopped
     environment:
       POSTGRES_USER: ${POSTGRES_USER:-postgres}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD env var is required}
       POSTGRES_DB: ${POSTGRES_DB:-portfolio}
     volumes:
       - postgres_data:/var/lib/postgresql/data
@@ -44,7 +44,7 @@ services:
     environment:
       DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-portfolio}
       REDIS_URL: redis://redis:6379/0
-      SECRET_KEY: ${SECRET_KEY:-dev-secret-key-change-in-production}
+      SECRET_KEY: ${SECRET_KEY:?SECRET_KEY env var is required}
       ACCESS_TOKEN_EXPIRE_MINUTES: ${ACCESS_TOKEN_EXPIRE_MINUTES:-15}
       REFRESH_TOKEN_EXPIRE_DAYS: ${REFRESH_TOKEN_EXPIRE_DAYS:-14}
       AUTH_LOGIN_RATE_LIMIT: ${AUTH_LOGIN_RATE_LIMIT:-5/minute}
