@@ -2,8 +2,9 @@
 Contact Message Model
 Contact form submissions
 """
+import sqlalchemy as sa
 from sqlalchemy import Column, String, Text, Boolean, DateTime
-from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.dialects.postgresql import UUID, INET as PG_INET
 from sqlalchemy.sql import func
 import uuid
 
@@ -24,7 +25,7 @@ class ContactMessage(Base):
     message = Column(Text, nullable=False)
     is_read = Column(Boolean, default=False, index=True)
     is_replied = Column(Boolean, default=False)
-    ip_address = Column(String(45), nullable=True)
+    ip_address = Column(sa.String(45).with_variant(PG_INET, "postgresql"), nullable=True)
     user_agent = Column(Text, nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now(), index=True)
     
