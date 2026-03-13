@@ -2,7 +2,7 @@
 Blog Models
 Blog posts and translations
 """
-from sqlalchemy import Column, String, Text, Boolean, Integer, DateTime, ForeignKey
+from sqlalchemy import Column, String, Text, Boolean, Integer, DateTime, ForeignKey, UniqueConstraint
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
@@ -48,7 +48,8 @@ class BlogTranslation(Base):
     Supports: TR, EN, DE, FR
     """
     __tablename__ = "blog_translations"
-    
+    __table_args__ = (UniqueConstraint("blog_post_id", "language", name="uq_blog_translations"),)
+
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     blog_post_id = Column(UUID(as_uuid=True), ForeignKey("blog_posts.id", ondelete="CASCADE"), nullable=False, index=True)
     language = Column(String(5), nullable=False, index=True)  # tr, en, de, fr

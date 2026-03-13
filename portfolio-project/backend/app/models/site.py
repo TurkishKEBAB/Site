@@ -2,7 +2,7 @@
 Site Models
 Configuration, translations, and analytics
 """
-from sqlalchemy import Column, String, Text, DateTime
+from sqlalchemy import Column, String, Text, DateTime, UniqueConstraint
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.sql import func
 import uuid
@@ -35,7 +35,8 @@ class Translation(Base):
     Supports: TR, EN, DE, FR
     """
     __tablename__ = "translations"
-    
+    __table_args__ = (UniqueConstraint("language", "translation_key", name="uq_translations"),)
+
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     language = Column(String(5), nullable=False, index=True)
     translation_key = Column(String(255), nullable=False, index=True)
