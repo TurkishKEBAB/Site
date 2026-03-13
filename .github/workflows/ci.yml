@@ -16,6 +16,9 @@ concurrency:
   group: ci-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+permissions:
+  contents: read
+
 jobs:
   backend-quality:
     name: Backend Quality
@@ -38,13 +41,21 @@ jobs:
         with:
           python-version: "3.13"
           cache: pip
-          cache-dependency-path: portfolio-project/backend/requirements.txt
+          cache-dependency-path: |
+            portfolio-project/backend/requirements.txt
+            portfolio-project/backend/requirements-dev.txt
 
       - name: Install backend dependencies
         working-directory: portfolio-project
         run: |
           python -m pip install --upgrade pip
-          pip install -r backend/requirements.txt
+          pip install -r backend/requirements.txt -r backend/requirements-dev.txt
+
+      - name: Security audit (pip-audit)
+        working-directory: portfolio-project
+        run: |
+          pip install pip-audit
+          pip-audit -r backend/requirements.txt
 
       - name: Run backend tests with coverage
         working-directory: portfolio-project
@@ -80,16 +91,16 @@ jobs:
         working-directory: portfolio-project/frontend
         run: npm run lint
 
-      - name: Run frontend tests
-        working-directory: portfolio-project/frontend
-        run: npm run test
-
       - name: Generate frontend coverage report
         working-directory: portfolio-project/frontend
         run: npm run test:coverage
 
-      - name: Build frontend
+      - name: Security audit (npm)
         working-directory: portfolio-project/frontend
+        run: npm audit --audit-level=high
+        continue-on-error: true
+
+      - name: Build frontend
         run: npm run build
 
       - name: Upload frontend coverage artifact
@@ -149,5 +160,6 @@ jobs:
           args: >
             -Dsonar.host.url=https://sonarcloud.io
             -Dsonar.organization=${{ vars.SONAR_ORGANIZATION }}
+            -Dsonar.qualitygate.wait=true
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}

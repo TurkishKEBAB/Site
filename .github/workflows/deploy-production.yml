@@ -10,13 +10,16 @@ concurrency:
   group: production-${{ github.ref }}
   cancel-in-progress: true
 
+permissions:
+  contents: read
+
 jobs:
   backend-quality:
     name: Backend Quality (Prod Gate)
     runs-on: ubuntu-latest
     env:
       DATABASE_URL: sqlite:///./ci.db
-      SECRET_KEY: ci-secret-key-123456789012345678901234
+      SECRET_KEY: ${{ secrets.CI_SECRET_KEY }}
       SMTP_USERNAME: ci@example.com
       SMTP_PASSWORD: ci-password
       REDIS_URL: redis://localhost:6379/0
