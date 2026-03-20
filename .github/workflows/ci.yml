@@ -101,6 +101,7 @@ jobs:
         continue-on-error: true
 
       - name: Build frontend
+        working-directory: portfolio-project/frontend
         run: npm run build
 
       - name: Upload frontend coverage artifact
