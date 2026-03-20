@@ -48,6 +48,10 @@ const FALLBACK_TRANSLATIONS: Record<Language, TranslationMap> = {
     blog_share: 'Share',
     blog_related_posts: 'Related Posts',
     blog_latest_posts: 'Latest Posts',
+    footer_description: 'Software engineer focused on enterprise backend systems, cloud-native architecture, and DevOps automation.',
+    footer_nav: 'Navigation',
+    footer_contact: 'Contact',
+    footer_open_to_collab: 'Open to engineering collaborations',
   },
   tr: {
     nav_home: 'Ana Sayfa',
@@ -82,6 +86,10 @@ const FALLBACK_TRANSLATIONS: Record<Language, TranslationMap> = {
     blog_share: 'Paylas',
     blog_related_posts: 'Benzer Yazilar',
     blog_latest_posts: 'Son Yazilar',
+    footer_description: 'Kurumsal backend sistemleri, cloud-native mimari ve DevOps otomasyonuna odaklanan yazilim muhendisi.',
+    footer_nav: 'Navigasyon',
+    footer_contact: 'Iletisim',
+    footer_open_to_collab: 'Muhendislik is birliklerine aciktir',
   },
 };
 

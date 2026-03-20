@@ -1,67 +1,65 @@
 import { Link } from 'react-router-dom'
 import { FiGithub, FiLinkedin, FiMail, FiTwitter } from 'react-icons/fi'
-import { motion } from 'framer-motion'
+import { useLanguage } from '../contexts/LanguageContext'
+import { GlowBar } from './ui'
 
 const socialLinks = [
   { icon: FiGithub, href: 'https://github.com/TurkishKEBAB', label: 'GitHub' },
   { icon: FiLinkedin, href: 'https://www.linkedin.com/in/yigit-okur-050b5b278/', label: 'LinkedIn' },
-  { icon: FiTwitter, href: 'https://x.com/biznedenokuruz', label: 'Twitter' },
+  { icon: FiTwitter, href: 'https://x.com/biznedenokuruz', label: 'Twitter/X' },
   { icon: FiMail, href: 'mailto:yigitokur@ieee.org', label: 'Email' },
 ]
 
-const footerLinks = [
-  { name: 'Home', path: '/' },
-  { name: 'About', path: '/about' },
-  { name: 'Projects', path: '/projects' },
-  { name: 'Blog', path: '/blog' },
-  { name: 'Contact', path: '/contact' },
-]
-
 export default function Footer() {
+  const { t } = useLanguage()
+
+  const footerLinks = [
+    { name: t('nav_home'), path: '/' },
+    { name: t('nav_about'), path: '/about' },
+    { name: t('nav_projects'), path: '/projects' },
+    { name: t('nav_blog'), path: '/blog' },
+    { name: t('nav_contact'), path: '/contact' },
+  ]
+
   return (
-    <footer className="relative bg-gray-50 dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700">
-      <div className="container-custom py-12">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+    <footer className="relative border-t border-gray-200 dark:border-dark-600/40 bg-white/50 dark:bg-dark-950/50 backdrop-blur-sm">
+      <GlowBar />
+
+      <div className="container-custom py-12 md:py-16">
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-10">
           {/* Brand */}
-          <div>
-            <motion.div
-              whileHover={{ scale: 1.05 }}
-              className="text-2xl font-bold bg-gradient-to-r from-primary-600 to-primary-400 bg-clip-text text-transparent mb-4"
-            >
-              Yiğit Okur
-            </motion.div>
-            <p className="text-gray-600 dark:text-gray-400 mb-4">
-              Software engineer focused on enterprise backend systems, cloud-native architecture, and DevOps automation.
+          <div className="md:col-span-5">
+            <div className="font-mono text-2xl font-bold text-gray-900 dark:text-dark-50 tracking-tighter mb-3">
+              YO<span className="text-primary-500 dark:text-primary-400">.sys</span>
+            </div>
+            <p className="text-sm text-gray-600 dark:text-dark-300 leading-relaxed mb-5 max-w-sm">
+              {t('footer_description')}
             </p>
-            <div className="flex space-x-4">
+            <div className="flex gap-2">
               {socialLinks.map((social) => (
-                <motion.a
+                <a
                   key={social.label}
                   href={social.href}
                   target="_blank"
                   rel="noopener noreferrer"
-                  whileHover={{ scale: 1.2, y: -2 }}
-                  whileTap={{ scale: 0.9 }}
-                  className="p-2 rounded-lg bg-gray-200 dark:bg-dark-700 text-gray-700 dark:text-gray-300 hover:bg-primary-600 hover:text-white transition-colors"
+                  className="p-2.5 rounded border border-gray-200 dark:border-dark-600 text-gray-500 dark:text-dark-400 hover:text-primary-600 dark:hover:text-primary-400 hover:border-primary-400/40 dark:hover:border-primary-400/30 transition-all"
                   aria-label={social.label}
                 >
-                  <social.icon size={20} />
-                </motion.a>
+                  <social.icon size={16} />
+                </a>
               ))}
             </div>
           </div>
 
           {/* Quick Links */}
-          <div>
-            <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">
-              Quick Links
-            </h3>
+          <div className="md:col-span-3">
+            <h3 className="sys-label mb-4">// {t('footer_nav')}</h3>
             <ul className="space-y-2">
               {footerLinks.map((link) => (
                 <li key={link.path}>
                   <Link
                     to={link.path}
-                    className="text-gray-600 dark:text-gray-400 hover:text-primary-600 dark:hover:text-primary-400 transition-colors"
+                    className="text-sm text-gray-600 dark:text-dark-300 hover:text-primary-600 dark:hover:text-primary-400 transition-colors"
                   >
                     {link.name}
                   </Link>
@@ -70,34 +68,31 @@ export default function Footer() {
             </ul>
           </div>
 
-          {/* Contact Info */}
-          <div>
-            <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">
-              Get in Touch
-            </h3>
-            <ul className="space-y-2 text-gray-600 dark:text-gray-400">
+          {/* Contact */}
+          <div className="md:col-span-4">
+            <h3 className="sys-label mb-4">// {t('footer_contact')}</h3>
+            <ul className="space-y-2 text-sm text-gray-600 dark:text-dark-300">
               <li>
                 <a
                   href="mailto:yigitokur@ieee.org"
-                  className="hover:text-primary-600 dark:hover:text-primary-400 transition-colors"
+                  className="hover:text-primary-600 dark:hover:text-primary-400 transition-colors font-mono text-xs"
                 >
                   yigitokur@ieee.org
                 </a>
               </li>
               <li>Istanbul, Turkey</li>
-              <li>Open to engineering collaborations</li>
+              <li className="text-gray-400 dark:text-dark-400 text-xs">
+                {t('footer_open_to_collab')}
+              </li>
             </ul>
           </div>
         </div>
 
-        <div className="mt-8 pt-8 border-t border-gray-200 dark:border-dark-700">
-          <div className="flex flex-col md:flex-row justify-between items-center text-sm text-gray-600 dark:text-gray-400">
-            <p>
-              © {new Date().getFullYear()} Yiğit Okur. All rights reserved.
-            </p>
-            <p className="mt-2 md:mt-0">
-              Built with ❤️ using React, TypeScript, and Tailwind CSS
-            </p>
+        {/* Bottom bar */}
+        <div className="mt-10 pt-6 border-t border-gray-200 dark:border-dark-600/40">
+          <div className="flex flex-col sm:flex-row justify-between items-center gap-2 font-mono text-[10px] tracking-wider uppercase text-gray-400 dark:text-dark-400">
+            <p>© {new Date().getFullYear()} Yiğit Okur</p>
+            <p>React · TypeScript · Tailwind CSS</p>
           </div>
         </div>
       </div>
