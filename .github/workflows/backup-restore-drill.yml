@@ -9,6 +9,9 @@ concurrency:
   group: backup-restore-drill-${{ github.ref }}
   cancel-in-progress: false
 
+permissions:
+  contents: read
+
 jobs:
   drill:
     name: PostgreSQL Backup + Restore Drill
