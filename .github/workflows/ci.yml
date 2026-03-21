@@ -83,7 +83,17 @@ jobs:
 
       - name: Install frontend dependencies
         working-directory: portfolio-project/frontend
-        run: npm ci
+        run: |
+          for attempt in 1 2 3; do
+            if npm ci; then
+              break
+            fi
+            if [ "$attempt" -eq 3 ]; then
+              exit 1
+            fi
+            echo "npm ci failed on attempt $attempt. Retrying in 15 seconds..."
+            sleep 15
+          done
 
       - name: Lint frontend
         working-directory: portfolio-project/frontend
