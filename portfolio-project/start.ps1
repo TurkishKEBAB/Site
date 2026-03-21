@@ -16,6 +16,7 @@ $projectRoot = $PSScriptRoot
 $backendPath = Join-Path $projectRoot 'backend'
 $frontendPath = Join-Path $projectRoot 'frontend'
 $composeFile = Join-Path $backendPath 'docker-compose.yml'
+$backendEnvFile = Join-Path $backendPath '.env'
 $backendHealthUrl = 'http://127.0.0.1:8000/health'
 $projectsApiUrl = 'http://127.0.0.1:8000/api/v1/projects/?language=en&limit=1'
 $frontendUrl = 'http://127.0.0.1:3000'
@@ -62,9 +63,9 @@ function Invoke-Compose {
         throw 'Invoke-Compose received no compose subcommand arguments.'
     }
 
-    & docker compose -f $composeFile @ComposeArguments
+    & docker compose --env-file $backendEnvFile -f $composeFile @ComposeArguments
     if ($LASTEXITCODE -ne 0) {
-        throw "docker compose command failed: docker compose -f $composeFile $($ComposeArguments -join ' ')"
+        throw "docker compose command failed: docker compose --env-file $backendEnvFile -f $composeFile $($ComposeArguments -join ' ')"
     }
 }
 
@@ -290,10 +291,10 @@ function Start-FrontendWindow {
 
     $frontendScript = @"
 Set-Location '$frontendPath'
-`$host.UI.RawUI.WindowTitle = 'Portfolio Frontend - Vite'
+`$host.UI.RawUI.WindowTitle = 'Portfolio Frontend - Next.js'
 Write-Host ''
 Write-Host '========================================' -ForegroundColor Cyan
-Write-Host 'Portfolio Frontend Dev Server' -ForegroundColor Cyan
+Write-Host 'Portfolio Frontend Next.js Dev Server' -ForegroundColor Cyan
 Write-Host '========================================' -ForegroundColor Cyan
 Write-Host ''
 if (-not (Test-Path node_modules)) {
@@ -314,6 +315,10 @@ Write-Section -Title 'Portfolio Project Startup' -Color ([ConsoleColor]::Cyan)
 
 if (-not (Test-Path $composeFile)) {
     throw "docker-compose.yml not found: $composeFile"
+}
+
+if (-not (Test-Path $backendEnvFile)) {
+    throw "Backend .env not found: $backendEnvFile"
 }
 
 if (-not $FrontendOnly) {

@@ -1,7 +1,7 @@
 import axios, { AxiosError, AxiosInstance } from 'axios';
 
 const API_BASE_URL =
-  import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api/v1';
+  process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000/api/v1';
 
 const api: AxiosInstance = axios.create({
   baseURL: API_BASE_URL,
@@ -23,8 +23,10 @@ const shouldAttachLanguage = (config: { method?: string; url?: string }) => {
 
 api.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem('token');
-    const language = localStorage.getItem('lang') || 'en';
+    const token =
+      typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+    const language =
+      typeof window !== 'undefined' ? localStorage.getItem('lang') || 'en' : 'en';
 
     const skipLanguageHeader =
       (config.headers as Record<string, unknown> | undefined)?.['X-Skip-Language'] === true;
@@ -58,23 +60,27 @@ api.interceptors.response.use(
       skipGlobalErrorValue === true || skipGlobalErrorValue === 'true';
 
     if (status === 401 || status === 403) {
-      localStorage.removeItem('token');
-      localStorage.removeItem('refresh_token');
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem('token');
+        localStorage.removeItem('refresh_token');
 
-      if (window.location.pathname.startsWith('/admin')) {
-        window.location.href = '/login';
+        if (window.location.pathname.startsWith('/admin')) {
+          window.location.href = '/login';
+        }
       }
     }
 
     if (!shouldSkipGlobalError) {
-      window.dispatchEvent(
-        new CustomEvent('api:error', {
-          detail: {
-            status,
-            message: error.message,
-          },
-        }),
-      );
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(
+          new CustomEvent('api:error', {
+            detail: {
+              status,
+              message: error.message,
+            },
+          }),
+        );
+      }
     }
 
     return Promise.reject(error);
