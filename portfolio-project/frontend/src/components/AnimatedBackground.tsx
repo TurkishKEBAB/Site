@@ -1,191 +1,243 @@
-import { useEffect, useRef } from 'react'
+/**
+ * AnimatedBackground — NEXUS Design System
+ *
+ * Interactive canvas-based particle network with mouse reactivity.
+ * Particles float gently, form connecting lines, and respond to cursor.
+ * Falls back to static render when prefers-reduced-motion is enabled.
+ */
+import { useEffect, useRef, useCallback } from 'react'
 
-type Particle = {
+interface Particle {
   x: number
   y: number
-  size: number
-  speedX: number
-  speedY: number
+  vx: number
+  vy: number
+  radius: number
   opacity: number
 }
 
-const getSecureRandom = (): number => {
-  const randomValues = new Uint32Array(1)
-  globalThis.crypto.getRandomValues(randomValues)
-  return randomValues[0] / 4294967296
-}
-
-const createParticle = (): Particle => ({
-  x: getSecureRandom() * globalThis.innerWidth,
-  y: getSecureRandom() * globalThis.innerHeight,
-  size: getSecureRandom() * 3 + 1,
-  speedX: (getSecureRandom() - 0.5) * 0.4,
-  speedY: (getSecureRandom() - 0.5) * 0.4,
-  opacity: getSecureRandom() * 0.4 + 0.2,
-})
-
-const updateParticle = (particle: Particle) => {
-  particle.x += particle.speedX
-  particle.y += particle.speedY
-
-  if (particle.x > globalThis.innerWidth) particle.x = 0
-  if (particle.x < 0) particle.x = globalThis.innerWidth
-  if (particle.y > globalThis.innerHeight) particle.y = 0
-  if (particle.y < 0) particle.y = globalThis.innerHeight
-}
-
-const drawParticle = (ctx: CanvasRenderingContext2D, particle: Particle) => {
-  ctx.fillStyle = '#38bdf8'
-  ctx.globalAlpha = particle.opacity
-  ctx.beginPath()
-  ctx.arc(particle.x, particle.y, particle.size, 0, Math.PI * 2)
-  ctx.fill()
-  ctx.globalAlpha = 1
-}
+const PARTICLE_COUNT = 70
+const CONNECTION_DIST = 140
+const MOUSE_RADIUS = 180
+const MOUSE_FORCE = 0.6
+const BASE_SPEED = 0.25
 
 export default function AnimatedBackground() {
   const canvasRef = useRef<HTMLCanvasElement>(null)
+  const particlesRef = useRef<Particle[]>([])
+  const mouseRef = useRef({ x: -9999, y: -9999 })
+  const rafRef = useRef<number>(0)
+  const isDarkRef = useRef(false)
+  const reducedMotionRef = useRef(false)
+
+  const createParticles = useCallback((w: number, h: number): Particle[] => {
+    return Array.from({ length: PARTICLE_COUNT }, () => ({
+      x: Math.random() * w,
+      y: Math.random() * h,
+      vx: (Math.random() - 0.5) * BASE_SPEED * 2,
+      vy: (Math.random() - 0.5) * BASE_SPEED * 2,
+      radius: Math.random() * 1.8 + 0.8,
+      opacity: Math.random() * 0.5 + 0.2,
+    }))
+  }, [])
 
   useEffect(() => {
     const canvas = canvasRef.current
-    if (!canvas) {
-      return
+    if (!canvas) return
+
+    const ctx = canvas.getContext('2d', { alpha: true })
+    if (!ctx) return
+
+    // Detect reduced motion
+    const motionQuery = window.matchMedia('(prefers-reduced-motion: reduce)')
+    reducedMotionRef.current = motionQuery.matches
+    const onMotionChange = (e: MediaQueryListEvent) => {
+      reducedMotionRef.current = e.matches
     }
+    motionQuery.addEventListener('change', onMotionChange)
 
-    const context = canvas.getContext('2d', { alpha: false })
-    if (!context) {
-      return
+    // Detect dark mode
+    const updateDarkMode = () => {
+      isDarkRef.current = document.documentElement.classList.contains('dark')
     }
+    updateDarkMode()
+    const darkObserver = new MutationObserver(updateDarkMode)
+    darkObserver.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ['class'],
+    })
 
-    const ctx = context
-    const prefersReducedMotion = globalThis.matchMedia('(prefers-reduced-motion: reduce)').matches
-
-    const setCanvasSize = () => {
-      const dpr = Math.min(globalThis.devicePixelRatio || 1, 2)
-      canvas.width = globalThis.innerWidth * dpr
-      canvas.height = globalThis.innerHeight * dpr
-      canvas.style.width = `${globalThis.innerWidth}px`
-      canvas.style.height = `${globalThis.innerHeight}px`
-      ctx.setTransform(1, 0, 0, 1, 0, 0)
-      ctx.scale(dpr, dpr)
+    // Resize handler
+    const resize = () => {
+      const dpr = Math.min(window.devicePixelRatio || 1, 2)
+      const rect = canvas.getBoundingClientRect()
+      canvas.width = rect.width * dpr
+      canvas.height = rect.height * dpr
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
+      particlesRef.current = createParticles(rect.width, rect.height)
     }
+    resize()
+    window.addEventListener('resize', resize)
 
-    const drawStaticBackground = () => {
-      const gradient = ctx.createLinearGradient(0, 0, globalThis.innerWidth, globalThis.innerHeight)
-      gradient.addColorStop(0, '#0f172a')
-      gradient.addColorStop(0.5, '#0c4a6e')
-      gradient.addColorStop(1, '#1e293b')
-      ctx.fillStyle = gradient
-      ctx.fillRect(0, 0, globalThis.innerWidth, globalThis.innerHeight)
+    // Mouse tracking
+    const onMouseMove = (e: MouseEvent) => {
+      const rect = canvas.getBoundingClientRect()
+      mouseRef.current = { x: e.clientX - rect.left, y: e.clientY - rect.top }
     }
-
-    setCanvasSize()
-
-    if (prefersReducedMotion) {
-      drawStaticBackground()
-      return () => undefined
+    const onMouseLeave = () => {
+      mouseRef.current = { x: -9999, y: -9999 }
     }
+    window.addEventListener('mousemove', onMouseMove)
+    canvas.addEventListener('mouseleave', onMouseLeave)
 
-    const particleCount = globalThis.innerWidth < 768 ? 15 : 30
-    const particles: Particle[] = Array.from({ length: particleCount }, createParticle)
+    // Animation loop
+    const animate = () => {
+      const w = canvas.getBoundingClientRect().width
+      const h = canvas.getBoundingClientRect().height
+      ctx.clearRect(0, 0, w, h)
 
-    let gradientAngle = 0
-    let animationFrameId = 0
-    let isPaused = document.hidden
+      const dark = isDarkRef.current
+      const particles = particlesRef.current
+      const mouse = mouseRef.current
+      const reduced = reducedMotionRef.current
 
-    const drawFrame = () => {
-      const gradient = ctx.createLinearGradient(
-        0,
-        0,
-        globalThis.innerWidth * Math.cos(gradientAngle),
-        globalThis.innerHeight * Math.sin(gradientAngle),
-      )
-      gradient.addColorStop(0, '#0f172a')
-      gradient.addColorStop(0.5, '#0c4a6e')
-      gradient.addColorStop(1, '#1e293b')
+      // Color palette
+      const particleColor = dark ? '0, 212, 255' : '0, 140, 180'
+      const lineColor = dark ? '0, 212, 255' : '0, 150, 200'
 
-      ctx.fillStyle = gradient
-      ctx.fillRect(0, 0, globalThis.innerWidth, globalThis.innerHeight)
+      // Update and draw particles
+      for (let i = 0; i < particles.length; i++) {
+        const p = particles[i]
 
-      gradientAngle += 0.001
+        if (!reduced) {
+          // Mouse repulsion
+          const dx = p.x - mouse.x
+          const dy = p.y - mouse.y
+          const dist = Math.sqrt(dx * dx + dy * dy)
+          if (dist < MOUSE_RADIUS && dist > 0) {
+            const force = (1 - dist / MOUSE_RADIUS) * MOUSE_FORCE
+            p.vx += (dx / dist) * force
+            p.vy += (dy / dist) * force
+          }
 
-      particles.forEach((particle) => {
-        updateParticle(particle)
-        drawParticle(ctx, particle)
-      })
+          // Damping
+          p.vx *= 0.98
+          p.vy *= 0.98
 
-      ctx.strokeStyle = 'rgba(56, 189, 248, 0.14)'
-      ctx.lineWidth = 1
+          // Clamp speed
+          const speed = Math.sqrt(p.vx * p.vx + p.vy * p.vy)
+          const maxSpeed = BASE_SPEED * 4
+          if (speed > maxSpeed) {
+            p.vx = (p.vx / speed) * maxSpeed
+            p.vy = (p.vy / speed) * maxSpeed
+          }
 
-      for (let i = 0; i < particles.length; i += 1) {
-        for (let j = i + 1; j < particles.length; j += 1) {
+          // Move
+          p.x += p.vx
+          p.y += p.vy
+
+          // Bounce off edges
+          if (p.x < 0) { p.x = 0; p.vx *= -1 }
+          if (p.x > w) { p.x = w; p.vx *= -1 }
+          if (p.y < 0) { p.y = 0; p.vy *= -1 }
+          if (p.y > h) { p.y = h; p.vy *= -1 }
+        }
+
+        // Draw particle
+        ctx.beginPath()
+        ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2)
+        ctx.fillStyle = `rgba(${particleColor}, ${p.opacity})`
+        ctx.fill()
+      }
+
+      // Draw connections
+      for (let i = 0; i < particles.length; i++) {
+        for (let j = i + 1; j < particles.length; j++) {
           const dx = particles[i].x - particles[j].x
           const dy = particles[i].y - particles[j].y
-          const distance = Math.hypot(dx, dy)
+          const dist = Math.sqrt(dx * dx + dy * dy)
 
-          if (distance < 120) {
-            ctx.globalAlpha = 1 - distance / 120
+          if (dist < CONNECTION_DIST) {
+            const alpha = (1 - dist / CONNECTION_DIST) * 0.15
             ctx.beginPath()
             ctx.moveTo(particles[i].x, particles[i].y)
             ctx.lineTo(particles[j].x, particles[j].y)
+            ctx.strokeStyle = `rgba(${lineColor}, ${alpha})`
+            ctx.lineWidth = 0.6
             ctx.stroke()
           }
         }
       }
 
-      ctx.globalAlpha = 1
-    }
-
-    const loop = () => {
-      if (isPaused) {
-        return
+      // Mouse glow halo
+      if (mouse.x > -999 && !reduced) {
+        const gradient = ctx.createRadialGradient(
+          mouse.x, mouse.y, 0,
+          mouse.x, mouse.y, MOUSE_RADIUS
+        )
+        gradient.addColorStop(0, `rgba(${particleColor}, 0.06)`)
+        gradient.addColorStop(1, 'transparent')
+        ctx.beginPath()
+        ctx.arc(mouse.x, mouse.y, MOUSE_RADIUS, 0, Math.PI * 2)
+        ctx.fillStyle = gradient
+        ctx.fill()
       }
 
-      drawFrame()
-      animationFrameId = requestAnimationFrame(loop)
+      rafRef.current = requestAnimationFrame(animate)
     }
-
-    const onVisibilityChange = () => {
-      isPaused = document.hidden
-      if (!isPaused) {
-        animationFrameId = requestAnimationFrame(loop)
-      } else if (animationFrameId) {
-        cancelAnimationFrame(animationFrameId)
-      }
-    }
-
-    let resizeTimeout: ReturnType<typeof setTimeout> | null = null
-    const onResize = () => {
-      if (resizeTimeout) {
-        clearTimeout(resizeTimeout)
-      }
-      resizeTimeout = setTimeout(() => {
-        setCanvasSize()
-      }, 200)
-    }
-
-    document.addEventListener('visibilitychange', onVisibilityChange)
-    globalThis.addEventListener('resize', onResize, { passive: true })
-
-    animationFrameId = requestAnimationFrame(loop)
+    rafRef.current = requestAnimationFrame(animate)
 
     return () => {
-      document.removeEventListener('visibilitychange', onVisibilityChange)
-      globalThis.removeEventListener('resize', onResize)
-      if (animationFrameId) {
-        cancelAnimationFrame(animationFrameId)
-      }
-      if (resizeTimeout) {
-        clearTimeout(resizeTimeout)
-      }
+      cancelAnimationFrame(rafRef.current)
+      window.removeEventListener('resize', resize)
+      window.removeEventListener('mousemove', onMouseMove)
+      canvas.removeEventListener('mouseleave', onMouseLeave)
+      motionQuery.removeEventListener('change', onMotionChange)
+      darkObserver.disconnect()
     }
-  }, [])
+  }, [createParticles])
 
   return (
-    <canvas
-      ref={canvasRef}
+    <div
       aria-hidden="true"
-      className="fixed inset-0 -z-10 pointer-events-none bg-gradient-to-br from-slate-950 via-primary-950 to-slate-900"
-    />
+      className="fixed inset-0 -z-10 pointer-events-none"
+    >
+      {/* Base background color */}
+      <div className="absolute inset-0 bg-[#f4f4f8] dark:bg-dark-950" />
+
+      {/* Top radial glow underglow */}
+      <div
+        className="absolute inset-0"
+        style={{
+          background: 'radial-gradient(ellipse 80% 50% at 50% -10%, rgba(0,212,255,0.08) 0%, transparent 60%)',
+        }}
+      />
+      <div
+        className="absolute inset-0 hidden dark:block"
+        style={{
+          background: 'radial-gradient(ellipse 80% 50% at 50% -10%, rgba(0,212,255,0.12) 0%, transparent 60%)',
+        }}
+      />
+
+      {/* Interactive particle canvas */}
+      <canvas
+        ref={canvasRef}
+        className="absolute inset-0 w-full h-full pointer-events-auto"
+      />
+
+      {/* Bottom fade for footer grounding */}
+      <div
+        className="absolute bottom-0 left-0 right-0 h-40"
+        style={{
+          background: 'linear-gradient(to top, #f4f4f8, transparent)',
+        }}
+      />
+      <div
+        className="absolute bottom-0 left-0 right-0 h-40 hidden dark:block"
+        style={{
+          background: 'linear-gradient(to top, #06060e, transparent)',
+        }}
+      />
+    </div>
   )
 }
