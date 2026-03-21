@@ -1,6 +1,76 @@
-﻿export type Locale = "en" | "tr";
+export type Locale = "en" | "tr";
 
 export type LocalizedString = Record<Locale, string>;
+
+type ContactFieldKey = "name" | "email" | "subject" | "message";
+type SeoPageKey = "home" | "about" | "projects" | "contact" | "blog" | "login" | "admin";
+
+interface HomeOverviewCard {
+  title: LocalizedString;
+  body: LocalizedString;
+}
+
+interface HomeLocaleContent {
+  heroEyebrow: string;
+  heroTitleFirst: string;
+  heroTitleSecond: string;
+  heroDescription: string;
+  availabilityLabel: string;
+  availabilityNote: string;
+  primaryCta: string;
+  secondaryCta: string;
+  tertiaryCta: string;
+  overviewLabel: string;
+  overviewTitle: string;
+  skillsLabel: string;
+  skillsTitle: string;
+  skillsSubtitle: string;
+  projectsLabel: string;
+  projectsTitle: string;
+  projectsSubtitle: string;
+  ctaLabel: string;
+  ctaTitle: string;
+  ctaBody: string;
+  scroll: string;
+  roleParts: string[];
+  overviewCards: Array<{ title: string; body: string }>;
+}
+
+interface AboutLocaleContent {
+  pageLabel: string;
+  pageTitle: string;
+  pageSubtitle: string;
+  journeyLabel: string;
+  journeyTitle: string;
+  journeyBody: string;
+  highlightsLabel: string;
+  highlightsTitle: string;
+  highlights: string[];
+}
+
+interface ContactLocaleContent {
+  pageLabel: string;
+  pageTitle: string;
+  pageSubtitle: string;
+  formLabel: string;
+  formTitle: string;
+  formDescription: string;
+  fields: Record<ContactFieldKey, string>;
+  placeholders: Record<ContactFieldKey, string>;
+  submit: string;
+  sending: string;
+  success: string;
+  failure: string;
+  validation: Record<ContactFieldKey, string>;
+  infoTitle: string;
+  availabilityTitle: string;
+  availabilityBody: string;
+}
+
+interface SeoLocaleContent {
+  title: string;
+  description: string;
+}
 
 export interface ImpactMetric {
   value: string;
@@ -26,6 +96,39 @@ export interface ProjectRecord {
   featured: boolean;
 }
 
+const localized = (en: string, tr: string): LocalizedString => ({ en, tr });
+
+const buildLocaleMap = <T>(resolver: (locale: Locale) => T): Record<Locale, T> => ({
+  en: resolver("en"),
+  tr: resolver("tr"),
+});
+
+export const getLocaleValue = <T>(value: Record<Locale, T>, locale: Locale): T =>
+  value[locale] ?? value[defaultLocale];
+
+const resolveLocalizedRecord = <T extends Record<string, LocalizedString>>(
+  value: T,
+  locale: Locale,
+): { [K in keyof T]: string } =>
+  Object.fromEntries(
+    (Object.entries(value) as Array<[keyof T, LocalizedString]>).map(([key, entry]) => [
+      key,
+      getLocaleValue(entry, locale),
+    ]),
+  ) as { [K in keyof T]: string };
+
+const resolveLocalizedList = (value: LocalizedString[], locale: Locale): string[] =>
+  value.map((entry) => getLocaleValue(entry, locale));
+
+const buildSeoEntry = (
+  title: LocalizedString,
+  description: LocalizedString,
+): Record<Locale, SeoLocaleContent> =>
+  buildLocaleMap((locale) => ({
+    title: getLocaleValue(title, locale),
+    description: getLocaleValue(description, locale),
+  }));
+
 export const defaultLocale: Locale = "en";
 export const localeCookieName = "preferred-locale";
 
@@ -37,10 +140,7 @@ export const siteConfig = {
   email: "yigitokur@ieee.org",
   phone: "+90 535 573 3873",
   phoneHref: "tel:+905355733873",
-  location: {
-    en: "Istanbul, Turkey",
-    tr: "Istanbul, Turkiye",
-  },
+  location: localized("Istanbul, Turkey", "Istanbul, Turkiye"),
   github: "https://github.com/TurkishKEBAB",
   linkedin: "https://www.linkedin.com/in/yigit-okur-050b5b278",
   twitter: "https://x.com/biznedenokuruz",
@@ -49,590 +149,541 @@ export const siteConfig = {
   ogImage: "/opengraph-image",
 };
 
-export const uiDictionary = {
-  en: {
-    navHome: "Home",
-    navAbout: "About",
-    navProjects: "Projects",
-    navBlog: "Blog",
-    navContact: "Contact",
-    navLanguage: "Language",
-    navTheme: "Theme",
-    footerNavigation: "Navigation",
-    footerContact: "Contact",
-    footerAvailability: "Open to engineering collaborations",
-    footerStack: "Next.js / React / Tailwind CSS",
-    contactCopy: "Copy message",
-    contactCopied: "Copied",
-    contactMailFallback: "Open email draft",
-    contactRetry: "Try again",
-    blogUnavailableTitle: "Blog is temporarily unavailable",
-    blogUnavailableBody:
-      "The public site still loads from repo-canonical content, but blog posts depend on the API right now.",
-    blogBackToProjects: "View projects",
-    blogBackToAbout: "View profile",
-    loginBackHome: "Back to home",
-    notFoundTitle: "Page not found",
-    notFoundBody:
-      "This route does not exist on the new public surface. The core profile content is available below.",
-    notFoundAction: "Return home",
-  },
-  tr: {
-    navHome: "Ana Sayfa",
-    navAbout: "Hakkimda",
-    navProjects: "Projeler",
-    navBlog: "Blog",
-    navContact: "Iletisim",
-    navLanguage: "Dil",
-    navTheme: "Tema",
-    footerNavigation: "Navigasyon",
-    footerContact: "Iletisim",
-    footerAvailability: "Muhendislik is birliklerine acik",
-    footerStack: "Next.js / React / Tailwind CSS",
-    contactCopy: "Mesaji kopyala",
-    contactCopied: "Kopyalandi",
-    contactMailFallback: "E-posta taslagi ac",
-    contactRetry: "Tekrar dene",
-    blogUnavailableTitle: "Blog gecici olarak ulasilamiyor",
-    blogUnavailableBody:
-      "Public site repo-iceriginden yuklenmeye devam ediyor, ancak blog yazilari simdilik API bagimli.",
-    blogBackToProjects: "Projeleri gor",
-    blogBackToAbout: "Profili gor",
-    loginBackHome: "Ana sayfaya don",
-    notFoundTitle: "Sayfa bulunamadi",
-    notFoundBody:
-      "Bu rota yeni public yuzeyde bulunmuyor. Asagidaki temel profil icerigine donebilirsiniz.",
-    notFoundAction: "Ana sayfaya don",
-  },
-} satisfies Record<Locale, Record<string, string>>;
+const uiDictionaryDefinitions = {
+  navHome: localized("Home", "Ana Sayfa"),
+  navAbout: localized("About", "Hakkimda"),
+  navProjects: localized("Projects", "Projeler"),
+  navBlog: localized("Blog", "Blog"),
+  navContact: localized("Contact", "Iletisim"),
+  navLanguage: localized("Language", "Dil"),
+  navTheme: localized("Theme", "Tema"),
+  footerNavigation: localized("Navigation", "Navigasyon"),
+  footerContact: localized("Contact", "Iletisim"),
+  footerAvailability: localized(
+    "Open to engineering collaborations",
+    "Muhendislik is birliklerine acik",
+  ),
+  footerStack: localized("Next.js / React / Tailwind CSS", "Next.js / React / Tailwind CSS"),
+  contactCopy: localized("Copy message", "Mesaji kopyala"),
+  contactCopied: localized("Copied", "Kopyalandi"),
+  contactMailFallback: localized("Open email draft", "E-posta taslagi ac"),
+  contactRetry: localized("Try again", "Tekrar dene"),
+  blogUnavailableTitle: localized(
+    "Blog is temporarily unavailable",
+    "Blog gecici olarak ulasilamiyor",
+  ),
+  blogUnavailableBody: localized(
+    "The public site still loads from repo-canonical content, but blog posts depend on the API right now.",
+    "Public site repo-iceriginden yuklenmeye devam ediyor, ancak blog yazilari simdilik API bagimli.",
+  ),
+  blogBackToProjects: localized("View projects", "Projeleri gor"),
+  blogBackToAbout: localized("View profile", "Profili gor"),
+  loginBackHome: localized("Back to home", "Ana sayfaya don"),
+  notFoundTitle: localized("Page not found", "Sayfa bulunamadi"),
+  notFoundBody: localized(
+    "This route does not exist on the new public surface. The core profile content is available below.",
+    "Bu rota yeni public yuzeyde bulunmuyor. Asagidaki temel profil icerigine donebilirsiniz.",
+  ),
+  notFoundAction: localized("Return home", "Ana sayfaya don"),
+} satisfies Record<string, LocalizedString>;
 
-export const homeContent = {
-  en: {
-    heroEyebrow: "> init system.profile",
-    heroTitleFirst: "YIGIT",
-    heroTitleSecond: "OKUR",
-    heroDescription:
-      "I build enterprise backend systems, cloud-native workflows, and AI-native tooling while studying Software Engineering at Isik University. My strongest case study comes from NETAS, where I traced a silent timezone defect across production microservices and turned it into a documented regression safety net.",
-    availabilityLabel: "Available for part-time cloud and backend roles",
-    availabilityNote: "Open to engineering collaborations and high-ownership internships",
-    primaryCta: "Get in touch",
-    secondaryCta: "Download CV",
-    tertiaryCta: "View projects",
-    overviewLabel: "Overview",
-    overviewTitle: "Impact-first profile",
-    skillsLabel: "Capabilities",
-    skillsTitle: "Technical system",
-    skillsSubtitle:
-      "Grouped by the stacks I actually use to ship backend, cloud, observability, and product work.",
-    projectsLabel: "Featured work",
-    projectsTitle: "Selected projects",
-    projectsSubtitle:
-      "A focused set of systems that represent product scale, technical depth, and delivery ownership.",
-    ctaLabel: "Contact",
-    ctaTitle: "Let's build something sharp",
-    ctaBody:
-      "If you want to discuss backend systems, cloud architecture, DevOps automation, or AI-native workflows, I am happy to connect.",
-    scroll: "Scroll",
-    roleParts: ["BACKEND SYSTEMS", "CLOUD & DEVOPS", "AI-NATIVE TOOLING"],
-    overviewCards: [
-      {
-        title: "NETAS timezone investigation",
-        body:
-          "Identified a silent v1/v2 timezone mismatch via YAML and ELK analysis, then documented the remediation path with 600+ lines of tests.",
-      },
-      {
-        title: "IsikSchedule product maturity",
-        body:
-          "Built a shared scheduling core spanning desktop and web, with roughly 1,000 active users and a 13-algorithm optimization engine.",
-      },
-      {
-        title: "IEEE and AdaLab leadership",
-        body:
-          "Blend delivery, community leadership, and research support through IEEE Isik and AdaLab responsibilities.",
-      },
-    ],
-  },
-  tr: {
-    heroEyebrow: "> sistem.profil baslatiliyor",
-    heroTitleFirst: "YIGIT",
-    heroTitleSecond: "OKUR",
-    heroDescription:
-      "Isik Universitesi'nde Yazilim Muhendisligi egitimime devam ederken enterprise backend sistemleri, cloud-native workflow'lar ve AI-native tooling uzerine uretim yapiyorum. En guclu case study'm NETAS'ta canli mikroservislerde sessizce kalan timezone defect'ini izleyip kalici regression guvencesine cevirmemdi.",
-    availabilityLabel: "Part-time cloud ve backend rollerine acigim",
-    availabilityNote: "Yuksek sahiplik gerektiren muhendislik is birlikleri ve stajlara acigim",
-    primaryCta: "Iletisime gec",
-    secondaryCta: "CV indir",
-    tertiaryCta: "Projeleri gor",
-    overviewLabel: "Genel bakis",
-    overviewTitle: "Etki odakli profil",
-    skillsLabel: "Yetkinlikler",
-    skillsTitle: "Teknik sistemim",
-    skillsSubtitle:
-      "Backend, cloud, observability ve urun teslimi icin gercekte kullandigim teknoloji gruplari.",
-    projectsLabel: "One cikan isler",
-    projectsTitle: "Secili projeler",
-    projectsSubtitle:
-      "Urun olgunlugu, teknik derinlik ve teslim sorumlulugunu birlikte gosteren odakli bir proje secimi.",
-    ctaLabel: "Iletisim",
-    ctaTitle: "Birlikte keskin bir seyler uretelim",
-    ctaBody:
-      "Backend sistemleri, cloud mimarisi, DevOps otomasyonu veya AI-native workflow'lar konusmak istersen baglanabiliriz.",
-    scroll: "Kaydir",
-    roleParts: ["BACKEND SYSTEMS", "CLOUD & DEVOPS", "AI-NATIVE TOOLING"],
-    overviewCards: [
-      {
-        title: "NETAS timezone incelemesi",
-        body:
-          "YAML ve ELK analiziyle sessiz kalan v1/v2 timezone uyumsuzlugunu tespit ettim; cozum yolunu 600+ satir test ile kalici hale getirdim.",
-      },
-      {
-        title: "IsikSchedule urun olgunlugu",
-        body:
-          "Masaustu ve web urunlerini paylasilan scheduling core uzerinde birlestirdim; yaklasik 1.000 aktif kullaniciya ve 13 algoritmali optimizasyon motoruna ulasti.",
-      },
-      {
-        title: "IEEE ve AdaLab liderligi",
-        body:
-          "IEEE Isik ve AdaLab sorumluluklariyla teknik teslim, topluluk liderligi ve arastirma destegini birlikte yuruttum.",
-      },
-    ],
-  },
-} satisfies Record<
+export const uiDictionary = buildLocaleMap((locale) =>
+  resolveLocalizedRecord(uiDictionaryDefinitions, locale),
+);
+
+const homeRoleParts = ["BACKEND SYSTEMS", "CLOUD & DEVOPS", "AI-NATIVE TOOLING"];
+
+const homeDefinition = {
+  heroEyebrow: localized("> init system.profile", "> sistem.profil baslatiliyor"),
+  heroTitleFirst: localized("YIGIT", "YIGIT"),
+  heroTitleSecond: localized("OKUR", "OKUR"),
+  heroDescription: localized(
+    "I build enterprise backend systems, cloud-native workflows, and AI-native tooling while studying Software Engineering at Isik University. My strongest case study comes from NETAS, where I traced a silent timezone defect across production microservices and turned it into a documented regression safety net.",
+    "Isik Universitesi'nde Yazilim Muhendisligi egitimime devam ederken enterprise backend sistemleri, cloud-native workflow'lar ve AI-native tooling uzerine uretim yapiyorum. En guclu case study'm NETAS'ta canli mikroservislerde sessizce kalan timezone defect'ini izleyip kalici regression guvencesine cevirmemdi.",
+  ),
+  availabilityLabel: localized(
+    "Available for part-time cloud and backend roles",
+    "Part-time cloud ve backend rollerine acigim",
+  ),
+  availabilityNote: localized(
+    "Open to engineering collaborations and high-ownership internships",
+    "Yuksek sahiplik gerektiren muhendislik is birlikleri ve stajlara acigim",
+  ),
+  primaryCta: localized("Get in touch", "Iletisime gec"),
+  secondaryCta: localized("Download CV", "CV indir"),
+  tertiaryCta: localized("View projects", "Projeleri gor"),
+  overviewLabel: localized("Overview", "Genel bakis"),
+  overviewTitle: localized("Impact-first profile", "Etki odakli profil"),
+  skillsLabel: localized("Capabilities", "Yetkinlikler"),
+  skillsTitle: localized("Technical system", "Teknik sistemim"),
+  skillsSubtitle: localized(
+    "Grouped by the stacks I actually use to ship backend, cloud, observability, and product work.",
+    "Backend, cloud, observability ve urun teslimi icin gercekte kullandigim teknoloji gruplari.",
+  ),
+  projectsLabel: localized("Featured work", "One cikan isler"),
+  projectsTitle: localized("Selected projects", "Secili projeler"),
+  projectsSubtitle: localized(
+    "A focused set of systems that represent product scale, technical depth, and delivery ownership.",
+    "Urun olgunlugu, teknik derinlik ve teslim sorumlulugunu birlikte gosteren odakli bir proje secimi.",
+  ),
+  ctaLabel: localized("Contact", "Iletisim"),
+  ctaTitle: localized("Let's build something sharp", "Birlikte keskin bir seyler uretelim"),
+  ctaBody: localized(
+    "If you want to discuss backend systems, cloud architecture, DevOps automation, or AI-native workflows, I am happy to connect.",
+    "Backend sistemleri, cloud mimarisi, DevOps otomasyonu veya AI-native workflow'lar konusmak istersen baglanabiliriz.",
+  ),
+  scroll: localized("Scroll", "Kaydir"),
+  roleParts: homeRoleParts,
+  overviewCards: [
+    {
+      title: localized("NETAS timezone investigation", "NETAS timezone incelemesi"),
+      body: localized(
+        "Identified a silent v1/v2 timezone mismatch via YAML and ELK analysis, then documented the remediation path with 600+ lines of tests.",
+        "YAML ve ELK analiziyle sessiz kalan v1/v2 timezone uyumsuzlugunu tespit ettim; cozum yolunu 600+ satir test ile kalici hale getirdim.",
+      ),
+    },
+    {
+      title: localized("IsikSchedule product maturity", "IsikSchedule urun olgunlugu"),
+      body: localized(
+        "Built a shared scheduling core spanning desktop and web, with roughly 1,000 active users and a 13-algorithm optimization engine.",
+        "Masaustu ve web urunlerini paylasilan scheduling core uzerinde birlestirdim; yaklasik 1.000 aktif kullaniciya ve 13 algoritmali optimizasyon motoruna ulasti.",
+      ),
+    },
+    {
+      title: localized("IEEE and AdaLab leadership", "IEEE ve AdaLab liderligi"),
+      body: localized(
+        "Blend delivery, community leadership, and research support through IEEE Isik and AdaLab responsibilities.",
+        "IEEE Isik ve AdaLab sorumluluklariyla teknik teslim, topluluk liderligi ve arastirma destegini birlikte yuruttum.",
+      ),
+    },
+  ] satisfies HomeOverviewCard[],
+};
+
+const resolveHomeContent = (locale: Locale): HomeLocaleContent => ({
+  heroEyebrow: getLocaleValue(homeDefinition.heroEyebrow, locale),
+  heroTitleFirst: getLocaleValue(homeDefinition.heroTitleFirst, locale),
+  heroTitleSecond: getLocaleValue(homeDefinition.heroTitleSecond, locale),
+  heroDescription: getLocaleValue(homeDefinition.heroDescription, locale),
+  availabilityLabel: getLocaleValue(homeDefinition.availabilityLabel, locale),
+  availabilityNote: getLocaleValue(homeDefinition.availabilityNote, locale),
+  primaryCta: getLocaleValue(homeDefinition.primaryCta, locale),
+  secondaryCta: getLocaleValue(homeDefinition.secondaryCta, locale),
+  tertiaryCta: getLocaleValue(homeDefinition.tertiaryCta, locale),
+  overviewLabel: getLocaleValue(homeDefinition.overviewLabel, locale),
+  overviewTitle: getLocaleValue(homeDefinition.overviewTitle, locale),
+  skillsLabel: getLocaleValue(homeDefinition.skillsLabel, locale),
+  skillsTitle: getLocaleValue(homeDefinition.skillsTitle, locale),
+  skillsSubtitle: getLocaleValue(homeDefinition.skillsSubtitle, locale),
+  projectsLabel: getLocaleValue(homeDefinition.projectsLabel, locale),
+  projectsTitle: getLocaleValue(homeDefinition.projectsTitle, locale),
+  projectsSubtitle: getLocaleValue(homeDefinition.projectsSubtitle, locale),
+  ctaLabel: getLocaleValue(homeDefinition.ctaLabel, locale),
+  ctaTitle: getLocaleValue(homeDefinition.ctaTitle, locale),
+  ctaBody: getLocaleValue(homeDefinition.ctaBody, locale),
+  scroll: getLocaleValue(homeDefinition.scroll, locale),
+  roleParts: [...homeDefinition.roleParts],
+  overviewCards: homeDefinition.overviewCards.map((card) => ({
+    title: getLocaleValue(card.title, locale),
+    body: getLocaleValue(card.body, locale),
+  })),
+});
+
+export const homeContent = buildLocaleMap(resolveHomeContent) satisfies Record<
   Locale,
-  {
-    heroEyebrow: string;
-    heroTitleFirst: string;
-    heroTitleSecond: string;
-    heroDescription: string;
-    availabilityLabel: string;
-    availabilityNote: string;
-    primaryCta: string;
-    secondaryCta: string;
-    tertiaryCta: string;
-    overviewLabel: string;
-    overviewTitle: string;
-    skillsLabel: string;
-    skillsTitle: string;
-    skillsSubtitle: string;
-    projectsLabel: string;
-    projectsTitle: string;
-    projectsSubtitle: string;
-    ctaLabel: string;
-    ctaTitle: string;
-    ctaBody: string;
-    scroll: string;
-    roleParts: string[];
-    overviewCards: Array<{ title: string; body: string }>;
-  }
+  HomeLocaleContent
 >;
+
+const impactMetric = (
+  value: string,
+  labelEn: string,
+  labelTr: string,
+  noteEn: string,
+  noteTr: string,
+): ImpactMetric => ({
+  value,
+  label: localized(labelEn, labelTr),
+  note: localized(noteEn, noteTr),
+});
 
 export const impactMetrics: ImpactMetric[] = [
-  {
-    value: "~1,000",
-    label: {
-      en: "active users reached",
-      tr: "aktif kullaniciya eristi",
-    },
-    note: {
-      en: "Desktop deployment of IsikSchedule",
-      tr: "IsikSchedule masaustu dagitimi",
-    },
-  },
-  {
-    value: "13",
-    label: {
-      en: "optimization algorithms",
-      tr: "optimizasyon algoritmasi",
-    },
-    note: {
-      en: "Shared scheduling engine",
-      tr: "Paylasilan scheduling motoru",
-    },
-  },
-  {
-    value: "3 / 700+",
-    label: {
-      en: "preliminary ranking",
-      tr: "on degerlendirme sirasi",
-    },
-    note: {
-      en: "Teknofest Sarkan UAV",
-      tr: "Teknofest Sarkan IHA",
-    },
-  },
+  impactMetric(
+    "~1,000",
+    "active users reached",
+    "aktif kullaniciya eristi",
+    "Desktop deployment of IsikSchedule",
+    "IsikSchedule masaustu dagitimi",
+  ),
+  impactMetric(
+    "13",
+    "optimization algorithms",
+    "optimizasyon algoritmasi",
+    "Shared scheduling engine",
+    "Paylasilan scheduling motoru",
+  ),
+  impactMetric(
+    "3 / 700+",
+    "preliminary ranking",
+    "on degerlendirme sirasi",
+    "Teknofest Sarkan UAV",
+    "Teknofest Sarkan IHA",
+  ),
 ];
+
+const skillGroup = (
+  titleEn: string,
+  titleTr: string,
+  summaryEn: string,
+  summaryTr: string,
+  skills: string[],
+): SkillGroup => ({
+  title: localized(titleEn, titleTr),
+  summary: localized(summaryEn, summaryTr),
+  skills,
+});
 
 export const skillGroups: SkillGroup[] = [
-  {
-    title: {
-      en: "Backend and architecture",
-      tr: "Backend ve mimari",
-    },
-    summary: {
-      en: "Production-focused APIs, modular services, and clean system boundaries.",
-      tr: "Production odakli API'ler, moduler servisler ve temiz sistem sinirlari.",
-    },
-    skills: ["Java", "Spring Boot", "Python", "FastAPI", "REST APIs", "Microservices", "Clean Architecture", "JWT / RBAC"],
-  },
-  {
-    title: {
-      en: "Cloud and observability",
-      tr: "Cloud ve observability",
-    },
-    summary: {
-      en: "Deploy, diagnose, and stabilize distributed systems.",
-      tr: "Dagitik sistemleri deploy etme, izleme ve stabil hale getirme.",
-    },
-    skills: ["Docker", "Kubernetes", "GitHub Actions", "AWS EC2", "AWS S3", "Redis", "ElasticSearch", "Kibana", "RabbitMQ"],
-  },
-  {
-    title: {
-      en: "Product and interface layer",
-      tr: "Urun ve arayuz katmani",
-    },
-    summary: {
-      en: "Enough frontend fluency to ship end-to-end experiences without losing system quality.",
-      tr: "Sistem kalitesini kaybetmeden uctan uca deneyim cikarmaya yetecek kadar frontend yetkinligi.",
-    },
-    skills: ["TypeScript", "React", "Next.js", "Tailwind CSS", "Electron", "Monaco Editor"],
-  },
-  {
-    title: {
-      en: "Testing and automation",
-      tr: "Test ve otomasyon",
-    },
-    summary: {
-      en: "Test-first debugging and reliable delivery pipelines.",
-      tr: "Test-first debugging ve guvenilir teslim pipeline'lari.",
-    },
-    skills: ["Pytest", "JUnit", "CI/CD", "SonarQube", "Defect Tracking", "Regression Design"],
-  },
+  skillGroup(
+    "Backend and architecture",
+    "Backend ve mimari",
+    "Production-focused APIs, modular services, and clean system boundaries.",
+    "Production odakli API'ler, moduler servisler ve temiz sistem sinirlari.",
+    [
+      "Java",
+      "Spring Boot",
+      "Python",
+      "FastAPI",
+      "REST APIs",
+      "Microservices",
+      "Clean Architecture",
+      "JWT / RBAC",
+    ],
+  ),
+  skillGroup(
+    "Cloud and observability",
+    "Cloud ve observability",
+    "Deploy, diagnose, and stabilize distributed systems.",
+    "Dagitik sistemleri deploy etme, izleme ve stabil hale getirme.",
+    [
+      "Docker",
+      "Kubernetes",
+      "GitHub Actions",
+      "AWS EC2",
+      "AWS S3",
+      "Redis",
+      "ElasticSearch",
+      "Kibana",
+      "RabbitMQ",
+    ],
+  ),
+  skillGroup(
+    "Product and interface layer",
+    "Urun ve arayuz katmani",
+    "Enough frontend fluency to ship end-to-end experiences without losing system quality.",
+    "Sistem kalitesini kaybetmeden uctan uca deneyim cikarmaya yetecek kadar frontend yetkinligi.",
+    ["TypeScript", "React", "Next.js", "Tailwind CSS", "Electron", "Monaco Editor"],
+  ),
+  skillGroup(
+    "Testing and automation",
+    "Test ve otomasyon",
+    "Test-first debugging and reliable delivery pipelines.",
+    "Test-first debugging ve guvenilir teslim pipeline'lari.",
+    ["Pytest", "JUnit", "CI/CD", "SonarQube", "Defect Tracking", "Regression Design"],
+  ),
 ];
+
+const projectRecord = (
+  slug: string,
+  titleEn: string,
+  titleTr: string,
+  summaryEn: string,
+  summaryTr: string,
+  descriptionEn: string,
+  descriptionTr: string,
+  impactEn: string,
+  impactTr: string,
+  technologies: string[],
+  featured: boolean,
+  githubUrl?: string,
+  demoUrl?: string,
+): ProjectRecord => ({
+  slug,
+  title: localized(titleEn, titleTr),
+  summary: localized(summaryEn, summaryTr),
+  description: localized(descriptionEn, descriptionTr),
+  impact: localized(impactEn, impactTr),
+  technologies,
+  featured,
+  githubUrl,
+  demoUrl,
+});
 
 export const projectRecords: ProjectRecord[] = [
-  {
-    slug: "isikschedule-platform",
-    title: {
-      en: "IsikSchedule Platform",
-      tr: "IsikSchedule Platformu",
-    },
-    summary: {
-      en: "Constraint-aware scheduling system spanning desktop and web products.",
-      tr: "Masaustu ve web urunlerini kapsayan constraint-aware scheduling sistemi.",
-    },
-    description: {
-      en: "Built a shared scheduling domain that powers both desktop and web experiences. The engine combines hard constraints with preference optimization and ships with 13 algorithms including Genetic, SA, Tabu, PSO, and hybrid strategies.",
-      tr: "Masaustu ve web deneyimlerini besleyen paylasilan scheduling domain'ini kurdum. Motor; hard constraint'leri, tercih optimizasyonunu ve Genetik, SA, Tabu, PSO ile hibrit stratejiler dahil 13 algoritmayi birlestiriyor.",
-    },
-    impact: {
-      en: "~1,000 active users on desktop release with ongoing web productization.",
-      tr: "Masaustu surumunde ~1.000 aktif kullanici ve devam eden web urunlestirme sureci.",
-    },
-    technologies: ["FastAPI", "Next.js", "PostgreSQL", "Redis", "Celery", "Docker", "PyQt6"],
-    githubUrl: "https://github.com/TurkishKEBAB/isikschedule-core",
-    demoUrl: "https://github.com/TurkishKEBAB/isikschedule-web",
-    featured: true,
-  },
-  {
-    slug: "teknofest-sarkan-uav-defense-platform",
-    title: {
-      en: "Teknofest Sarkan UAV Defense Platform",
-      tr: "Teknofest Sarkan IHA Savunma Platformu",
-    },
-    summary: {
-      en: "Telemetry reliability and anti-jamming software for a defense UAV platform.",
-      tr: "Savunma odakli IHA platformu icin telemetri guvenilirligi ve anti-jamming yazilimi.",
-    },
-    description: {
-      en: "Led telemetry software and cross-team coordination for a defense UAV effort. The project ranked 3rd among 700+ proposals in preliminary evaluation while carrying real delivery and sponsorship pressure.",
-      tr: "Savunma odakli IHA calismasinda telemetri yazilimi ve takimlar arasi koordinasyona liderlik ettim. Proje, gercek teslim ve sponsorluk baskisi altinda on degerlendirmede 700+ basvuru arasinda 3. oldu.",
-    },
-    impact: {
-      en: "Managed a 200,000 TL budget including a 165,000 TL TUBITAK R&D grant.",
-      tr: "165.000 TL TUBITAK Ar-Ge hibesi dahil toplam 200.000 TL butce yonetildi.",
-    },
-    technologies: ["Python", "Telemetry", "Systems Design", "Team Coordination"],
-    featured: true,
-  },
-  {
-    slug: "agentic-ide-thesis-project",
-    title: {
-      en: "Agentic IDE",
-      tr: "Agentic IDE",
-    },
-    summary: {
-      en: "A thesis-driven IDE concept centered on observe, plan, approve, and apply loops.",
-      tr: "Observe, plan, approve ve apply dongusu etrafinda kurulan tez odakli IDE konsepti.",
-    },
-    description: {
-      en: "Designed the architecture for an AI-native IDE that keeps human approval in the loop. The system explores hybrid orchestration, sandboxing, and policy-aware execution for code agents.",
-      tr: "Insan onayini merkezde tutan AI-native bir IDE icin mimari tasarladim. Sistem, hibrit orkestrasyon, sandboxing ve politika farkinda ajan calistirma yaklasimlarini arastiriyor.",
-    },
-    impact: {
-      en: "Translates modern agent workflows into a concrete thesis-grade product direction.",
-      tr: "Modern ajan workflow'larini somut ve tez seviyesinde bir urun yonune ceviriyor.",
-    },
-    technologies: ["TypeScript", "Electron", "Monaco Editor", "LLMs", "RAG"],
-    featured: true,
-  },
-  {
-    slug: "portfolio-platform-web-desktop",
-    title: {
-      en: "Portfolio Platform",
-      tr: "Portfolyo Platformu",
-    },
-    summary: {
-      en: "Full-stack portfolio system with admin workflows and staged deployments.",
-      tr: "Admin workflow'lari ve asamali deploy hattina sahip full-stack portfolyo sistemi.",
-    },
-    description: {
-      en: "Built a multi-platform portfolio product with JWT/RBAC, GitHub caching, Supabase asset handling, SMTP notifications, and CI/CD to Vercel and Railway.",
-      tr: "JWT/RBAC, GitHub cache, Supabase varlik yonetimi, SMTP bildirimleri ve Vercel/Railway CI/CD hattiyla cok platformlu bir portfolyo urunu gelistirdim.",
-    },
-    impact: {
-      en: "Owns both the storytelling surface and the operational backbone behind it.",
-      tr: "Hem anlati yuzeyini hem de arkasindaki operasyonel omurgayi sahipleniyor.",
-    },
-    technologies: ["Next.js", "FastAPI", "PostgreSQL", "Redis", "Supabase", "Railway", "Vercel"],
-    githubUrl: "https://github.com/TurkishKEBAB/Site",
-    featured: false,
-  },
+  projectRecord(
+    "isikschedule-platform",
+    "IsikSchedule Platform",
+    "IsikSchedule Platformu",
+    "Constraint-aware scheduling system spanning desktop and web products.",
+    "Masaustu ve web urunlerini kapsayan constraint-aware scheduling sistemi.",
+    "Built a shared scheduling domain that powers both desktop and web experiences. The engine combines hard constraints with preference optimization and ships with 13 algorithms including Genetic, SA, Tabu, PSO, and hybrid strategies.",
+    "Masaustu ve web deneyimlerini besleyen paylasilan scheduling domain'ini kurdum. Motor; hard constraint'leri, tercih optimizasyonunu ve Genetik, SA, Tabu, PSO ile hibrit stratejiler dahil 13 algoritmayi birlestiriyor.",
+    "~1,000 active users on desktop release with ongoing web productization.",
+    "Masaustu surumunde ~1.000 aktif kullanici ve devam eden web urunlestirme sureci.",
+    ["FastAPI", "Next.js", "PostgreSQL", "Redis", "Celery", "Docker", "PyQt6"],
+    true,
+    "https://github.com/TurkishKEBAB/isikschedule-core",
+    "https://github.com/TurkishKEBAB/isikschedule-web",
+  ),
+  projectRecord(
+    "teknofest-sarkan-uav-defense-platform",
+    "Teknofest Sarkan UAV Defense Platform",
+    "Teknofest Sarkan IHA Savunma Platformu",
+    "Telemetry reliability and anti-jamming software for a defense UAV platform.",
+    "Savunma odakli IHA platformu icin telemetri guvenilirligi ve anti-jamming yazilimi.",
+    "Led telemetry software and cross-team coordination for a defense UAV effort. The project ranked 3rd among 700+ proposals in preliminary evaluation while carrying real delivery and sponsorship pressure.",
+    "Savunma odakli IHA calismasinda telemetri yazilimi ve takimlar arasi koordinasyona liderlik ettim. Proje, gercek teslim ve sponsorluk baskisi altinda on degerlendirmede 700+ basvuru arasinda 3. oldu.",
+    "Managed a 200,000 TL budget including a 165,000 TL TUBITAK R&D grant.",
+    "165.000 TL TUBITAK Ar-Ge hibesi dahil toplam 200.000 TL butce yonetildi.",
+    ["Python", "Telemetry", "Systems Design", "Team Coordination"],
+    true,
+  ),
+  projectRecord(
+    "agentic-ide-thesis-project",
+    "Agentic IDE",
+    "Agentic IDE",
+    "A thesis-driven IDE concept centered on observe, plan, approve, and apply loops.",
+    "Observe, plan, approve ve apply dongusu etrafinda kurulan tez odakli IDE konsepti.",
+    "Designed the architecture for an AI-native IDE that keeps human approval in the loop. The system explores hybrid orchestration, sandboxing, and policy-aware execution for code agents.",
+    "Insan onayini merkezde tutan AI-native bir IDE icin mimari tasarladim. Sistem, hibrit orkestrasyon, sandboxing ve politika farkinda ajan calistirma yaklasimlarini arastiriyor.",
+    "Translates modern agent workflows into a concrete thesis-grade product direction.",
+    "Modern ajan workflow'larini somut ve tez seviyesinde bir urun yonune ceviriyor.",
+    ["TypeScript", "Electron", "Monaco Editor", "LLMs", "RAG"],
+    true,
+  ),
+  projectRecord(
+    "portfolio-platform-web-desktop",
+    "Portfolio Platform",
+    "Portfolyo Platformu",
+    "Full-stack portfolio system with admin workflows and staged deployments.",
+    "Admin workflow'lari ve asamali deploy hattina sahip full-stack portfolyo sistemi.",
+    "Built a multi-platform portfolio product with JWT/RBAC, GitHub caching, Supabase asset handling, SMTP notifications, and CI/CD to Vercel and Railway.",
+    "JWT/RBAC, GitHub cache, Supabase varlik yonetimi, SMTP bildirimleri ve Vercel/Railway CI/CD hattiyla cok platformlu bir portfolyo urunu gelistirdim.",
+    "Owns both the storytelling surface and the operational backbone behind it.",
+    "Hem anlati yuzeyini hem de arkasindaki operasyonel omurgayi sahipleniyor.",
+    ["Next.js", "FastAPI", "PostgreSQL", "Redis", "Supabase", "Railway", "Vercel"],
+    false,
+    "https://github.com/TurkishKEBAB/Site",
+  ),
 ];
 
-export const aboutContent = {
-  en: {
-    pageLabel: "Profile dossier",
-    pageTitle: "About",
-    pageSubtitle:
-      "A software engineering student building durable backend systems, product workflows, and engineering leverage.",
-    journeyLabel: "Current trajectory",
-    journeyTitle: "What I optimize for",
-    journeyBody:
-      "I like solving problems where product value and systems thinking meet: enterprise defects that need careful diagnosis, scheduling engines that need algorithmic depth, and public-facing software that still needs operational reliability.",
-    highlightsLabel: "Selected highlights",
-    highlightsTitle: "Recent proof points",
-    highlights: [
+const aboutDefinition = {
+  pageLabel: localized("Profile dossier", "Profil dosyasi"),
+  pageTitle: localized("About", "Hakkimda"),
+  pageSubtitle: localized(
+    "A software engineering student building durable backend systems, product workflows, and engineering leverage.",
+    "Dayanikli backend sistemleri, urun workflow'lari ve muhendislik kaldiraci ureten bir yazilim muhendisligi ogrencisi.",
+  ),
+  journeyLabel: localized("Current trajectory", "Guncel yonde"),
+  journeyTitle: localized("What I optimize for", "Neyi optimize ediyorum"),
+  journeyBody: localized(
+    "I like solving problems where product value and systems thinking meet: enterprise defects that need careful diagnosis, scheduling engines that need algorithmic depth, and public-facing software that still needs operational reliability.",
+    "Urun degeriyle sistem dusuncesinin kesistigi problemleri seviyorum: dikkatli teshis gerektiren enterprise defect'ler, algoritmik derinlik isteyen scheduling motorlari ve operasyonel olarak guvenilir kalmasi gereken public yazilimlar.",
+  ),
+  highlightsLabel: localized("Selected highlights", "Secili basliklar"),
+  highlightsTitle: localized("Recent proof points", "Son donem kanitlar"),
+  highlights: [
+    localized(
       "NETAS internship: traced a timezone defect across enterprise microservices and turned it into a documented regression shield.",
-      "IEEE Isik: continued technical leadership and community operations reaching 1,100+ students.",
-      "AdaLab: ongoing research support around AI and data analytics workflows.",
-      "Sarkan UAV: delivery leadership under budget, sponsorship, and competition pressure.",
-    ],
-  },
-  tr: {
-    pageLabel: "Profil dosyasi",
-    pageTitle: "Hakkimda",
-    pageSubtitle:
-      "Dayanikli backend sistemleri, urun workflow'lari ve muhendislik kaldiraci ureten bir yazilim muhendisligi ogrencisi.",
-    journeyLabel: "Guncel yonde",
-    journeyTitle: "Neyi optimize ediyorum",
-    journeyBody:
-      "Urun degeriyle sistem dusuncesinin kesistigi problemleri seviyorum: dikkatli teshis gerektiren enterprise defect'ler, algoritmik derinlik isteyen scheduling motorlari ve operasyonel olarak guvenilir kalmasi gereken public yazilimlar.",
-    highlightsLabel: "Secili basliklar",
-    highlightsTitle: "Son donem kanitlar",
-    highlights: [
       "NETAS staji: enterprise mikroservislerde timezone defect'ini izleyip kalici regression kalkanina cevirdim.",
+    ),
+    localized(
+      "IEEE Isik: continued technical leadership and community operations reaching 1,100+ students.",
       "IEEE Isik: 1.100+ ogrenciye ulasan teknik liderlik ve topluluk operasyonlarini surdurdum.",
+    ),
+    localized(
+      "AdaLab: ongoing research support around AI and data analytics workflows.",
       "AdaLab: AI ve veri analitigi workflow'larinda arastirma destegi sagliyorum.",
+    ),
+    localized(
+      "Sarkan UAV: delivery leadership under budget, sponsorship, and competition pressure.",
       "Sarkan IHA: butce, sponsorluk ve rekabet baskisi altinda teslim liderligi yuruttum.",
-    ],
-  },
-} satisfies Record<
+    ),
+  ],
+};
+
+const resolveAboutContent = (locale: Locale): AboutLocaleContent => ({
+  pageLabel: getLocaleValue(aboutDefinition.pageLabel, locale),
+  pageTitle: getLocaleValue(aboutDefinition.pageTitle, locale),
+  pageSubtitle: getLocaleValue(aboutDefinition.pageSubtitle, locale),
+  journeyLabel: getLocaleValue(aboutDefinition.journeyLabel, locale),
+  journeyTitle: getLocaleValue(aboutDefinition.journeyTitle, locale),
+  journeyBody: getLocaleValue(aboutDefinition.journeyBody, locale),
+  highlightsLabel: getLocaleValue(aboutDefinition.highlightsLabel, locale),
+  highlightsTitle: getLocaleValue(aboutDefinition.highlightsTitle, locale),
+  highlights: resolveLocalizedList(aboutDefinition.highlights, locale),
+});
+
+export const aboutContent = buildLocaleMap(resolveAboutContent) satisfies Record<
   Locale,
-  {
-    pageLabel: string;
-    pageTitle: string;
-    pageSubtitle: string;
-    journeyLabel: string;
-    journeyTitle: string;
-    journeyBody: string;
-    highlightsLabel: string;
-    highlightsTitle: string;
-    highlights: string[];
-  }
+  AboutLocaleContent
 >;
 
-export const contactContent = {
-  en: {
-    pageLabel: "Channel",
-    pageTitle: "Get in touch",
-    pageSubtitle:
-      "The reliable path is direct contact first. The form still works when the API is healthy and degrades gracefully when it is not.",
-    formLabel: "Message",
-    formTitle: "Send a note",
-    formDescription:
-      "If the form request fails, your draft stays on the page and you can copy it or open a prepared email.",
-    fields: {
-      name: "Full name",
-      email: "Email address",
-      subject: "Subject",
-      message: "Message",
-    },
-    placeholders: {
-      name: "Your full name",
-      email: "you@example.com",
-      subject: "What would you like to discuss?",
-      message: "Share the project, role, or topic you want to discuss.",
-    },
-    submit: "Send message",
-    sending: "Sending...",
-    success: "Your message has been sent successfully.",
-    failure:
-      "The contact API is unavailable right now. Your draft is still here so you can copy it or open an email draft instead.",
-    validation: {
-      name: "Please enter at least 2 characters.",
-      email: "Please enter a valid email address.",
-      subject: "Subject must be at least 3 characters or left empty.",
-      message: "Your message must be at least 10 characters long.",
-    },
-    infoTitle: "Direct channels",
-    availabilityTitle: "Currently open to",
-    availabilityBody:
-      "Backend systems, cloud platform work, DevOps automation, and high-ownership engineering internships.",
-  },
-  tr: {
-    pageLabel: "Kanal",
-    pageTitle: "Iletisime gec",
-    pageSubtitle:
-      "Guvenilir yol once dogrudan iletisimdir. Form API saglikliyken calisir, degilse de zarif bicimde degrade olur.",
-    formLabel: "Mesaj",
-    formTitle: "Bir not birak",
-    formDescription:
-      "Form istegi basarisiz olursa taslagin sayfada kalir; kopyalayabilir veya hazir e-posta taslagi acabilirsin.",
-    fields: {
-      name: "Ad soyad",
-      email: "E-posta adresi",
-      subject: "Konu",
-      message: "Mesaj",
-    },
-    placeholders: {
-      name: "Adiniz soyadiniz",
-      email: "ornek@eposta.com",
-      subject: "Hangi konuda konusmak istersiniz?",
-      message: "Konusmak istediginiz rol, proje veya konuyu paylasin.",
-    },
-    submit: "Mesaji gonder",
-    sending: "Gonderiliyor...",
-    success: "Mesajiniz basariyla gonderildi.",
-    failure:
-      "Iletisim API'si su anda ulasilamiyor. Taslaginiz sayfada tutuldu; kopyalayabilir veya e-posta taslagi acabilirsiniz.",
-    validation: {
-      name: "Lutfen en az 2 karakter girin.",
-      email: "Lutfen gecerli bir e-posta adresi girin.",
-      subject: "Konu en az 3 karakter olmali veya bos birakilmalidir.",
-      message: "Mesajiniz en az 10 karakterden olusmalidir.",
-    },
-    infoTitle: "Dogrudan kanallar",
-    availabilityTitle: "Su alanlara acigim",
-    availabilityBody:
-      "Backend sistemleri, cloud platform calismalari, DevOps otomasyonu ve yuksek sahiplik gerektiren muhendislik stajlari.",
-  },
-} satisfies Record<
+const contactFieldLabels = {
+  name: localized("Full name", "Ad soyad"),
+  email: localized("Email address", "E-posta adresi"),
+  subject: localized("Subject", "Konu"),
+  message: localized("Message", "Mesaj"),
+} satisfies Record<ContactFieldKey, LocalizedString>;
+
+const contactPlaceholders = {
+  name: localized("Your full name", "Adiniz soyadiniz"),
+  email: localized("you@example.com", "ornek@eposta.com"),
+  subject: localized("What would you like to discuss?", "Hangi konuda konusmak istersiniz?"),
+  message: localized(
+    "Share the project, role, or topic you want to discuss.",
+    "Konusmak istediginiz rol, proje veya konuyu paylasin.",
+  ),
+} satisfies Record<ContactFieldKey, LocalizedString>;
+
+const contactValidationMessages = {
+  name: localized("Please enter at least 2 characters.", "Lutfen en az 2 karakter girin."),
+  email: localized(
+    "Please enter a valid email address.",
+    "Lutfen gecerli bir e-posta adresi girin.",
+  ),
+  subject: localized(
+    "Subject must be at least 3 characters or left empty.",
+    "Konu en az 3 karakter olmali veya bos birakilmalidir.",
+  ),
+  message: localized(
+    "Your message must be at least 10 characters long.",
+    "Mesajiniz en az 10 karakterden olusmalidir.",
+  ),
+} satisfies Record<ContactFieldKey, LocalizedString>;
+
+const contactDefinition = {
+  pageLabel: localized("Channel", "Kanal"),
+  pageTitle: localized("Get in touch", "Iletisime gec"),
+  pageSubtitle: localized(
+    "The reliable path is direct contact first. The form still works when the API is healthy and degrades gracefully when it is not.",
+    "Guvenilir yol once dogrudan iletisimdir. Form API saglikliyken calisir, degilse de zarif bicimde degrade olur.",
+  ),
+  formLabel: localized("Message", "Mesaj"),
+  formTitle: localized("Send a note", "Bir not birak"),
+  formDescription: localized(
+    "If the form request fails, your draft stays on the page and you can copy it or open a prepared email.",
+    "Form istegi basarisiz olursa taslagin sayfada kalir; kopyalayabilir veya hazir e-posta taslagi acabilirsin.",
+  ),
+  fields: contactFieldLabels,
+  placeholders: contactPlaceholders,
+  submit: localized("Send message", "Mesaji gonder"),
+  sending: localized("Sending...", "Gonderiliyor..."),
+  success: localized(
+    "Your message has been sent successfully.",
+    "Mesajiniz basariyla gonderildi.",
+  ),
+  failure: localized(
+    "The contact API is unavailable right now. Your draft is still here so you can copy it or open an email draft instead.",
+    "Iletisim API'si su anda ulasilamiyor. Taslaginiz sayfada tutuldu; kopyalayabilir veya e-posta taslagi acabilirsiniz.",
+  ),
+  validation: contactValidationMessages,
+  infoTitle: localized("Direct channels", "Dogrudan kanallar"),
+  availabilityTitle: localized("Currently open to", "Su alanlara acigim"),
+  availabilityBody: localized(
+    "Backend systems, cloud platform work, DevOps automation, and high-ownership engineering internships.",
+    "Backend sistemleri, cloud platform calismalari, DevOps otomasyonu ve yuksek sahiplik gerektiren muhendislik stajlari.",
+  ),
+};
+
+const resolveContactContent = (locale: Locale): ContactLocaleContent => ({
+  pageLabel: getLocaleValue(contactDefinition.pageLabel, locale),
+  pageTitle: getLocaleValue(contactDefinition.pageTitle, locale),
+  pageSubtitle: getLocaleValue(contactDefinition.pageSubtitle, locale),
+  formLabel: getLocaleValue(contactDefinition.formLabel, locale),
+  formTitle: getLocaleValue(contactDefinition.formTitle, locale),
+  formDescription: getLocaleValue(contactDefinition.formDescription, locale),
+  fields: resolveLocalizedRecord(contactDefinition.fields, locale),
+  placeholders: resolveLocalizedRecord(contactDefinition.placeholders, locale),
+  submit: getLocaleValue(contactDefinition.submit, locale),
+  sending: getLocaleValue(contactDefinition.sending, locale),
+  success: getLocaleValue(contactDefinition.success, locale),
+  failure: getLocaleValue(contactDefinition.failure, locale),
+  validation: resolveLocalizedRecord(contactDefinition.validation, locale),
+  infoTitle: getLocaleValue(contactDefinition.infoTitle, locale),
+  availabilityTitle: getLocaleValue(contactDefinition.availabilityTitle, locale),
+  availabilityBody: getLocaleValue(contactDefinition.availabilityBody, locale),
+});
+
+export const contactContent = buildLocaleMap(resolveContactContent) satisfies Record<
   Locale,
-  {
-    pageLabel: string;
-    pageTitle: string;
-    pageSubtitle: string;
-    formLabel: string;
-    formTitle: string;
-    formDescription: string;
-    fields: Record<"name" | "email" | "subject" | "message", string>;
-    placeholders: Record<"name" | "email" | "subject" | "message", string>;
-    submit: string;
-    sending: string;
-    success: string;
-    failure: string;
-    validation: Record<"name" | "email" | "subject" | "message", string>;
-    infoTitle: string;
-    availabilityTitle: string;
-    availabilityBody: string;
-  }
+  ContactLocaleContent
 >;
 
-export const seoContent = {
+const seoDefinitions = {
   home: {
-    en: {
-      title: "Yigit Okur | Software Engineer - Cloud & DevOps",
-      description:
-        "Portfolio of Yigit Okur focused on backend systems, cloud-native architecture, DevOps automation, and high-impact engineering delivery.",
-    },
-    tr: {
-      title: "Yigit Okur | Software Engineer - Cloud & DevOps",
-      description:
-        "Yigit Okur'un backend sistemleri, cloud-native mimari, DevOps otomasyonu ve yuksek etkili muhendislik teslimine odakli portfolyosu.",
-    },
+    title: localized(
+      "Yigit Okur | Software Engineer - Cloud & DevOps",
+      "Yigit Okur | Software Engineer - Cloud & DevOps",
+    ),
+    description: localized(
+      "Portfolio of Yigit Okur focused on backend systems, cloud-native architecture, DevOps automation, and high-impact engineering delivery.",
+      "Yigit Okur'un backend sistemleri, cloud-native mimari, DevOps otomasyonu ve yuksek etkili muhendislik teslimine odakli portfolyosu.",
+    ),
   },
   about: {
-    en: {
-      title: "About | Yigit Okur",
-      description:
-        "Impact-oriented profile of Yigit Okur across enterprise debugging, scheduling systems, technical leadership, and research support.",
-    },
-    tr: {
-      title: "Hakkimda | Yigit Okur",
-      description:
-        "Yigit Okur'un enterprise debugging, scheduling sistemleri, teknik liderlik ve arastirma destegini birlestiren etki odakli profili.",
-    },
+    title: localized("About | Yigit Okur", "Hakkimda | Yigit Okur"),
+    description: localized(
+      "Impact-oriented profile of Yigit Okur across enterprise debugging, scheduling systems, technical leadership, and research support.",
+      "Yigit Okur'un enterprise debugging, scheduling sistemleri, teknik liderlik ve arastirma destegini birlestiren etki odakli profili.",
+    ),
   },
   projects: {
-    en: {
-      title: "Projects | Yigit Okur",
-      description:
-        "Selected engineering projects across scheduling optimization, defense telemetry, AI-native tooling, and platform delivery.",
-    },
-    tr: {
-      title: "Projeler | Yigit Okur",
-      description:
-        "Scheduling optimizasyonu, savunma telemetrisi, AI-native tooling ve platform teslimini kapsayan secili muhendislik projeleri.",
-    },
+    title: localized("Projects | Yigit Okur", "Projeler | Yigit Okur"),
+    description: localized(
+      "Selected engineering projects across scheduling optimization, defense telemetry, AI-native tooling, and platform delivery.",
+      "Scheduling optimizasyonu, savunma telemetrisi, AI-native tooling ve platform teslimini kapsayan secili muhendislik projeleri.",
+    ),
   },
   contact: {
-    en: {
-      title: "Contact | Yigit Okur",
-      description:
-        "Direct contact channels for software engineering collaboration, backend roles, and cloud-focused opportunities.",
-    },
-    tr: {
-      title: "Iletisim | Yigit Okur",
-      description:
-        "Yazilim muhendisligi is birlikleri, backend roller ve cloud odakli firsatlar icin dogrudan iletisim kanallari.",
-    },
+    title: localized("Contact | Yigit Okur", "Iletisim | Yigit Okur"),
+    description: localized(
+      "Direct contact channels for software engineering collaboration, backend roles, and cloud-focused opportunities.",
+      "Yazilim muhendisligi is birlikleri, backend roller ve cloud odakli firsatlar icin dogrudan iletisim kanallari.",
+    ),
   },
   blog: {
-    en: {
-      title: "Blog | Yigit Okur",
-      description:
-        "Engineering notes and case studies. Blog reliability improvements are planned via ISR in a later phase.",
-    },
-    tr: {
-      title: "Blog | Yigit Okur",
-      description:
-        "Muhendislik notlari ve case study'ler. Blog guvenilirligi sonraki fazda ISR ile gelistirilecek.",
-    },
+    title: localized("Blog | Yigit Okur", "Blog | Yigit Okur"),
+    description: localized(
+      "Engineering notes and case studies. Blog reliability improvements are planned via ISR in a later phase.",
+      "Muhendislik notlari ve case study'ler. Blog guvenilirligi sonraki fazda ISR ile gelistirilecek.",
+    ),
   },
   login: {
-    en: {
-      title: "Admin Login | Yigit Okur",
-      description: "Admin access for the portfolio control surface.",
-    },
-    tr: {
-      title: "Admin Girisi | Yigit Okur",
-      description: "Portfolyo yonetim yuzeyi icin admin erisimi.",
-    },
+    title: localized("Admin Login | Yigit Okur", "Admin Girisi | Yigit Okur"),
+    description: localized(
+      "Admin access for the portfolio control surface.",
+      "Portfolyo yonetim yuzeyi icin admin erisimi.",
+    ),
   },
   admin: {
-    en: {
-      title: "Admin | Yigit Okur",
-      description: "Authenticated portfolio administration surface.",
-    },
-    tr: {
-      title: "Admin | Yigit Okur",
-      description: "Kimlik dogrulanmis portfolyo yonetim yuzeyi.",
-    },
+    title: localized("Admin | Yigit Okur", "Admin | Yigit Okur"),
+    description: localized(
+      "Authenticated portfolio administration surface.",
+      "Kimlik dogrulanmis portfolyo yonetim yuzeyi.",
+    ),
   },
 } satisfies Record<
-  "home" | "about" | "projects" | "contact" | "blog" | "login" | "admin",
-  Record<Locale, { title: string; description: string }>
+  SeoPageKey,
+  {
+    title: LocalizedString;
+    description: LocalizedString;
+  }
 >;
+
+export const seoContent = Object.fromEntries(
+  (Object.entries(seoDefinitions) as Array<
+    [SeoPageKey, { title: LocalizedString; description: LocalizedString }]
+  >).map(([key, value]) => [key, buildSeoEntry(value.title, value.description)]),
+) as Record<SeoPageKey, Record<Locale, SeoLocaleContent>>;
 
 export const defaultKeywords = [
   "Yigit Okur",
@@ -670,11 +721,5 @@ GitHub: https://github.com/TurkishKEBAB
 LinkedIn: https://www.linkedin.com/in/yigit-okur-050b5b278
 `;
 
-export const getLocaleValue = <T>(value: Record<Locale, T>, locale: Locale): T =>
-  value[locale] ?? value[defaultLocale];
-
 export const getFeaturedProjects = (): ProjectRecord[] =>
   projectRecords.filter((project) => project.featured);
-
-
-

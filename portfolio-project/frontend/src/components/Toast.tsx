@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useState, useCallback, ReactNode } from "react";
+import { createContext, useCallback, useContext, useState, type ReactNode } from "react";
 import { AnimatePresence, motion } from "motion/react";
 
 type ToastType = "success" | "error" | "info" | "warning";
@@ -17,7 +17,13 @@ interface ToastContextValue {
   hideToast: (id: string) => void;
 }
 
+interface ToastProviderProps {
+  readonly children: ReactNode;
+}
+
 const ToastContext = createContext<ToastContextValue | undefined>(undefined);
+
+const createToastId = (): string => globalThis.crypto.randomUUID();
 
 export const useToast = () => {
   const context = useContext(ToastContext);
@@ -26,10 +32,6 @@ export const useToast = () => {
   }
   return context;
 };
-
-interface ToastProviderProps {
-  children: ReactNode;
-}
 
 export const ToastProvider = ({ children }: ToastProviderProps) => {
   const [toasts, setToasts] = useState<Toast[]>([]);
@@ -40,10 +42,10 @@ export const ToastProvider = ({ children }: ToastProviderProps) => {
 
   const showToast = useCallback(
     (type: ToastType, message: string, duration = 5000) => {
-      const id = `toast-${Date.now()}-${Math.random()}`;
-      const newToast: Toast = { id, type, message, duration };
+      const id = createToastId();
+      const nextToast: Toast = { id, type, message, duration };
 
-      setToasts((prev) => [...prev, newToast]);
+      setToasts((prev) => [...prev, nextToast]);
 
       if (duration > 0) {
         window.setTimeout(() => {
@@ -82,7 +84,7 @@ export const ToastProvider = ({ children }: ToastProviderProps) => {
               transition={{ duration: 0.2 }}
               className={`${getToastStyles(
                 toast.type,
-              )} px-4 py-3 rounded-lg shadow-lg flex items-center gap-3 min-w-[300px] max-w-md pointer-events-auto`}
+              )} min-w-[300px] max-w-md pointer-events-auto flex items-center gap-3 rounded-lg px-4 py-3 shadow-lg`}
               role="alert"
               aria-live={toast.type === "error" ? "assertive" : "polite"}
             >
@@ -90,10 +92,10 @@ export const ToastProvider = ({ children }: ToastProviderProps) => {
               <button
                 type="button"
                 onClick={() => hideToast(toast.id)}
-                className="flex-shrink-0 opacity-70 hover:opacity-100 transition-opacity"
+                className="flex-shrink-0 opacity-70 transition-opacity hover:opacity-100"
                 aria-label="Close notification"
               >
-                ×
+                x
               </button>
             </motion.div>
           ))}

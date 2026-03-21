@@ -10,6 +10,8 @@ export interface BlogPostBundle {
   status: BlogStatus;
 }
 
+const emptyBlogPosts: BlogPost[] = [];
+
 const getApiBaseUrl = () =>
   (process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000/api/v1").replace(/\/$/, "");
 
@@ -59,6 +61,30 @@ async function fetchJson<T>(url: string): Promise<{ status: number; data: T | nu
   return { status: response.status, data };
 }
 
+const buildEmptyBundle = (status: BlogStatus): BlogPostBundle => ({
+  post: null,
+  relatedPosts: emptyBlogPosts,
+  latestPosts: emptyBlogPosts,
+  status,
+});
+
+const sortPostsByCreatedAt = (posts: BlogPost[]): BlogPost[] =>
+  [...posts].sort(
+    (left, right) =>
+      new Date(right.created_at).getTime() - new Date(left.created_at).getTime(),
+  );
+
+const buildRelatedPosts = (post: BlogPost, posts: BlogPost[]): BlogPost[] =>
+  posts
+    .filter(
+      (candidate) =>
+        candidate.id !== post.id && candidate.tags?.some((tag) => post.tags?.includes(tag)),
+    )
+    .slice(0, 3);
+
+const buildLatestPosts = (post: BlogPost, posts: BlogPost[]): BlogPost[] =>
+  sortPostsByCreatedAt(posts.filter((candidate) => candidate.id !== post.id)).slice(0, 3);
+
 export async function fetchBlogPosts(locale: Locale): Promise<{
   posts: BlogPost[];
   degraded: boolean;
@@ -73,7 +99,7 @@ export async function fetchBlogPosts(locale: Locale): Promise<{
     );
 
     if (!response.data?.items) {
-      return { posts: [], degraded: true };
+      return { posts: emptyBlogPosts, degraded: true };
     }
 
     return {
@@ -82,7 +108,7 @@ export async function fetchBlogPosts(locale: Locale): Promise<{
     };
   } catch (error) {
     console.error("Failed to fetch blog posts", error);
-    return { posts: [], degraded: true };
+    return { posts: emptyBlogPosts, degraded: true };
   }
 }
 
@@ -98,52 +124,24 @@ export async function fetchBlogPostBundle(
     );
 
     if (postResponse.status === 404) {
-      return {
-        post: null,
-        relatedPosts: [],
-        latestPosts: [],
-        status: "not_found",
-      };
+      return buildEmptyBundle("not_found");
     }
 
     if (!postResponse.data) {
-      return {
-        post: null,
-        relatedPosts: [],
-        latestPosts: [],
-        status: "unavailable",
-      };
+      return buildEmptyBundle("unavailable");
     }
 
     const post = normalizeBlogPost(postResponse.data);
     const { posts, degraded } = await fetchBlogPosts(locale);
-    const relatedPosts = posts
-      .filter(
-        (candidate) =>
-          candidate.id !== post.id && candidate.tags?.some((tag) => post.tags?.includes(tag)),
-      )
-      .slice(0, 3);
-    const latestPosts = posts
-      .filter((candidate) => candidate.id !== post.id)
-      .sort(
-        (left, right) =>
-          new Date(right.created_at).getTime() - new Date(left.created_at).getTime(),
-      )
-      .slice(0, 3);
 
     return {
       post,
-      relatedPosts,
-      latestPosts,
+      relatedPosts: buildRelatedPosts(post, posts),
+      latestPosts: buildLatestPosts(post, posts),
       status: degraded ? "unavailable" : "ok",
     };
   } catch (error) {
     console.error("Failed to fetch blog detail", error);
-    return {
-      post: null,
-      relatedPosts: [],
-      latestPosts: [],
-      status: "unavailable",
-    };
+    return buildEmptyBundle("unavailable");
   }
 }

@@ -17,6 +17,12 @@ const MOUSE_RADIUS = 180;
 const MOUSE_FORCE = 0.6;
 const BASE_SPEED = 0.25;
 
+const secureRandomFloat = (): number => {
+  const randomBuffer = new Uint32Array(1);
+  globalThis.crypto.getRandomValues(randomBuffer);
+  return randomBuffer[0] / 4294967296;
+};
+
 export default function AnimatedBackground() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const particlesRef = useRef<Particle[]>([]);
@@ -27,12 +33,12 @@ export default function AnimatedBackground() {
 
   const createParticles = useCallback((width: number, height: number): Particle[] => {
     return Array.from({ length: PARTICLE_COUNT }, () => ({
-      x: Math.random() * width,
-      y: Math.random() * height,
-      vx: (Math.random() - 0.5) * BASE_SPEED * 2,
-      vy: (Math.random() - 0.5) * BASE_SPEED * 2,
-      radius: Math.random() * 1.8 + 0.8,
-      opacity: Math.random() * 0.5 + 0.2,
+      x: secureRandomFloat() * width,
+      y: secureRandomFloat() * height,
+      vx: (secureRandomFloat() - 0.5) * BASE_SPEED * 2,
+      vy: (secureRandomFloat() - 0.5) * BASE_SPEED * 2,
+      radius: secureRandomFloat() * 1.8 + 0.8,
+      opacity: secureRandomFloat() * 0.5 + 0.2,
     }));
   }, []);
 
