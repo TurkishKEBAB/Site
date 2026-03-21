@@ -247,9 +247,15 @@ export default function Home() {
                 />
                 {/* Photo */}
                 <img
-                  src="/profile-placeholder.png"
+                  src="/profile.jpg"
                   alt="Yiğit Okur"
                   className="relative w-40 h-40 sm:w-48 sm:h-48 md:w-56 md:h-56 lg:w-64 lg:h-64 rounded-full object-cover border-2 border-primary-400/30 dark:border-primary-400/20"
+                  onError={(e) => {
+                    const target = e.currentTarget
+                    if (!target.src.includes('profile-placeholder')) {
+                      target.src = '/profile-placeholder.png'
+                    }
+                  }}
                 />
                 {/* Corner accent */}
                 <div className="absolute -bottom-2 -right-2 w-6 h-6 border-r-2 border-b-2 border-primary-400/40 rounded-br" aria-hidden="true" />
