@@ -8,12 +8,14 @@ const withBundleAnalyzer = bundleAnalyzer({
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+const workspaceRoot = path.resolve(__dirname, "..", "..");
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   poweredByHeader: false,
+  outputFileTracingRoot: workspaceRoot,
   turbopack: {
-    root: __dirname,
+    root: workspaceRoot,
   },
 };
 
