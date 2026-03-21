@@ -4,12 +4,10 @@ on:
   push:
     branches:
       - main
-      - Codex_Implementation
       - develop
   pull_request:
     branches:
       - main
-      - Codex_Implementation
       - develop
 
 concurrency:
@@ -91,6 +89,10 @@ jobs:
         working-directory: portfolio-project/frontend
         run: npm run lint
 
+      - name: Enforce public server-component boundaries
+        working-directory: portfolio-project/frontend
+        run: npm run check:server-boundaries
+
       - name: Generate frontend coverage report
         working-directory: portfolio-project/frontend
         run: npm run test:coverage
@@ -104,12 +106,25 @@ jobs:
         working-directory: portfolio-project/frontend
         run: npm run build
 
+      - name: Build bundle analysis
+        if: ${{ github.event_name == 'push' && (github.ref == 'refs/heads/main' || startsWith(github.ref_name, 'feature/frontend-') || startsWith(github.ref_name, 'fix/frontend-') || startsWith(github.ref_name, 'refactor/frontend-')) }}
+        working-directory: portfolio-project/frontend
+        run: npm run analyze
+
       - name: Upload frontend coverage artifact
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: frontend-coverage
           path: portfolio-project/frontend/coverage/lcov.info
           if-no-files-found: error
+
+      - name: Upload bundle analysis artifact
+        if: ${{ github.event_name == 'push' && (github.ref == 'refs/heads/main' || startsWith(github.ref_name, 'feature/frontend-') || startsWith(github.ref_name, 'fix/frontend-') || startsWith(github.ref_name, 'refactor/frontend-')) }}
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: frontend-bundle-analysis
+          path: portfolio-project/frontend/.next/analyze
+          if-no-files-found: warn
 
   sonarcloud:
     name: SonarCloud Scan (Push)
