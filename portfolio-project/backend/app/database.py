@@ -3,6 +3,7 @@ Database Configuration and Session Management
 SQLAlchemy setup with connection pooling
 """
 from sqlalchemy import create_engine, event, text
+from sqlalchemy.engine.url import make_url
 from sqlalchemy.orm import sessionmaker, Session, DeclarativeBase
 from typing import Generator
 import logging
@@ -11,9 +12,32 @@ from app.config import settings
 
 logger = logging.getLogger(__name__)
 
+def normalize_database_url(raw_url: str) -> str:
+    """
+    Normalize DATABASE_URL values coming from local .env files or hosting providers.
+
+    Railway/Heroku-style URLs can include aliases like `postgres://` and dashboard
+    copy/paste can accidentally introduce wrapping quotes or whitespace.
+    """
+    database_url = (raw_url or "").strip().strip('"').strip("'")
+
+    if not database_url:
+        raise RuntimeError("DATABASE_URL is empty.")
+
+    if database_url.startswith("postgres://"):
+        database_url = database_url.replace("postgres://", "postgresql+psycopg://", 1)
+    elif database_url.startswith("postgresql://"):
+        database_url = database_url.replace("postgresql://", "postgresql+psycopg://", 1)
+
+    make_url(database_url)
+    return database_url
+
+
+DATABASE_URL = normalize_database_url(settings.DATABASE_URL)
+
 # Create SQLAlchemy engine with connection pooling
 engine = create_engine(
-    settings.DATABASE_URL,
+    DATABASE_URL,
     pool_pre_ping=True,  # Verify connections before using
     pool_size=10,  # Number of connections to maintain
     max_overflow=20,  # Additional connections when pool is full
