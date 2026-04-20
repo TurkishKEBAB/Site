@@ -4,8 +4,7 @@ import { Inter, JetBrains_Mono, Space_Grotesk } from "next/font/google";
 
 import "@/index.css";
 
-import { siteConfig } from "@/content/site";
-import { getRequestLocale } from "@/lib/locale";
+import { defaultLocale, siteConfig } from "@/content/site";
 import { Providers } from "@/components/providers";
 
 const inter = Inter({
@@ -53,22 +52,20 @@ const themeScript = `
   })();
 `;
 
-export default async function RootLayout({
+export default function RootLayout({
   children,
 }: Readonly<{
   children: ReactNode;
 }>) {
-  const locale = await getRequestLocale();
-
   return (
     <html
-      lang={locale}
+      lang={defaultLocale}
       suppressHydrationWarning
       className={`${inter.variable} ${mono.variable} ${display.variable}`}
     >
       <body suppressHydrationWarning>
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
-        <Providers initialLanguage={locale}>{children}</Providers>
+        <Providers initialLanguage={defaultLocale}>{children}</Providers>
       </body>
     </html>
   );

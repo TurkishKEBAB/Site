@@ -1,16 +1,9 @@
-import type { Metadata } from "next";
-
-import Contact from "@/routes/Contact";
-import { getRequestLocale } from "@/lib/locale";
+import ContactClient from "@/routes/ContactClient";
+import { defaultLocale } from "@/content/site";
 import { buildMetadata } from "@/lib/metadata";
 
-export async function generateMetadata(): Promise<Metadata> {
-  const locale = await getRequestLocale();
-  return buildMetadata("contact", locale, "/contact");
-}
+export const metadata = buildMetadata("contact", defaultLocale, "/contact");
 
-export default async function ContactPage() {
-  const locale = await getRequestLocale();
-
-  return <Contact locale={locale} />;
+export default function ContactPage() {
+  return <ContactClient />;
 }

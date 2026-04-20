@@ -1,9 +1,11 @@
+"use client";
+
 import Link from "next/link";
 import { FiGithub, FiLinkedin, FiMail, FiTwitter } from "react-icons/fi";
 
-import { getRequestLocale } from "@/lib/locale";
 import { getLocaleValue, siteConfig, uiDictionary } from "@/content/site";
 import { GlowBar } from "@/components/ui";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 const socialLinks = [
   { icon: FiGithub, href: siteConfig.github, label: "GitHub" },
@@ -12,8 +14,8 @@ const socialLinks = [
   { icon: FiMail, href: `mailto:${siteConfig.email}`, label: "Email" },
 ];
 
-export default async function Footer() {
-  const locale = await getRequestLocale();
+export default function Footer() {
+  const { language: locale } = useLanguage();
   const copy = uiDictionary[locale];
 
   const footerLinks = [

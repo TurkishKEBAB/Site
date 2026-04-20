@@ -6,6 +6,7 @@ import About from "@/routes/About";
 import Contact from "@/routes/Contact";
 import Home from "@/routes/Home";
 import Projects from "@/routes/Projects";
+import { aboutContent, contactContent, homeContent, projectRecords } from "@/content/site";
 
 vi.mock("next/link", () => ({
   default: ({
@@ -42,34 +43,38 @@ vi.mock("@/components/ContactForm", () => ({
 
 describe("public route SSR", () => {
   it("renders the home route with static impact content", () => {
-    const html = renderToStaticMarkup(<Home locale="en" />);
+    const locale = "en";
+    const html = renderToStaticMarkup(<Home locale={locale} />);
 
-    expect(html).toContain("YIGIT");
-    expect(html).toContain("NETAS timezone investigation");
-    expect(html).toContain("Download CV");
+    expect(html).toContain(homeContent[locale].heroTitleFirst);
+    expect(html).toContain(homeContent[locale].overviewCards[0].title);
+    expect(html).toContain(homeContent[locale].secondaryCta);
     expect(html).not.toContain("Loading");
   });
 
   it("renders the about route with scannable highlight content", () => {
-    const html = renderToStaticMarkup(<About locale="en" />);
+    const locale = "en";
+    const html = renderToStaticMarkup(<About locale={locale} />);
 
-    expect(html).toContain("A software engineering student building durable backend systems");
+    expect(html).toContain(aboutContent[locale].pageSubtitle);
     expect(html).toContain("Delivery with scale");
     expect(html).not.toContain("No experience found");
   });
 
   it("renders the projects route with curated project records", () => {
-    const html = renderToStaticMarkup(<Projects locale="en" />);
+    const locale = "en";
+    const html = renderToStaticMarkup(<Projects locale={locale} />);
 
     expect(html).toContain("Detailed project slice");
-    expect(html).toContain("IsikSchedule");
+    expect(html).toContain(projectRecords[0].title[locale]);
     expect(html).not.toContain("No featured project");
   });
 
   it("renders the contact route with direct channels even without API data", () => {
-    const html = renderToStaticMarkup(<Contact locale="en" />);
+    const locale = "en";
+    const html = renderToStaticMarkup(<Contact locale={locale} />);
 
-    expect(html).toContain("Get in touch");
+    expect(html).toContain(contactContent[locale].pageTitle);
     expect(html).toContain("yigitokur@ieee.org");
     expect(html).toContain("contact-form");
     expect(html).not.toContain("No contact");

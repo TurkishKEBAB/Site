@@ -1,8 +1,6 @@
 import NotFound from "@/routes/NotFound";
-import { getRequestLocale } from "@/lib/locale";
+import { defaultLocale } from "@/content/site";
 
-export default async function NotFoundPage() {
-  const locale = await getRequestLocale();
-
-  return <NotFound locale={locale} />;
+export default function NotFoundPage() {
+  return <NotFound locale={defaultLocale} />;
 }

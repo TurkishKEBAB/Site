@@ -1,16 +1,9 @@
-import type { Metadata } from "next";
-
-import About from "@/routes/About";
-import { getRequestLocale } from "@/lib/locale";
+import AboutClient from "@/routes/AboutClient";
+import { defaultLocale } from "@/content/site";
 import { buildMetadata } from "@/lib/metadata";
 
-export async function generateMetadata(): Promise<Metadata> {
-  const locale = await getRequestLocale();
-  return buildMetadata("about", locale, "/about");
-}
+export const metadata = buildMetadata("about", defaultLocale, "/about");
 
-export default async function AboutPage() {
-  const locale = await getRequestLocale();
-
-  return <About locale={locale} />;
+export default function AboutPage() {
+  return <AboutClient />;
 }

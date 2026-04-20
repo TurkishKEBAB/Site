@@ -1,8 +1,8 @@
 "use client";
 
-import { createContext, ReactNode, useContext, useMemo, useState } from "react";
+import { createContext, ReactNode, useContext, useEffect, useMemo, useState } from "react";
 
-import { localeCookieName, type Locale, uiDictionary } from "@/content/site";
+import { defaultLocale, localeCookieName, type Locale, uiDictionary } from "@/content/site";
 
 type TranslationMap = typeof uiDictionary.en;
 
@@ -19,19 +19,65 @@ interface LanguageProviderProps {
   initialLanguage: Locale;
 }
 
+const readCookieLanguage = (): Locale | null => {
+  if (typeof document === "undefined") {
+    return null;
+  }
+
+  const cookieEntry = document.cookie
+    .split(";")
+    .map((entry) => entry.trim())
+    .find(
+      (entry) =>
+        entry.startsWith(`${localeCookieName}=`) || entry.startsWith("lang="),
+    );
+
+  if (!cookieEntry) {
+    return null;
+  }
+
+  const [, value = ""] = cookieEntry.split("=");
+  return value === "tr" ? "tr" : value === "en" ? "en" : null;
+};
+
 export function LanguageProvider({
   children,
   initialLanguage,
 }: LanguageProviderProps) {
   const [language, setLanguageState] = useState<Locale>(initialLanguage);
 
+  useEffect(() => {
+    if (typeof window === "undefined") {
+      return;
+    }
+
+    const storedLanguage = window.localStorage.getItem("lang");
+    const cookieLanguage = readCookieLanguage();
+    const resolvedLanguage =
+      storedLanguage === "tr" || storedLanguage === "en"
+        ? storedLanguage
+        : cookieLanguage ?? initialLanguage ?? defaultLocale;
+
+    if (resolvedLanguage !== language) {
+      setLanguageState(resolvedLanguage);
+      return;
+    }
+
+    document.documentElement.lang = resolvedLanguage;
+  }, [initialLanguage, language]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") {
+      return;
+    }
+
+    window.localStorage.setItem("lang", language);
+    document.cookie = `${localeCookieName}=${language}; path=/; max-age=31536000; samesite=lax`;
+    document.documentElement.lang = language;
+  }, [language]);
+
   const setLanguage = (value: Locale) => {
     setLanguageState(value);
-
-    if (typeof window !== "undefined") {
-      localStorage.setItem("lang", value);
-      document.cookie = `${localeCookieName}=${value}; path=/; max-age=31536000; samesite=lax`;
-    }
   };
 
   const value = useMemo<LanguageContextValue>(
