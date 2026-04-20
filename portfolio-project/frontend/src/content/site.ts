@@ -140,7 +140,7 @@ export const siteConfig = {
   email: "yigitokur@ieee.org",
   phone: "+90 535 573 3873",
   phoneHref: "tel:+905355733873",
-  location: localized("Istanbul, Turkey", "Istanbul, Turkiye"),
+  location: localized("Bagcilar, Istanbul, Turkey", "Bagcilar, Istanbul, Turkiye"),
   github: "https://github.com/TurkishKEBAB",
   linkedin: "https://www.linkedin.com/in/yigit-okur-050b5b278",
   twitter: "https://x.com/biznedenokuruz",
@@ -191,23 +191,23 @@ export const uiDictionary = buildLocaleMap((locale) =>
   resolveLocalizedRecord(uiDictionaryDefinitions, locale),
 );
 
-const homeRoleParts = ["BACKEND SYSTEMS", "CLOUD & DEVOPS", "AI-NATIVE TOOLING"];
+const homeRoleParts = ["ENTERPRISE BACKEND", "CLOUD & DEVOPS", "QUALITY AUTOMATION"];
 
 const homeDefinition = {
   heroEyebrow: localized("> init system.profile", "> sistem.profil baslatiliyor"),
   heroTitleFirst: localized("YIGIT", "YIGIT"),
   heroTitleSecond: localized("OKUR", "OKUR"),
   heroDescription: localized(
-    "I build enterprise backend systems, cloud-native workflows, and AI-native tooling while studying Software Engineering at Isik University. My strongest case study comes from NETAS, where I traced a silent timezone defect across production microservices and turned it into a documented regression safety net.",
-    "Isik Universitesi'nde Yazilim Muhendisligi egitimime devam ederken enterprise backend sistemleri, cloud-native workflow'lar ve AI-native tooling uzerine uretim yapiyorum. En guclu case study'm NETAS'ta canli mikroservislerde sessizce kalan timezone defect'ini izleyip kalici regression guvencesine cevirmemdi.",
+    "Third-year Software Engineering student at Isik University focused on enterprise backend systems, cloud delivery, and DevOps automation. At NETAS, I contributed production code across four Jira tickets and turned a silent timezone mismatch into a documented regression safety net with targeted tests.",
+    "Isik Universitesi'nde ucuncu sinif Yazilim Muhendisligi ogrencisi olarak enterprise backend sistemleri, cloud delivery ve DevOps otomasyonu uzerine odaklaniyorum. NETAS'ta dort Jira ticket boyunca production koda katkida bulunup sessiz kalan timezone uyumsuzlugunu hedefli testlerle kalici bir regression guvencesine cevirdim.",
   ),
   availabilityLabel: localized(
-    "Available for part-time cloud and backend roles",
-    "Part-time cloud ve backend rollerine acigim",
+    "Available for part-time software engineering and cloud roles",
+    "Part-time software engineering ve cloud rollerine acigim",
   ),
   availabilityNote: localized(
-    "Open to engineering collaborations and high-ownership internships",
-    "Yuksek sahiplik gerektiren muhendislik is birlikleri ve stajlara acigim",
+    "Open to backend, platform, DevOps, and quality-focused engineering teams.",
+    "Backend, platform, DevOps ve kalite odakli muhendislik ekiplerine acigim.",
   ),
   primaryCta: localized("Get in touch", "Iletisime gec"),
   secondaryCta: localized("Download CV", "CV indir"),
@@ -236,24 +236,24 @@ const homeDefinition = {
   roleParts: homeRoleParts,
   overviewCards: [
     {
-      title: localized("NETAS timezone investigation", "NETAS timezone incelemesi"),
+      title: localized("NETAS production case study", "NETAS production case study"),
       body: localized(
-        "Identified a silent v1/v2 timezone mismatch via YAML and ELK analysis, then documented the remediation path with 600+ lines of tests.",
-        "YAML ve ELK analiziyle sessiz kalan v1/v2 timezone uyumsuzlugunu tespit ettim; cozum yolunu 600+ satir test ile kalici hale getirdim.",
+        "Shipped 25 commits and 1,550 lines of code and tests across four Jira tickets, then proved a silent timezone mismatch with YAML and ELK analysis plus 600+ lines of targeted tests.",
+        "Dort Jira ticket boyunca 25 commit ve 1.550 satir kod-test katkisi yaptim; ardindan sessiz timezone uyumsuzlugunu YAML ve ELK analizi ile ortaya koyup 600+ satir hedefli testle kanitladim.",
       ),
     },
     {
       title: localized("IsikSchedule product maturity", "IsikSchedule urun olgunlugu"),
       body: localized(
-        "Built a shared scheduling core spanning desktop and web, with roughly 1,000 active users and a 13-algorithm optimization engine.",
-        "Masaustu ve web urunlerini paylasilan scheduling core uzerinde birlestirdim; yaklasik 1.000 aktif kullaniciya ve 13 algoritmali optimizasyon motoruna ulasti.",
+        "Built a shared scheduling core across desktop and web, serving roughly 1,000 users on desktop with a 13-algorithm engine and 86.97% coverage backed by SonarQube Cloud.",
+        "Masaustu ve web urunlerini ayni scheduling core etrafinda kurdum; masaustunde yaklasik 1.000 kullaniciya ulasan, 13 algoritmali ve SonarQube Cloud ile %86.97 coverage izlenen bir sistem oldu.",
       ),
     },
     {
-      title: localized("IEEE and AdaLab leadership", "IEEE ve AdaLab liderligi"),
+      title: localized("Leadership and research throughput", "Liderlik ve arastirma ciktilari"),
       body: localized(
-        "Blend delivery, community leadership, and research support through IEEE Isik and AdaLab responsibilities.",
-        "IEEE Isik ve AdaLab sorumluluklariyla teknik teslim, topluluk liderligi ve arastirma destegini birlikte yuruttum.",
+        "Coordinate IEEE Isik operations reaching 1,100+ students, support AdaLab research, and stay comfortable moving between delivery, mentoring, and community ownership.",
+        "IEEE Isik tarafinda 1.100+ ogrenciye ulasan operasyonlari koordine ediyor, AdaLab arastirmalarina destek oluyor ve teslim, mentorluk ile topluluk sahipligini birlikte yurutecek esnekligi koruyorum.",
       ),
     },
   ] satisfies HomeOverviewCard[],
@@ -314,18 +314,18 @@ export const impactMetrics: ImpactMetric[] = [
     "IsikSchedule masaustu dagitimi",
   ),
   impactMetric(
-    "13",
-    "optimization algorithms",
-    "optimizasyon algoritmasi",
-    "Shared scheduling engine",
-    "Paylasilan scheduling motoru",
+    "1,550+",
+    "lines of code and tests",
+    "satir kod ve test",
+    "NETAS production contributions",
+    "NETAS production katkisi",
   ),
   impactMetric(
-    "3 / 700+",
-    "preliminary ranking",
-    "on degerlendirme sirasi",
-    "Teknofest Sarkan UAV",
-    "Teknofest Sarkan IHA",
+    "35+",
+    "technical events delivered",
+    "teknik etkinlik duzenlendi",
+    "IEEE Isik leadership and coordination",
+    "IEEE Isik liderligi ve koordinasyonu",
   ),
 ];
 
@@ -345,49 +345,61 @@ export const skillGroups: SkillGroup[] = [
   skillGroup(
     "Backend and architecture",
     "Backend ve mimari",
-    "Production-focused APIs, modular services, and clean system boundaries.",
-    "Production odakli API'ler, moduler servisler ve temiz sistem sinirlari.",
+    "Production-facing APIs, enterprise Java services, and clean system boundaries.",
+    "Production odakli API'ler, enterprise Java servisleri ve temiz sistem sinirlari.",
     [
       "Java",
       "Spring Boot",
       "Python",
       "FastAPI",
       "REST APIs",
+      "Hibernate / JPA",
+      "JSF / PrimeFaces",
       "Microservices",
       "Clean Architecture",
       "JWT / RBAC",
     ],
   ),
   skillGroup(
-    "Cloud and observability",
-    "Cloud ve observability",
-    "Deploy, diagnose, and stabilize distributed systems.",
-    "Dagitik sistemleri deploy etme, izleme ve stabil hale getirme.",
+    "Cloud, observability, and delivery",
+    "Cloud, observability ve delivery",
+    "Deploy, diagnose, and stabilize distributed systems with quality gates.",
+    "Kalite kapilariyla dagitik sistemleri deploy etme, izleme ve stabil hale getirme.",
     [
       "Docker",
       "Kubernetes",
       "GitHub Actions",
+      "Spring Cloud Config",
+      "Zuul Gateway",
       "AWS EC2",
       "AWS S3",
       "Redis",
       "ElasticSearch",
       "Kibana",
       "RabbitMQ",
+      "SonarQube",
     ],
   ),
   skillGroup(
     "Product and interface layer",
     "Urun ve arayuz katmani",
-    "Enough frontend fluency to ship end-to-end experiences without losing system quality.",
-    "Sistem kalitesini kaybetmeden uctan uca deneyim cikarmaya yetecek kadar frontend yetkinligi.",
-    ["TypeScript", "React", "Next.js", "Tailwind CSS", "Electron", "Monaco Editor"],
+    "Enough frontend fluency to ship end-to-end products without losing system quality.",
+    "Sistem kalitesini kaybetmeden uctan uca urun cikarmaya yetecek kadar frontend yetkinligi.",
+    ["TypeScript", "Vue.js", "React", "Next.js", "Tailwind CSS", "Electron", "Monaco Editor"],
   ),
   skillGroup(
     "Testing and automation",
     "Test ve otomasyon",
-    "Test-first debugging and reliable delivery pipelines.",
-    "Test-first debugging ve guvenilir teslim pipeline'lari.",
-    ["Pytest", "JUnit", "CI/CD", "SonarQube", "Defect Tracking", "Regression Design"],
+    "Test-first debugging, structured quality gates, and reliable delivery pipelines.",
+    "Test-first debugging, yapilandirilmis kalite kapilari ve guvenilir teslim pipeline'lari.",
+    ["Pytest", "JUnit", "CI/CD", "SonarQube", "GitLab", "Jira", "Test Automation", "Regression Design"],
+  ),
+  skillGroup(
+    "Research and AI-native tooling",
+    "Arastirma ve AI-native tooling",
+    "Agentic systems, LLM workflows, and algorithm-heavy problem solving.",
+    "Ajan tabanli sistemler, LLM workflow'lari ve algoritma agirlikli problem cozumu.",
+    ["LLMs", "RAG", "Constraint Optimization", "Data Pipelines", "Algorithmic Evaluation"],
   ),
 ];
 
@@ -422,13 +434,13 @@ export const projectRecords: ProjectRecord[] = [
     "isikschedule-platform",
     "IsikSchedule Platform",
     "IsikSchedule Platformu",
-    "Constraint-aware scheduling system spanning desktop and web products.",
-    "Masaustu ve web urunlerini kapsayan constraint-aware scheduling sistemi.",
-    "Built a shared scheduling domain that powers both desktop and web experiences. The engine combines hard constraints with preference optimization and ships with 13 algorithms including Genetic, SA, Tabu, PSO, and hybrid strategies.",
-    "Masaustu ve web deneyimlerini besleyen paylasilan scheduling domain'ini kurdum. Motor; hard constraint'leri, tercih optimizasyonunu ve Genetik, SA, Tabu, PSO ile hibrit stratejiler dahil 13 algoritmayi birlestiriyor.",
-    "~1,000 active users on desktop release with ongoing web productization.",
-    "Masaustu surumunde ~1.000 aktif kullanici ve devam eden web urunlestirme sureci.",
-    ["FastAPI", "Next.js", "PostgreSQL", "Redis", "Celery", "Docker", "PyQt6"],
+    "Constraint-aware scheduling platform spanning desktop and web products.",
+    "Masaustu ve web urunlerini kapsayan constraint-aware scheduling platformu.",
+    "Built a shared scheduling domain that powers both desktop and web experiences. The product ships 13 registered algorithms, a FastAPI + Next.js web layer, JWT/RBAC, and a Dockerized multi-service runtime with PostgreSQL, Redis, and Celery.",
+    "Masaustu ve web deneyimlerini ayni scheduling domain'iyle besleyen sistemi kurdum. Urun; 13 kayitli algoritma, FastAPI + Next.js web kati, JWT/RBAC ve PostgreSQL, Redis, Celery iceren Dockerize coklu servis mimarisi ile gelisiyor.",
+    "~1,000 active users on desktop, 86.97% coverage, and a public web release in progress.",
+    "Masaustunde ~1.000 aktif kullanici, %86.97 coverage ve devam eden public web release sureci.",
+    ["FastAPI", "Next.js", "PostgreSQL", "Redis", "Celery", "Docker", "PyQt6", "SonarQube"],
     true,
     "https://github.com/TurkishKEBAB/isikschedule-core",
     "https://github.com/TurkishKEBAB/isikschedule-web",
@@ -439,10 +451,10 @@ export const projectRecords: ProjectRecord[] = [
     "Teknofest Sarkan IHA Savunma Platformu",
     "Telemetry reliability and anti-jamming software for a defense UAV platform.",
     "Savunma odakli IHA platformu icin telemetri guvenilirligi ve anti-jamming yazilimi.",
-    "Led telemetry software and cross-team coordination for a defense UAV effort. The project ranked 3rd among 700+ proposals in preliminary evaluation while carrying real delivery and sponsorship pressure.",
-    "Savunma odakli IHA calismasinda telemetri yazilimi ve takimlar arasi koordinasyona liderlik ettim. Proje, gercek teslim ve sponsorluk baskisi altinda on degerlendirmede 700+ basvuru arasinda 3. oldu.",
-    "Managed a 200,000 TL budget including a 165,000 TL TUBITAK R&D grant.",
-    "165.000 TL TUBITAK Ar-Ge hibesi dahil toplam 200.000 TL butce yonetildi.",
+    "Led software development for anti-jamming telemetry systems and control algorithms, while coordinating cross-functional work across mechanics, electronics, and software.",
+    "Anti-jamming telemetri sistemleri ve kontrol algoritmalari icin yazilim gelistirmeye liderlik ederken mekanik, elektronik ve yazilim ekipleri arasindaki koordinasyonu da ustlendim.",
+    "Ranked 3rd among 700+ projects and managed a 200,000 TL budget including a 165,000 TL TUBITAK grant.",
+    "700+ proje arasinda 3. siraya yerlesip 165.000 TL TUBITAK destegi dahil toplam 200.000 TL butce yonetildi.",
     ["Python", "Telemetry", "Systems Design", "Team Coordination"],
     true,
   ),
@@ -452,12 +464,25 @@ export const projectRecords: ProjectRecord[] = [
     "Agentic IDE",
     "A thesis-driven IDE concept centered on observe, plan, approve, and apply loops.",
     "Observe, plan, approve ve apply dongusu etrafinda kurulan tez odakli IDE konsepti.",
-    "Designed the architecture for an AI-native IDE that keeps human approval in the loop. The system explores hybrid orchestration, sandboxing, and policy-aware execution for code agents.",
-    "Insan onayini merkezde tutan AI-native bir IDE icin mimari tasarladim. Sistem, hibrit orkestrasyon, sandboxing ve politika farkinda ajan calistirma yaklasimlarini arastiriyor.",
-    "Translates modern agent workflows into a concrete thesis-grade product direction.",
-    "Modern ajan workflow'larini somut ve tez seviyesinde bir urun yonune ceviriyor.",
+    "Designing a modular AI-native IDE on TypeScript, Electron, and Monaco without forking VS Code. The architecture focuses on human-in-the-loop approvals, prohibited-command enforcement, and hybrid local/cloud LLM orchestration.",
+    "VS Code fork'u kullanmadan TypeScript, Electron ve Monaco tabanli modul bir AI-native IDE tasarliyorum. Mimari; human-in-the-loop onaylar, riskli komut kisitlari ve hibrit lokal/bulut LLM orkestrasyonuna odaklaniyor.",
+    "Still in early architecture phase with requirements, diagrams, and CI-backed validation strategy before implementation.",
+    "Uygulamaya gecmeden once gereksinimler, mimari diagramlar ve CI destekli dogrulama stratejisiyle erken tasarim asamasinda.",
     ["TypeScript", "Electron", "Monaco Editor", "LLMs", "RAG"],
     true,
+  ),
+  projectRecord(
+    "automated-web-crawler",
+    "Automated Web Crawler",
+    "Otomatik Web Crawler",
+    "Concurrent scraping platform with FastAPI and PostgreSQL backend services.",
+    "FastAPI ve PostgreSQL backend servisleriyle kurulan eszamanli scraping platformu.",
+    "Built a high-throughput scraping system with Scrapy, BeautifulSoup, FastAPI, and PostgreSQL. The pipeline enforces robots.txt compliance, retry logic, and fault tolerance across concurrent workers.",
+    "Scrapy, BeautifulSoup, FastAPI ve PostgreSQL ile yuksek throughput bir scraping sistemi kurdum. Pipeline; robots.txt uyumlulugu, retry mantigi ve concurrent worker'lar arasinda fault tolerance sagliyor.",
+    "Reached 89.9% successful execution with strict robots compliance and automatic retry controls.",
+    "Siki robots uyumlulugu ve otomatik retry kontrolleriyle %89.9 basari oranina ulasti.",
+    ["Python", "Scrapy", "FastAPI", "PostgreSQL", "BeautifulSoup"],
+    false,
   ),
   projectRecord(
     "portfolio-platform-web-desktop",
@@ -465,11 +490,11 @@ export const projectRecords: ProjectRecord[] = [
     "Portfolyo Platformu",
     "Full-stack portfolio system with admin workflows and staged deployments.",
     "Admin workflow'lari ve asamali deploy hattina sahip full-stack portfolyo sistemi.",
-    "Built a multi-platform portfolio product with JWT/RBAC, GitHub caching, Supabase asset handling, SMTP notifications, and CI/CD to Vercel and Railway.",
-    "JWT/RBAC, GitHub cache, Supabase varlik yonetimi, SMTP bildirimleri ve Vercel/Railway CI/CD hattiyla cok platformlu bir portfolyo urunu gelistirdim.",
-    "Owns both the storytelling surface and the operational backbone behind it.",
-    "Hem anlati yuzeyini hem de arkasindaki operasyonel omurgayi sahipleniyor.",
-    ["Next.js", "FastAPI", "PostgreSQL", "Redis", "Supabase", "Railway", "Vercel"],
+    "Built a multi-platform portfolio product with 60+ API endpoints, JWT/RBAC, 24-hour GitHub caching, Supabase asset handling, SMTP notifications, and staged CI/CD deployments to Vercel and Railway.",
+    "60+ API endpoint, JWT/RBAC, 24 saatlik GitHub cache, Supabase varlik yonetimi, SMTP bildirimleri ve Vercel ile Railway uzerinden asamali CI/CD dagitimlari iceren cok platformlu bir portfolyo urunu gelistirdim.",
+    "Quality Gate passed in SonarQube Cloud, with public release pending final security hotspot remediation.",
+    "SonarQube Cloud Quality Gate basarili; public release son guvenlik hotspot duzeltmeleri sonrasina planli.",
+    ["Next.js", "FastAPI", "PostgreSQL", "Redis", "Supabase", "Railway", "Vercel", "SonarQube"],
     false,
     "https://github.com/TurkishKEBAB/Site",
   ),
@@ -479,33 +504,33 @@ const aboutDefinition = {
   pageLabel: localized("Profile dossier", "Profil dosyasi"),
   pageTitle: localized("About", "Hakkimda"),
   pageSubtitle: localized(
-    "A software engineering student building durable backend systems, product workflows, and engineering leverage.",
-    "Dayanikli backend sistemleri, urun workflow'lari ve muhendislik kaldiraci ureten bir yazilim muhendisligi ogrencisi.",
+    "A third-year software engineering student building durable backend systems, cloud delivery paths, and high-ownership engineering leverage.",
+    "Dayanikli backend sistemleri, cloud delivery surecleri ve yuksek sahiplik ureten bir ucuncu sinif yazilim muhendisligi ogrencisi.",
   ),
   journeyLabel: localized("Current trajectory", "Guncel yonde"),
   journeyTitle: localized("What I optimize for", "Neyi optimize ediyorum"),
   journeyBody: localized(
-    "I like solving problems where product value and systems thinking meet: enterprise defects that need careful diagnosis, scheduling engines that need algorithmic depth, and public-facing software that still needs operational reliability.",
-    "Urun degeriyle sistem dusuncesinin kesistigi problemleri seviyorum: dikkatli teshis gerektiren enterprise defect'ler, algoritmik derinlik isteyen scheduling motorlari ve operasyonel olarak guvenilir kalmasi gereken public yazilimlar.",
+    "I optimize for teams where code quality, diagnosis depth, and delivery ownership matter at the same time. The work I enjoy most sits at the intersection of enterprise defects, algorithm-heavy backend systems, and operationally reliable products.",
+    "Kod kalitesi, teshis derinligi ve teslim sahipliginin ayni anda onem tasidigi ekiplere dogru ilerliyorum. En cok sevdigim problemler; enterprise defect'ler, algoritma agirlikli backend sistemleri ve operasyonel olarak guvenilir urunlerin kesisiminde yer aliyor.",
   ),
   highlightsLabel: localized("Selected highlights", "Secili basliklar"),
   highlightsTitle: localized("Recent proof points", "Son donem kanitlar"),
   highlights: [
     localized(
-      "NETAS internship: traced a timezone defect across enterprise microservices and turned it into a documented regression shield.",
-      "NETAS staji: enterprise mikroservislerde timezone defect'ini izleyip kalici regression kalkanina cevirdim.",
+      "NETAS internship: 25 commits and 1,550 lines of code and tests across four Jira tickets on a production Java microservices platform.",
+      "NETAS staji: production Java mikroservis platformunda dort Jira ticket boyunca 25 commit ve 1.550 satir kod-test katkisi.",
     ),
     localized(
-      "IEEE Isik: continued technical leadership and community operations reaching 1,100+ students.",
-      "IEEE Isik: 1.100+ ogrenciye ulasan teknik liderlik ve topluluk operasyonlarini surdurdum.",
+      "Timezone investigation: proved a silent UTC vs UTC+3 mismatch with YAML and ELK analysis, then documented the fix path with 600+ lines of tests.",
+      "Timezone incelemesi: sessiz kalan UTC vs UTC+3 uyumsuzlugunu YAML ve ELK analizi ile kanitlayip cozum yolunu 600+ satir test ile belgeledim.",
     ),
     localized(
-      "AdaLab: ongoing research support around AI and data analytics workflows.",
-      "AdaLab: AI ve veri analitigi workflow'larinda arastirma destegi sagliyorum.",
+      "IEEE Isik and AdaLab: combine 35+ technical events, 1,100+ student reach, and ongoing AI/data analytics research support.",
+      "IEEE Isik ve AdaLab: 35+ teknik etkinlik, 1.100+ ogrenci erisimi ve suren AI/veri analitigi arastirma destegini birlikte yuruttum.",
     ),
     localized(
-      "Sarkan UAV: delivery leadership under budget, sponsorship, and competition pressure.",
-      "Sarkan IHA: butce, sponsorluk ve rekabet baskisi altinda teslim liderligi yuruttum.",
+      "Cross-domain adaptation: moved between enterprise software, architecture project coordination, mentoring, and defense-tech delivery without losing execution quality.",
+      "Alanlar arasi adaptasyon: enterprise yazilim, mimari proje koordinasyonu, mentorluk ve savunma teknolojileri teslimi arasinda uygulama kalitesini koruyarak gecis yaptim.",
     ),
   ],
 };
@@ -589,8 +614,8 @@ const contactDefinition = {
   infoTitle: localized("Direct channels", "Dogrudan kanallar"),
   availabilityTitle: localized("Currently open to", "Su alanlara acigim"),
   availabilityBody: localized(
-    "Backend systems, cloud platform work, DevOps automation, and high-ownership engineering internships.",
-    "Backend sistemleri, cloud platform calismalari, DevOps otomasyonu ve yuksek sahiplik gerektiren muhendislik stajlari.",
+    "Part-time software engineering, backend systems, cloud platform work, and DevOps automation roles.",
+    "Part-time software engineering, backend sistemleri, cloud platform calismalari ve DevOps otomasyonu rolleri.",
   ),
 };
 
@@ -702,19 +727,36 @@ Software Engineer | Cloud & DevOps Focus
 Website: https://yigitokur.me
 Email: yigitokur@ieee.org
 Phone: +90 535 573 3873
-Location: Istanbul, Turkey
+Location: Bagcilar, Istanbul, Turkey
 
 SUMMARY
-Software Engineering student focused on enterprise backend systems, cloud-native architecture, DevOps automation, and AI-native tooling.
+Third-year Software Engineering student at Isik University seeking a part-time software engineering or Cloud/DevOps role. Contributed to production systems at NETAS on an enterprise Java microservices platform and ships personal products with CI/CD, Docker, PostgreSQL, and SonarQube.
+
+EDUCATION
+- Isik University - B.Sc. Software Engineering (2023-2027 expected)
+- Ergun Oner-Mehmet Oner Anatolian High School (2019-2023)
+
+EXPERIENCE
+- NETAS Telekomunikasyon A.S. - Software Engineering Intern (Jan 2026 - Feb 2026)
+- Arch of Sigma - Project Management Intern, Remote (Nov 2025 - Jan 2026)
+- Isik University CSE Department - Student Assistant (Feb 2024 - Present)
+- AdaLab - Academic Data Analytics Lab - Research Assistant (Dec 2025 - Present)
 
 SELECTED HIGHLIGHTS
-- NETAS: traced a silent timezone mismatch across production Java microservices and documented the fix path with 600+ lines of tests.
-- IsikSchedule: built and productized a scheduling system reaching roughly 1,000 active desktop users with a 13-algorithm optimization engine.
-- Teknofest Sarkan UAV: led telemetry and coordination work for a project ranked 3rd among 700+ proposals.
-- IEEE Isik + AdaLab: combine technical leadership, community operations, and research support.
+- NETAS: 25 commits and 1,550 lines of code and tests across four Jira tickets on a production Java microservices platform.
+- Timezone case study: traced a silent UTC vs UTC+3 mismatch with YAML and ELK analysis, then documented remediation with 600+ lines of targeted tests.
+- IsikSchedule: built a dual-platform scheduling product serving ~1,000 active desktop users with a 13-algorithm engine and 86.97% coverage.
+- IEEE Isik: help coordinate 35+ technical events reaching 1,100+ students.
+
+SELECTED PROJECTS
+- IsikSchedule Platform - FastAPI, Next.js, PostgreSQL, Redis, Docker, PyQt6
+- Agentic IDE - TypeScript, Electron, Monaco, LLMs, RAG
+- Teknofest Sarkan UAV Defense Platform - Python, telemetry, RF-oriented systems
+- Automated Web Crawler - Scrapy, FastAPI, PostgreSQL
+- Portfolio Platform - FastAPI, Next.js, PostgreSQL, Docker
 
 KEY STACK
-Java, Spring Boot, Python, FastAPI, TypeScript, Next.js, Docker, Kubernetes, PostgreSQL, Redis, ElasticSearch, GitHub Actions.
+Java, Spring Boot, Python, FastAPI, TypeScript, Next.js, Docker, Kubernetes, PostgreSQL, Redis, RabbitMQ, ElasticSearch, SonarQube, GitHub Actions.
 
 LINKS
 GitHub: https://github.com/TurkishKEBAB
