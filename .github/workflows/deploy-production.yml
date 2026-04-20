@@ -212,7 +212,6 @@ jobs:
       - deploy-backend
     environment:
       name: production
-    continue-on-error: true
     steps:
       - name: Validate backend smoke configuration
         env:
