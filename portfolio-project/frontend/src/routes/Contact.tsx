@@ -71,7 +71,7 @@ export default function Contact({ locale }: ContactPageProps) {
             </PanelCard>
 
             <CornerFrame accent className="p-6">
-              <StatusDot color="green" label={locale === "tr" ? "ACTIVE" : "ACTIVE"} />
+              <StatusDot color="green" label="ACTIVE" />
               <h3 className="font-display text-lg font-bold text-gray-900 dark:text-dark-50 mt-3 mb-2">
                 {text.availabilityTitle}
               </h3>

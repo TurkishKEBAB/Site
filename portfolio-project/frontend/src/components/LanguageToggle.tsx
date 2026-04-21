@@ -25,7 +25,7 @@ export default function LanguageToggle() {
   };
 
   return (
-    <div className="relative hidden md:block">
+    <div className="relative">
       <button
         onClick={() => setOpen((prev) => !prev)}
         className="p-2 rounded text-gray-500 dark:text-dark-300 hover:text-gray-900 dark:hover:text-dark-50 hover:bg-gray-100 dark:hover:bg-dark-800 transition-colors"

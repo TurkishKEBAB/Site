@@ -1,4 +1,4 @@
-﻿import AnimatedSection from "@/components/AnimatedSection";
+import AnimatedSection from "@/components/AnimatedSection";
 import ProjectExplorer, { type LocalizedProjectView } from "@/components/ProjectExplorer";
 import { SectionHeading } from "@/components/ui";
 import { getLocaleValue, projectRecords, type Locale } from "@/content/site";

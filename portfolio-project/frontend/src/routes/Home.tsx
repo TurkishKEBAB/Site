@@ -1,4 +1,4 @@
-﻿import Link from "next/link";
+import Link from "next/link";
 import { FiArrowRight, FiDownload, FiGithub, FiLinkedin, FiMail, FiChevronDown } from "react-icons/fi";
 
 import AnimatedSection from "@/components/AnimatedSection";
