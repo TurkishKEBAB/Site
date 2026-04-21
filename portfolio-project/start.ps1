@@ -313,15 +313,15 @@ npm run dev
 
 Write-Section -Title 'Portfolio Project Startup' -Color ([ConsoleColor]::Cyan)
 
-if (-not (Test-Path $composeFile)) {
-    throw "docker-compose.yml not found: $composeFile"
-}
-
-if (-not (Test-Path $backendEnvFile)) {
-    throw "Backend .env not found: $backendEnvFile"
-}
-
 if (-not $FrontendOnly) {
+    if (-not (Test-Path $composeFile)) {
+        throw "docker-compose.yml not found: $composeFile"
+    }
+
+    if (-not (Test-Path $backendEnvFile)) {
+        throw "Backend .env not found: $backendEnvFile"
+    }
+
     Write-Host '[1/3] Backend stack (Docker Compose)' -ForegroundColor Cyan
     Ensure-BackendAndInfrastructure
 
