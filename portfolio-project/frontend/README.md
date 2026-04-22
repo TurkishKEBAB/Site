@@ -40,8 +40,8 @@ npm run preview
 Create a `.env` file:
 
 ```env
-VITE_API_BASE_URL=http://localhost:8000/api/v1
-VITE_GITHUB_USERNAME=TurkishKEBAB
+NEXT_PUBLIC_API_BASE_URL=http://localhost:8000/api/v1
+NEXT_PUBLIC_SITE_URL=https://yigitokur.me
 ```
 
 ## Project Structure

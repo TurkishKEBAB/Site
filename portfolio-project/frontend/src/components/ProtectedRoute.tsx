@@ -1,52 +1,53 @@
-import React, { useEffect } from 'react';
-import { Navigate, useNavigate } from 'react-router-dom';
-import { useAuth } from '../contexts/AuthContext';
-import { useToast } from './Toast';
+"use client";
+
+import type { ReactNode } from "react";
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
+
+import { useAuth } from "@/contexts/AuthContext";
+import { useToast } from "@/components/Toast";
 
 interface ProtectedRouteProps {
-  children: React.ReactNode;
+  children: ReactNode;
 }
 
-const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
+export default function ProtectedRoute({ children }: ProtectedRouteProps) {
+  const router = useRouter();
   const { isAuthenticated, isLoading, user } = useAuth();
   const { showToast } = useToast();
-  const navigate = useNavigate();
 
   useEffect(() => {
-    // If finished loading and not authenticated, show error message
     if (!isLoading && !isAuthenticated) {
-      showToast('error', 'Bu sayfayı görüntülemek için giriş yapmalısınız.');
-      
-      // Navigate to login after a short delay
+      showToast("error", "You need to sign in to access this page.");
+
       const timer = setTimeout(() => {
-        navigate('/login', { replace: true });
+        router.replace("/login");
       }, 1500);
 
       return () => clearTimeout(timer);
     }
 
-    // If authenticated but not an admin (for admin routes)
     if (!isLoading && isAuthenticated && user && !user.is_active) {
-      showToast('warning', 'Hesabınız aktif değil. Lütfen yönetici ile iletişime geçin.');
+      showToast("warning", "Your account is not active yet.");
     }
-  }, [isLoading, isAuthenticated, user, showToast, navigate]);
+
+    return undefined;
+  }, [isAuthenticated, isLoading, router, showToast, user]);
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-blue-900 to-gray-900 flex items-center justify-center">
-        <div className="text-white text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto mb-4"></div>
-          <p>Kimlik doğrulanıyor...</p>
+      <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-gray-950 via-slate-900 to-cyan-950">
+        <div className="text-center text-white">
+          <div className="mx-auto mb-4 h-12 w-12 animate-spin rounded-full border-b-2 border-white" />
+          <p>Verifying session...</p>
         </div>
       </div>
     );
   }
 
   if (!isAuthenticated) {
-    return <Navigate to="/login" replace />;
+    return null;
   }
 
   return <>{children}</>;
-};
-
-export default ProtectedRoute;
+}

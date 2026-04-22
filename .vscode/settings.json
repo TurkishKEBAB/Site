@@ -1,5 +1,9 @@
 {
     "cSpell.words": [
         "aiosmtplib"
-    ]
+    ],
+    "sonarlint.connectedMode.project": {
+        "connectionId": "turkishkebab",
+        "projectKey": "TurkishKEBAB_Site"
+    }
 }
