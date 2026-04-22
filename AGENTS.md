@@ -4,7 +4,7 @@ This file provides guidance to WARP (warp.dev) when working with code in this re
 
 ## Project Overview
 
-Full-stack portfolio site for Yiğit Okur. The main application lives under `portfolio-project/` with a FastAPI backend and React/TypeScript frontend. The repo root contains a convenience `start.ps1` that launches both services in separate PowerShell windows.
+Full-stack portfolio site for Yiğit Okur. The main application lives under `portfolio-project/` with a FastAPI backend and a Next.js/TypeScript frontend. The repo root contains a convenience `start.ps1` that forwards to `portfolio-project/start.ps1`.
 
 ## Git Workflow
 
@@ -101,7 +101,7 @@ All commands below assume `portfolio-project/` as the working directory unless n
 ./start.ps1
 ```
 
-This boots both backend (uvicorn on :8000) and frontend (Vite on :5173) in separate shells, creating venvs and installing deps if needed.
+This boots the backend stack with Docker Compose (`postgres`, `redis`, `api`) and opens the frontend Next.js dev server on `:3000`. The script supports `-BackendOnly`, `-FrontendOnly`, `-ResetData`, and `-SkipSeed`.
 
 ### Backend
 
@@ -123,21 +123,23 @@ docker-compose up -d
 
 Seed data: `python seed_data.py` (from `backend/`).
 
+Windows helper: `./start_backend.ps1` (from `backend/`) runs uvicorn via `venv/Scripts/python.exe`.
+
 ### Frontend
 
 ```powershell
 cd portfolio-project/frontend
 npm install
-npm run dev -- --host
+npm run dev
 ```
 
-The Vite dev server proxies `/api` requests to `http://localhost:8000`.
+The frontend dev server runs at `http://localhost:3000`. API calls are configured via `NEXT_PUBLIC_API_BASE_URL` (fallback `http://localhost:8000/api/v1` in `frontend/src/services/api.ts`).
 
 ### Environment Variables
 
-Backend: `portfolio-project/backend/.env.example` — required: `DATABASE_URL`, `SECRET_KEY`, `SMTP_USERNAME`, `SMTP_PASSWORD`. Optional: `SUPABASE_URL`, `SUPABASE_KEY`, `GITHUB_API_TOKEN`, `REDIS_URL`.
+Backend: `portfolio-project/backend/.env.example` — for local uvicorn runs, required: `DATABASE_URL`, `SECRET_KEY`, `SMTP_USERNAME`, `SMTP_PASSWORD`. For Docker Compose startup, also set `POSTGRES_PASSWORD` and `REDIS_PASSWORD`.
 
-Frontend: `VITE_API_BASE_URL` (defaults to `http://localhost:8000/api/v1`).
+Frontend: `portfolio-project/frontend/.env.example` — `NEXT_PUBLIC_API_BASE_URL`, `NEXT_PUBLIC_SITE_URL`, `VITE_GITHUB_USERNAME`.
 
 ## Testing
 
@@ -193,7 +195,7 @@ cd portfolio-project
 cd portfolio-project/frontend
 npm run lint           # ESLint (--max-warnings 0)
 npm run type-check     # tsc --noEmit
-npm run build          # tsc + vite build (catches type errors)
+npm run build          # next build (includes Next.js production checks)
 ```
 
 Backend has `black`, `isort`, and `flake8` in requirements but no pre-configured scripts — run them directly:
@@ -219,31 +221,33 @@ Layered FastAPI application:
 - **`crud/`** — Database operations per domain (e.g., `crud/project.py`). These accept a `Session` and return ORM model instances.
 - **`models/`** — SQLAlchemy ORM models inheriting from `Base` in `database.py`.
 - **`schemas/`** — Pydantic v2 request/response schemas.
-- **`services/`** — Stateful services: `cache_service.py` (Redis singleton with graceful fallback), email (aiosmtplib), GitHub API (httpx + 24h cache), Supabase storage.
+- **`services/`** — Stateful services: `cache_service.py` (Redis singleton with graceful fallback), `captcha_service.py` (Turnstile/hCaptcha/reCAPTCHA verification), email (aiosmtplib), GitHub API (httpx + 24h cache), Supabase storage.
 - **`core/rate_limit.py`** — slowapi `Limiter` instance.
 - **`utils/`** — `logger.py` (loguru setup), `security.py` (JWT token creation).
 
 Auth flow: JWT-based. Tokens carry `{"sub": "<user_uuid>"}`. Admin status is determined by checking the user's email against `ADMIN_EMAILS` (comma-separated env var), not a database flag.
 
-### Frontend (`portfolio-project/frontend/src/`)
+### Frontend (`portfolio-project/frontend/`)
 
-React 18 SPA with client-side routing:
+Next.js App Router frontend (React 19 + TypeScript):
 
-- **`App.tsx`** — Provider hierarchy: `ToastProvider` > `LanguageProvider` > `AuthProvider`. All page routes are lazy-loaded. `/admin` is wrapped in `ProtectedRoute`.
-- **`services/api.ts`** — Axios instance with base URL from `VITE_API_BASE_URL`. Request interceptor attaches JWT from `localStorage` and a `language` query param on GET requests. Response interceptor dispatches `api:error` custom events and redirects to `/login` on 401/403 from admin pages. The `apiEndpoints` object provides a typed endpoint map.
-- **`services/*Service.ts`** — Domain service modules (blog, contact, experience, project, skill, technology) wrapping the Axios client.
-- **`contexts/AuthContext.tsx`** — Auth state + `login`/`logout` functions. Uses `/auth/login/json` for login, `/auth/me` for user info.
-- **`contexts/LanguageContext.tsx`** — i18n context backed by the `/translations` API.
-- **`pages/`** — Home, About, Projects, Blog, BlogDetail, Contact, Login, Admin, NotFound.
-- **`components/`** — Layout (with Outlet), AnimatedBackground, ProtectedRoute, Toast, SEO, etc.
-- **`seo/`** — `seoConfig.ts` with per-route meta.
-- **Path alias**: `@` maps to `./src` (configured in `vite.config.ts`).
+- **`app/`** — Route groups for public/auth/admin surfaces: `(public)`, `(auth)`, `(admin)`. Metadata routes include `sitemap.ts`, `robots.ts`, `opengraph-image.tsx`, and `twitter-image.tsx`.
+- **`app/layout.tsx`** — Root layout with Next font loading, locale-aware `<html lang>`, theme bootstrap script, and shared providers.
+- **`src/components/providers.tsx`** — Provider hierarchy: `LanguageProvider` > `ToastProvider` > `AuthProvider`.
+- **`src/services/api.ts`** — Axios instance with base URL from `NEXT_PUBLIC_API_BASE_URL`. Request interceptor attaches JWT from `localStorage` and a `language` query param on GET requests. Response interceptor dispatches `api:error` custom events and redirects to `/login` on 401/403 from admin pages. The `apiEndpoints` object provides a typed endpoint map.
+- **`src/routes/`** — Feature route components (Home, About, Projects, Blog, BlogDetail, Contact, Login, Admin, NotFound) consumed by `app/*/page.tsx` files.
+- **`src/contexts/AuthContext.tsx`** — Auth state + `login`/`logout` functions. Uses `/auth/login/json` for login, `/auth/me` for user info.
+- **`src/contexts/LanguageContext.tsx`** — UI dictionary-based i18n (`src/content/site.ts`) with language persistence in `localStorage` + cookie.
+- **`src/lib/metadata.ts`** — Per-route metadata builders and JSON-LD helpers used by app routes.
+- **Path alias**: `@` maps to `./src` (configured in `vite.config.ts` and `tsconfig.json`).
 
-Build splits chunks: `react-vendor`, `markdown-vendor`, `motion-vendor` (via `manualChunks` in Vite config).
+Bundle analysis runs via `npm run analyze` (`@next/bundle-analyzer`) and CI uploads artifacts from `frontend/.next/analyze`.
 
 ### CI/CD (`.github/workflows/`)
 
-- **`ci.yml`** — Runs on push/PR to `main` and feature branches. Two parallel jobs: backend (Python 3.13, pytest) and frontend (Node 20, lint + test + build). A third `sonarcloud` job runs if `SONAR_TOKEN` is configured.
+- **`ci.yml`** — Runs on push/PR to `main` and `develop`. Two parallel jobs: backend (Python 3.13, pytest) and frontend (Node 20, lint + server-component boundary check + coverage + build). A `sonarcloud` push job runs only when Sonar credentials are available.
+- **`sonar-pr-gate.yml`** — SonarCloud PR analysis gate for pull requests targeting `main`.
+- **`deploy-production.yml`** — Production pipeline with separate backend (Railway) and frontend (Vercel) deployments plus smoke checks.
 - **`deploy-vercel-preview.yml`** / **`deploy-railway-staging.yml`** — Staging deployment workflows.
 
 ### Database
@@ -253,6 +257,6 @@ PostgreSQL 15 in production/docker; tests use in-memory SQLite. Schema migration
 ### Key Ports
 
 - Backend API: `8000`
-- Frontend dev server: `5173` (Vite default) or `3000` (configured in `vite.config.ts`)
+- Frontend dev server: `3000`
 - PostgreSQL: `5432`
 - Redis: `6379`
