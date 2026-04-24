@@ -1,0 +1,357 @@
+# Audit Implementation Plan
+
+Kaynak rapor: [`../planlama.md`](../planlama.md)
+
+Bu dosya, teknik denetim raporundaki bulguları uygulanabilir fazlara ve takip edilebilir TODO listesine dönüştürür. Rapor kanıt envanteri olarak kalsın; bu dosya ise her oturumda işaretlenecek yaşayan uygulama planı olsun.
+
+## Kısa Değerlendirme
+
+Rapor bulgu kapsamı açısından güçlü ve uygulamaya başlamak için yeterli. Rapordaki veriler, test sonuçları ve doğrulama notları geçerli kaynak gerçekliği olarak kabul edilir; eksik alanlar olabilir, fakat mevcut bulguların tekrar kanıtlanması bu planın ön koşulu değildir. Eksik olan kısım implementasyon sırası, bağımlılıklar, kabul kriterleri ve iş takibi formatıydı.
+
+Planı aşağıdaki sırayla yürütmek daha güvenli:
+
+1. Önce mevcut test/audit çalışma durumunu kaydet.
+2. Kullanıcıyı veya CI'ı doğrudan etkileyen P0/P1 regresyonları kapat.
+3. Veritabanı şeması gerektiren işleri Alembic temeli kurulduktan sonra yap.
+4. Büyük frontend refactorlarını güvenlik ve CI kapıları stabil olduktan sonra ele al.
+5. Test, gözlemlenebilirlik ve dokümantasyon kalitesini fazlar boyunca artır.
+
+## Takip Kuralları
+
+- Her iş tamamlandığında ilgili checkbox `[x]` yapılır.
+- Her faz sonunda `Faz Durumu` ve `Notlar` güncellenir.
+- Bir PR bir reviewable problemi çözmelidir; backend ve frontend değişiklikleri yalnızca zorunluysa aynı PR'a girer.
+- Branch isimleri `AGENTS.md` ve `GIT_WORKFLOW.md` kurallarına uygun olmalıdır.
+- Commit mesajları Conventional Commits formatında ve İngilizce yazılmalıdır.
+- Her faz için hedefli testler, mümkünse `./quality.ps1`, çalıştırılmalıdır.
+
+## Faz 0 - Baseline Durum Kaydı
+
+Faz Durumu: `todo`
+
+Amaç: Rapordaki bulguları yeniden kanıtlamak değil; ilk PR'lardan önce mevcut test, build ve audit komutlarının bugünkü kırmızı/yeşil durumunu kaydetmek. Rapor verileri doğru kabul edilir, bu faz yalnızca implementasyon sırasında regresyonları ayırt etmeyi kolaylaştırır.
+
+TODO:
+
+- [ ] `git status --short --branch` ve `git fetch origin` ile branch/working tree durumunu kaydet.
+- [ ] Backend testlerini çalıştır: `cd portfolio-project && python -m pytest -q`.
+- [ ] Frontend lint çalıştır: `cd portfolio-project/frontend && npm run lint`.
+- [ ] Frontend type-check çalıştır: `cd portfolio-project/frontend && npm run type-check`.
+- [ ] Frontend test çalıştır: `cd portfolio-project/frontend && npm run test`.
+- [ ] Frontend build çalıştır: `cd portfolio-project/frontend && npm run build`.
+- [ ] Güncel audit durumunu ölç: `cd portfolio-project/frontend && npm audit --audit-level=high`.
+- [ ] Ölçüm sonuçlarını ilgili PR açıklamasına veya bu dosyanın faz notuna ekle.
+- [ ] Rapordaki doğru kabul edilen başlangıç verileriyle komut çıktıları arasında yeni bir fark varsa bunu ayrıca not et.
+
+Kabul kriteri:
+
+- Başlangıç test/audit durumu biliniyor.
+- İlk implementasyon fazı için hangi komutların zaten kırmızı olduğu açıkça not edilmiş.
+- Rapor bulguları tekrar tartışmaya açılmadan implementasyon için kaynak kabul edilmiş.
+
+Notlar:
+
+- `npm audit` çıktısı değişken olduğu için Faz 1'e başlamadan tekrar ölçülmelidir.
+- Rapor eksik olabilir; bu nedenle yeni bulgu çıkarsa ilgili faza ek TODO olarak işlenmelidir.
+
+## Faz 1 - P0 Stabilizasyon ve CI Güvenlik Kapısı
+
+Faz Durumu: `todo`
+
+Amaç: Kullanıcı oturumunu bozan aktif frontend regresyonunu ve CI'da güvenlik açığı geçmesine izin veren kapıyı kapatmak.
+
+TODO:
+
+- [ ] `frontend/src/services/api.ts` içinde token temizleme koşulunu yalnızca `401` için çalışacak hale getir.
+- [ ] `403` davranışı için frontend servis testi ekle: 403 localStorage tokenlarını silmemeli.
+- [ ] `401` davranışı için regresyon testi ekle: 401 tokenları silmeli ve admin sayfasında login'e yönlendirmeli.
+- [ ] Güncel `npm audit --audit-level=high` çıktısını sınıflandır.
+- [ ] High severity açıkları kapatacak dependency upgrade PR'ını hazırla.
+- [ ] Upgrade sonrası `npm audit --audit-level=high` sıfır high açık ile geçmeli.
+- [ ] `.github/workflows/ci.yml` içinde `npm audit` için `continue-on-error: true` kaldır.
+- [ ] `deploy-vercel-preview.yml` ve `deploy-railway-staging.yml` içindeki stale `Codex_Implementation` referanslarını güncelle.
+
+Kabul kriteri:
+
+- 403 artık kullanıcıyı oturumdan atmıyor.
+- CI high severity frontend audit açığında başarısız oluyor.
+- Staging/preview workflow'ları ölü branch ismine bağlı değil.
+- Hedefli frontend testler, lint, type-check ve build geçiyor.
+
+Önerilen PR bölümü:
+
+- PR 1: `fix(frontend): preserve session on forbidden responses`
+- PR 2: `fix(frontend): clear high severity audit findings`
+- PR 3: `ci(github): enforce frontend audit gate`
+- PR 4: `ci(github): remove stale deployment branch references`
+
+Notlar:
+
+- Audit gate, dependency açıkları kapatılmadan aktive edilirse CI bilinçli olarak kırmızıya döner. Bu yüzden dependency upgrade ve gate kaldırma aynı PR'da veya ardışık PR'larda planlanmalıdır.
+
+## Faz 2 - Düşük Riskli Backend Güvenlik Sıkılaştırma
+
+Faz Durumu: `todo`
+
+Amaç: Şema değişikliği gerektirmeyen veya düşük riskli backend güvenlik açıklarını kapatmak.
+
+TODO:
+
+- [ ] `backend/app/api/deps.py` içindeki admin email/user email debug loglarını kaldır veya PII içermeyen hale getir.
+- [ ] İlgili auth/admin dependency testlerini ekle veya güncelle.
+- [ ] `backend/app/config.py` içinde `ADMIN_EMAILS` default kişisel email değerini kaldır.
+- [ ] Production validation içinde boş `ADMIN_EMAILS` için fail-fast davranışı doğrula.
+- [ ] Test fixture/env ayarlarının explicit `ADMIN_EMAILS` set ettiğini doğrula.
+- [ ] `backend/seed_data.py` içinde env yokken parola üretip stdout'a basma davranışını kaldır.
+- [ ] `SEED_ADMIN_PASSWORD` yoksa seed işlemini `RuntimeError` ile durdur.
+- [ ] Seed davranışı için test veya en azından manuel doğrulama ekle.
+- [ ] `backend/app/main.py` CORS method listesini explicit whitelist yap.
+- [ ] CORS davranışını mevcut frontend istekleriyle smoke test et.
+
+Kabul kriteri:
+
+- Admin yetki kontrolünde PII loglanmıyor.
+- Prod varsayılan admin email ile ayağa kalkmıyor.
+- Seed script admin parolasını terminale yazmıyor.
+- CORS method whitelist mevcut uygulama akışını bozmuyor.
+
+Önerilen PR bölümü:
+
+- PR 1: `fix(security): remove admin authorization email logging`
+- PR 2: `fix(config): require explicit admin emails in production`
+- PR 3: `fix(seed): require explicit admin seed password`
+- PR 4: `fix(api): whitelist allowed cors methods`
+
+## Faz 3 - Migration Temeli ve Admin Yetkilendirme Modeli
+
+Faz Durumu: `todo`
+
+Amaç: Prod şema değişikliklerini güvenli hale getirmek ve admin yetkisini email listesi yerine veritabanı modeliyle yönetmek.
+
+TODO:
+
+- [ ] Alembic klasörünü ve `alembic.ini` yapılandırmasını ekle.
+- [ ] Mevcut SQLAlchemy modellerinden baseline migration üret.
+- [ ] Test ve local SQLite/Postgres akışlarıyla migration komutlarını doğrula.
+- [ ] Deploy pipeline'a `alembic upgrade head` adımını ekle.
+- [ ] `User.is_admin` kolonu için migration ekle.
+- [ ] `ADMIN_EMAILS` değerini yalnızca bootstrap/grant mekanizması olarak sınırla.
+- [ ] `require_admin` dependency'sini `User.is_admin` kontrolüne geçir.
+- [ ] Admin grant/revoke veya bootstrap kararını dokümante et.
+- [ ] Admin action audit log tablosu için tasarım yap.
+- [ ] Kritik admin CRUD işlemlerine audit log yaz.
+- [ ] Login lockout için `failed_login_count` ve `locked_until` alanlarını tasarla.
+- [ ] Login lockout backend testlerini ekle.
+
+Kabul kriteri:
+
+- Şema değişiklikleri migration ile versionlanıyor.
+- Admin yetkisi DB kolonu üzerinden okunuyor.
+- Email listesi kalıcı yetki kaynağı değil.
+- Audit log en azından kritik admin aksiyonlarında kayıt üretiyor.
+- Login brute-force denemeleri lockout ile sınırlandırılıyor.
+
+Önerilen PR bölümü:
+
+- PR 1: `feat(backend): add alembic migration baseline`
+- PR 2: `feat(auth): authorize admins with user role flag`
+- PR 3: `feat(admin): record audit log for admin actions`
+- PR 4: `feat(auth): lock accounts after repeated login failures`
+
+Notlar:
+
+- `User.is_admin`, audit log ve login lockout migration gerektirir; Alembic temeli kurulmadan bu işlere başlanmamalıdır.
+
+## Faz 4 - Upload Güvenliği ve Frontend Security Headers
+
+Faz Durumu: `todo`
+
+Amaç: Dosya upload içeriğini gerçek dosya türüne göre doğrulamak ve frontend güvenlik başlıklarını netleştirmek.
+
+TODO:
+
+- [ ] `filetype` veya uygun alternatif kütüphane seçimini yap.
+- [ ] `backend/app/services/storage_service.py` içine `validate_file_content(bytes)` ekle.
+- [ ] Upload akışında uzantı/boyut kontrolüne ek olarak magic-byte kontrolü çalıştır.
+- [ ] `.jpg` uzantılı ama geçersiz binary payload için backend test ekle.
+- [ ] Geçerli image upload akışının regresyonsuz olduğunu test et.
+- [ ] `frontend/next.config.mjs` için güvenlik header tasarımını yap.
+- [ ] CSP eklenirse inline theme bootstrap script için nonce/hash stratejisini belirle.
+- [ ] Security headers için build ve smoke doğrulaması yap.
+
+Kabul kriteri:
+
+- Sahte image upload 400/uygun hata ile reddediliyor.
+- Geçerli image upload çalışmaya devam ediyor.
+- Security header eklemeleri mevcut Next.js runtime ve theme script ile çakışmıyor.
+
+Önerilen PR bölümü:
+
+- PR 1: `fix(storage): validate uploaded file content type`
+- PR 2: `feat(frontend): add baseline security headers`
+
+## Faz 5 - Dokümantasyon ve DX Temizliği
+
+Faz Durumu: `todo`
+
+Amaç: Yeni katkıcıların doğru dokümandan başlamasını sağlamak ve tarihsel doküman karmaşasını azaltmak.
+
+TODO:
+
+- [ ] Root `README.md` dosyasını gerçek proje giriş sayfası haline getir.
+- [ ] `portfolio-project/README.md` içindeki eski React 18/Vite bilgilerini Next 16 + React 19 stack'iyle güncelle.
+- [ ] `portfolio-project/` kökündeki tarihsel MD dosyalarını sınıflandır.
+- [ ] Güncel olmayan tarihsel dosyaları `portfolio-project/docs/_archive/` altına taşı.
+- [ ] Canonical doküman listesini belirt: root README, AGENTS, GIT_WORKFLOW, QUICKSTART, docs.
+- [ ] Backend/frontend çalışma komutlarını tek yerde doğrula.
+- [ ] PowerShell-only akışlara alternatif cross-platform notu ekle veya bilinçli kısıt olarak dokümante et.
+
+Kabul kriteri:
+
+- Yeni geliştirici hangi dosyadan başlayacağını biliyor.
+- Stack dokümantasyonu mevcut package/script gerçekliğiyle uyumlu.
+- Tarihsel raporlar kaybolmadan arşivlenmiş durumda.
+
+Önerilen PR bölümü:
+
+- PR 1: `docs(repo): refresh project onboarding guide`
+- PR 2: `docs(repo): archive historical status documents`
+
+## Faz 6 - Frontend Kalite ve Performans Temeli
+
+Faz Durumu: `todo`
+
+Amaç: Frontend regresyonlarını görünür kılmak, LCP riskini azaltmak ve büyük bileşenleri güvenli şekilde parçalamaya başlamak.
+
+TODO:
+
+- [ ] `vite.config.ts` coverage threshold değerlerini düşük ama gerçekçi başlangıç seviyesinde ekle.
+- [ ] `npm run test:coverage` çıktısına göre kırılmaları triage et.
+- [ ] `.eslintrc.cjs` içinde `react-hooks/exhaustive-deps` kuralını önce `warn`, sonra mümkünse `error` yap.
+- [ ] `@typescript-eslint/no-explicit-any` kuralını önce `warn`, sonra mümkünse `error` yap.
+- [ ] `jsx-a11y` plugin ihtiyacını doğrula ve kademeli olarak ekle.
+- [ ] Tüm raw `<img>` kullanımlarını envanterle.
+- [ ] `next.config.mjs` image `remotePatterns` ihtiyacını belirle.
+- [ ] LCP etkisi yüksek görsellerden başlayarak `next/image` dönüşümünü yap.
+- [ ] `Admin.tsx` için mevcut state, form ve CRUD akışlarını haritala.
+- [ ] `Admin.tsx` içinden bağımsız tab bileşenlerini çıkar: Projects, Skills, Experiences, Messages.
+- [ ] Focus trap/helper gibi tekrar eden davranışları `src/lib/admin/` altına taşı.
+- [ ] `site.ts` monolitini domain bazlı parçalara ayırma tasarımını yap.
+- [ ] Basit `*Client.tsx` wrapper indirection'larını azaltma stratejisini belirle.
+
+Kabul kriteri:
+
+- Coverage ve lint regresyonları CI'da görünür hale geliyor.
+- Kritik görseller `next/image` kullanıyor.
+- `Admin.tsx` tek dosya riskinden çıkmaya başlıyor.
+- Refactorlar public/admin davranışını değiştirmeden geçiyor.
+
+Önerilen PR bölümü:
+
+- PR 1: `test(frontend): add coverage thresholds`
+- PR 2: `chore(frontend): tighten lint rules incrementally`
+- PR 3: `refactor(frontend): render key images with next image`
+- PR 4: `refactor(frontend): split admin route tabs`
+- PR 5: `refactor(frontend): split site content modules`
+
+## Faz 7 - Observability, API Contract ve Data Fetching
+
+Faz Durumu: `todo`
+
+Amaç: Prod hatalarını izlenebilir hale getirmek ve frontend/backend contract drift riskini azaltmak.
+
+TODO:
+
+- [ ] Backend Sentry entegrasyonunu tasarla ve env gereksinimlerini dokümante et.
+- [ ] Frontend Sentry entegrasyonunu tasarla.
+- [ ] Release tag stratejisini belirle: git SHA veya deploy-provided release id.
+- [ ] Backend error response contract'ını standartlaştır.
+- [ ] Frontend merkezi `parseApiError` helper'ı ekle.
+- [ ] OpenAPI schema üretim akışını doğrula.
+- [ ] `openapi-typescript` ile generated API types dosyası üret.
+- [ ] CI'da generated type drift kontrolünü ekle.
+- [ ] TanStack Query kullanımını değerlendir.
+- [ ] Query key factory ve ilk public list endpoint hooklarını ekle.
+
+Kabul kriteri:
+
+- Prod hataları release bilgisiyle izlenebiliyor.
+- API response/error contract'ı tek yerde tanımlı.
+- Frontend servis tipleri backend schema değişimlerine karşı drift sinyali veriyor.
+
+Önerilen PR bölümü:
+
+- PR 1: `feat(observability): add backend error reporting`
+- PR 2: `feat(observability): add frontend error reporting`
+- PR 3: `feat(api): standardize error responses`
+- PR 4: `build(frontend): generate api contract types`
+- PR 5: `refactor(frontend): introduce query hooks for public data`
+
+## Faz 8 - Test Kapsamı ve E2E Güvence
+
+Faz Durumu: `todo`
+
+Amaç: Kritik kullanıcı akışlarını uçtan uca güvenceye almak ve coverage hedeflerini kademeli yükseltmek.
+
+TODO:
+
+- [ ] Backend coverage scope'unu genişletme planı yap.
+- [ ] Auth refresh rotation ve blacklist testlerini genişlet.
+- [ ] Admin authorization testlerini DB tabanlı admin modeline göre güncelle.
+- [ ] Upload validation testlerini kalıcı hale getir.
+- [ ] Contact captcha testlerini provider mock ile güçlendir.
+- [ ] Frontend `AuthContext` testlerini token lifecycle için genişlet.
+- [ ] Frontend `LanguageContext` testlerini cookie/localStorage senaryolarıyla genişlet.
+- [ ] `services/api.test.ts` içine 401/403/language param davranışlarını ekle.
+- [ ] Playwright kurulumunu ekle.
+- [ ] Public smoke E2E yaz: Home, About, Projects, Contact.
+- [ ] Admin smoke E2E yaz: Login, create/edit/delete, logout.
+- [ ] Blog E2E yaz: list, detail, markdown render.
+- [ ] i18n E2E yaz: TR/EN toggle, persistence.
+- [ ] CI'da E2E için PR veya nightly stratejisini belirle.
+
+Kabul kriteri:
+
+- Kritik auth/admin/contact/blog/project akışları otomatik testle korunuyor.
+- Coverage threshold değerleri gerçekçi şekilde yükseltilebiliyor.
+- E2E testler stabil ve CI stratejisi net.
+
+Önerilen PR bölümü:
+
+- PR 1: `test(backend): expand auth and upload coverage`
+- PR 2: `test(frontend): cover auth and api service behavior`
+- PR 3: `test(e2e): add public route smoke tests`
+- PR 4: `test(e2e): add admin workflow smoke tests`
+
+## İlk Başlanacak Sıra
+
+Bu planı adım adım uygularken önerilen ilk sıra:
+
+1. Faz 0 baseline doğrulama.
+2. `api.ts` 401/403 regresyon düzeltmesi.
+3. Frontend audit dependency upgrade.
+4. `npm audit` CI gate aktivasyonu.
+5. Deploy workflow stale branch referansları.
+6. Backend PII log ve seed password düzeltmeleri.
+7. Alembic baseline.
+
+Bu sıra hızlı geri dönüş sağlar ve sonraki büyük işleri daha az riskli hale getirir.
+
+## Fazlar Arası Bağımlılıklar
+
+- `User.is_admin`, audit log ve login lockout işleri Alembic baseline'dan sonra yapılmalıdır.
+- `npm audit` gate, high severity açıkları kapatılmadan zorunlu hale getirilirse CI kırmızı kalır.
+- CSP eklenmeden önce inline theme bootstrap script davranışı netleştirilmelidir.
+- `Admin.tsx` parçalama başlamadan önce mevcut admin CRUD akışları test veya smoke senaryolarıyla korunmalıdır.
+- `next/image` dönüşümü remote image domainleri netleşmeden tamamlanmamalıdır.
+
+## Genel Definition of Done
+
+Bir iş tamamlanmış sayılmadan önce:
+
+- [ ] İlgili kod/doküman değişiklikleri sınırlı ve reviewable olmalı.
+- [ ] Hedefli testler çalıştırılmış olmalı.
+- [ ] Riskli frontend işlerinde `npm run lint`, `npm run type-check`, `npm run test` ve `npm run build` çalıştırılmalı.
+- [ ] Riskli backend işlerinde `python -m pytest -q` çalıştırılmalı.
+- [ ] CI veya deploy davranışı değişiyorsa workflow etkisi PR açıklamasında yazılmalı.
+- [ ] Bu dosyadaki ilgili TODO checkbox güncellenmeli.
