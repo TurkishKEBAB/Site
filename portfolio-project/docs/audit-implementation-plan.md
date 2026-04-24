@@ -27,21 +27,21 @@ Planı aşağıdaki sırayla yürütmek daha güvenli:
 
 ## Faz 0 - Baseline Durum Kaydı
 
-Faz Durumu: `todo`
+Faz Durumu: `done`
 
 Amaç: Rapordaki bulguları yeniden kanıtlamak değil; ilk PR'lardan önce mevcut test, build ve audit komutlarının bugünkü kırmızı/yeşil durumunu kaydetmek. Rapor verileri doğru kabul edilir, bu faz yalnızca implementasyon sırasında regresyonları ayırt etmeyi kolaylaştırır.
 
 TODO:
 
-- [ ] `git status --short --branch` ve `git fetch origin` ile branch/working tree durumunu kaydet.
-- [ ] Backend testlerini çalıştır: `cd portfolio-project && python -m pytest -q`.
-- [ ] Frontend lint çalıştır: `cd portfolio-project/frontend && npm run lint`.
-- [ ] Frontend type-check çalıştır: `cd portfolio-project/frontend && npm run type-check`.
-- [ ] Frontend test çalıştır: `cd portfolio-project/frontend && npm run test`.
-- [ ] Frontend build çalıştır: `cd portfolio-project/frontend && npm run build`.
-- [ ] Güncel audit durumunu ölç: `cd portfolio-project/frontend && npm audit --audit-level=high`.
-- [ ] Ölçüm sonuçlarını ilgili PR açıklamasına veya bu dosyanın faz notuna ekle.
-- [ ] Rapordaki doğru kabul edilen başlangıç verileriyle komut çıktıları arasında yeni bir fark varsa bunu ayrıca not et.
+- [x] `git status --short --branch` ve `git fetch origin` ile branch/working tree durumunu kaydet.
+- [x] Backend testlerini çalıştır: `cd portfolio-project && python -m pytest -q`.
+- [x] Frontend lint çalıştır: `cd portfolio-project/frontend && npm run lint`.
+- [x] Frontend type-check çalıştır: `cd portfolio-project/frontend && npm run type-check`.
+- [x] Frontend test çalıştır: `cd portfolio-project/frontend && npm run test`.
+- [x] Frontend build çalıştır: `cd portfolio-project/frontend && npm run build`.
+- [x] Güncel audit durumunu ölç: `cd portfolio-project/frontend && npm audit --audit-level=high`.
+- [x] Ölçüm sonuçlarını ilgili PR açıklamasına veya bu dosyanın faz notuna ekle.
+- [x] Rapordaki doğru kabul edilen başlangıç verileriyle komut çıktıları arasında yeni bir fark varsa bunu ayrıca not et.
 
 Kabul kriteri:
 
@@ -53,6 +53,17 @@ Notlar:
 
 - `npm audit` çıktısı değişken olduğu için Faz 1'e başlamadan tekrar ölçülmelidir.
 - Rapor eksik olabilir; bu nedenle yeni bulgu çıkarsa ilgili faza ek TODO olarak işlenmelidir.
+
+Faz 0 ölçüm notu (2026-04-25):
+
+- Git başlangıç durumu: `## main...origin/main`, working tree temiz; `git fetch origin` başarıyla tamamlandı. Çalışma dalı: `chore/repo-audit-phase-0`.
+- Backend test: `python -m pytest -q` başarılı; `75 passed`, toplam coverage `%85.60`, `6 warnings`. Ek olarak kapanışta SQLite bağlantısı için `ResourceWarning` görüldü.
+- Frontend lint: `npm run lint` başarılı.
+- Frontend type-check: `npm run type-check` başarılı.
+- Frontend test: `npm run test` başarılı; `3 passed` test dosyası, `11 passed` test. `ContactForm` negatif senaryolarında beklenen `backend unavailable` stderr logları üretildi.
+- Frontend build: `npm run build` başarılı; Next.js `16.2.1` Turbopack build tamamlandı. `Browserslist` verisinin 6 ay eski olduğuna dair bakım uyarısı verdi.
+- Frontend audit: `npm audit --audit-level=high` başarısız; `19 vulnerabilities` bulundu (`7 moderate`, `12 high`). High bulgular: `axios`, `flatted`, `glob`, `minimatch`, `next`, `picomatch`, `rollup`.
+- Rapor farkı: planlama raporundaki önceki audit ölçümü `18 toplam / 12 high` idi; güncel ölçüm `19 toplam / 12 high`. High sayısı aynı, toplam açık sayısı +1.
 
 ## Faz 1 - P0 Stabilizasyon ve CI Güvenlik Kapısı
 
