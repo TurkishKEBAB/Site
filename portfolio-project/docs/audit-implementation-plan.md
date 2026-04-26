@@ -110,22 +110,22 @@ Faz 1 ölçüm notu (2026-04-26):
 
 ## Faz 2 - Düşük Riskli Backend Güvenlik Sıkılaştırma
 
-Faz Durumu: `todo`
+Faz Durumu: `done`
 
 Amaç: Şema değişikliği gerektirmeyen veya düşük riskli backend güvenlik açıklarını kapatmak.
 
 TODO:
 
-- [ ] `backend/app/api/deps.py` içindeki admin email/user email debug loglarını kaldır veya PII içermeyen hale getir.
-- [ ] İlgili auth/admin dependency testlerini ekle veya güncelle.
-- [ ] `backend/app/config.py` içinde `ADMIN_EMAILS` default kişisel email değerini kaldır.
-- [ ] Production validation içinde boş `ADMIN_EMAILS` için fail-fast davranışı doğrula.
-- [ ] Test fixture/env ayarlarının explicit `ADMIN_EMAILS` set ettiğini doğrula.
-- [ ] `backend/seed_data.py` içinde env yokken parola üretip stdout'a basma davranışını kaldır.
-- [ ] `SEED_ADMIN_PASSWORD` yoksa seed işlemini `RuntimeError` ile durdur.
-- [ ] Seed davranışı için test veya en azından manuel doğrulama ekle.
-- [ ] `backend/app/main.py` CORS method listesini explicit whitelist yap.
-- [ ] CORS davranışını mevcut frontend istekleriyle smoke test et.
+- [x] `backend/app/api/deps.py` içindeki admin email/user email debug loglarını kaldır veya PII içermeyen hale getir.
+- [x] İlgili auth/admin dependency testlerini ekle veya güncelle.
+- [x] `backend/app/config.py` içinde `ADMIN_EMAILS` default kişisel email değerini kaldır.
+- [x] Production validation içinde boş `ADMIN_EMAILS` için fail-fast davranışı doğrula.
+- [x] Test fixture/env ayarlarının explicit `ADMIN_EMAILS` set ettiğini doğrula.
+- [x] `backend/seed_data.py` içinde env yokken parola üretip stdout'a basma davranışını kaldır.
+- [x] `SEED_ADMIN_PASSWORD` yoksa seed işlemini `RuntimeError` ile durdur.
+- [x] Seed davranışı için test veya en azından manuel doğrulama ekle.
+- [x] `backend/app/main.py` CORS method listesini explicit whitelist yap.
+- [x] CORS davranışını mevcut frontend istekleriyle smoke test et.
 
 Kabul kriteri:
 
@@ -140,6 +140,15 @@ Kabul kriteri:
 - PR 2: `fix(config): require explicit admin emails in production`
 - PR 3: `fix(seed): require explicit admin seed password`
 - PR 4: `fix(api): whitelist allowed cors methods`
+
+Notlar:
+
+- Faz 1 değişiklikleri `main` içindedir: PR #23 `2026-04-26` tarihinde squash merge edildi ve `origin/main` üzerinde `f749f9e fix(frontend): complete audit phase 1 stabilization (#23)` commit'i bulunuyor.
+- Admin authorization logları artık user email veya admin email listesini yazmıyor; regresyon testi log mesajlarında `user@test.com` ve `admin@test.com` bulunmadığını doğruluyor.
+- `ADMIN_EMAILS` default'u boşaltıldı; production validation boş admin listesiyle fail-fast hata üretiyor. Test fixture, CI env, Docker Compose env geçişi ve `.env.example` explicit `ADMIN_EMAILS` kullanıyor.
+- Seed script `SEED_ADMIN_PASSWORD` yokken parola üretmiyor ve stdout'a parola yazmıyor; `RuntimeError` ile duruyor.
+- CORS method listesi `GET`, `POST`, `PUT`, `PATCH`, `DELETE`, `OPTIONS` olarak sınırlandı; preflight testleri frontend CRUD methodlarını kabul edip `TRACE` methodunu reddediyor.
+- Doğrulama: `python -m pytest -c pytest.ini backend/tests/test_config.py backend/tests/test_admin_security.py backend/tests/test_seed_data.py backend/tests/test_system_health.py -q --no-cov` başarılı (`13 passed`); `python -m pytest -q` başarılı (`83 passed`, coverage `%85.64`).
 
 ## Faz 3 - Migration Temeli ve Admin Yetkilendirme Modeli
 

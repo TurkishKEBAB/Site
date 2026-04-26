@@ -5,7 +5,6 @@ Seed database with CV v6 data for Yigit Okur.
 from datetime import date, datetime, timezone
 from typing import Dict, List, Optional
 import os
-import secrets
 
 from sqlalchemy.orm import Session
 from slugify import slugify
@@ -39,9 +38,9 @@ def seed_admin_user(db: Session) -> User:
     """Create portfolio owner user."""
     seed_admin_password = os.getenv("SEED_ADMIN_PASSWORD")
     if not seed_admin_password:
-        seed_admin_password = secrets.token_urlsafe(18)
-        print("SEED_ADMIN_PASSWORD not set. Generated one-time random admin password for seed run.")
-        print(f"Generated seed admin password: {seed_admin_password}")
+        raise RuntimeError(
+            "SEED_ADMIN_PASSWORD is required to seed the admin user."
+        )
 
     user = User(
         email="yigitokur@ieee.org",

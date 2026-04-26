@@ -103,11 +103,6 @@ def require_admin(
     admin_emails = set(settings.admin_email_list)
     user_email = getattr(current_user, "email", "").lower()
 
-    # Debug logging
-    logger.debug(f"Admin check - User email: '{user_email}'")
-    logger.debug(f"Admin emails list: {admin_emails}")
-    logger.debug(f"Is admin: {user_email in admin_emails}")
-
     if not admin_emails:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -115,13 +110,13 @@ def require_admin(
         )
 
     if user_email not in admin_emails:
-        logger.warning(f"Admin access denied for user: {user_email}")
+        logger.warning("Admin access denied")
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Not enough permissions. Admin access required."
         )
     
-    logger.info(f"Admin access granted for user: {user_email}")
+    logger.info("Admin access granted")
     return current_user
 
 

@@ -31,7 +31,7 @@ class Settings(BaseSettings):
     ACCESS_TOKEN_EXPIRE_MINUTES: Optional[int] = None
     REFRESH_TOKEN_EXPIRE_DAYS: int = 14
     JWT_EXPIRE_MINUTES: int = 15  # backward compatibility alias
-    ADMIN_EMAILS: str = "yigitokur@ieee.org,admin@portfolio.com"
+    ADMIN_EMAILS: str = ""
 
     # GitHub
     GITHUB_USERNAME: str = "TurkishKEBAB"
@@ -160,6 +160,10 @@ class Settings(BaseSettings):
             errors.append("FRONTEND_URL cannot point to localhost in production.")
         if len(self.SECRET_KEY.strip()) < 32:
             errors.append("SECRET_KEY must be at least 32 characters in production.")
+        if not self.admin_email_list:
+            errors.append(
+                "ADMIN_EMAILS must include at least one admin email in production."
+            )
         if not self.CAPTCHA_ENABLED:
             errors.append("CAPTCHA_ENABLED must be true in production.")
         if not self.CAPTCHA_SECRET_KEY:
