@@ -31,8 +31,9 @@ def test_production_requires_captcha_enabled_and_secret():
 
 
 def test_admin_emails_default_is_empty():
-    settings = _build_settings()
+    settings = _build_settings(ADMIN_EMAILS="")
 
+    assert Settings.model_fields["ADMIN_EMAILS"].default == ""
     assert settings.ADMIN_EMAILS == ""
     assert settings.admin_email_list == []
 
