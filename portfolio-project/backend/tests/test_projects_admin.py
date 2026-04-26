@@ -1,6 +1,15 @@
 """Projects endpoint tests."""
 
+import io
+
 from app.models.project import ProjectImage
+from PIL import Image
+
+
+def _build_png_bytes(size: tuple[int, int] = (1, 1)) -> bytes:
+    buffer = io.BytesIO()
+    Image.new("RGB", size, color=(0, 0, 0)).save(buffer, format="PNG")
+    return buffer.getvalue()
 
 
 def test_create_project_requires_admin(client, user_headers):
@@ -105,6 +114,9 @@ def test_upload_update_delete_project_image(client, admin_headers, create_projec
         def validate_file(self, filename, file_size, allowed_extensions):
             return True, ""
 
+        def validate_file_content(self, file_data, allowed_mimes=None):
+            return True, ""
+
         async def upload_file(self, file_path, file_data, content_type, optimize):
             return "https://example.com/project-image.jpg"
 
@@ -113,7 +125,7 @@ def test_upload_update_delete_project_image(client, admin_headers, create_projec
     upload = client.post(
         f"/api/v1/projects/{project.id}/upload-image",
         headers=admin_headers,
-        files={"file": ("image.jpg", b"binary-image", "image/jpeg")},
+        files={"file": ("image.jpg", _build_png_bytes(), "image/jpeg")},
         data={"caption": "Cover", "display_order": 2},
     )
 
@@ -143,6 +155,9 @@ def test_upload_project_image_invalid_extension(client, admin_headers, create_pr
         def validate_file(self, filename, file_size, allowed_extensions):
             return False, "Invalid file type"
 
+        def validate_file_content(self, file_data, allowed_mimes=None):
+            return True, ""
+
     monkeypatch.setattr("app.api.v1.projects.StorageService", DummyStorage)
 
     response = client.post(
@@ -153,6 +168,23 @@ def test_upload_project_image_invalid_extension(client, admin_headers, create_pr
 
     assert response.status_code == 400
     assert response.json()["detail"] == "Invalid file type"
+
+
+def test_upload_project_image_rejects_disguised_payload(
+    client, admin_headers, create_project
+):
+    """Renaming a non-image binary to .jpg must be rejected by magic-byte check."""
+
+    project = create_project(slug="disguised-image-project")
+
+    response = client.post(
+        f"/api/v1/projects/{project.id}/upload-image",
+        headers=admin_headers,
+        files={"file": ("totally-an-image.jpg", b"<html>not an image</html>", "image/jpeg")},
+    )
+
+    assert response.status_code == 400
+    assert "allowed type" in response.json()["detail"].lower()
 
 
 def test_delete_project_success(client, admin_headers, create_project):
