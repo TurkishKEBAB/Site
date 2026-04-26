@@ -49,6 +49,10 @@ jobs:
         working-directory: portfolio-project
         run: python -m pytest -q
 
+      - name: Validate Alembic migrations
+        working-directory: portfolio-project/backend
+        run: python -m alembic upgrade head
+
   frontend-quality:
     name: Frontend Quality (Prod Gate)
     runs-on: ubuntu-latest

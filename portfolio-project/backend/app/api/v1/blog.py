@@ -2,21 +2,24 @@
 Blog Post Endpoints
 CRUD operations for blog posts
 """
-from typing import List
+
 import math
-from fastapi import APIRouter, Depends, HTTPException, status, Query
-from sqlalchemy.orm import Session
 import uuid
+from typing import List
 
 from app.api.deps import get_db, require_admin
+from app.crud import blog as blog_crud
+from app.models.user import User
 from app.schemas.blog import (
     BlogPostCreate,
-    BlogPostUpdate,
-    BlogPostResponse,
     BlogPostListResponse,
-    BlogTranslationCreate
+    BlogPostResponse,
+    BlogPostUpdate,
+    BlogTranslationCreate,
 )
-from app.crud import blog as blog_crud
+from app.services.admin_audit import record_admin_action
+from fastapi import APIRouter, Depends, HTTPException, Query, status
+from sqlalchemy.orm import Session
 
 router = APIRouter()
 
@@ -27,7 +30,7 @@ async def get_blog_posts(
     limit: int = Query(20, ge=1, le=100),
     language: str = Query("en", pattern="^(tr|en)$"),
     published_only: bool = True,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
 ):
     """
     Get list of blog posts with pagination
@@ -37,11 +40,7 @@ async def get_blog_posts(
     page = skip // limit + 1 if limit else 1
 
     posts = blog_crud.get_blog_posts(
-        db,
-        skip=skip,
-        limit=limit,
-        language=language,
-        published_only=published_only
+        db, skip=skip, limit=limit, language=language, published_only=published_only
     )
 
     return {
@@ -49,7 +48,7 @@ async def get_blog_posts(
         "total": total,
         "page": page,
         "size": limit,
-        "pages": max(pages, 1)
+        "pages": max(pages, 1),
     }
 
 
@@ -58,32 +57,33 @@ async def search_blog_posts(
     q: str = Query(..., min_length=2),
     language: str = Query("en", pattern="^(tr|en)$"),
     limit: int = Query(10, ge=1, le=50),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
 ):
     """
     Search blog posts by title and content
     """
-    return blog_crud.search_blog_posts(db, search_query=q, language=language, limit=limit)
+    return blog_crud.search_blog_posts(
+        db, search_query=q, language=language, limit=limit
+    )
 
 
 @router.get("/{slug}", response_model=BlogPostResponse)
 async def get_blog_post(
     slug: str,
     language: str = Query("en", pattern="^(tr|en)$"),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
 ):
     """
     Get a specific blog post by slug
     Also increments view count
     """
     post = blog_crud.get_blog_post_by_slug(db, slug=slug, language=language)
-    
+
     if not post:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Blog post not found"
+            status_code=status.HTTP_404_NOT_FOUND, detail="Blog post not found"
         )
-    
+
     # Increment view count
     blog_crud.increment_blog_views(db, post.id)
 
@@ -101,12 +101,21 @@ async def get_blog_post(
 async def create_blog_post(
     post_data: BlogPostCreate,
     db: Session = Depends(get_db),
-    current_user = Depends(require_admin)
+    current_user: User = Depends(require_admin),
 ):
     """
     Create a new blog post (admin only)
     """
-    return blog_crud.create_blog_post(db, post_data, author_id=current_user.id)
+    post = blog_crud.create_blog_post(db, post_data, author_id=current_user.id)
+    record_admin_action(
+        db,
+        actor=current_user,
+        action="blog_post.create",
+        target_type="blog_post",
+        target_id=post.id,
+        details={"slug": post.slug},
+    )
+    return post
 
 
 @router.put("/{post_id}", response_model=BlogPostResponse)
@@ -114,19 +123,28 @@ async def update_blog_post(
     post_id: uuid.UUID,
     post_data: BlogPostUpdate,
     db: Session = Depends(get_db),
-    _: None = Depends(require_admin)
+    current_user: User = Depends(require_admin),
 ):
     """
     Update a blog post (admin only)
     """
-    updated_post = blog_crud.update_blog_post(db, post_id=post_id, post_update=post_data)
-    
+    updated_post = blog_crud.update_blog_post(
+        db, post_id=post_id, post_update=post_data
+    )
+
     if not updated_post:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Blog post not found"
+            status_code=status.HTTP_404_NOT_FOUND, detail="Blog post not found"
         )
-    
+
+    record_admin_action(
+        db,
+        actor=current_user,
+        action="blog_post.update",
+        target_type="blog_post",
+        target_id=post_id,
+        details={"slug": updated_post.slug},
+    )
     return updated_post
 
 
@@ -134,19 +152,25 @@ async def update_blog_post(
 async def delete_blog_post(
     post_id: uuid.UUID,
     db: Session = Depends(get_db),
-    _: None = Depends(require_admin)
+    current_user: User = Depends(require_admin),
 ):
     """
     Delete a blog post (admin only)
     """
     success = blog_crud.delete_blog_post(db, post_id=post_id)
-    
+
     if not success:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Blog post not found"
+            status_code=status.HTTP_404_NOT_FOUND, detail="Blog post not found"
         )
-    
+
+    record_admin_action(
+        db,
+        actor=current_user,
+        action="blog_post.delete",
+        target_type="blog_post",
+        target_id=post_id,
+    )
     return None
 
 
@@ -155,17 +179,18 @@ async def add_blog_translation(
     post_id: uuid.UUID,
     translation_data: BlogTranslationCreate,
     db: Session = Depends(get_db),
-    _: None = Depends(require_admin)
+    current_user: User = Depends(require_admin),
 ):
     """
     Add or update translation for a blog post (admin only)
     """
-    updated_post = blog_crud.add_blog_translation(db, post_id=post_id, translation=translation_data)
-    
+    updated_post = blog_crud.add_blog_translation(
+        db, post_id=post_id, translation=translation_data
+    )
+
     if not updated_post:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Blog post not found"
+            status_code=status.HTTP_404_NOT_FOUND, detail="Blog post not found"
         )
 
     post = blog_crud.get_blog_post_by_id(db, post_id=post_id)
@@ -175,4 +200,12 @@ async def add_blog_translation(
             detail="Blog post not found",
         )
 
+    record_admin_action(
+        db,
+        actor=current_user,
+        action="blog_translation.upsert",
+        target_type="blog_post",
+        target_id=post_id,
+        details={"language": translation_data.language},
+    )
     return post

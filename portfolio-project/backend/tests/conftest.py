@@ -1,15 +1,10 @@
+import os
+import uuid
 from datetime import date, timedelta
 from typing import Callable
-import uuid
-import os
-
-import pytest
-from fastapi.testclient import TestClient
-from sqlalchemy import create_engine
-from sqlalchemy.orm import Session, sessionmaker
-from sqlalchemy.pool import StaticPool
 
 import app.models as app_models  # noqa: F401
+import pytest
 from app import main as main_module
 from app.api.deps import get_db
 from app.config import settings
@@ -26,6 +21,10 @@ from app.models.skill import Skill
 from app.models.technology import Technology
 from app.schemas.user import UserCreate
 from app.utils.security import create_access_token
+from fastapi.testclient import TestClient
+from sqlalchemy import create_engine
+from sqlalchemy.orm import Session, sessionmaker
+from sqlalchemy.pool import StaticPool
 
 SQLALCHEMY_DATABASE_URL = "sqlite://"
 TEST_USER_SECRET = os.getenv("TEST_USER_SECRET", "test-user-secret")
@@ -111,8 +110,9 @@ def create_user(db_session: Session) -> Callable[..., object]:
         email: str,
         username: str,
         secret: str = TEST_USER_SECRET,
+        is_admin: bool | None = None,
     ):
-        return user_crud.create_user(
+        user = user_crud.create_user(
             db_session,
             UserCreate(
                 email=email,
@@ -120,6 +120,11 @@ def create_user(db_session: Session) -> Callable[..., object]:
                 password=secret,
             ),
         )
+        if is_admin is not None:
+            user.is_admin = is_admin
+            db_session.commit()
+            db_session.refresh(user)
+        return user
 
     return _create_user
 
@@ -136,12 +141,16 @@ def regular_user(create_user):
 
 @pytest.fixture
 def admin_token(admin_user):
-    return create_access_token(data={"sub": str(admin_user.id)}, expires_delta=timedelta(minutes=30))
+    return create_access_token(
+        data={"sub": str(admin_user.id)}, expires_delta=timedelta(minutes=30)
+    )
 
 
 @pytest.fixture
 def user_token(regular_user):
-    return create_access_token(data={"sub": str(regular_user.id)}, expires_delta=timedelta(minutes=30))
+    return create_access_token(
+        data={"sub": str(regular_user.id)}, expires_delta=timedelta(minutes=30)
+    )
 
 
 @pytest.fixture

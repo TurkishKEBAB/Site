@@ -2,18 +2,19 @@
 Application Configuration
 Loads environment variables and provides type-safe configuration
 """
-from typing import Optional, List
-from pydantic_settings import BaseSettings, SettingsConfigDict
+
 from functools import lru_cache
 from pathlib import Path
+from typing import List, Optional
 
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 ENV_FILE_PATH = Path(__file__).resolve().parents[1] / ".env"
 
 
 class Settings(BaseSettings):
     """Application settings loaded from environment variables"""
-    
+
     # API Configuration
     API_V1_PREFIX: str = "/api/v1"
     PROJECT_NAME: str = "Yiğit Okur Portfolio API"
@@ -21,10 +22,10 @@ class Settings(BaseSettings):
     API_HOST: str = "127.0.0.1"
     API_PORT: int = 8000
     ENVIRONMENT: str = "development"
-    
+
     # Database
     DATABASE_URL: str
-    
+
     # Security & JWT
     SECRET_KEY: str
     JWT_ALGORITHM: str = "HS256"
@@ -59,6 +60,8 @@ class Settings(BaseSettings):
 
     # Auth / Abuse protection
     AUTH_LOGIN_RATE_LIMIT: str = "5/minute"
+    LOGIN_MAX_FAILED_ATTEMPTS: int = 5
+    LOGIN_LOCKOUT_MINUTES: int = 15
     CONTACT_RATE_LIMIT: str = "5/minute"
 
     # CAPTCHA
@@ -73,7 +76,11 @@ class Settings(BaseSettings):
         """Returns list of allowed CORS origins"""
         if self.is_production:
             origins = {self.FRONTEND_URL}
-            extra_origins = [origin.strip() for origin in self.CORS_EXTRA_ORIGINS.split(",") if origin.strip()]
+            extra_origins = [
+                origin.strip()
+                for origin in self.CORS_EXTRA_ORIGINS.split(",")
+                if origin.strip()
+            ]
             origins.update(extra_origins)
         else:
             origins = {
@@ -91,7 +98,11 @@ class Settings(BaseSettings):
     @property
     def admin_email_list(self) -> List[str]:
         """Return admin emails as normalized list"""
-        return [email.strip().lower() for email in self.ADMIN_EMAILS.split(",") if email.strip()]
+        return [
+            email.strip().lower()
+            for email in self.ADMIN_EMAILS.split(",")
+            if email.strip()
+        ]
 
     @property
     def access_token_expire_minutes(self) -> int:
@@ -114,7 +125,11 @@ class Settings(BaseSettings):
 
     @property
     def captcha_required_paths(self) -> List[str]:
-        return [path.strip() for path in self.CAPTCHA_REQUIRED_PATHS.split(",") if path.strip()]
+        return [
+            path.strip()
+            for path in self.CAPTCHA_REQUIRED_PATHS.split(",")
+            if path.strip()
+        ]
 
     # Rate Limiting
     RATE_LIMIT_PER_MINUTE: int = 60
@@ -136,7 +151,7 @@ class Settings(BaseSettings):
         env_file=str(ENV_FILE_PATH),
         env_file_encoding="utf-8",
         case_sensitive=True,
-        extra="ignore"
+        extra="ignore",
     )
 
     @property

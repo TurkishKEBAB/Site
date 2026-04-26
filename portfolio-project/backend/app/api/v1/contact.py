@@ -2,32 +2,36 @@
 Contact Form Endpoints
 Submit and manage contact messages
 """
+
 import uuid
 
-from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
-from loguru import logger
-from sqlalchemy import func
-from sqlalchemy.orm import Session
-
 from app.api.deps import get_db, require_admin
+from app.config import get_settings
+from app.core.rate_limit import limiter
 from app.crud import contact as contact_crud
 from app.models.contact import ContactMessage as ContactMessageModel
+from app.models.user import User
 from app.schemas.contact import (
     ContactMessage,
     ContactMessageCreate,
     ContactMessageListResponse,
     ContactMessageResponse,
 )
-from app.core.rate_limit import limiter
-from app.config import get_settings
-from app.services.email_service import EmailService
+from app.services.admin_audit import record_admin_action
 from app.services.captcha_service import verify_captcha_token
+from app.services.email_service import EmailService
+from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
+from loguru import logger
+from sqlalchemy import func
+from sqlalchemy.orm import Session
 
 router = APIRouter()
 settings = get_settings()
 
 
-@router.post('/', response_model=ContactMessageResponse, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/", response_model=ContactMessageResponse, status_code=status.HTTP_201_CREATED
+)
 @limiter.limit(settings.CONTACT_RATE_LIMIT)
 async def submit_contact_message(
     request: Request,
@@ -39,12 +43,14 @@ async def submit_contact_message(
     Sends confirmation email to sender and notification to admin.
     """
     ip_address = request.client.host if request.client else None
-    user_agent = request.headers.get('user-agent')
+    user_agent = request.headers.get("user-agent")
     captcha_header = request.headers.get("X-Captcha-Token")
     captcha_token = message_data.captcha_token or captcha_header
 
     if settings.CAPTCHA_ENABLED:
-        captcha_ok = await verify_captcha_token(captcha_token=captcha_token, remote_ip=ip_address)
+        captcha_ok = await verify_captcha_token(
+            captcha_token=captcha_token, remote_ip=ip_address
+        )
         if not captcha_ok:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
@@ -75,16 +81,16 @@ async def submit_contact_message(
             message_content=message.message,
         )
     except Exception:
-        logger.exception('Email sending failed while processing contact message')
+        logger.exception("Email sending failed while processing contact message")
 
     return {
-        'success': True,
-        'message': 'Your message has been sent successfully.',
-        'message_id': message.id,
+        "success": True,
+        "message": "Your message has been sent successfully.",
+        "message_id": message.id,
     }
 
 
-@router.get('/', response_model=ContactMessageListResponse)
+@router.get("/", response_model=ContactMessageListResponse)
 async def get_contact_messages(
     skip: int = Query(0, ge=0),
     limit: int = Query(20, ge=1, le=100),
@@ -102,28 +108,30 @@ async def get_contact_messages(
 
     count_query = db.query(func.count(ContactMessageModel.id))
     if unread_only:
-        count_query = count_query.filter(ContactMessageModel.is_read == False)  # noqa: E712
+        count_query = count_query.filter(
+            ContactMessageModel.is_read == False
+        )  # noqa: E712
     total = count_query.scalar()
 
     return {
-        'messages': messages,
-        'total': total,
-        'skip': skip,
-        'limit': limit,
-        'unread_count': contact_crud.get_unread_count(db),
+        "messages": messages,
+        "total": total,
+        "skip": skip,
+        "limit": limit,
+        "unread_count": contact_crud.get_unread_count(db),
     }
 
 
-@router.get('/unread-count')
+@router.get("/unread-count")
 async def get_unread_count(
     db: Session = Depends(get_db),
     _: None = Depends(require_admin),
 ):
     """Get count of unread messages (admin only)."""
-    return {'unread_count': contact_crud.get_unread_count(db)}
+    return {"unread_count": contact_crud.get_unread_count(db)}
 
 
-@router.get('/{message_id}', response_model=ContactMessage)
+@router.get("/{message_id}", response_model=ContactMessage)
 async def get_contact_message(
     message_id: uuid.UUID,
     db: Session = Depends(get_db),
@@ -135,17 +143,17 @@ async def get_contact_message(
     if not message:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail='Message not found',
+            detail="Message not found",
         )
 
     return message
 
 
-@router.patch('/{message_id}/read', response_model=ContactMessage)
+@router.patch("/{message_id}/read", response_model=ContactMessage)
 async def mark_message_as_read(
     message_id: uuid.UUID,
     db: Session = Depends(get_db),
-    _: None = Depends(require_admin),
+    current_user: User = Depends(require_admin),
 ):
     """Mark a message as read (admin only)."""
     message = contact_crud.mark_message_as_read(db, message_id=message_id)
@@ -153,17 +161,24 @@ async def mark_message_as_read(
     if not message:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail='Message not found',
+            detail="Message not found",
         )
 
+    record_admin_action(
+        db,
+        actor=current_user,
+        action="contact_message.mark_read",
+        target_type="contact_message",
+        target_id=message_id,
+    )
     return message
 
 
-@router.patch('/{message_id}/replied', response_model=ContactMessage)
+@router.patch("/{message_id}/replied", response_model=ContactMessage)
 async def mark_message_as_replied(
     message_id: uuid.UUID,
     db: Session = Depends(get_db),
-    _: None = Depends(require_admin),
+    current_user: User = Depends(require_admin),
 ):
     """Mark a message as replied (admin only)."""
     message = contact_crud.mark_message_as_replied(db, message_id=message_id)
@@ -171,17 +186,24 @@ async def mark_message_as_replied(
     if not message:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail='Message not found',
+            detail="Message not found",
         )
 
+    record_admin_action(
+        db,
+        actor=current_user,
+        action="contact_message.mark_replied",
+        target_type="contact_message",
+        target_id=message_id,
+    )
     return message
 
 
-@router.delete('/{message_id}', status_code=status.HTTP_204_NO_CONTENT)
+@router.delete("/{message_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_contact_message(
     message_id: uuid.UUID,
     db: Session = Depends(get_db),
-    _: None = Depends(require_admin),
+    current_user: User = Depends(require_admin),
 ):
     """Delete a contact message (admin only)."""
     success = contact_crud.delete_contact_message(db, message_id=message_id)
@@ -189,7 +211,14 @@ async def delete_contact_message(
     if not success:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail='Message not found',
+            detail="Message not found",
         )
 
+    record_admin_action(
+        db,
+        actor=current_user,
+        action="contact_message.delete",
+        target_type="contact_message",
+        target_id=message_id,
+    )
     return None
