@@ -1,5 +1,6 @@
 from datetime import timedelta
 
+from app.crud import user as user_crud
 from app.utils.security import create_access_token
 
 TEST_LOGIN_SECRET = "test-user-secret"
@@ -106,7 +107,9 @@ def test_refresh_token_success(client, admin_user):
     )
     refresh_token = login.json()["refresh_token"]
 
-    response = client.post("/api/v1/auth/refresh", json={"refresh_token": refresh_token})
+    response = client.post(
+        "/api/v1/auth/refresh", json={"refresh_token": refresh_token}
+    )
 
     assert response.status_code == 200
     body = response.json()
@@ -204,3 +207,50 @@ def test_register_success(client, admin_headers):
     body = response.json()
     assert body["email"] == "new-user@test.com"
     assert body["username"] == "newuser"
+
+
+def test_login_lockout_blocks_correct_password_after_repeated_failures(
+    db_session,
+    regular_user,
+    monkeypatch,
+):
+    monkeypatch.setattr(user_crud.settings, "LOGIN_MAX_FAILED_ATTEMPTS", 3)
+    monkeypatch.setattr(user_crud.settings, "LOGIN_LOCKOUT_MINUTES", 15)
+
+    for _ in range(3):
+        assert (
+            user_crud.authenticate_user(
+                db_session,
+                regular_user.email,
+                "wrong-password",
+            )
+            is None
+        )
+
+    db_session.refresh(regular_user)
+    assert regular_user.failed_login_count == 3
+    assert regular_user.locked_until is not None
+    assert (
+        user_crud.authenticate_user(
+            db_session,
+            regular_user.email,
+            TEST_LOGIN_SECRET,
+        )
+        is None
+    )
+
+
+def test_successful_login_resets_failed_login_state(db_session, regular_user):
+    regular_user.failed_login_count = 2
+    regular_user.locked_until = None
+    db_session.commit()
+
+    authenticated = user_crud.authenticate_user(
+        db_session,
+        regular_user.email,
+        TEST_LOGIN_SECRET,
+    )
+
+    assert authenticated is not None
+    assert authenticated.failed_login_count == 0
+    assert authenticated.locked_until is None

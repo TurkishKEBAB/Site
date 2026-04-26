@@ -6,8 +6,9 @@ from fastapi import HTTPException
 
 
 class DummyUser:
-    def __init__(self, email: str):
+    def __init__(self, email: str, is_admin: bool = False):
         self.email = email
+        self.is_admin = is_admin
 
 
 class RecordingLogger:
@@ -38,12 +39,14 @@ def test_require_admin_logs_no_email_or_admin_list(monkeypatch):
     assert "admin@test.com" not in joined_messages
 
 
-def test_require_admin_fails_closed_when_admin_emails_empty(monkeypatch):
-    monkeypatch.setattr(deps.settings, "ADMIN_EMAILS", "")
-    expected_detail = "Server misconfiguration: ADMIN_EMAILS not set"
+def test_require_admin_uses_database_admin_flag(monkeypatch):
+    monkeypatch.setattr(deps.settings, "ADMIN_EMAILS", "admin@test.com")
 
     with pytest.raises(HTTPException) as exc_info:
         deps.require_admin(DummyUser("admin@test.com"))
 
-    assert exc_info.value.status_code == 500
-    assert exc_info.value.detail == expected_detail
+    assert exc_info.value.status_code == 403
+
+    admin = deps.require_admin(DummyUser("user@test.com", is_admin=True))
+
+    assert admin.is_admin is True

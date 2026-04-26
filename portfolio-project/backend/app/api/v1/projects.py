@@ -2,22 +2,24 @@
 Project Endpoints
 CRUD operations for projects
 """
+
+import os
 import re
 import uuid
-import os
-
-from fastapi import APIRouter, Depends, File, HTTPException, Query, UploadFile, status
-from sqlalchemy.orm import Session
 
 from app.api.deps import get_db, require_admin
+from app.crud import project as project_crud
+from app.models.user import User
 from app.schemas.project import (
     ProjectCreate,
     ProjectResponse,
     ProjectTranslationCreate,
     ProjectUpdate,
 )
-from app.crud import project as project_crud
+from app.services.admin_audit import record_admin_action
 from app.services.storage_service import StorageService
+from fastapi import APIRouter, Depends, File, HTTPException, Query, UploadFile, status
+from sqlalchemy.orm import Session
 
 router = APIRouter()
 
@@ -37,7 +39,9 @@ def _serialize_project(project, language: str) -> dict:
     source = translated or fallback
 
     title = source.title if source else project.title
-    short_description = source.short_description if source else project.short_description
+    short_description = (
+        source.short_description if source else project.short_description
+    )
     description = source.description if source else project.description
 
     return {
@@ -93,7 +97,7 @@ async def get_projects(
     language: str = Query("en", pattern="^(tr|en)$"),
     featured_only: bool = False,
     technology_slug: str = None,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
 ):
     """
     Get list of projects with optional filtering
@@ -110,16 +114,16 @@ async def get_projects(
         limit=limit,
         language=language,
         featured_only=featured_only,
-        technology_slug=technology_slug
+        technology_slug=technology_slug,
     )
     items = [_serialize_project(project, language) for project in projects]
-    
+
     return {
         "items": items,
         "total": total,
         "page": skip // limit + 1 if limit > 0 else 1,
         "size": limit,
-        "pages": (total + limit - 1) // limit if limit > 0 else 1
+        "pages": (total + limit - 1) // limit if limit > 0 else 1,
     }
 
 
@@ -127,19 +131,18 @@ async def get_projects(
 async def get_project(
     slug: str,
     language: str = Query("en", pattern="^(tr|en)$"),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
 ):
     """
     Get a specific project by slug
     """
     project = project_crud.get_project_by_slug(db, slug=slug, language=language)
-    
+
     if not project:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Project not found"
+            status_code=status.HTTP_404_NOT_FOUND, detail="Project not found"
         )
-    
+
     return _serialize_project(project, language)
 
 
@@ -147,12 +150,21 @@ async def get_project(
 async def create_project(
     project_data: ProjectCreate,
     db: Session = Depends(get_db),
-    _: None = Depends(require_admin)
+    current_user: User = Depends(require_admin),
 ):
     """
     Create a new project (admin only)
     """
-    return project_crud.create_project(db, project_data)
+    project = project_crud.create_project(db, project_data)
+    record_admin_action(
+        db,
+        actor=current_user,
+        action="project.create",
+        target_type="project",
+        target_id=project.id,
+        details={"slug": project.slug},
+    )
+    return project
 
 
 @router.put("/{project_id}", response_model=ProjectResponse)
@@ -160,19 +172,28 @@ async def update_project(
     project_id: uuid.UUID,
     project_data: ProjectUpdate,
     db: Session = Depends(get_db),
-    _: None = Depends(require_admin)
+    current_user: User = Depends(require_admin),
 ):
     """
     Update a project (admin only)
     """
-    updated_project = project_crud.update_project(db, project_id=project_id, project_update=project_data)
-    
+    updated_project = project_crud.update_project(
+        db, project_id=project_id, project_update=project_data
+    )
+
     if not updated_project:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Project not found"
+            status_code=status.HTTP_404_NOT_FOUND, detail="Project not found"
         )
-    
+
+    record_admin_action(
+        db,
+        actor=current_user,
+        action="project.update",
+        target_type="project",
+        target_id=project_id,
+        details={"slug": updated_project.slug},
+    )
     return updated_project
 
 
@@ -183,21 +204,20 @@ async def upload_project_image(
     caption: str = None,
     display_order: int = 0,
     db: Session = Depends(get_db),
-    _: None = Depends(require_admin)
+    current_user: User = Depends(require_admin),
 ):
     """
     Upload an image for a project (admin only)
     """
     from app.models.project import ProjectImage
-    
+
     # Verify project exists
     project = project_crud.get_project_by_id(db, project_id=project_id)
     if not project:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Project not found"
+            status_code=status.HTTP_404_NOT_FOUND, detail="Project not found"
         )
-    
+
     # Read file content in chunks and enforce a maximum size limit
     storage_service = StorageService()
     chunk_size = 1024 * 1024  # 1 MB
@@ -211,7 +231,7 @@ async def upload_project_image(
         if len(file_buffer) > MAX_PROJECT_IMAGE_UPLOAD_SIZE:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Uploaded file is too large."
+                detail="Uploaded file is too large.",
             )
 
     file_content = bytes(file_buffer)
@@ -223,13 +243,12 @@ async def upload_project_image(
     is_valid, error_message = storage_service.validate_file(
         original_filename,
         len(file_content),
-        allowed_extensions=["jpg", "jpeg", "png", "gif", "webp"]
+        allowed_extensions=["jpg", "jpeg", "png", "gif", "webp"],
     )
 
     if not is_valid:
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=error_message
+            status_code=status.HTTP_400_BAD_REQUEST, detail=error_message
         )
 
     # Sanitize filename to prevent path traversal and injection,
@@ -255,71 +274,88 @@ async def upload_project_image(
         file_path=file_path,
         file_data=file_content,
         content_type=file.content_type or "image/jpeg",
-        optimize=True
+        optimize=True,
     )
-    
+
     if not public_url:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to upload image"
+            detail="Failed to upload image",
         )
-    
+
     # Create ProjectImage record
     project_image = ProjectImage(
         project_id=project_id,
         image_url=public_url,
         caption=caption,
-        display_order=display_order
+        display_order=display_order,
     )
     db.add(project_image)
     db.commit()
     db.refresh(project_image)
-    
+    record_admin_action(
+        db,
+        actor=current_user,
+        action="project_image.create",
+        target_type="project_image",
+        target_id=project_image.id,
+        details={"project_id": str(project_id), "filename": safe_filename},
+    )
+
     return {
         "id": str(project_image.id),
         "url": public_url,
         "caption": caption,
         "display_order": display_order,
         "filename": file.filename,
-        "size": len(file_content)
+        "size": len(file_content),
     }
 
 
-@router.delete("/{project_id}/images/{image_id}", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete(
+    "/{project_id}/images/{image_id}", status_code=status.HTTP_204_NO_CONTENT
+)
 async def delete_project_image(
     project_id: uuid.UUID,
     image_id: uuid.UUID,
     db: Session = Depends(get_db),
-    _: None = Depends(require_admin)
+    current_user: User = Depends(require_admin),
 ):
     """
     Delete a project image (admin only)
     """
     from app.models.project import ProjectImage
-    
+
     # Verify project exists
     project = project_crud.get_project_by_id(db, project_id=project_id)
     if not project:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Project not found"
+            status_code=status.HTTP_404_NOT_FOUND, detail="Project not found"
         )
-    
+
     # Find and delete image
-    image = db.query(ProjectImage).filter(
-        ProjectImage.id == image_id,
-        ProjectImage.project_id == project_id
-    ).first()
-    
+    image = (
+        db.query(ProjectImage)
+        .filter(ProjectImage.id == image_id, ProjectImage.project_id == project_id)
+        .first()
+    )
+
     if not image:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Image not found"
+            status_code=status.HTTP_404_NOT_FOUND, detail="Image not found"
         )
-    
+
     db.delete(image)
     db.commit()
-    
+    record_admin_action(
+        db,
+        actor=current_user,
+        action="project_image.delete",
+        target_type="project_image",
+        target_id=image_id,
+        details={"project_id": str(project_id)},
+    )
+
     return None
 
 
@@ -330,47 +366,54 @@ async def update_project_image(
     caption: str = None,
     display_order: int = None,
     db: Session = Depends(get_db),
-    _: None = Depends(require_admin)
+    current_user: User = Depends(require_admin),
 ):
     """
     Update project image caption and/or display order (admin only)
     """
     from app.models.project import ProjectImage
-    
+
     # Verify project exists
     project = project_crud.get_project_by_id(db, project_id=project_id)
     if not project:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Project not found"
+            status_code=status.HTTP_404_NOT_FOUND, detail="Project not found"
         )
-    
+
     # Find image
-    image = db.query(ProjectImage).filter(
-        ProjectImage.id == image_id,
-        ProjectImage.project_id == project_id
-    ).first()
-    
+    image = (
+        db.query(ProjectImage)
+        .filter(ProjectImage.id == image_id, ProjectImage.project_id == project_id)
+        .first()
+    )
+
     if not image:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Image not found"
+            status_code=status.HTTP_404_NOT_FOUND, detail="Image not found"
         )
-    
+
     # Update fields
     if caption is not None:
         image.caption = caption
     if display_order is not None:
         image.display_order = display_order
-    
+
     db.commit()
     db.refresh(image)
-    
+    record_admin_action(
+        db,
+        actor=current_user,
+        action="project_image.update",
+        target_type="project_image",
+        target_id=image_id,
+        details={"project_id": str(project_id)},
+    )
+
     return {
         "id": str(image.id),
         "image_url": image.image_url,
         "caption": image.caption,
-        "display_order": image.display_order
+        "display_order": image.display_order,
     }
 
 
@@ -378,19 +421,25 @@ async def update_project_image(
 async def delete_project(
     project_id: uuid.UUID,
     db: Session = Depends(get_db),
-    _: None = Depends(require_admin)
+    current_user: User = Depends(require_admin),
 ):
     """
     Delete a project (admin only)
     """
     success = project_crud.delete_project(db, project_id=project_id)
-    
+
     if not success:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Project not found"
+            status_code=status.HTTP_404_NOT_FOUND, detail="Project not found"
         )
-    
+
+    record_admin_action(
+        db,
+        actor=current_user,
+        action="project.delete",
+        target_type="project",
+        target_id=project_id,
+    )
     return None
 
 
@@ -399,23 +448,20 @@ async def add_project_translation(
     project_id: uuid.UUID,
     translation_data: ProjectTranslationCreate,
     db: Session = Depends(get_db),
-    _: None = Depends(require_admin)
+    current_user: User = Depends(require_admin),
 ):
     """
     Add or update translation for a project (admin only)
     """
     updated_project = project_crud.add_project_translation(
-        db,
-        project_id=project_id,
-        translation=translation_data
+        db, project_id=project_id, translation=translation_data
     )
-    
+
     if not updated_project:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Project not found"
+            status_code=status.HTTP_404_NOT_FOUND, detail="Project not found"
         )
-    
+
     project = project_crud.get_project_by_id(db, project_id=project_id)
     if not project:
         raise HTTPException(
@@ -423,4 +469,12 @@ async def add_project_translation(
             detail="Project not found",
         )
 
+    record_admin_action(
+        db,
+        actor=current_user,
+        action="project_translation.upsert",
+        target_type="project",
+        target_id=project_id,
+        details={"language": translation_data.language},
+    )
     return project

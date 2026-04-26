@@ -2,17 +2,19 @@
 GitHub Integration Endpoints
 GitHub repository fetching and caching
 """
+
 from typing import List
-from fastapi import APIRouter, Depends, HTTPException, status, Query
+
+from app.api.deps import get_current_user_optional, get_db, require_admin
+from app.config import get_settings
+from app.crud import github as github_crud
+from app.models.user import User
+from app.schemas.github import GitHubRepo, GitHubSyncResponse
+from app.services.admin_audit import record_admin_action
+from app.services.github_service import GitHubService
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from loguru import logger
 from sqlalchemy.orm import Session
-
-from app.api.deps import get_db, require_admin, get_current_user_optional
-from app.schemas.github import GitHubRepo, GitHubSyncResponse
-from app.crud import github as github_crud
-from app.services.github_service import GitHubService
-from app.config import get_settings
-from app.models.user import User
 
 router = APIRouter()
 settings = get_settings()
@@ -39,7 +41,7 @@ async def get_github_repos(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Authentication required for force refresh",
             )
-        if current_user.email.lower() not in set(settings.admin_email_list):
+        if not current_user.is_admin:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="Admin privileges required for force refresh",
@@ -48,9 +50,7 @@ async def get_github_repos(
     if not cache_valid or force_refresh:
         # Fetch fresh data from GitHub
         github_service = GitHubService()
-        fresh_repos = await github_service.fetch_user_repos(
-            force_refresh=force_refresh
-        )
+        fresh_repos = await github_service.fetch_user_repos(force_refresh=force_refresh)
 
         # Update database cache
         if fresh_repos:
@@ -62,8 +62,7 @@ async def get_github_repos(
 
 @router.post("/sync", response_model=GitHubSyncResponse)
 async def sync_github_repos(
-    db: Session = Depends(get_db),
-    _: None = Depends(require_admin)
+    db: Session = Depends(get_db), current_user: User = Depends(require_admin)
 ):
     """
     Force sync GitHub repositories (admin only)
@@ -72,24 +71,28 @@ async def sync_github_repos(
     github_service = GitHubService()
 
     try:
-        repos = await github_service.fetch_user_repos(
-            force_refresh=True
-        )
+        repos = await github_service.fetch_user_repos(force_refresh=True)
 
         if not repos:
             raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="No repositories found"
+                status_code=status.HTTP_404_NOT_FOUND, detail="No repositories found"
             )
 
         # Update database
         count = github_crud.bulk_create_or_update_repos(db, repos)
+        record_admin_action(
+            db,
+            actor=current_user,
+            action="github.sync",
+            target_type="github_repo",
+            details={"fetched": len(repos), "updated": count},
+        )
 
         return {
             "success": True,
             "fetched": len(repos),
             "updated": count,
-            "message": f"Successfully synced {count} repositories"
+            "message": f"Successfully synced {count} repositories",
         }
 
     except HTTPException:
@@ -99,18 +102,16 @@ async def sync_github_repos(
         if settings.is_production:
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail="GitHub sync failed"
+                detail="GitHub sync failed",
             )
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"GitHub sync failed: {str(e)}"
+            detail=f"GitHub sync failed: {str(e)}",
         )
 
 
 @router.get("/cache-status")
-async def get_cache_status(
-    db: Session = Depends(get_db)
-):
+async def get_cache_status(db: Session = Depends(get_db)):
     """
     Get GitHub cache status
     """
@@ -120,17 +121,22 @@ async def get_cache_status(
     return {
         "cache_valid": cache_valid,
         "cache_age_hours": cache_age.total_seconds() / 3600 if cache_age else None,
-        "cache_exists": cache_age is not None
+        "cache_exists": cache_age is not None,
     }
 
 
 @router.delete("/cache", status_code=status.HTTP_204_NO_CONTENT)
 async def clear_cache(
-    db: Session = Depends(get_db),
-    _: None = Depends(require_admin)
+    db: Session = Depends(get_db), current_user: User = Depends(require_admin)
 ):
     """
     Clear GitHub repository cache (admin only)
     """
     github_crud.clear_github_cache(db)
+    record_admin_action(
+        db,
+        actor=current_user,
+        action="github_cache.clear",
+        target_type="github_repo",
+    )
     return None

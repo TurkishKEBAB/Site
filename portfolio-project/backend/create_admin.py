@@ -1,4 +1,5 @@
 """Create or reset admin users using environment-provided bootstrap password."""
+
 import os
 import sys
 import uuid
@@ -11,7 +12,6 @@ sys.path.insert(0, str(Path(__file__).parent))
 from app.config import get_settings  # noqa: E402
 from app.database import SessionLocal  # noqa: E402
 from app.models.user import User  # noqa: E402
-
 
 PLACEHOLDER_HASH = "$2b$12$placeholder_hash_will_be_generated_by_backend"
 
@@ -29,7 +29,9 @@ def create_admin(reset_existing: bool = False):
 
     db = SessionLocal()
     try:
-        admin_emails = settings.admin_email_list or ["admin@example.com"]
+        admin_emails = settings.admin_email_list
+        if not admin_emails:
+            raise RuntimeError("ADMIN_EMAILS must include at least one admin email.")
 
         for email in admin_emails:
             username = email.split("@")[0]
@@ -45,11 +47,15 @@ def create_admin(reset_existing: bool = False):
                     existing_admin.password_hash = pwd_context.hash(bootstrap_password)
                     if not existing_admin.is_active:
                         existing_admin.is_active = True
+                    if not existing_admin.is_admin:
+                        existing_admin.is_admin = True
                     db.commit()
                     db.refresh(existing_admin)
                     print(f"OK: Admin password reset for {email}")
                 else:
-                    print(f"OK: Admin user already exists for {email} (password unchanged)")
+                    print(
+                        f"OK: Admin user already exists for {email} (password unchanged)"
+                    )
                 continue
 
             admin = User(
@@ -58,6 +64,7 @@ def create_admin(reset_existing: bool = False):
                 email=email,
                 password_hash=pwd_context.hash(bootstrap_password),
                 is_active=True,
+                is_admin=True,
             )
             db.add(admin)
             db.commit()

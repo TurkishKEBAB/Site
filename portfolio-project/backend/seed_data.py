@@ -2,15 +2,13 @@
 Seed database with CV v6 data for Yigit Okur.
 """
 
+import os
 from datetime import date, datetime, timezone
 from typing import Dict, List, Optional
-import os
-
-from sqlalchemy.orm import Session
-from slugify import slugify
 
 from app.database import SessionLocal
 from app.models import (
+    AdminActionLog,
     BlogPost,
     BlogTranslation,
     ContactMessage,
@@ -32,21 +30,22 @@ from app.models import (
     User,
 )
 from app.utils.security import get_password_hash
+from slugify import slugify
+from sqlalchemy.orm import Session
 
 
 def seed_admin_user(db: Session) -> User:
     """Create portfolio owner user."""
     seed_admin_password = os.getenv("SEED_ADMIN_PASSWORD")
     if not seed_admin_password:
-        raise RuntimeError(
-            "SEED_ADMIN_PASSWORD is required to seed the admin user."
-        )
+        raise RuntimeError("SEED_ADMIN_PASSWORD is required to seed the admin user.")
 
     user = User(
         email="yigitokur@ieee.org",
         username="yigitokur",
         password_hash=get_password_hash(seed_admin_password),
         is_active=True,
+        is_admin=True,
     )
     db.add(user)
     db.commit()
@@ -59,56 +58,256 @@ def seed_technologies(db: Session) -> Dict[str, str]:
     """Seed all technologies used by projects."""
     print("Adding technologies...")
     technologies_data: List[Dict[str, Optional[str]]] = [
-        {"name": "Java", "category": "language", "icon": "devicon-java-plain", "color": "#007396"},
-        {"name": "Spring Boot", "category": "framework", "icon": "devicon-spring-plain", "color": "#6DB33F"},
-        {"name": "Python", "category": "language", "icon": "devicon-python-plain", "color": "#3776AB"},
-        {"name": "FastAPI", "category": "framework", "icon": "devicon-fastapi-plain", "color": "#009688"},
-        {"name": "TypeScript", "category": "language", "icon": "devicon-typescript-plain", "color": "#3178C6"},
-        {"name": "JavaScript", "category": "language", "icon": "devicon-javascript-plain", "color": "#F7DF1E"},
-        {"name": "SQL", "category": "language", "icon": "devicon-azuresqldatabase-plain", "color": "#336791"},
-        {"name": "C#", "category": "language", "icon": "devicon-csharp-plain", "color": "#239120"},
-        {"name": "Docker", "category": "tool", "icon": "devicon-docker-plain", "color": "#2496ED"},
-        {"name": "Kubernetes", "category": "tool", "icon": "devicon-kubernetes-plain", "color": "#326CE5"},
-        {"name": "GitHub Actions", "category": "tool", "icon": "devicon-githubactions-plain", "color": "#2088FF"},
-        {"name": "AWS EC2", "category": "cloud", "icon": "devicon-amazonwebservices-plain-wordmark", "color": "#FF9900"},
-        {"name": "AWS S3", "category": "cloud", "icon": "devicon-amazonwebservices-plain-wordmark", "color": "#FF9900"},
-        {"name": "Spring Cloud Config", "category": "framework", "icon": "devicon-spring-plain", "color": "#6DB33F"},
-        {"name": "Zuul Gateway", "category": "framework", "icon": None, "color": "#0F172A"},
-        {"name": "SonarQube", "category": "tool", "icon": "devicon-sonarqube-plain", "color": "#4E9BCD"},
-        {"name": "ElasticSearch", "category": "database", "icon": "devicon-elasticsearch-plain", "color": "#005571"},
+        {
+            "name": "Java",
+            "category": "language",
+            "icon": "devicon-java-plain",
+            "color": "#007396",
+        },
+        {
+            "name": "Spring Boot",
+            "category": "framework",
+            "icon": "devicon-spring-plain",
+            "color": "#6DB33F",
+        },
+        {
+            "name": "Python",
+            "category": "language",
+            "icon": "devicon-python-plain",
+            "color": "#3776AB",
+        },
+        {
+            "name": "FastAPI",
+            "category": "framework",
+            "icon": "devicon-fastapi-plain",
+            "color": "#009688",
+        },
+        {
+            "name": "TypeScript",
+            "category": "language",
+            "icon": "devicon-typescript-plain",
+            "color": "#3178C6",
+        },
+        {
+            "name": "JavaScript",
+            "category": "language",
+            "icon": "devicon-javascript-plain",
+            "color": "#F7DF1E",
+        },
+        {
+            "name": "SQL",
+            "category": "language",
+            "icon": "devicon-azuresqldatabase-plain",
+            "color": "#336791",
+        },
+        {
+            "name": "C#",
+            "category": "language",
+            "icon": "devicon-csharp-plain",
+            "color": "#239120",
+        },
+        {
+            "name": "Docker",
+            "category": "tool",
+            "icon": "devicon-docker-plain",
+            "color": "#2496ED",
+        },
+        {
+            "name": "Kubernetes",
+            "category": "tool",
+            "icon": "devicon-kubernetes-plain",
+            "color": "#326CE5",
+        },
+        {
+            "name": "GitHub Actions",
+            "category": "tool",
+            "icon": "devicon-githubactions-plain",
+            "color": "#2088FF",
+        },
+        {
+            "name": "AWS EC2",
+            "category": "cloud",
+            "icon": "devicon-amazonwebservices-plain-wordmark",
+            "color": "#FF9900",
+        },
+        {
+            "name": "AWS S3",
+            "category": "cloud",
+            "icon": "devicon-amazonwebservices-plain-wordmark",
+            "color": "#FF9900",
+        },
+        {
+            "name": "Spring Cloud Config",
+            "category": "framework",
+            "icon": "devicon-spring-plain",
+            "color": "#6DB33F",
+        },
+        {
+            "name": "Zuul Gateway",
+            "category": "framework",
+            "icon": None,
+            "color": "#0F172A",
+        },
+        {
+            "name": "SonarQube",
+            "category": "tool",
+            "icon": "devicon-sonarqube-plain",
+            "color": "#4E9BCD",
+        },
+        {
+            "name": "ElasticSearch",
+            "category": "database",
+            "icon": "devicon-elasticsearch-plain",
+            "color": "#005571",
+        },
         {"name": "Kibana", "category": "tool", "icon": None, "color": "#005571"},
-        {"name": "Redis", "category": "database", "icon": "devicon-redis-plain", "color": "#DC382D"},
-        {"name": "RabbitMQ", "category": "tool", "icon": "devicon-rabbitmq-plain", "color": "#FF6600"},
-        {"name": "PostgreSQL", "category": "database", "icon": "devicon-postgresql-plain", "color": "#4169E1"},
+        {
+            "name": "Redis",
+            "category": "database",
+            "icon": "devicon-redis-plain",
+            "color": "#DC382D",
+        },
+        {
+            "name": "RabbitMQ",
+            "category": "tool",
+            "icon": "devicon-rabbitmq-plain",
+            "color": "#FF6600",
+        },
+        {
+            "name": "PostgreSQL",
+            "category": "database",
+            "icon": "devicon-postgresql-plain",
+            "color": "#4169E1",
+        },
         {"name": "Celery", "category": "tool", "icon": None, "color": "#37814A"},
-        {"name": "Vagrant", "category": "tool", "icon": "devicon-vagrant-plain", "color": "#1868F2"},
-        {"name": "Hibernate/JPA", "category": "framework", "icon": None, "color": "#59666C"},
-        {"name": "JSF/PrimeFaces", "category": "framework", "icon": None, "color": "#4B5563"},
-        {"name": "Vue.js", "category": "framework", "icon": "devicon-vuejs-plain", "color": "#4FC08D"},
-        {"name": "React", "category": "framework", "icon": "devicon-react-original", "color": "#61DAFB"},
-        {"name": "Next.js", "category": "framework", "icon": "devicon-nextjs-original", "color": "#111111"},
-        {"name": "Tailwind CSS", "category": "framework", "icon": "devicon-tailwindcss-plain", "color": "#06B6D4"},
-        {"name": "Electron", "category": "framework", "icon": "devicon-electron-original", "color": "#47848F"},
+        {
+            "name": "Vagrant",
+            "category": "tool",
+            "icon": "devicon-vagrant-plain",
+            "color": "#1868F2",
+        },
+        {
+            "name": "Hibernate/JPA",
+            "category": "framework",
+            "icon": None,
+            "color": "#59666C",
+        },
+        {
+            "name": "JSF/PrimeFaces",
+            "category": "framework",
+            "icon": None,
+            "color": "#4B5563",
+        },
+        {
+            "name": "Vue.js",
+            "category": "framework",
+            "icon": "devicon-vuejs-plain",
+            "color": "#4FC08D",
+        },
+        {
+            "name": "React",
+            "category": "framework",
+            "icon": "devicon-react-original",
+            "color": "#61DAFB",
+        },
+        {
+            "name": "Next.js",
+            "category": "framework",
+            "icon": "devicon-nextjs-original",
+            "color": "#111111",
+        },
+        {
+            "name": "Tailwind CSS",
+            "category": "framework",
+            "icon": "devicon-tailwindcss-plain",
+            "color": "#06B6D4",
+        },
+        {
+            "name": "Electron",
+            "category": "framework",
+            "icon": "devicon-electron-original",
+            "color": "#47848F",
+        },
         {"name": "LLMs", "category": "library", "icon": None, "color": "#7C3AED"},
         {"name": "RAG", "category": "library", "icon": None, "color": "#9333EA"},
-        {"name": "Git", "category": "tool", "icon": "devicon-git-plain", "color": "#F05032"},
-        {"name": "GitLab", "category": "tool", "icon": "devicon-gitlab-plain", "color": "#FC6D26"},
-        {"name": "GitHub", "category": "tool", "icon": "devicon-github-original", "color": "#181717"},
-        {"name": "Maven", "category": "tool", "icon": "devicon-maven-plain", "color": "#C71A36"},
-        {"name": "Gradle", "category": "tool", "icon": "devicon-gradle-plain", "color": "#02303A"},
-        {"name": "Linux (Ubuntu)", "category": "tool", "icon": "devicon-linux-plain", "color": "#FCC624"},
-        {"name": "Azure DevOps", "category": "tool", "icon": "devicon-azure-plain", "color": "#0078D4"},
+        {
+            "name": "Git",
+            "category": "tool",
+            "icon": "devicon-git-plain",
+            "color": "#F05032",
+        },
+        {
+            "name": "GitLab",
+            "category": "tool",
+            "icon": "devicon-gitlab-plain",
+            "color": "#FC6D26",
+        },
+        {
+            "name": "GitHub",
+            "category": "tool",
+            "icon": "devicon-github-original",
+            "color": "#181717",
+        },
+        {
+            "name": "Maven",
+            "category": "tool",
+            "icon": "devicon-maven-plain",
+            "color": "#C71A36",
+        },
+        {
+            "name": "Gradle",
+            "category": "tool",
+            "icon": "devicon-gradle-plain",
+            "color": "#02303A",
+        },
+        {
+            "name": "Linux (Ubuntu)",
+            "category": "tool",
+            "icon": "devicon-linux-plain",
+            "color": "#FCC624",
+        },
+        {
+            "name": "Azure DevOps",
+            "category": "tool",
+            "icon": "devicon-azure-plain",
+            "color": "#0078D4",
+        },
         {"name": "PyQt6", "category": "framework", "icon": None, "color": "#41CD52"},
         {"name": "Scrapy", "category": "framework", "icon": None, "color": "#60A839"},
-        {"name": "BeautifulSoup", "category": "library", "icon": None, "color": "#1D4ED8"},
-        {"name": "Pytest", "category": "tool", "icon": "devicon-pytest-plain", "color": "#0A9EDC"},
+        {
+            "name": "BeautifulSoup",
+            "category": "library",
+            "icon": None,
+            "color": "#1D4ED8",
+        },
+        {
+            "name": "Pytest",
+            "category": "tool",
+            "icon": "devicon-pytest-plain",
+            "color": "#0A9EDC",
+        },
         {"name": "JUnit", "category": "tool", "icon": None, "color": "#25A162"},
         {"name": "JWT", "category": "tool", "icon": None, "color": "#F59E0B"},
         {"name": "RBAC", "category": "tool", "icon": None, "color": "#D97706"},
-        {"name": "Supabase", "category": "cloud", "icon": "devicon-supabase-plain", "color": "#3ECF8E"},
-        {"name": "Vercel", "category": "cloud", "icon": "devicon-vercel-original", "color": "#111111"},
+        {
+            "name": "Supabase",
+            "category": "cloud",
+            "icon": "devicon-supabase-plain",
+            "color": "#3ECF8E",
+        },
+        {
+            "name": "Vercel",
+            "category": "cloud",
+            "icon": "devicon-vercel-original",
+            "color": "#111111",
+        },
         {"name": "Railway", "category": "cloud", "icon": None, "color": "#4C1D95"},
-        {"name": "Monaco Editor", "category": "framework", "icon": None, "color": "#3B82F6"},
+        {
+            "name": "Monaco Editor",
+            "category": "framework",
+            "icon": None,
+            "color": "#3B82F6",
+        },
     ]
     for tech_data in technologies_data:
         db.add(
@@ -141,51 +340,321 @@ def seed_skills(db: Session) -> None:
         "Tooling": "Araclar",
     }
     skills_data = [
-        {"name": "Docker", "name_tr": "Docker", "category": "Cloud & DevOps", "proficiency": 90, "icon": "🐳"},
-        {"name": "Kubernetes", "name_tr": "Kubernetes", "category": "Cloud & DevOps", "proficiency": 75, "icon": "☸️"},
-        {"name": "GitHub Actions (CI/CD)", "name_tr": "GitHub Actions (CI/CD)", "category": "Cloud & DevOps", "proficiency": 86, "icon": "⚙️"},
-        {"name": "AWS (EC2, S3)", "name_tr": "AWS (EC2, S3)", "category": "Cloud & DevOps", "proficiency": 78, "icon": "☁️"},
-        {"name": "Spring Cloud Config", "name_tr": "Spring Cloud Config", "category": "Cloud & DevOps", "proficiency": 82, "icon": "🧩"},
-        {"name": "Zuul Gateway", "name_tr": "Zuul Gateway", "category": "Cloud & DevOps", "proficiency": 80, "icon": "🛣️"},
-        {"name": "SonarQube", "name_tr": "SonarQube", "category": "Cloud & DevOps", "proficiency": 84, "icon": "📈"},
-        {"name": "ElasticSearch", "name_tr": "ElasticSearch", "category": "Observability & Infra", "proficiency": 78, "icon": "🔍"},
-        {"name": "Kibana", "name_tr": "Kibana", "category": "Observability & Infra", "proficiency": 80, "icon": "📊"},
-        {"name": "Redis", "name_tr": "Redis", "category": "Observability & Infra", "proficiency": 82, "icon": "🟥"},
-        {"name": "RabbitMQ", "name_tr": "RabbitMQ", "category": "Observability & Infra", "proficiency": 76, "icon": "🐇"},
-        {"name": "PostgreSQL", "name_tr": "PostgreSQL", "category": "Observability & Infra", "proficiency": 88, "icon": "🐘"},
-        {"name": "Celery", "name_tr": "Celery", "category": "Observability & Infra", "proficiency": 74, "icon": "🌿"},
-        {"name": "Vagrant", "name_tr": "Vagrant", "category": "Observability & Infra", "proficiency": 70, "icon": "📦"},
-        {"name": "Java/Spring Boot", "name_tr": "Java/Spring Boot", "category": "Backend", "proficiency": 92, "icon": "☕"},
-        {"name": "Python/FastAPI", "name_tr": "Python/FastAPI", "category": "Backend", "proficiency": 90, "icon": "🐍"},
-        {"name": "REST APIs", "name_tr": "REST API'ler", "category": "Backend", "proficiency": 91, "icon": "🔌"},
-        {"name": "Hibernate/JPA", "name_tr": "Hibernate/JPA", "category": "Backend", "proficiency": 82, "icon": "🗄️"},
-        {"name": "JSF/PrimeFaces", "name_tr": "JSF/PrimeFaces", "category": "Backend", "proficiency": 76, "icon": "🧱"},
-        {"name": "Microservices", "name_tr": "Mikroservisler", "category": "Architecture", "proficiency": 86, "icon": "🧬"},
-        {"name": "Clean Architecture", "name_tr": "Clean Architecture", "category": "Architecture", "proficiency": 87, "icon": "🏛️"},
-        {"name": "JWT/RBAC", "name_tr": "JWT/RBAC", "category": "Architecture", "proficiency": 85, "icon": "🔐"},
-        {"name": "Constraint Optimization", "name_tr": "Kisit Optimizasyonu", "category": "Architecture", "proficiency": 88, "icon": "🧠"},
-        {"name": "JUnit", "name_tr": "JUnit", "category": "Testing & Automation", "proficiency": 84, "icon": "✅"},
-        {"name": "Pytest", "name_tr": "Pytest", "category": "Testing & Automation", "proficiency": 88, "icon": "🧪"},
-        {"name": "CI/CD Pipelines", "name_tr": "CI/CD Pipeline'lari", "category": "Testing & Automation", "proficiency": 86, "icon": "🔁"},
-        {"name": "Defect Tracking (Jira, GitLab)", "name_tr": "Hata Takibi (Jira, GitLab)", "category": "Testing & Automation", "proficiency": 83, "icon": "🗂️"},
-        {"name": "Test Automation", "name_tr": "Test Otomasyonu", "category": "Testing & Automation", "proficiency": 85, "icon": "🤖"},
-        {"name": "Vue.js", "name_tr": "Vue.js", "category": "Frontend", "proficiency": 78, "icon": "🟢"},
-        {"name": "React", "name_tr": "React", "category": "Frontend", "proficiency": 86, "icon": "⚛️"},
-        {"name": "Next.js", "name_tr": "Next.js", "category": "Frontend", "proficiency": 80, "icon": "▲"},
-        {"name": "JavaScript/TypeScript", "name_tr": "JavaScript/TypeScript", "category": "Frontend", "proficiency": 90, "icon": "📜"},
-        {"name": "Tailwind CSS", "name_tr": "Tailwind CSS", "category": "Frontend", "proficiency": 82, "icon": "🎨"},
-        {"name": "Electron", "name_tr": "Electron", "category": "Frontend", "proficiency": 70, "icon": "💡"},
-        {"name": "Java", "name_tr": "Java", "category": "Languages", "proficiency": 93, "icon": "☕"},
-        {"name": "Python", "name_tr": "Python", "category": "Languages", "proficiency": 92, "icon": "🐍"},
-        {"name": "TypeScript/JavaScript", "name_tr": "TypeScript/JavaScript", "category": "Languages", "proficiency": 90, "icon": "🧾"},
-        {"name": "SQL", "name_tr": "SQL", "category": "Languages", "proficiency": 86, "icon": "🗃️"},
-        {"name": "C#", "name_tr": "C#", "category": "Languages", "proficiency": 80, "icon": "#️⃣"},
-        {"name": "LLMs", "name_tr": "LLM'ler", "category": "AI & Data", "proficiency": 74, "icon": "🧠"},
-        {"name": "Retrieval-Augmented Generation (RAG)", "name_tr": "Retrieval-Augmented Generation (RAG)", "category": "AI & Data", "proficiency": 72, "icon": "📚"},
-        {"name": "Git/GitLab/GitHub", "name_tr": "Git/GitLab/GitHub", "category": "Tooling", "proficiency": 92, "icon": "🔧"},
-        {"name": "Maven/Gradle", "name_tr": "Maven/Gradle", "category": "Tooling", "proficiency": 82, "icon": "🏗️"},
-        {"name": "Linux (Ubuntu)", "name_tr": "Linux (Ubuntu)", "category": "Tooling", "proficiency": 88, "icon": "🐧"},
-        {"name": "Azure DevOps", "name_tr": "Azure DevOps", "category": "Tooling", "proficiency": 76, "icon": "📦"},
+        {
+            "name": "Docker",
+            "name_tr": "Docker",
+            "category": "Cloud & DevOps",
+            "proficiency": 90,
+            "icon": "🐳",
+        },
+        {
+            "name": "Kubernetes",
+            "name_tr": "Kubernetes",
+            "category": "Cloud & DevOps",
+            "proficiency": 75,
+            "icon": "☸️",
+        },
+        {
+            "name": "GitHub Actions (CI/CD)",
+            "name_tr": "GitHub Actions (CI/CD)",
+            "category": "Cloud & DevOps",
+            "proficiency": 86,
+            "icon": "⚙️",
+        },
+        {
+            "name": "AWS (EC2, S3)",
+            "name_tr": "AWS (EC2, S3)",
+            "category": "Cloud & DevOps",
+            "proficiency": 78,
+            "icon": "☁️",
+        },
+        {
+            "name": "Spring Cloud Config",
+            "name_tr": "Spring Cloud Config",
+            "category": "Cloud & DevOps",
+            "proficiency": 82,
+            "icon": "🧩",
+        },
+        {
+            "name": "Zuul Gateway",
+            "name_tr": "Zuul Gateway",
+            "category": "Cloud & DevOps",
+            "proficiency": 80,
+            "icon": "🛣️",
+        },
+        {
+            "name": "SonarQube",
+            "name_tr": "SonarQube",
+            "category": "Cloud & DevOps",
+            "proficiency": 84,
+            "icon": "📈",
+        },
+        {
+            "name": "ElasticSearch",
+            "name_tr": "ElasticSearch",
+            "category": "Observability & Infra",
+            "proficiency": 78,
+            "icon": "🔍",
+        },
+        {
+            "name": "Kibana",
+            "name_tr": "Kibana",
+            "category": "Observability & Infra",
+            "proficiency": 80,
+            "icon": "📊",
+        },
+        {
+            "name": "Redis",
+            "name_tr": "Redis",
+            "category": "Observability & Infra",
+            "proficiency": 82,
+            "icon": "🟥",
+        },
+        {
+            "name": "RabbitMQ",
+            "name_tr": "RabbitMQ",
+            "category": "Observability & Infra",
+            "proficiency": 76,
+            "icon": "🐇",
+        },
+        {
+            "name": "PostgreSQL",
+            "name_tr": "PostgreSQL",
+            "category": "Observability & Infra",
+            "proficiency": 88,
+            "icon": "🐘",
+        },
+        {
+            "name": "Celery",
+            "name_tr": "Celery",
+            "category": "Observability & Infra",
+            "proficiency": 74,
+            "icon": "🌿",
+        },
+        {
+            "name": "Vagrant",
+            "name_tr": "Vagrant",
+            "category": "Observability & Infra",
+            "proficiency": 70,
+            "icon": "📦",
+        },
+        {
+            "name": "Java/Spring Boot",
+            "name_tr": "Java/Spring Boot",
+            "category": "Backend",
+            "proficiency": 92,
+            "icon": "☕",
+        },
+        {
+            "name": "Python/FastAPI",
+            "name_tr": "Python/FastAPI",
+            "category": "Backend",
+            "proficiency": 90,
+            "icon": "🐍",
+        },
+        {
+            "name": "REST APIs",
+            "name_tr": "REST API'ler",
+            "category": "Backend",
+            "proficiency": 91,
+            "icon": "🔌",
+        },
+        {
+            "name": "Hibernate/JPA",
+            "name_tr": "Hibernate/JPA",
+            "category": "Backend",
+            "proficiency": 82,
+            "icon": "🗄️",
+        },
+        {
+            "name": "JSF/PrimeFaces",
+            "name_tr": "JSF/PrimeFaces",
+            "category": "Backend",
+            "proficiency": 76,
+            "icon": "🧱",
+        },
+        {
+            "name": "Microservices",
+            "name_tr": "Mikroservisler",
+            "category": "Architecture",
+            "proficiency": 86,
+            "icon": "🧬",
+        },
+        {
+            "name": "Clean Architecture",
+            "name_tr": "Clean Architecture",
+            "category": "Architecture",
+            "proficiency": 87,
+            "icon": "🏛️",
+        },
+        {
+            "name": "JWT/RBAC",
+            "name_tr": "JWT/RBAC",
+            "category": "Architecture",
+            "proficiency": 85,
+            "icon": "🔐",
+        },
+        {
+            "name": "Constraint Optimization",
+            "name_tr": "Kisit Optimizasyonu",
+            "category": "Architecture",
+            "proficiency": 88,
+            "icon": "🧠",
+        },
+        {
+            "name": "JUnit",
+            "name_tr": "JUnit",
+            "category": "Testing & Automation",
+            "proficiency": 84,
+            "icon": "✅",
+        },
+        {
+            "name": "Pytest",
+            "name_tr": "Pytest",
+            "category": "Testing & Automation",
+            "proficiency": 88,
+            "icon": "🧪",
+        },
+        {
+            "name": "CI/CD Pipelines",
+            "name_tr": "CI/CD Pipeline'lari",
+            "category": "Testing & Automation",
+            "proficiency": 86,
+            "icon": "🔁",
+        },
+        {
+            "name": "Defect Tracking (Jira, GitLab)",
+            "name_tr": "Hata Takibi (Jira, GitLab)",
+            "category": "Testing & Automation",
+            "proficiency": 83,
+            "icon": "🗂️",
+        },
+        {
+            "name": "Test Automation",
+            "name_tr": "Test Otomasyonu",
+            "category": "Testing & Automation",
+            "proficiency": 85,
+            "icon": "🤖",
+        },
+        {
+            "name": "Vue.js",
+            "name_tr": "Vue.js",
+            "category": "Frontend",
+            "proficiency": 78,
+            "icon": "🟢",
+        },
+        {
+            "name": "React",
+            "name_tr": "React",
+            "category": "Frontend",
+            "proficiency": 86,
+            "icon": "⚛️",
+        },
+        {
+            "name": "Next.js",
+            "name_tr": "Next.js",
+            "category": "Frontend",
+            "proficiency": 80,
+            "icon": "▲",
+        },
+        {
+            "name": "JavaScript/TypeScript",
+            "name_tr": "JavaScript/TypeScript",
+            "category": "Frontend",
+            "proficiency": 90,
+            "icon": "📜",
+        },
+        {
+            "name": "Tailwind CSS",
+            "name_tr": "Tailwind CSS",
+            "category": "Frontend",
+            "proficiency": 82,
+            "icon": "🎨",
+        },
+        {
+            "name": "Electron",
+            "name_tr": "Electron",
+            "category": "Frontend",
+            "proficiency": 70,
+            "icon": "💡",
+        },
+        {
+            "name": "Java",
+            "name_tr": "Java",
+            "category": "Languages",
+            "proficiency": 93,
+            "icon": "☕",
+        },
+        {
+            "name": "Python",
+            "name_tr": "Python",
+            "category": "Languages",
+            "proficiency": 92,
+            "icon": "🐍",
+        },
+        {
+            "name": "TypeScript/JavaScript",
+            "name_tr": "TypeScript/JavaScript",
+            "category": "Languages",
+            "proficiency": 90,
+            "icon": "🧾",
+        },
+        {
+            "name": "SQL",
+            "name_tr": "SQL",
+            "category": "Languages",
+            "proficiency": 86,
+            "icon": "🗃️",
+        },
+        {
+            "name": "C#",
+            "name_tr": "C#",
+            "category": "Languages",
+            "proficiency": 80,
+            "icon": "#️⃣",
+        },
+        {
+            "name": "LLMs",
+            "name_tr": "LLM'ler",
+            "category": "AI & Data",
+            "proficiency": 74,
+            "icon": "🧠",
+        },
+        {
+            "name": "Retrieval-Augmented Generation (RAG)",
+            "name_tr": "Retrieval-Augmented Generation (RAG)",
+            "category": "AI & Data",
+            "proficiency": 72,
+            "icon": "📚",
+        },
+        {
+            "name": "Git/GitLab/GitHub",
+            "name_tr": "Git/GitLab/GitHub",
+            "category": "Tooling",
+            "proficiency": 92,
+            "icon": "🔧",
+        },
+        {
+            "name": "Maven/Gradle",
+            "name_tr": "Maven/Gradle",
+            "category": "Tooling",
+            "proficiency": 82,
+            "icon": "🏗️",
+        },
+        {
+            "name": "Linux (Ubuntu)",
+            "name_tr": "Linux (Ubuntu)",
+            "category": "Tooling",
+            "proficiency": 88,
+            "icon": "🐧",
+        },
+        {
+            "name": "Azure DevOps",
+            "name_tr": "Azure DevOps",
+            "category": "Tooling",
+            "proficiency": 76,
+            "icon": "📦",
+        },
     ]
     for index, item in enumerate(skills_data, start=1):
         skill = Skill(
@@ -577,7 +1046,9 @@ def seed_projects(db: Session) -> List[Project]:
     return created_projects
 
 
-def link_project_technologies(db: Session, tech_map: Dict[str, str], projects: List[Project]) -> None:
+def link_project_technologies(
+    db: Session, tech_map: Dict[str, str], projects: List[Project]
+) -> None:
     """Connect projects to technologies."""
     print("Linking project technologies...")
     mapping = {
@@ -649,24 +1120,48 @@ def seed_site_config(db: Session) -> None:
     print("Adding site config...")
     config_data = [
         {"key": "site_name", "value": "Yigit Okur", "description": "Display name"},
-        {"key": "site_title", "value": "Yigit Okur | Software Engineer · Cloud & DevOps", "description": "SEO title"},
+        {
+            "key": "site_title",
+            "value": "Yigit Okur | Software Engineer · Cloud & DevOps",
+            "description": "SEO title",
+        },
         {
             "key": "site_description",
             "value": "Software Engineering student focused on enterprise backend systems, cloud-native architecture, and DevOps automation.",
             "description": "SEO description",
         },
-        {"key": "contact_email", "value": "yigitokur@ieee.org", "description": "Primary contact"},
-        {"key": "github_url", "value": "https://github.com/TurkishKEBAB", "description": "GitHub profile"},
-        {"key": "linkedin_url", "value": "https://www.linkedin.com/in/yigit-okur-050b5b278", "description": "LinkedIn profile"},
+        {
+            "key": "contact_email",
+            "value": "yigitokur@ieee.org",
+            "description": "Primary contact",
+        },
+        {
+            "key": "github_url",
+            "value": "https://github.com/TurkishKEBAB",
+            "description": "GitHub profile",
+        },
+        {
+            "key": "linkedin_url",
+            "value": "https://www.linkedin.com/in/yigit-okur-050b5b278",
+            "description": "LinkedIn profile",
+        },
         {
             "key": "meta_keywords",
             "value": "Yigit Okur, Software Engineer, Cloud, DevOps, Spring Boot, FastAPI, React, Portfolio",
             "description": "SEO keywords",
         },
-        {"key": "maintenance_mode", "value": "false", "description": "Maintenance flag"},
+        {
+            "key": "maintenance_mode",
+            "value": "false",
+            "description": "Maintenance flag",
+        },
     ]
     for item in config_data:
-        db.add(SiteConfig(key=item["key"], value=item["value"], description=item["description"]))
+        db.add(
+            SiteConfig(
+                key=item["key"], value=item["value"], description=item["description"]
+            )
+        )
     db.commit()
     print(f"Added {len(config_data)} site config entries")
 
@@ -752,6 +1247,7 @@ def clear_existing_data(db: Session) -> None:
     """Clear all mutable data in dependency-safe order."""
     print("Clearing existing data...")
     models_in_order = [
+        AdminActionLog,
         TokenBlacklist,
         RefreshTokenSession,
         ProjectTechnology,

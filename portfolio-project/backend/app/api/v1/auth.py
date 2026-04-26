@@ -2,21 +2,29 @@
 Authentication Endpoints
 Login and user management
 """
+
+import uuid
 from datetime import datetime, timedelta, timezone
 from typing import Annotated
-import uuid
+
+import jwt
+from app.api.deps import get_current_user, get_db, require_admin
+from app.config import get_settings
+from app.core.rate_limit import limiter
+from app.crud import token as token_crud
+from app.crud import user as user_crud
+from app.schemas.user import (
+    RefreshTokenRequest,
+    Token,
+    UserCreate,
+    UserLogin,
+    UserResponse,
+)
+from app.services.admin_audit import record_admin_action
+from app.utils.security import create_access_token, create_refresh_token
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
-import jwt
-
-from app.api.deps import get_db, get_current_user, require_admin
-from app.config import get_settings
-from app.schemas.user import UserLogin, UserCreate, UserResponse, Token, RefreshTokenRequest
-from app.crud import user as user_crud
-from app.crud import token as token_crud
-from app.core.rate_limit import limiter
-from app.utils.security import create_access_token, create_refresh_token
 
 router = APIRouter()
 settings = get_settings()
@@ -42,7 +50,9 @@ def _issue_token_pair(
         expires_delta=timedelta(days=refresh_expires_days),
     )
 
-    refresh_expires_at = datetime.now(timezone.utc) + timedelta(days=refresh_expires_days)
+    refresh_expires_at = datetime.now(timezone.utc) + timedelta(
+        days=refresh_expires_days
+    )
     token_crud.create_refresh_token_session(
         db,
         user_id=user_id,
@@ -69,20 +79,20 @@ def _issue_token_pair(
 async def login(
     request: Request,
     form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
 ):
     """
     OAuth2 compatible token login, get an access token for future requests
     """
     user = user_crud.authenticate_user(db, form_data.username, form_data.password)
-    
+
     if not user:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Incorrect email or password",
             headers={"WWW-Authenticate": "Bearer"},
         )
-    
+
     # Update last login
     user_crud.update_last_login(db, user.id)
 
@@ -93,21 +103,19 @@ async def login(
 @router.post("/login/json", response_model=Token)
 @limiter.limit(settings.AUTH_LOGIN_RATE_LIMIT)
 async def login_json(
-    request: Request,
-    credentials: UserLogin,
-    db: Session = Depends(get_db)
+    request: Request, credentials: UserLogin, db: Session = Depends(get_db)
 ):
     """
     JSON-based login endpoint (alternative to OAuth2 form)
     """
     user = user_crud.authenticate_user(db, credentials.email, credentials.password)
-    
+
     if not user:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Incorrect email or password",
         )
-    
+
     # Update last login
     user_crud.update_last_login(db, user.id)
 
@@ -116,43 +124,48 @@ async def login_json(
 
 
 @router.get("/me", response_model=UserResponse)
-async def read_users_me(
-    current_user = Depends(get_current_user)
-):
+async def read_users_me(current_user=Depends(get_current_user)):
     """
     Get current authenticated user information
     """
     return current_user
 
 
-@router.post("/register", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/register", response_model=UserResponse, status_code=status.HTTP_201_CREATED
+)
 async def register(
     user_data: UserCreate,
     db: Session = Depends(get_db),
-    _: None = Depends(require_admin)  # Only admins can create users
+    current_user=Depends(require_admin),  # Only admins can create users
 ):
     """
     Register a new user (admin only)
     """
     # Check if user already exists
     existing_user = user_crud.get_user_by_email(db, user_data.email)
-    
+
     if existing_user:
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Email already registered"
+            status_code=status.HTTP_400_BAD_REQUEST, detail="Email already registered"
         )
-    
+
     # Create new user
     user = user_crud.create_user(db, user_data)
-    
+    record_admin_action(
+        db,
+        actor=current_user,
+        action="user.create",
+        target_type="user",
+        target_id=user.id,
+        details={"email": user.email, "is_admin": user.is_admin},
+    )
+
     return user
 
 
 @router.post("/verify-token")
-async def verify_token(
-    current_user = Depends(get_current_user)
-):
+async def verify_token(current_user=Depends(get_current_user)):
     """
     Verify if the current token is valid
     Returns user information if valid
@@ -163,17 +176,15 @@ async def verify_token(
             "id": str(current_user.id),
             "email": current_user.email,
             "full_name": getattr(current_user, "username", current_user.email),
-            "is_admin": current_user.email.lower() in set(settings.admin_email_list),
-        }
+            "is_admin": current_user.is_admin,
+        },
     }
 
 
 @router.post("/refresh", response_model=Token)
 @limiter.limit(settings.AUTH_LOGIN_RATE_LIMIT)
 async def refresh_token(
-    request: Request,
-    payload: RefreshTokenRequest,
-    db: Session = Depends(get_db)
+    request: Request, payload: RefreshTokenRequest, db: Session = Depends(get_db)
 ):
     """
     Rotate refresh token and return a new token pair.
@@ -204,7 +215,9 @@ async def refresh_token(
     if token_crud.is_token_blacklisted(db, token_jti):
         raise credentials_exception
 
-    if not token_crud.is_refresh_token_session_active(db, token_jti=token_jti, user_id=user_id):
+    if not token_crud.is_refresh_token_session_active(
+        db, token_jti=token_jti, user_id=user_id
+    ):
         raise credentials_exception
 
     user = user_crud.get_user_by_id(db, user_id=user_id)
