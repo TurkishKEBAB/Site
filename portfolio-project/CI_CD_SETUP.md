@@ -121,18 +121,18 @@ These are UI/ruleset settings and are not versioned in git.
 ## Recommended Branch Strategy
 
 - Permanent branches:
-  - `main`: production-ready branch only
-  - `Codex_Implementation`: active integration/development branch
-- Short-lived branches:
-  - `feat/*`, `fix/*`, `chore/*`, `docs/*`, `refactor/*`
+  - `main`: only long-lived development base; production-ready
+- Short-lived branches: see [`../AGENTS.md`](../AGENTS.md) and [`../GIT_WORKFLOW.md`](../GIT_WORKFLOW.md) for the canonical naming rules (`feature/*`, `fix/*`, `refactor/*`, `chore/*`, `docs/*`, `test/*`, `ci/*`, `build/*`).
 - PR flow:
-  - feature branch -> `Codex_Implementation`
-  - `Codex_Implementation` -> `main`
+  - feature branch -> `main` (squash merge)
 - Merge strategy:
   - squash merge only
   - auto-delete head branches after merge
   - no direct pushes to `main`
-  - no direct pushes to `Codex_Implementation` except emergency maintainer fixes
+
+> The `Codex_Implementation` integration branch has been retired. Do not
+> recreate it; do not target it from feature branches. See
+> [`../GIT_WORKFLOW.md`](../GIT_WORKFLOW.md) for the migration history.
 
 ### Main Branch Ruleset
 
@@ -150,23 +150,6 @@ These are UI/ruleset settings and are not versioned in git.
   - `Frontend Quality`
   - `Sonar PR Gate`
   - `PR Governance`
-
-### Codex_Implementation Branch Ruleset
-
-- Require pull request before merge
-- Require 1 approval
-- Require review from Code Owners
-- Dismiss stale approvals
-- Require conversation resolution
-- Include administrators
-- Require branch up to date
-- Disable force push
-- Disable branch deletion
-- Required checks:
-  - `Backend Quality`
-  - `Frontend Quality`
-  - `PR Governance`
-  - `PR Labeler`
 
 ### Repository Settings
 
