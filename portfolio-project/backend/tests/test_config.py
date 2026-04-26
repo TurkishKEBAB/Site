@@ -19,6 +19,7 @@ def _build_settings(**overrides) -> Settings:
 def test_production_requires_captcha_enabled_and_secret():
     settings = _build_settings(
         ENVIRONMENT="production",
+        ADMIN_EMAILS="admin@example.com",
         CAPTCHA_ENABLED=False,
         CAPTCHA_SECRET_KEY=None,
     )
@@ -29,9 +30,35 @@ def test_production_requires_captcha_enabled_and_secret():
     assert "CAPTCHA_SECRET_KEY must be set in production." in errors
 
 
+def test_admin_emails_default_is_empty():
+    settings = _build_settings()
+
+    assert settings.ADMIN_EMAILS == ""
+    assert settings.admin_email_list == []
+
+
+def test_production_requires_admin_emails():
+    settings = _build_settings(
+        ENVIRONMENT="production",
+        ADMIN_EMAILS="",
+        CAPTCHA_ENABLED=True,
+        CAPTCHA_SECRET_KEY="turnstile-secret",
+        SECRET_KEY="y" * 40,
+        FRONTEND_URL="https://portfolio.example.com",
+    )
+
+    errors = settings.production_validation_errors()
+
+    assert (
+        "ADMIN_EMAILS must include at least one admin email in production."
+        in errors
+    )
+
+
 def test_production_with_valid_security_settings_has_no_errors():
     settings = _build_settings(
         ENVIRONMENT="production",
+        ADMIN_EMAILS="admin@example.com",
         CAPTCHA_ENABLED=True,
         CAPTCHA_SECRET_KEY="turnstile-secret",
         SECRET_KEY="y" * 40,

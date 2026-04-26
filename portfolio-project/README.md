@@ -123,7 +123,7 @@ Key backend environment variables (see `backend/.env.example`):
 DATABASE_URL=postgresql+psycopg://user:pass@localhost:5432/portfolio
 SECRET_KEY=generate-a-long-random-string
 JWT_ALGORITHM=HS256
-ADMIN_EMAILS=yigitokur@ieee.org
+ADMIN_EMAILS=admin@example.com
 SMTP_HOST=smtp.gmail.com
 SMTP_USERNAME=...
 SMTP_PASSWORD=...
