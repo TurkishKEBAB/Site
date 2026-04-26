@@ -3,13 +3,22 @@ Storage Service
 Supabase Storage integration for file uploads
 """
 import asyncio
-from supabase import create_client, Client
-from typing import Optional
-from PIL import Image
 import io
+from typing import Iterable, Optional
+
+import filetype
+from PIL import Image
 from loguru import logger
+from supabase import Client, create_client
 
 from app.config import settings
+
+
+# Default MIME whitelist for image upload paths. Extension-based callers can pass
+# a custom set when other formats need to be accepted.
+DEFAULT_ALLOWED_IMAGE_MIMES: frozenset[str] = frozenset(
+    {"image/jpeg", "image/png", "image/gif", "image/webp"}
+)
 
 
 class StorageService:
@@ -177,6 +186,37 @@ class StorageService:
             logger.error(f"Error getting file URL: {e}")
             return None
     
+    def validate_file_content(
+        self,
+        file_data: bytes,
+        allowed_mimes: Optional[Iterable[str]] = None,
+    ) -> tuple[bool, str]:
+        """Verify the uploaded payload using magic-byte detection.
+
+        Extension- and size-only checks are insufficient because clients can
+        rename arbitrary binaries to a permitted extension. This inspects the
+        leading bytes via the ``filetype`` library and rejects anything whose
+        detected MIME type is not in the allow list.
+        """
+        if not file_data:
+            return False, "Uploaded file is empty"
+
+        allowed_set = (
+            frozenset(allowed_mimes)
+            if allowed_mimes is not None
+            else DEFAULT_ALLOWED_IMAGE_MIMES
+        )
+
+        kind = filetype.guess(file_data)
+        if kind is None or kind.mime not in allowed_set:
+            allowed_display = ", ".join(sorted(allowed_set))
+            return (
+                False,
+                f"File content does not match an allowed type ({allowed_display})",
+            )
+
+        return True, ""
+
     def validate_file(
         self,
         filename: str,

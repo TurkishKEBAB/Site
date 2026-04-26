@@ -199,20 +199,20 @@ Notlar:
 
 ## Faz 4 - Upload Güvenliği ve Frontend Security Headers
 
-Faz Durumu: `todo`
+Faz Durumu: `done`
 
 Amaç: Dosya upload içeriğini gerçek dosya türüne göre doğrulamak ve frontend güvenlik başlıklarını netleştirmek.
 
 TODO:
 
-- [ ] `filetype` veya uygun alternatif kütüphane seçimini yap.
-- [ ] `backend/app/services/storage_service.py` içine `validate_file_content(bytes)` ekle.
-- [ ] Upload akışında uzantı/boyut kontrolüne ek olarak magic-byte kontrolü çalıştır.
-- [ ] `.jpg` uzantılı ama geçersiz binary payload için backend test ekle.
-- [ ] Geçerli image upload akışının regresyonsuz olduğunu test et.
-- [ ] `frontend/next.config.mjs` için güvenlik header tasarımını yap.
-- [ ] CSP eklenirse inline theme bootstrap script için nonce/hash stratejisini belirle.
-- [ ] Security headers için build ve smoke doğrulaması yap.
+- [x] `filetype` veya uygun alternatif kütüphane seçimini yap.
+- [x] `backend/app/services/storage_service.py` içine `validate_file_content(bytes)` ekle.
+- [x] Upload akışında uzantı/boyut kontrolüne ek olarak magic-byte kontrolü çalıştır.
+- [x] `.jpg` uzantılı ama geçersiz binary payload için backend test ekle.
+- [x] Geçerli image upload akışının regresyonsuz olduğunu test et.
+- [x] `frontend/next.config.mjs` için güvenlik header tasarımını yap.
+- [x] CSP eklenirse inline theme bootstrap script için nonce/hash stratejisini belirle.
+- [x] Security headers için build ve smoke doğrulaması yap.
 
 Kabul kriteri:
 
@@ -224,6 +224,19 @@ Kabul kriteri:
 
 - PR 1: `fix(storage): validate uploaded file content type`
 - PR 2: `feat(frontend): add baseline security headers`
+
+Notlar:
+
+- Faz 1, 2 ve 3 değişiklikleri `main` içindedir: PR #23 `f749f9e`, PR #24 `b035674` ve PR #25 `8bc098b` squash merge commit'leri `origin/main` üzerinde bulunuyor.
+- `filetype>=1.2.0,<2.0.0` Pillow ile aynı bölümde `requirements.txt` içine eklendi; sistem bağımlılığı yok (python-magic alternatifinin libmagic gereksinimini import zorunluluğu olmadığı için tercih edildi).
+- `StorageService.validate_file_content(file_data, allowed_mimes=None)` magic-byte tabanlı kontrol uyguluyor; varsayılan allow-list `image/jpeg`, `image/png`, `image/gif`, `image/webp`. Boş payload ve allow-list dışındaki tüm tipler `(False, açıklayıcı mesaj)` ile reddediliyor.
+- `api/v1/projects.py` upload akışı `validate_file()` (uzantı + boyut) sonrasında `validate_file_content()` (magic-byte) çağırıyor; redirect/path güvenlik bütünlüğü için `validate_file_content` `validate_file` ile aynı 400 hata yüzeyine bağlanıyor.
+- `tests/test_storage_validation.py` (yeni) gerçek StorageService üstünde 5 birim test çalıştırıyor: gerçek PNG/JPEG kabul, text payload ret, boş payload ret, custom allow-list davranışı.
+- `tests/test_projects_admin.py::test_upload_project_image_rejects_disguised_payload` (yeni) `.jpg` uzantılı arbitrary HTML payload'unu API üzerinden 400 ile reddediyor; mevcut upload regresyon testi gerçek 1x1 PNG bytes'ı (Pillow ile üretilen) kullanıyor.
+- DummyStorage mock'larına `validate_file_content` metodu eklendi (regresyon testleri için her zaman `(True, "")` döndürüyor).
+- `frontend/next.config.mjs` `headers()` async fonksiyonu üzerinden tüm path'lere baseline güvenlik header'ları uyguluyor: `X-Frame-Options: DENY`, `X-Content-Type-Options: nosniff`, `Referrer-Policy: strict-origin-when-cross-origin`, `Permissions-Policy` (camera/microphone/geolocation/interest-cohort kapalı), `X-DNS-Prefetch-Control: on`, `Strict-Transport-Security` 2-yıl preload.
+- CSP bilinçli olarak ertelendi: inline theme bootstrap script (`app/layout.tsx:42-53`) ve Next.js'in kendi runtime inline injectionları nonce/hash stratejisi gerektiriyor; bu iş Faz 7 observability/security follow-up'ında ele alınacak. Karar config dosyasında inline yorum olarak dokümante edildi.
+- Doğrulama: `python -m pytest -q` başarılı (`92 passed`, coverage `%86.25`); frontend `npm run lint`, `npm run type-check`, `npm run test` (4 dosya / 13 test), `npm run build` başarılı.
 
 ## Faz 5 - Dokümantasyon ve DX Temizliği
 

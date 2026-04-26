@@ -251,6 +251,17 @@ async def upload_project_image(
             status_code=status.HTTP_400_BAD_REQUEST, detail=error_message
         )
 
+    # Magic-byte check: extension/size alone cannot prevent renamed binaries.
+    is_valid_content, content_error = storage_service.validate_file_content(
+        file_content,
+        allowed_mimes={"image/jpeg", "image/png", "image/gif", "image/webp"},
+    )
+
+    if not is_valid_content:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail=content_error
+        )
+
     # Sanitize filename to prevent path traversal and injection,
     # while preserving the validated extension and overall length limit.
     name_part, ext = os.path.splitext(original_filename)
