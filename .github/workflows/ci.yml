@@ -110,7 +110,6 @@ jobs:
       - name: Security audit (npm)
         working-directory: portfolio-project/frontend
         run: npm audit --audit-level=high
-        continue-on-error: true
 
       - name: Build frontend
         working-directory: portfolio-project/frontend

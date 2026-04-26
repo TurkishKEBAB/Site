@@ -3,8 +3,11 @@ name: Deploy Backend Staging (Railway)
 on:
   push:
     branches:
-      - Codex_Implementation
+      - main
       - develop
+      - "feature/backend-*"
+      - "fix/backend-*"
+      - "refactor/backend-*"
   workflow_dispatch:
 
 concurrency:

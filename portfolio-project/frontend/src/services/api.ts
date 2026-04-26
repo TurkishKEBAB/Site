@@ -11,6 +11,12 @@ const api: AxiosInstance = axios.create({
   },
 });
 
+export const browserNavigation = {
+  redirectToLogin() {
+    window.location.href = '/login';
+  },
+};
+
 const shouldAttachLanguage = (config: { method?: string; url?: string }) => {
   const method = (config.method || 'get').toLowerCase();
   if (method !== 'get') {
@@ -59,13 +65,13 @@ api.interceptors.response.use(
     const shouldSkipGlobalError =
       skipGlobalErrorValue === true || skipGlobalErrorValue === 'true';
 
-    if (status === 401 || status === 403) {
+    if (status === 401) {
       if (typeof window !== 'undefined') {
         localStorage.removeItem('token');
         localStorage.removeItem('refresh_token');
 
         if (window.location.pathname.startsWith('/admin')) {
-          window.location.href = '/login';
+          browserNavigation.redirectToLogin();
         }
       }
     }
