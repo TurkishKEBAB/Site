@@ -67,20 +67,20 @@ Faz 0 ölçüm notu (2026-04-25):
 
 ## Faz 1 - P0 Stabilizasyon ve CI Güvenlik Kapısı
 
-Faz Durumu: `todo`
+Faz Durumu: `done`
 
 Amaç: Kullanıcı oturumunu bozan aktif frontend regresyonunu ve CI'da güvenlik açığı geçmesine izin veren kapıyı kapatmak.
 
 TODO:
 
-- [ ] `frontend/src/services/api.ts` içinde token temizleme koşulunu yalnızca `401` için çalışacak hale getir.
-- [ ] `403` davranışı için frontend servis testi ekle: 403 localStorage tokenlarını silmemeli.
-- [ ] `401` davranışı için regresyon testi ekle: 401 tokenları silmeli ve admin sayfasında login'e yönlendirmeli.
-- [ ] Güncel `npm audit --audit-level=high` çıktısını sınıflandır.
-- [ ] High severity açıkları kapatacak dependency upgrade PR'ını hazırla.
-- [ ] Upgrade sonrası `npm audit --audit-level=high` sıfır high açık ile geçmeli.
-- [ ] `.github/workflows/ci.yml` içinde `npm audit` için `continue-on-error: true` kaldır.
-- [ ] `deploy-vercel-preview.yml` ve `deploy-railway-staging.yml` içindeki stale `Codex_Implementation` referanslarını güncelle.
+- [x] `frontend/src/services/api.ts` içinde token temizleme koşulunu yalnızca `401` için çalışacak hale getir.
+- [x] `403` davranışı için frontend servis testi ekle: 403 localStorage tokenlarını silmemeli.
+- [x] `401` davranışı için regresyon testi ekle: 401 tokenları silmeli ve admin sayfasında login'e yönlendirmeli.
+- [x] Güncel `npm audit --audit-level=high` çıktısını sınıflandır.
+- [x] High severity açıkları kapatacak dependency upgrade PR'ını hazırla.
+- [x] Upgrade sonrası `npm audit --audit-level=high` sıfır high açık ile geçmeli.
+- [x] `.github/workflows/ci.yml` içinde `npm audit` için `continue-on-error: true` kaldır.
+- [x] `deploy-vercel-preview.yml` ve `deploy-railway-staging.yml` içindeki stale `Codex_Implementation` referanslarını güncelle.
 
 Kabul kriteri:
 
@@ -99,6 +99,14 @@ Kabul kriteri:
 Notlar:
 
 - Audit gate, dependency açıkları kapatılmadan aktive edilirse CI bilinçli olarak kırmızıya döner. Bu yüzden dependency upgrade ve gate kaldırma aynı PR'da veya ardışık PR'larda planlanmalıdır.
+
+Faz 1 ölçüm notu (2026-04-26):
+
+- Başlangıç audit durumu: `npm audit --audit-level=high --json` başarısız; `19 vulnerabilities` (`7 moderate`, `12 high`). High sınıflandırması: `axios`, `next`, `@typescript-eslint/*` zinciri, `minimatch`, `flatted`, `glob`, `picomatch`, `rollup`.
+- Dependency düzeltmeleri: `axios` `1.15.2`, `next`/`@next/bundle-analyzer` `16.2.4`, `@typescript-eslint/eslint-plugin` ve `@typescript-eslint/parser` `8.59.0`, `eslint` `8.57.1`; lockfile audit fix ile güvenli transitive sürümlere güncellendi.
+- Son audit durumu: `npm audit --audit-level=high` başarılı; high açık `0`. Kalan audit notu: `4 moderate` (`vite`/`esbuild` ve Next iç `postcss` zinciri); npm bunlar için breaking/yanlış major öneriyor, Faz 1 high gate kabul kriterini etkilemiyor.
+- Hedefli doğrulama: `npm run test -- src/services/api.test.ts`, `npm run test`, `npm run lint`, `npm run type-check` başarılı.
+- CI/deploy düzeltmeleri: frontend npm audit adımındaki `continue-on-error: true` kaldırıldı; preview/staging workflow'larında `Codex_Implementation` branch referansları çıkarılıp `main`, `develop` ve ilgili frontend/backend task branch pattern'ları eklendi.
 
 ## Faz 2 - Düşük Riskli Backend Güvenlik Sıkılaştırma
 
