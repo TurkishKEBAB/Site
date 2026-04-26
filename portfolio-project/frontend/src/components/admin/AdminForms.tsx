@@ -1,22 +1,11 @@
 import { ChangeEvent, FormEvent, useEffect, useState } from 'react';
 
 import { Technology } from '../../services/technologyService';
+import type { ProjectTranslation } from '../../services/types';
 
 export type AdminLanguage = 'en' | 'tr';
-
-export interface ProjectImage {
-  id: string;
-  image_url: string;
-  caption: string | null;
-  display_order: number;
-}
-
-export interface ProjectTranslationData {
-  language: string;
-  title: string;
-  short_description: string;
-  description: string;
-}
+export type { ProjectImage } from '../../services/types';
+export type ProjectTranslationData = ProjectTranslation;
 
 export interface ProjectFormValues {
   title: string;

@@ -1,9 +1,16 @@
 import api, { apiEndpoints } from './api';
 import { BlogPost, BlogPostCreate, PaginatedResponse } from './types';
 
-type BlogPostApiRecord = BlogPost & {
+type BlogPostApiRecord = Omit<
+  BlogPost,
+  'published' | 'is_published' | 'is_featured' | 'views' | 'view_count' | 'reading_time' | 'read_time'
+> & {
+  published?: boolean;
   is_published?: boolean;
+  is_featured?: boolean;
+  views?: number | string;
   view_count?: number | string;
+  reading_time?: number | string;
   read_time?: number | string;
 };
 
@@ -28,18 +35,16 @@ const normalizeBlogPost = (post: BlogPostApiRecord): BlogPost => ({
   views: normalizeNumber(post.views, normalizeNumber(post.view_count)),
   view_count: normalizeNumber(post.view_count, normalizeNumber(post.views)),
   reading_time:
-    typeof post.reading_time === 'number'
-      ? post.reading_time
+    post.reading_time !== undefined
+      ? normalizeNumber(post.reading_time, 0)
       : post.read_time !== undefined
         ? normalizeNumber(post.read_time, 0)
         : undefined,
   read_time:
-    typeof post.read_time === 'number'
-      ? post.read_time
-      : post.read_time !== undefined
-        ? normalizeNumber(post.read_time, 0)
-        : post.reading_time !== undefined
-          ? normalizeNumber(post.reading_time, 0)
+    post.read_time !== undefined
+      ? normalizeNumber(post.read_time, 0)
+      : post.reading_time !== undefined
+        ? normalizeNumber(post.reading_time, 0)
         : undefined,
   is_featured: Boolean(post.is_featured),
 });

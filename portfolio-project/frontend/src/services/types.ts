@@ -61,14 +61,14 @@ export interface ProjectTranslation {
   id?: string;
   language: string;
   title: string;
-  short_description?: string;
-  description?: string;
+  short_description: string;
+  description: string;
 }
 
 export interface ProjectImage {
   id: string;
   image_url: string;
-  caption?: string | null;
+  caption: string | null;
   display_order: number;
 }
 

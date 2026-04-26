@@ -20,12 +20,24 @@ describe("blogService", () => {
             excerpt: "Excerpt",
             is_published: true,
             view_count: "42",
-            read_time: "5",
+            reading_time: "5",
+            created_at: "2026-04-26",
+            updated_at: "2026-04-26",
+          },
+          {
+            id: "post-2",
+            title: "Post 2",
+            slug: "post-2",
+            content: "Body",
+            excerpt: "Excerpt",
+            published: true,
+            views: "12",
+            read_time: "3",
             created_at: "2026-04-26",
             updated_at: "2026-04-26",
           },
         ],
-        total: 1,
+        total: 2,
         page: 1,
         size: 10,
         pages: 1,
@@ -42,6 +54,12 @@ describe("blogService", () => {
       reading_time: 5,
       read_time: 5,
       is_featured: false,
+    });
+    expect(response.items[1]).toMatchObject({
+      views: 12,
+      view_count: 12,
+      reading_time: 3,
+      read_time: 3,
     });
   });
 
