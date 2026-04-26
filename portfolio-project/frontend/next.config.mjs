@@ -33,6 +33,15 @@ const securityHeaders = [
 const nextConfig = {
   poweredByHeader: false,
   outputFileTracingRoot: workspaceRoot,
+  images: {
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "**.supabase.co",
+        pathname: "/storage/v1/object/public/**",
+      },
+    ],
+  },
   turbopack: {
     root: workspaceRoot,
   },

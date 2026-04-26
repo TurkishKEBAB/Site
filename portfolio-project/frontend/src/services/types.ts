@@ -52,9 +52,31 @@ export interface Project {
   created_at: string;
   updated_at: string;
   // Optional fields for backward compatibility
-  translations?: any[];
-  images?: any[];
-  project_technologies?: any[];
+  translations?: ProjectTranslation[];
+  images?: ProjectImage[];
+  project_technologies?: ProjectTechnology[];
+}
+
+export interface ProjectTranslation {
+  id?: string;
+  language: string;
+  title: string;
+  short_description?: string;
+  description?: string;
+}
+
+export interface ProjectImage {
+  id: string;
+  image_url: string;
+  caption?: string | null;
+  display_order: number;
+}
+
+export interface ProjectTechnology {
+  id?: string;
+  technology_id?: string;
+  project_id?: string;
+  technology?: Technology;
 }
 
 export interface ProjectCreate {
