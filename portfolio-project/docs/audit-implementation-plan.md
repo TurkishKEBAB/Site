@@ -240,19 +240,19 @@ Notlar:
 
 ## Faz 5 - Dokümantasyon ve DX Temizliği
 
-Faz Durumu: `todo`
+Faz Durumu: `done`
 
 Amaç: Yeni katkıcıların doğru dokümandan başlamasını sağlamak ve tarihsel doküman karmaşasını azaltmak.
 
 TODO:
 
-- [ ] Root `README.md` dosyasını gerçek proje giriş sayfası haline getir.
-- [ ] `portfolio-project/README.md` içindeki eski React 18/Vite bilgilerini Next 16 + React 19 stack'iyle güncelle.
-- [ ] `portfolio-project/` kökündeki tarihsel MD dosyalarını sınıflandır.
-- [ ] Güncel olmayan tarihsel dosyaları `portfolio-project/docs/_archive/` altına taşı.
-- [ ] Canonical doküman listesini belirt: root README, AGENTS, GIT_WORKFLOW, QUICKSTART, docs.
-- [ ] Backend/frontend çalışma komutlarını tek yerde doğrula.
-- [ ] PowerShell-only akışlara alternatif cross-platform notu ekle veya bilinçli kısıt olarak dokümante et.
+- [x] Root `README.md` dosyasını gerçek proje giriş sayfası haline getir.
+- [x] `portfolio-project/README.md` içindeki eski React 18/Vite bilgilerini Next 16 + React 19 stack'iyle güncelle.
+- [x] `portfolio-project/` kökündeki tarihsel MD dosyalarını sınıflandır.
+- [x] Güncel olmayan tarihsel dosyaları `portfolio-project/docs/_archive/` altına taşı.
+- [x] Canonical doküman listesini belirt: root README, AGENTS, GIT_WORKFLOW, QUICKSTART, docs.
+- [x] Backend/frontend çalışma komutlarını tek yerde doğrula.
+- [x] PowerShell-only akışlara alternatif cross-platform notu ekle veya bilinçli kısıt olarak dokümante et.
 
 Kabul kriteri:
 
@@ -264,6 +264,16 @@ Kabul kriteri:
 
 - PR 1: `docs(repo): refresh project onboarding guide`
 - PR 2: `docs(repo): archive historical status documents`
+
+Notlar:
+
+- Faz 1, 2, 3 ve 4 değişiklikleri `main` içindedir: PR #23 `f749f9e`, PR #24 `b035674`, PR #25 `8bc098b` ve PR #26 `00a9922` squash merge commit'leri `origin/main` üzerinde bulunuyor.
+- Root `README.md` artık tek satırlık özet yerine repo giriş sayfası: layout tablosu, "where to start" matrisi, stack özeti ve cross-platform quick start komutları içeriyor.
+- `portfolio-project/README.md` Next 16 + React 19 + TypeScript stack'iyle yeniden yazıldı; FastAPI/Pydantic v2/SQLAlchemy 2/Alembic/PyJWT detayları, magic-byte upload doğrulaması, security header'ları ve admin authorization (User.is_admin) modeli güncel olarak yansıtılıyor. Eski "React 18 + Vite 5" bilgisi temizlendi.
+- `portfolio-project/QUICKSTART.md` canonical doküman listesini içeriyor (root README, AGENTS, GIT_WORKFLOW, project README, QUICKSTART, PROGRESS, CI_CD_SETUP, docs/audit-implementation-plan.md, docs/admin-authorization.md). PowerShell-only `start.ps1`/`status.ps1`/`stop.ps1`/`quality.ps1` akışları için Linux/macOS cross-platform alternatifleri (`docker-compose`, `curl`, doğrudan pytest/npm komutları) bilinçli kısıt notu ile birlikte eklendi.
+- Tarihsel MD dosyaları `portfolio-project/docs/_archive/` altına taşındı: `BACKEND_COMPLETE.md`, `BACKEND_PACKAGES_INSTALLED.md`, `COMPREHENSIVE_PROJECT_ANALYSIS.md`, `DETAILED_ANALYSIS_REPORT.md`, `FRONTEND_STARTED.md`, `IMPLEMENTATION_AUDIT.md`, `INSTALLATION_SUMMARY.md`, `TASK1_BACKEND_ANALYSIS.md`, `TODO_QUICKSTART.md` (9 dosya, `git mv` ile geçmiş korunarak). Kökte sadece canonical set kaldı: `README.md`, `QUICKSTART.md`, `PROGRESS.md`, `CI_CD_SETUP.md`, `planlama.md` (frozen audit kaynağı).
+- `CI_CD_SETUP.md` retire edilmiş `Codex_Implementation` integration branch ruleset'i kaldırıldı; "Recommended Branch Strategy" bölümü `AGENTS.md`/`GIT_WORKFLOW.md` ile uyumlu hale getirildi (squash merge to `main`, integration branch yok).
+- Doğrulama: `python -m pytest -q` başarılı (`92 passed`, coverage `%86.25`); frontend `npm run lint`, `npm run type-check`, `npm run test`, `npm run build` başarılı. Faz 5 sadece dokümantasyon değişikliklerinden oluştuğu için hedefli regresyon olmadı.
 
 ## Faz 6 - Frontend Kalite ve Performans Temeli
 
