@@ -30,14 +30,16 @@ const normalizeBlogPost = (post: BlogPostApiRecord): BlogPost => ({
   reading_time:
     typeof post.reading_time === 'number'
       ? post.reading_time
-      : post.read_time
+      : post.read_time !== undefined
         ? normalizeNumber(post.read_time, 0)
         : undefined,
   read_time:
     typeof post.read_time === 'number'
       ? post.read_time
-      : post.reading_time
-        ? normalizeNumber(post.reading_time, 0)
+      : post.read_time !== undefined
+        ? normalizeNumber(post.read_time, 0)
+        : post.reading_time !== undefined
+          ? normalizeNumber(post.reading_time, 0)
         : undefined,
   is_featured: Boolean(post.is_featured),
 });

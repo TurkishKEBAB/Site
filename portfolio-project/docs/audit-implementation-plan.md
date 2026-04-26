@@ -315,7 +315,7 @@ Kabul kriteri:
 Notlar:
 
 - Faz 1, 2, 3, 4 ve 5 değişiklikleri `main` içindedir: PR #23 `f749f9e`, PR #24 `b035674`, PR #25 `8bc098b`, PR #26 `00a9922` ve PR #28 `04c669c` squash merge commit'leri `origin/main` üzerinde bulunuyor.
-- Başlangıç coverage ölçümü: `npm run test:coverage` başarılı; `4` test dosyası / `13` test geçti. İlk toplam coverage `statements/lines %26.06`, `functions %34.86`, `branches %54.14`; refactor sonrası yeni dosyalar dahil son ölçüm `statements/lines %25.55`, `functions %33.05`, `branches %52.33`. Bu nedenle başlangıç eşiği `lines/functions/statements: 20`, `branches: 15` olarak eklendi ve yeşil doğrulandı.
+- Başlangıç coverage ölçümü: `npm run test:coverage` başarılı; `4` test dosyası / `13` test geçti. İlk toplam coverage `statements/lines %26.06`, `functions %34.86`, `branches %54.14`; refactor sonrası yeni dosyalar dahil ilk ölçüm `statements/lines %25.55`, `functions %33.05`, `branches %52.33` idi. Sonar PR Gate yeni kod coverage'ını `1.2%` gördüğü için tab/helper/blogService testleri eklendi, coverage kapsamı `frontend/src` ile sınırlandı ve son ölçüm `8` test dosyası / `24` test, toplam `statements/lines %36.41`, `functions %50.87`, `branches %59.70` oldu. Başlangıç eşiği `lines/functions/statements: 20`, `branches: 15` olarak yeşil doğrulandı.
 - `react-hooks/exhaustive-deps` ve `@typescript-eslint/no-explicit-any` önce CLI override ile triage edildi. `exhaustive-deps` ihlali yoktu; `no-explicit-any` 4 ihlal üretti ve `blogService.ts`/`types.ts` içinde somut tiplerle kapatıldı. İki kural da `.eslintrc.cjs` içinde `error` seviyesine alındı.
 - `eslint-plugin-jsx-a11y@6.10.2` eklendi ve `plugin:jsx-a11y/recommended` etkinleştirildi. Tespit edilen upload label ilişkisi düzeltildi.
 - Raw image envanteri `Home.tsx` profil görseli ve `Admin.tsx` image manager thumbnail'larıydı. İkisi de `next/image` kullanımına geçti; `rg '<img' src app` runtime raw `<img>` kullanımı bulmuyor.
@@ -323,6 +323,7 @@ Notlar:
 - `Admin.tsx` state/form/CRUD akış haritası ve `site.ts`/`*Client.tsx` stratejisi `docs/frontend-phase-6-notes.md` içine kaydedildi.
 - Admin tab render blokları `DashboardTab`, `ProjectsTab`, `SkillsTab`, `ExperiencesTab`, `MessagesTab` bileşenlerine çıkarıldı; state ve mutation handler'ları davranış değişikliği olmaması için şimdilik `Admin.tsx` içinde kaldı. `Admin.tsx` yaklaşık `1685` satırdan `1227` satıra indi.
 - Modal focus trap helper'ı `src/lib/admin/useAdminModalFocusTrap.ts`, admin tarih biçimleme helper'ı `src/lib/admin/format.ts` altına taşındı.
+- Sonar düzeltmesi: LCOV artık `next.config.mjs`, `app/**` ve `scripts/**` gibi `sonar.sources=frontend/src` dışındaki dosyaları raporlamıyor; bu, PR Gate logundaki `Could not resolve 20 file paths` uyarısını kaldırmalı. Ayrıca `SonarSource/sonarqube-scan-action` SHA pin'i v6 tag commit'i olan `fd88b7d7ccbaefd23d8f36f73b59db7a3d246602` değerine güncellendi.
 - Doğrulama: `npm run test:coverage`, `npm run test`, `npm run check:server-boundaries`, `npm run lint`, `npm run type-check`, `npm run build`, `npm audit --audit-level=high` başarılı. `ContactForm` negatif testlerinde beklenen `backend unavailable` stderr logları devam ediyor. Build yalnızca mevcut `Browserslist/caniuse-lite` bakım uyarısını verdi; audit tarafında yalnızca Faz 1'den bilinen `4 moderate` açık kaldı.
 
 ## Faz 7 - Observability, API Contract ve Data Fetching

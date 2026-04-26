@@ -34,6 +34,8 @@ export default defineConfig({
     css: true,
     coverage: {
       provider: 'v8',
+      include: ['src/**/*.{ts,tsx}'],
+      exclude: ['src/**/*.test.{ts,tsx}', 'src/test/**', 'src/**/types.ts'],
       reporter: ['text', 'html', 'lcov'],
       reportsDirectory: './coverage',
       thresholds: {
