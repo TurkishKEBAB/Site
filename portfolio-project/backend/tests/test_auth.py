@@ -252,5 +252,10 @@ def test_successful_login_resets_failed_login_state(db_session, regular_user):
     )
 
     assert authenticated is not None
-    assert authenticated.failed_login_count == 0
-    assert authenticated.locked_until is None
+
+    updated = user_crud.mark_login_success(db_session, authenticated.id)
+
+    assert updated is not None
+    assert updated.failed_login_count == 0
+    assert updated.locked_until is None
+    assert updated.last_login is not None

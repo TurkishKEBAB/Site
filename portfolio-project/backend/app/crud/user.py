@@ -96,18 +96,13 @@ def record_failed_login(db: Session, user: User) -> User:
     return user
 
 
-def reset_login_failures(db: Session, user: User) -> User:
-    """Clear failed login state after a successful authentication."""
-    user.failed_login_count = 0
-    user.locked_until = None
-    db.commit()
-    db.refresh(user)
-    return user
-
-
 def authenticate_user(db: Session, email: str, password: str) -> Optional[User]:
     """
-    Authenticate user with email and password
+    Authenticate user with email and password.
+
+    On success this returns the user without mutating login-tracking columns;
+    callers must invoke :func:`mark_login_success` to record the login and
+    clear any failed-attempt state in a single commit.
 
     Args:
         db: Database session
@@ -131,27 +126,18 @@ def authenticate_user(db: Session, email: str, password: str) -> Optional[User]:
     if not user.is_active:
         return None
 
-    reset_login_failures(db, user)
     return user
 
 
-def update_last_login(db: Session, user_id: uuid.UUID) -> User:
-    """
-    Update user's last login timestamp
-
-    Args:
-        db: Database session
-        user_id: User ID
-
-    Returns:
-        Updated user
-    """
+def mark_login_success(db: Session, user_id: uuid.UUID) -> Optional[User]:
+    """Record a successful login and clear failed-attempt tracking in one commit."""
     user = get_user_by_id(db, user_id)
-    if user:
-        user.last_login = datetime.now(timezone.utc)
-        user.failed_login_count = 0
-        user.locked_until = None
-        db.commit()
-        db.refresh(user)
+    if user is None:
+        return None
 
+    user.last_login = datetime.now(timezone.utc)
+    user.failed_login_count = 0
+    user.locked_until = None
+    db.commit()
+    db.refresh(user)
     return user

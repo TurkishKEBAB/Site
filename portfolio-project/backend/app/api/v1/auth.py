@@ -93,8 +93,8 @@ async def login(
             headers={"WWW-Authenticate": "Bearer"},
         )
 
-    # Update last login
-    user_crud.update_last_login(db, user.id)
+    # Record successful login (last_login + clear lockout counters)
+    user_crud.mark_login_success(db, user.id)
 
     tokens, _ = _issue_token_pair(db, user_id=user.id, request=request)
     return tokens
@@ -116,8 +116,8 @@ async def login_json(
             detail="Incorrect email or password",
         )
 
-    # Update last login
-    user_crud.update_last_login(db, user.id)
+    # Record successful login (last_login + clear lockout counters)
+    user_crud.mark_login_success(db, user.id)
 
     tokens, _ = _issue_token_pair(db, user_id=user.id, request=request)
     return tokens
@@ -243,5 +243,5 @@ async def refresh_token(
         expires_at=expires_at,
         reason="rotated",
     )
-    user_crud.update_last_login(db, user.id)
+    user_crud.mark_login_success(db, user.id)
     return tokens
