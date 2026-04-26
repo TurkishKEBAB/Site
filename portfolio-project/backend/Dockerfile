@@ -18,7 +18,8 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy application code
 COPY app/ ./app/
-COPY init_db.py seed_data.py ./
+COPY alembic/ ./alembic/
+COPY alembic.ini init_db.py seed_data.py ./
 
 # Create logs directory
 RUN mkdir -p logs
@@ -37,5 +38,5 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
 # Run as non-root
 USER appuser
 
-# Run application
-CMD ["sh", "-c", "uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000}"]
+# Run migrations, then application
+CMD ["sh", "-c", "python -m alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000}"]

@@ -55,6 +55,10 @@ jobs:
           pip install pip-audit
           pip-audit -r backend/requirements.txt
 
+      - name: Validate Alembic migrations
+        working-directory: portfolio-project/backend
+        run: python -m alembic upgrade head
+
       - name: Run backend tests with coverage
         working-directory: portfolio-project
         run: python -m pytest -q
