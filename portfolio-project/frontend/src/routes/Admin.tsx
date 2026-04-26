@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { motion } from 'motion/react';
@@ -1170,7 +1170,7 @@ export default function Admin() {
             <div className="mb-6">
               <label
                 htmlFor="project-image-upload"
-                aria-label="Proje resmi yukle"
+                aria-label="Proje resmi yükle"
                 className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-lg cursor-pointer border-gray-300 bg-gray-50 hover:bg-gray-100 dark:border-gray-600 dark:bg-gray-800 dark:hover:bg-gray-700"
               >
                 <div className="flex flex-col items-center justify-center pt-5 pb-6">
