@@ -4,12 +4,14 @@ on:
   pull_request:
     branches:
       - main
-      - Codex_Implementation
       - develop
   push:
     branches:
-      - Codex_Implementation
+      - main
       - develop
+      - "feature/frontend-*"
+      - "fix/frontend-*"
+      - "refactor/frontend-*"
   workflow_dispatch:
 
 concurrency:
