@@ -62,4 +62,50 @@ describe("parseApiError", () => {
       requestId: "req-2",
     });
   });
+
+  it("uses legacy message and error fields when detail is unavailable", () => {
+    expect(
+      parseApiError(
+        axiosError({
+          data: { message: "Backend unavailable" },
+          status: 503,
+          statusText: "Service Unavailable",
+          headers: {},
+          config: responseConfig,
+        }),
+      ),
+    ).toMatchObject({
+      status: 503,
+      code: "HTTP_ERROR",
+      message: "Backend unavailable",
+    });
+
+    expect(
+      parseApiError(
+        axiosError({
+          data: { error: "Forbidden" },
+          status: 403,
+          statusText: "Forbidden",
+          headers: {},
+          config: responseConfig,
+        }),
+      ),
+    ).toMatchObject({
+      status: 403,
+      code: "HTTP_ERROR",
+      message: "Forbidden",
+    });
+  });
+
+  it("normalizes non-Axios failures", () => {
+    expect(parseApiError(new Error("boom"))).toMatchObject({
+      code: "UNKNOWN_ERROR",
+      message: "boom",
+    });
+
+    expect(parseApiError(null, "Fallback")).toMatchObject({
+      code: "UNKNOWN_ERROR",
+      message: "Fallback",
+    });
+  });
 });
