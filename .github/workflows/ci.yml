@@ -59,6 +59,14 @@ jobs:
         working-directory: portfolio-project/backend
         run: python -m alembic upgrade head
 
+      - name: Export OpenAPI schema
+        working-directory: portfolio-project
+        run: python backend/scripts/export_openapi.py --output backend/openapi.json
+
+      - name: Check OpenAPI schema drift
+        working-directory: portfolio-project
+        run: git diff --exit-code -- backend/openapi.json
+
       - name: Run backend tests with coverage
         working-directory: portfolio-project
         run: python -m pytest -q
@@ -106,6 +114,10 @@ jobs:
       - name: Enforce public server-component boundaries
         working-directory: portfolio-project/frontend
         run: npm run check:server-boundaries
+
+      - name: Check generated API types
+        working-directory: portfolio-project/frontend
+        run: npm run check:api-types
 
       - name: Generate frontend coverage report
         working-directory: portfolio-project/frontend
