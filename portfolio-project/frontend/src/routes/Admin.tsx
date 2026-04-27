@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { motion } from 'motion/react';
+import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { AxiosError } from 'axios';
 import api from '../services/api';
@@ -14,6 +15,14 @@ import { experienceService } from '../services/experienceService';
 import { contactService, ContactMessageResponse } from '../services/contactService';
 import { technologyService, Technology } from '../services/technologyService';
 import type { Skill, Experience } from '../services/types';
+import type { AdminCopy, AdminProject, AdminTabId, Stats } from '../components/admin/types';
+import {
+  DashboardTab,
+  ExperiencesTab,
+  MessagesTab,
+  ProjectsTab,
+  SkillsTab,
+} from '../components/admin/tabs';
 import {
   defaultExperienceFormValues,
   defaultProjectFormValues,
@@ -29,58 +38,7 @@ import {
   TranslationEditor,
   AdminLanguage,
 } from '../components/admin/AdminForms';
-
-interface Stats {
-  projects: number;
-  skills: number;
-  experiences: number;
-  messages: number;
-  unreadMessages: number;
-}
-
-interface AdminProject {
-  id: string;
-  title: string;
-  slug: string;
-  shortDescription: string;
-  description: string;
-  coverImage: string | null;
-  githubUrl: string | null;
-  demoUrl: string | null;
-  featured: boolean;
-  displayOrder: number;
-  updatedAt: string | null;
-  createdAt: string | null;
-  technologies?: Array<{ id: string; name: string; slug: string }>;
-}
-
-const FOCUSABLE_SELECTOR =
-  'a[href], button:not([disabled]), textarea:not([disabled]), input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])';
-
-const getFocusableElements = (container: HTMLElement): HTMLElement[] =>
-  Array.from(container.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR)).filter(
-    (element) =>
-      !element.hasAttribute('disabled') &&
-      element.getAttribute('aria-hidden') !== 'true' &&
-      window.getComputedStyle(element).display !== 'none' &&
-      window.getComputedStyle(element).visibility !== 'hidden',
-  );
-
-function formatDate(value: string | null, locale: string): string {
-  if (!value) {
-    return '—';
-  }
-
-  try {
-    return new Intl.DateTimeFormat(locale, {
-      dateStyle: 'medium',
-      timeStyle: 'short',
-    }).format(new Date(value));
-  } catch (error) {
-    console.error('Failed to format date:', error);
-    return '—';
-  }
-}
+import { useAdminModalFocusTrap } from '../lib/admin/useAdminModalFocusTrap';
 
 export default function Admin() {
   const { user, logout } = useAuth();
@@ -89,7 +47,7 @@ export default function Admin() {
   const { showToast } = useToast();
   const adminLanguage: AdminLanguage = language === 'tr' ? 'tr' : 'en';
   const dateLocale = adminLanguage === 'tr' ? 'tr-TR' : 'en-US';
-  const text = {
+  const text: AdminCopy = {
     loading: adminLanguage === 'tr' ? 'Yukleniyor...' : 'Loading...',
     adminPanel: adminLanguage === 'tr' ? 'Admin Panel' : 'Admin Panel',
     welcome: adminLanguage === 'tr' ? 'Hos geldin' : 'Welcome',
@@ -132,7 +90,7 @@ export default function Admin() {
 
   const [loading, setLoading] = useState(true);
   const [statsLoading, setStatsLoading] = useState(false);
-  const [activeTab, setActiveTab] = useState('dashboard');
+  const [activeTab, setActiveTab] = useState<AdminTabId>('dashboard');
 
   const [projects, setProjects] = useState<AdminProject[]>([]);
   const [projectsLoading, setProjectsLoading] = useState(false);
@@ -187,7 +145,6 @@ export default function Admin() {
   const [messages, setMessages] = useState<ContactMessageResponse[]>([]);
   const [messagesLoading, setMessagesLoading] = useState(false);
   const [messageActionId, setMessageActionId] = useState<string | null>(null);
-  const previouslyFocusedElementRef = useRef<HTMLElement | null>(null);
   const projectModalRef = useRef<HTMLDivElement>(null);
   const skillModalRef = useRef<HTMLDivElement>(null);
   const experienceModalRef = useRef<HTMLDivElement>(null);
@@ -434,87 +391,17 @@ export default function Admin() {
     translationModalOpen,
   ]);
 
-  useEffect(() => {
-    const anyModalOpen =
-      projectModalOpen ||
-      skillModalOpen ||
-      experienceModalOpen ||
-      imageManagerOpen ||
-      translationModalOpen;
+  const activeModalRef = (
+    [
+      [translationModalOpen, translationModalRef],
+      [imageManagerOpen, imageManagerModalRef],
+      [experienceModalOpen, experienceModalRef],
+      [skillModalOpen, skillModalRef],
+      [projectModalOpen, projectModalRef],
+    ] as const
+  ).find(([isOpen]) => isOpen)?.[1] ?? null;
 
-    if (!anyModalOpen) {
-      previouslyFocusedElementRef.current?.focus();
-      previouslyFocusedElementRef.current = null;
-      return;
-    }
-
-    if (!previouslyFocusedElementRef.current) {
-      const activeElement = document.activeElement;
-      if (activeElement instanceof HTMLElement) {
-        previouslyFocusedElementRef.current = activeElement;
-      }
-    }
-
-    const activeModal =
-      (translationModalOpen && translationModalRef.current) ||
-      (imageManagerOpen && imageManagerModalRef.current) ||
-      (experienceModalOpen && experienceModalRef.current) ||
-      (skillModalOpen && skillModalRef.current) ||
-      (projectModalOpen && projectModalRef.current);
-
-    if (!activeModal) {
-      return;
-    }
-
-    const focusInitialElement = () => {
-      const focusableElements = getFocusableElements(activeModal);
-      (focusableElements[0] || activeModal).focus();
-    };
-
-    const animationFrameId = requestAnimationFrame(focusInitialElement);
-
-    const trapFocus = (event: KeyboardEvent) => {
-      if (event.key !== 'Tab') {
-        return;
-      }
-
-      const focusableElements = getFocusableElements(activeModal);
-      if (focusableElements.length === 0) {
-        event.preventDefault();
-        activeModal.focus();
-        return;
-      }
-
-      const firstElement = focusableElements[0];
-      const lastElement = focusableElements[focusableElements.length - 1];
-      const currentActive = document.activeElement as HTMLElement | null;
-
-      if (event.shiftKey) {
-        if (!currentActive || currentActive === firstElement || !activeModal.contains(currentActive)) {
-          event.preventDefault();
-          lastElement.focus();
-        }
-        return;
-      }
-
-      if (!currentActive || currentActive === lastElement || !activeModal.contains(currentActive)) {
-        event.preventDefault();
-        firstElement.focus();
-      }
-    };
-
-    activeModal.addEventListener('keydown', trapFocus);
-    return () => {
-      cancelAnimationFrame(animationFrameId);
-      activeModal.removeEventListener('keydown', trapFocus);
-    };
-  }, [
-    experienceModalOpen,
-    imageManagerOpen,
-    projectModalOpen,
-    skillModalOpen,
-    translationModalOpen,
-  ]);
+  useAdminModalFocusTrap(activeModalRef);
 
   const normalizeOptional = (value: string) => {
     const trimmed = value.trim();
@@ -1025,6 +912,14 @@ export default function Admin() {
     },
   ];
 
+  const adminTabs: Array<{ id: AdminTabId; label: string; icon: string }> = [
+    { id: 'dashboard', label: text.dashboard, icon: '📊' },
+    { id: 'projects', label: text.projects, icon: '📁' },
+    { id: 'skills', label: text.skills, icon: '⚡' },
+    { id: 'experiences', label: text.experiences, icon: '💼' },
+    { id: 'messages', label: text.messages, icon: '✉️' },
+  ];
+
   return (
     <div className="min-h-screen bg-gray-100 pt-20 pb-12 dark:bg-gray-900">
       <div className="container-custom">
@@ -1075,13 +970,7 @@ export default function Admin() {
 
         <div className="mb-6 rounded-xl bg-white shadow-lg dark:bg-gray-800">
           <div className="flex border-b border-gray-200 dark:border-gray-700">
-            {[
-              { id: 'dashboard', label: text.dashboard, icon: '📊' },
-              { id: 'projects', label: text.projects, icon: '📁' },
-              { id: 'skills', label: text.skills, icon: '⚡' },
-              { id: 'experiences', label: text.experiences, icon: '💼' },
-              { id: 'messages', label: text.messages, icon: '✉️' },
-            ].map((tab) => (
+            {adminTabs.map((tab) => (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
@@ -1100,439 +989,58 @@ export default function Admin() {
 
         <div className="rounded-xl bg-white p-8 shadow-lg dark:bg-gray-800">
           {activeTab === 'dashboard' && (
-            <div className="space-y-6">
-              <div>
-                <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
-                  {text.welcomeUser}, {user?.username || 'Yigit'}! 👋
-                </h2>
-                <p className="mt-2 text-gray-600 dark:text-gray-400">
-                  Backend bağlantısı aktif; projeler sekmesinden içerik oluşturabilir, istatistikleri anlık
-                  takip edebilirsin. Beceriler ve mesajlar için gelişmiş yönetim ekranları sıradaki iterasyonda
-                  devreye girecek.
-                </p>
-              </div>
-
-              <div className="rounded-lg border border-blue-200 bg-blue-50 p-4 dark:border-blue-800 dark:bg-blue-900/20">
-                <h3 className="mb-2 font-semibold text-blue-900 dark:text-blue-100">🚀 Odaklanılacak Başlıklar</h3>
-                <ul className="ml-4 space-y-2 text-blue-800 dark:text-blue-200">
-                  <li>Proje listesi üzerinden CRUD akışlarını test et.</li>
-                  <li>Mesaj sekmesi için backend endpoint'lerini bağla.</li>
-                  <li>Yetki hataları için otomatik yönlendirmeyi doğrula.</li>
-                </ul>
-              </div>
-            </div>
+            <DashboardTab text={text} username={user?.username} />
           )}
 
           {activeTab === 'projects' && (
-            <div className="space-y-6">
-              <div className="flex flex-wrap items-center justify-between gap-4">
-                <div>
-                  <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
-                    {text.projectManagement}
-                  </h2>
-                  <p className="text-sm text-gray-500 dark:text-gray-400">
-                    Kayıtlı projeleri listele, yeni projeler ekle veya mevcutları güncelle.
-                  </p>
-                </div>
-                <button
-                  onClick={openCreateProjectModal}
-                  className="rounded-lg bg-primary-600 px-4 py-2 text-sm font-semibold text-white shadow transition hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
-                >
-                  {text.addProject}
-                </button>
-              </div>
-
-              <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                  <thead className="bg-gray-50 dark:bg-gray-900/30">
-                    <tr>
-                      <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
-                        Başlık
-                      </th>
-                      <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
-                        Slug
-                      </th>
-                      <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
-                        Öne Çıkan
-                      </th>
-                      <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
-                        Sıra
-                      </th>
-                      <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
-                        Güncellendi
-                      </th>
-                      <th className="px-4 py-3" />
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-gray-200 bg-white dark:divide-gray-700 dark:bg-gray-900/20">
-                    {projectsLoading && (
-                      <tr>
-                        <td colSpan={6} className="px-4 py-6 text-center text-sm text-gray-500 dark:text-gray-400">
-                          Projeler yükleniyor...
-                        </td>
-                      </tr>
-                    )}
-
-                    {!projectsLoading && projects.length === 0 && (
-                      <tr>
-                        <td colSpan={6} className="px-4 py-6 text-center text-sm text-gray-500 dark:text-gray-400">
-                          Bu alanda henüz proje bulunmuyor. Yeni bir proje oluşturabilirsiniz.
-                        </td>
-                      </tr>
-                    )}
-
-                    {!projectsLoading && projects.map((project) => (
-                      <tr key={project.id} className="hover:bg-gray-50 dark:hover:bg-gray-900/40">
-                        <td className="px-4 py-3 text-sm font-medium text-gray-900 dark:text-gray-100">
-                          {project.title || '—'}
-                        </td>
-                        <td className="px-4 py-3 text-sm text-gray-600 dark:text-gray-300">
-                          {project.slug || '—'}
-                        </td>
-                        <td className="px-4 py-3 text-sm">
-                          {project.featured ? (
-                            <span className="rounded-full bg-green-100 px-3 py-1 text-xs font-semibold text-green-700 dark:bg-green-900/40 dark:text-green-300">
-                              Evet
-                            </span>
-                          ) : (
-                            <span className="rounded-full bg-gray-200 px-3 py-1 text-xs font-semibold text-gray-600 dark:bg-gray-800 dark:text-gray-300">
-                              Hayır
-                            </span>
-                          )}
-                        </td>
-                        <td className="px-4 py-3 text-sm text-gray-600 dark:text-gray-300">
-                          {project.displayOrder}
-                        </td>
-                        <td className="px-4 py-3 text-sm text-gray-600 dark:text-gray-300">
-                          {formatDate(project.updatedAt, dateLocale)}
-                        </td>
-                        <td className="px-4 py-3 text-right text-sm">
-                          <div className="flex justify-end gap-2">
-                            <button
-                              onClick={() => openTranslationModal(project)}
-                              className="rounded-lg border border-blue-500 px-3 py-1.5 text-xs font-semibold text-blue-600 transition hover:bg-blue-50 dark:border-blue-400 dark:text-blue-300 dark:hover:bg-blue-900/40"
-                              title="Çevirileri yönet"
-                            >
-                              🌐 {text.translate}
-                            </button>
-                            <button
-                              onClick={() => openImageManager(project)}
-                              className="rounded-lg border border-purple-500 px-3 py-1.5 text-xs font-semibold text-purple-600 transition hover:bg-purple-50 dark:border-purple-400 dark:text-purple-300 dark:hover:bg-purple-900/40"
-                              title="Proje resimlerini yönet"
-                            >
-                              🖼️ {text.images}
-                            </button>
-                            <button
-                              onClick={() => openEditProjectModal(project)}
-                              className="rounded-lg border border-gray-300 px-3 py-1.5 text-xs font-semibold text-gray-700 transition hover:bg-gray-100 dark:border-gray-600 dark:text-gray-200 dark:hover:bg-gray-700"
-                            >
-                              {text.edit}
-                            </button>
-                            <button
-                              onClick={() => handleDeleteProject(project)}
-                              className="rounded-lg border border-red-500 px-3 py-1.5 text-xs font-semibold text-red-600 transition hover:bg-red-50 dark:border-red-400 dark:text-red-300 dark:hover:bg-red-900/40"
-                              disabled={projectActionId === project.id}
-                            >
-                              {projectActionId === project.id ? text.deleting : text.delete}
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
+            <ProjectsTab
+              text={text}
+              projects={projects}
+              projectsLoading={projectsLoading}
+              projectActionId={projectActionId}
+              dateLocale={dateLocale}
+              onCreateProject={openCreateProjectModal}
+              onEditProject={openEditProjectModal}
+              onDeleteProject={handleDeleteProject}
+              onOpenImageManager={openImageManager}
+              onOpenTranslationManager={openTranslationModal}
+            />
           )}
 
           {activeTab === 'skills' && (
-            <div className="space-y-6">
-              <div className="flex flex-wrap items-center justify-between gap-4">
-                <div>
-                  <h2 className="text-2xl font-bold text-gray-900 dark:text-white">{text.skillManagement}</h2>
-                  <p className="text-sm text-gray-500 dark:text-gray-400">
-                    Kayıtlı becerileri listele, düzenle veya sil.
-                  </p>
-                </div>
-                <button
-                  onClick={openCreateSkillModal}
-                  className="rounded-lg bg-primary-600 px-4 py-2 text-sm font-semibold text-white shadow transition hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
-                >
-                  {text.addSkill}
-                </button>
-              </div>
-
-              <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                  <thead className="bg-gray-50 dark:bg-gray-900/30">
-                    <tr>
-                      <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
-                        İsim
-                      </th>
-                      <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
-                        Kategori
-                      </th>
-                      <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
-                        Yeterlilik
-                      </th>
-                      <th className="px-4 py-3" />
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-gray-200 bg-white dark:divide-gray-700 dark:bg-gray-900/20">
-                    {skillsLoading && (
-                      <tr>
-                        <td colSpan={4} className="px-4 py-6 text-center text-sm text-gray-500 dark:text-gray-400">
-                          Beceriler yükleniyor...
-                        </td>
-                      </tr>
-                    )}
-
-                    {!skillsLoading && skills.length === 0 && (
-                      <tr>
-                        <td colSpan={4} className="px-4 py-6 text-center text-sm text-gray-500 dark:text-gray-400">
-                          Henüz beceri bulunmuyor.
-                        </td>
-                      </tr>
-                    )}
-
-                    {!skillsLoading && skills.map((skill) => (
-                      <tr key={skill.id} className="hover:bg-gray-50 dark:hover:bg-gray-900/40">
-                        <td className="px-4 py-3 text-sm font-medium text-gray-900 dark:text-gray-100">
-                          {skill.name || '—'}
-                        </td>
-                        <td className="px-4 py-3 text-sm text-gray-600 dark:text-gray-300">
-                          {skill.category || '—'}
-                        </td>
-                        <td className="px-4 py-3 text-sm text-gray-600 dark:text-gray-300">
-                          {skill.proficiency}%
-                        </td>
-                        <td className="px-4 py-3 text-right text-sm">
-                          <div className="flex justify-end gap-2">
-                            <button
-                              onClick={() => openEditSkillModal(skill)}
-                              className="rounded-lg border border-gray-300 px-3 py-1.5 text-xs font-semibold text-gray-700 transition hover:bg-gray-100 dark:border-gray-600 dark:text-gray-200 dark:hover:bg-gray-700"
-                            >
-                              {text.edit}
-                            </button>
-                            <button
-                              onClick={() => handleDeleteSkill(skill.id)}
-                              className="rounded-lg border border-red-500 px-3 py-1.5 text-xs font-semibold text-red-600 transition hover:bg-red-50 dark:border-red-400 dark:text-red-300 dark:hover:bg-red-900/40"
-                            >
-                              {text.delete}
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
+            <SkillsTab
+              text={text}
+              skills={skills}
+              skillsLoading={skillsLoading}
+              onCreateSkill={openCreateSkillModal}
+              onEditSkill={openEditSkillModal}
+              onDeleteSkill={handleDeleteSkill}
+            />
           )}
 
           {activeTab === 'experiences' && (
-            <div className="space-y-6">
-              <div className="flex flex-wrap items-center justify-between gap-4">
-                <div>
-                  <h2 className="text-2xl font-bold text-gray-900 dark:text-white">{text.experienceManagement}</h2>
-                  <p className="text-sm text-gray-500 dark:text-gray-400">
-                    Kayıtlı deneyimleri listele, düzenle veya sil.
-                  </p>
-                </div>
-                <button
-                  onClick={openCreateExperienceModal}
-                  className="rounded-lg bg-primary-600 px-4 py-2 text-sm font-semibold text-white shadow transition hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
-                >
-                  {text.addExperience}
-                </button>
-              </div>
-
-              <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                  <thead className="bg-gray-50 dark:bg-gray-900/30">
-                    <tr>
-                      <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
-                        Başlık
-                      </th>
-                      <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
-                        Kuruluş
-                      </th>
-                      <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
-                        Tür
-                      </th>
-                      <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
-                        Tarih
-                      </th>
-                      <th className="px-4 py-3" />
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-gray-200 bg-white dark:divide-gray-700 dark:bg-gray-900/20">
-                    {experiencesLoading && (
-                      <tr>
-                        <td colSpan={5} className="px-4 py-6 text-center text-sm text-gray-500 dark:text-gray-400">
-                          Deneyimler yükleniyor...
-                        </td>
-                      </tr>
-                    )}
-
-                    {!experiencesLoading && experiences.length === 0 && (
-                      <tr>
-                        <td colSpan={5} className="px-4 py-6 text-center text-sm text-gray-500 dark:text-gray-400">
-                          Henüz deneyim bulunmuyor.
-                        </td>
-                      </tr>
-                    )}
-
-                    {!experiencesLoading && experiences.map((experience) => (
-                      <tr key={experience.id} className="hover:bg-gray-50 dark:hover:bg-gray-900/40">
-                        <td className="px-4 py-3 text-sm font-medium text-gray-900 dark:text-gray-100">
-                          {experience.title || '—'}
-                        </td>
-                        <td className="px-4 py-3 text-sm text-gray-600 dark:text-gray-300">
-                          {experience.organization || '—'}
-                        </td>
-                        <td className="px-4 py-3 text-sm">
-                          <span className="rounded-full bg-blue-100 px-3 py-1 text-xs font-semibold text-blue-700 dark:bg-blue-900/40 dark:text-blue-300">
-                            {experience.experience_type}
-                          </span>
-                        </td>
-                        <td className="px-4 py-3 text-sm text-gray-600 dark:text-gray-300">
-                          {new Date(experience.start_date).toLocaleDateString(dateLocale)}
-                          {experience.is_current
-                            ? adminLanguage === 'tr'
-                              ? ' - Devam ediyor'
-                              : ' - Ongoing'
-                            : experience.end_date
-                              ? ` - ${new Date(experience.end_date).toLocaleDateString(dateLocale)}`
-                              : ''}
-                        </td>
-                        <td className="px-4 py-3 text-right text-sm">
-                          <div className="flex justify-end gap-2">
-                            <button
-                              onClick={() => openEditExperienceModal(experience)}
-                              className="rounded-lg border border-gray-300 px-3 py-1.5 text-xs font-semibold text-gray-700 transition hover:bg-gray-100 dark:border-gray-600 dark:text-gray-200 dark:hover:bg-gray-700"
-                            >
-                              {text.edit}
-                            </button>
-                            <button
-                              onClick={() => handleDeleteExperience(experience.id)}
-                              className="rounded-lg border border-red-500 px-3 py-1.5 text-xs font-semibold text-red-600 transition hover:bg-red-50 dark:border-red-400 dark:text-red-300 dark:hover:bg-red-900/40"
-                            >
-                              {text.delete}
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
+            <ExperiencesTab
+              text={text}
+              experiences={experiences}
+              experiencesLoading={experiencesLoading}
+              adminLanguage={adminLanguage}
+              dateLocale={dateLocale}
+              onCreateExperience={openCreateExperienceModal}
+              onEditExperience={openEditExperienceModal}
+              onDeleteExperience={handleDeleteExperience}
+            />
           )}
 
           {activeTab === 'messages' && (
-            <div className="space-y-6">
-              <div>
-                <h2 className="text-2xl font-bold text-gray-900 dark:text-white">{text.incomingMessages}</h2>
-                <p className="text-sm text-gray-500 dark:text-gray-400">
-                  İletişim formundan gelen mesajları yönetin.
-                </p>
-              </div>
-
-              <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                  <thead className="bg-gray-50 dark:bg-gray-900/30">
-                    <tr>
-                      <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
-                        İsim
-                      </th>
-                      <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
-                        E-posta
-                      </th>
-                      <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
-                        Konu
-                      </th>
-                      <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
-                        Durum
-                      </th>
-                      <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
-                        Tarih
-                      </th>
-                      <th className="px-4 py-3" />
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-gray-200 bg-white dark:divide-gray-700 dark:bg-gray-900/20">
-                    {messagesLoading && (
-                      <tr>
-                        <td colSpan={6} className="px-4 py-6 text-center text-sm text-gray-500 dark:text-gray-400">
-                          Mesajlar yükleniyor...
-                        </td>
-                      </tr>
-                    )}
-
-                    {!messagesLoading && messages.length === 0 && (
-                      <tr>
-                        <td colSpan={6} className="px-4 py-6 text-center text-sm text-gray-500 dark:text-gray-400">
-                          Henüz mesaj bulunmuyor.
-                        </td>
-                      </tr>
-                    )}
-
-                    {!messagesLoading && messages.map((message) => (
-                      <tr key={message.id} className="hover:bg-gray-50 dark:hover:bg-gray-900/40">
-                        <td className="px-4 py-3 text-sm font-medium text-gray-900 dark:text-gray-100">
-                          {message.name || '—'}
-                        </td>
-                        <td className="px-4 py-3 text-sm text-gray-600 dark:text-gray-300">
-                          {message.email || '—'}
-                        </td>
-                        <td className="px-4 py-3 text-sm text-gray-600 dark:text-gray-300">
-                          {message.subject || '—'}
-                        </td>
-                        <td className="px-4 py-3 text-sm">
-                          {!message.is_read ? (
-                            <span className="rounded-full bg-red-100 px-3 py-1 text-xs font-semibold text-red-700 dark:bg-red-900/40 dark:text-red-300">
-                              Okunmadı
-                            </span>
-                          ) : message.is_replied ? (
-                            <span className="rounded-full bg-green-100 px-3 py-1 text-xs font-semibold text-green-700 dark:bg-green-900/40 dark:text-green-300">
-                              Yanıtlandı
-                            </span>
-                          ) : (
-                            <span className="rounded-full bg-gray-200 px-3 py-1 text-xs font-semibold text-gray-600 dark:bg-gray-800 dark:text-gray-300">
-                              Okundu
-                            </span>
-                          )}
-                        </td>
-                        <td className="px-4 py-3 text-sm text-gray-600 dark:text-gray-300">
-                          {formatDate(message.created_at, dateLocale)}
-                        </td>
-                        <td className="px-4 py-3 text-right text-sm">
-                          <div className="flex justify-end gap-2">
-                            {!message.is_read && (
-                              <button
-                                onClick={() => handleMarkAsRead(message.id)}
-                                className="rounded-lg border border-blue-500 px-3 py-1.5 text-xs font-semibold text-blue-600 transition hover:bg-blue-50 dark:border-blue-400 dark:text-blue-300 dark:hover:bg-blue-900/40"
-                                disabled={messageActionId === message.id}
-                              >
-                                {messageActionId === message.id ? 'İşleniyor...' : 'Okundu'}
-                              </button>
-                            )}
-                            <button
-                              onClick={() => handleDeleteMessage(message.id)}
-                              className="rounded-lg border border-red-500 px-3 py-1.5 text-xs font-semibold text-red-600 transition hover:bg-red-50 dark:border-red-400 dark:text-red-300 dark:hover:bg-red-900/40"
-                              disabled={messageActionId === message.id}
-                            >
-                              {messageActionId === message.id ? text.deleting : text.delete}
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
+            <MessagesTab
+              text={text}
+              messages={messages}
+              messagesLoading={messagesLoading}
+              messageActionId={messageActionId}
+              dateLocale={dateLocale}
+              onMarkAsRead={handleMarkAsRead}
+              onDeleteMessage={handleDeleteMessage}
+            />
           )}
         </div>
       </div>
@@ -1662,7 +1170,11 @@ export default function Admin() {
 
             {/* Upload Area */}
             <div className="mb-6">
-              <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-lg cursor-pointer border-gray-300 bg-gray-50 hover:bg-gray-100 dark:border-gray-600 dark:bg-gray-800 dark:hover:bg-gray-700">
+              <label
+                htmlFor="project-image-upload"
+                aria-label="Proje resmi yükle"
+                className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-lg cursor-pointer border-gray-300 bg-gray-50 hover:bg-gray-100 dark:border-gray-600 dark:bg-gray-800 dark:hover:bg-gray-700"
+              >
                 <div className="flex flex-col items-center justify-center pt-5 pb-6">
                   <svg className="w-10 h-10 mb-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
@@ -1673,6 +1185,7 @@ export default function Admin() {
                   <p className="text-xs text-gray-500 dark:text-gray-400">PNG, JPG, GIF, WEBP (MAX. 5MB)</p>
                 </div>
                 <input
+                  id="project-image-upload"
                   type="file"
                   className="hidden"
                   accept="image/*"
@@ -1729,10 +1242,12 @@ export default function Admin() {
                     className="group relative rounded-lg border border-gray-200 bg-white p-3 shadow-sm hover:shadow-md transition dark:border-gray-700 dark:bg-gray-800"
                   >
                     {/* Image Preview */}
-                    <div className="aspect-video w-full overflow-hidden rounded-lg bg-gray-100 dark:bg-gray-700">
-                      <img
+                    <div className="relative aspect-video w-full overflow-hidden rounded-lg bg-gray-100 dark:bg-gray-700">
+                      <Image
                         src={image.image_url}
                         alt={image.caption || `Proje resmi ${index + 1}`}
+                        fill
+                        sizes="(min-width: 1024px) 18rem, (min-width: 768px) 50vw, 100vw"
                         className="h-full w-full object-cover"
                       />
                     </div>

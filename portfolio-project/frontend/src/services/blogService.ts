@@ -1,25 +1,50 @@
 import api, { apiEndpoints } from './api';
 import { BlogPost, BlogPostCreate, PaginatedResponse } from './types';
 
-const normalizeBlogPost = (post: any): BlogPost => ({
+type BlogPostApiRecord = Omit<
+  BlogPost,
+  'published' | 'is_published' | 'is_featured' | 'views' | 'view_count' | 'reading_time' | 'read_time'
+> & {
+  published?: boolean;
+  is_published?: boolean;
+  is_featured?: boolean;
+  views?: number | string;
+  view_count?: number | string;
+  reading_time?: number | string;
+  read_time?: number | string;
+};
+
+const normalizeNumber = (value: number | string | undefined, fallback = 0): number => {
+  if (typeof value === 'number') {
+    return value;
+  }
+
+  if (typeof value === 'string') {
+    const parsed = Number(value);
+    return Number.isFinite(parsed) ? parsed : fallback;
+  }
+
+  return fallback;
+};
+
+const normalizeBlogPost = (post: BlogPostApiRecord): BlogPost => ({
   ...post,
   published: typeof post.published === 'boolean' ? post.published : Boolean(post.is_published),
   is_published:
     typeof post.is_published === 'boolean' ? post.is_published : Boolean(post.published),
-  views: typeof post.views === 'number' ? post.views : Number(post.view_count || 0),
-  view_count:
-    typeof post.view_count === 'number' ? post.view_count : Number(post.views || 0),
+  views: normalizeNumber(post.views, normalizeNumber(post.view_count)),
+  view_count: normalizeNumber(post.view_count, normalizeNumber(post.views)),
   reading_time:
-    typeof post.reading_time === 'number'
-      ? post.reading_time
-      : post.read_time
-        ? Number(post.read_time)
+    post.reading_time !== undefined
+      ? normalizeNumber(post.reading_time, 0)
+      : post.read_time !== undefined
+        ? normalizeNumber(post.read_time, 0)
         : undefined,
   read_time:
-    typeof post.read_time === 'number'
-      ? post.read_time
-      : post.reading_time
-        ? Number(post.reading_time)
+    post.read_time !== undefined
+      ? normalizeNumber(post.read_time, 0)
+      : post.reading_time !== undefined
+        ? normalizeNumber(post.reading_time, 0)
         : undefined,
   is_featured: Boolean(post.is_featured),
 });

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { FiArrowRight, FiDownload, FiGithub, FiLinkedin, FiMail, FiChevronDown } from "react-icons/fi";
 
 import AnimatedSection from "@/components/AnimatedSection";
@@ -146,9 +147,13 @@ export default function Home({ locale }: HomePageProps) {
                   style={{ background: "linear-gradient(135deg, #00d4ff, #0099cc, #00d4ff)" }}
                   aria-hidden="true"
                 />
-                <img
+                <Image
                   src={siteConfig.profileImage}
                   alt={siteConfig.name}
+                  width={256}
+                  height={256}
+                  priority
+                  sizes="(min-width: 1024px) 16rem, (min-width: 768px) 14rem, (min-width: 640px) 12rem, 10rem"
                   className="relative w-40 h-40 sm:w-48 sm:h-48 md:w-56 md:h-56 lg:w-64 lg:h-64 rounded-full object-cover border-2 border-primary-400/30 dark:border-primary-400/20"
                 />
                 <div className="absolute -bottom-2 -right-2 w-6 h-6 border-r-2 border-b-2 border-primary-400/40 rounded-br" aria-hidden="true" />
