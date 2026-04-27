@@ -80,46 +80,48 @@ describe("api service auth responses", () => {
     const listener = vi.fn();
     window.addEventListener("api:error", listener);
 
-    await expect(
-      api.get("/contact/", {
-        adapter: async (config) => {
-          const response: AxiosResponse = {
-            data: {
-              success: false,
-              error: {
-                code: "VALIDATION_ERROR",
-                message: "Validation Error",
-                fields: { email: "Invalid email" },
-                request_id: "req-frontend",
+    try {
+      await expect(
+        api.get("/contact/", {
+          adapter: async (config) => {
+            const response: AxiosResponse = {
+              data: {
+                success: false,
+                error: {
+                  code: "VALIDATION_ERROR",
+                  message: "Validation Error",
+                  fields: { email: "Invalid email" },
+                  request_id: "req-frontend",
+                },
+                detail: "Validation Error",
               },
-              detail: "Validation Error",
-            },
-            status: 422,
-            statusText: "422",
-            headers: {},
-            config,
-          };
+              status: 422,
+              statusText: "422",
+              headers: {},
+              config,
+            };
 
-          throw new AxiosError(
-            "Request failed with status code 422",
-            undefined,
-            config,
-            undefined,
-            response,
-          );
-        },
-      }),
-    ).rejects.toMatchObject({ response: { status: 422 } });
+            throw new AxiosError(
+              "Request failed with status code 422",
+              undefined,
+              config,
+              undefined,
+              response,
+            );
+          },
+        }),
+      ).rejects.toMatchObject({ response: { status: 422 } });
 
-    expect(listener).toHaveBeenCalledTimes(1);
-    expect(listener.mock.calls[0][0].detail).toMatchObject({
-      status: 422,
-      code: "VALIDATION_ERROR",
-      message: "Validation Error",
-      fields: { email: "Invalid email" },
-      requestId: "req-frontend",
-    });
-
-    window.removeEventListener("api:error", listener);
+      expect(listener).toHaveBeenCalledTimes(1);
+      expect(listener.mock.calls[0][0].detail).toMatchObject({
+        status: 422,
+        code: "VALIDATION_ERROR",
+        message: "Validation Error",
+        fields: { email: "Invalid email" },
+        requestId: "req-frontend",
+      });
+    } finally {
+      window.removeEventListener("api:error", listener);
+    }
   });
 });

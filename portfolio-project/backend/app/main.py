@@ -36,7 +36,6 @@ from app.api.v1 import api_router
 
 # Setup logging
 setup_logging()
-init_observability()
 
 
 @asynccontextmanager
@@ -54,6 +53,8 @@ async def lifespan(app: FastAPI):
         for issue in production_errors:
             logger.error("Production configuration error: {}", issue)
         raise RuntimeError("Invalid production configuration")
+
+    init_observability()
     
     # Check database connection
     if check_db_connection():

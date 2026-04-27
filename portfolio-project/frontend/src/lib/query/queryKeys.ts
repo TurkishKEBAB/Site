@@ -1,8 +1,15 @@
-type QueryParams = Record<string, boolean | number | string | undefined>;
+type QueryParamValue = boolean | number | string;
+type QueryParams = Record<string, QueryParamValue | undefined>;
+
+const isDefinedParam = (
+  entry: [string, QueryParamValue | undefined],
+): entry is [string, QueryParamValue] => entry[1] !== undefined;
 
 const compactParams = (params?: QueryParams) =>
   Object.fromEntries(
-    Object.entries(params ?? {}).filter(([, value]) => value !== undefined),
+    Object.entries(params ?? {})
+      .filter(isDefinedParam)
+      .sort(([left], [right]) => left.localeCompare(right)),
   );
 
 export const queryKeys = {
