@@ -391,13 +391,15 @@ export default function Admin() {
     translationModalOpen,
   ]);
 
-  const activeModalRef =
-    translationModalOpen ? translationModalRef
-      : imageManagerOpen ? imageManagerModalRef
-        : experienceModalOpen ? experienceModalRef
-          : skillModalOpen ? skillModalRef
-            : projectModalOpen ? projectModalRef
-              : null;
+  const activeModalRef = (
+    [
+      [translationModalOpen, translationModalRef],
+      [imageManagerOpen, imageManagerModalRef],
+      [experienceModalOpen, experienceModalRef],
+      [skillModalOpen, skillModalRef],
+      [projectModalOpen, projectModalRef],
+    ] as const
+  ).find(([isOpen]) => isOpen)?.[1] ?? null;
 
   useAdminModalFocusTrap(activeModalRef);
 
