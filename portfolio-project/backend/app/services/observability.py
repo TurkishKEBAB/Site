@@ -44,10 +44,11 @@ def init_observability() -> None:
         logger.info("Sentry backend reporting disabled: SENTRY_DSN is not set.")
         return
 
+    release = resolve_release(settings.SENTRY_RELEASE)
     sentry_sdk.init(
         dsn=settings.SENTRY_DSN,
         environment=settings.SENTRY_ENVIRONMENT or settings.ENVIRONMENT,
-        release=resolve_release(settings.SENTRY_RELEASE),
+        release=release,
         traces_sample_rate=settings.SENTRY_TRACES_SAMPLE_RATE,
         profiles_sample_rate=settings.SENTRY_PROFILES_SAMPLE_RATE,
         integrations=[
@@ -58,7 +59,7 @@ def init_observability() -> None:
         send_default_pii=False,
     )
     _initialized = True
-    logger.info("Sentry backend reporting enabled for release {}", resolve_release())
+    logger.info("Sentry backend reporting enabled for release {}", release)
 
 
 def capture_exception(exc: BaseException) -> None:

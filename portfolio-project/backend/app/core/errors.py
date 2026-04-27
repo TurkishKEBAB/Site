@@ -93,6 +93,20 @@ def build_error_payload(
     }
 
 
+def _inject_rate_limit_headers(
+    request: Request, response: JSONResponse
+) -> JSONResponse:
+    view_rate_limit = getattr(request.state, "view_rate_limit", None)
+    app = request.scope.get("app")
+    limiter = getattr(getattr(app, "state", None), "limiter", None)
+    inject_headers = getattr(limiter, "_inject_headers", None)
+
+    if view_rate_limit is None or not callable(inject_headers):
+        return response
+
+    return inject_headers(response, view_rate_limit)
+
+
 async def api_error_handler(request: Request, exc: ApiError) -> JSONResponse:
     logger.warning("{} on {}: {}", exc.code, request.url.path, exc.message)
     return JSONResponse(
@@ -147,8 +161,9 @@ async def validation_exception_handler(
 async def rate_limit_exception_handler(
     request: Request, exc: RateLimitExceeded
 ) -> JSONResponse:
-    return JSONResponse(
+    response = JSONResponse(
         status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+        headers=exc.headers,
         content=build_error_payload(
             code="RATE_LIMITED",
             message="Rate limit exceeded",
@@ -156,6 +171,7 @@ async def rate_limit_exception_handler(
             legacy_detail=str(exc.detail or "Rate limit exceeded"),
         ),
     )
+    return _inject_rate_limit_headers(request, response)
 
 
 async def general_exception_handler(request: Request, exc: Exception) -> JSONResponse:
