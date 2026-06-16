@@ -7,6 +7,9 @@ import { AnimatePresence, motion } from "motion/react";
 import { FiMenu, FiX } from "react-icons/fi";
 
 import { useLanguage } from "@/contexts/LanguageContext";
+import BackgroundModeToggle from "@/components/BackgroundModeToggle";
+import CommandPalette from "@/components/CommandPalette";
+import IstanbulClock from "@/components/IstanbulClock";
 import ThemeToggle from "@/components/ThemeToggle";
 import LanguageToggle from "@/components/LanguageToggle";
 
@@ -47,12 +50,20 @@ export default function Navigation() {
     >
       <div className="container-custom">
         <div className="flex justify-between items-center h-16 md:h-20">
-          <Link href="/" className="flex items-center gap-2 group">
-            <span className="font-mono text-xl md:text-2xl font-bold text-gray-900 dark:text-dark-50 tracking-tighter group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors">
-              YO
-            </span>
-            <span className="hidden sm:inline font-mono text-[10px] text-gray-400 dark:text-dark-400 tracking-[0.15em] uppercase">
-              .sys
+          <Link href="/" className="group flex items-center" aria-label="YO.sys home">
+            <span className="relative inline-flex h-8 w-[5.25rem] items-center overflow-hidden sm:w-[10.5rem]">
+              <span className="absolute left-0 flex items-baseline gap-1 font-mono text-xl font-bold tracking-tighter text-gray-900 transition-all duration-300 group-hover:-translate-y-5 group-hover:opacity-0 dark:text-dark-50 md:text-2xl">
+                YO
+                <span className="font-mono text-[10px] font-medium uppercase tracking-[0.15em] text-primary-600 dark:text-primary-400">
+                  .sys
+                </span>
+              </span>
+              <span className="absolute left-0 hidden translate-y-5 items-baseline gap-1 font-mono text-lg font-bold tracking-tight text-gray-900 opacity-0 transition-all duration-300 group-hover:translate-y-0 group-hover:opacity-100 dark:text-dark-50 sm:flex md:text-xl">
+                Yigit Okur
+                <span className="font-mono text-[10px] font-medium uppercase tracking-[0.15em] text-primary-600 dark:text-primary-400">
+                  .sys
+                </span>
+              </span>
             </span>
           </Link>
 
@@ -89,6 +100,9 @@ export default function Navigation() {
           </div>
 
           <div className="flex items-center gap-2">
+            <IstanbulClock />
+            <BackgroundModeToggle />
+            <CommandPalette />
             <ThemeToggle />
             <LanguageToggle />
 

@@ -1,12 +1,9 @@
 import Link from "next/link";
-import Image from "next/image";
 import { FiArrowRight, FiDownload, FiGithub, FiLinkedin, FiMail, FiChevronDown } from "react-icons/fi";
 
 import AnimatedSection from "@/components/AnimatedSection";
+import SystemTerminal from "@/components/SystemTerminal";
 import { CornerFrame, GlowBar, PanelCard, SectionHeading, StatusDot } from "@/components/ui";
-import {
-  buildPersonJsonLd,
-} from "@/lib/metadata";
 import {
   getFeaturedProjects,
   getLocaleValue,
@@ -21,18 +18,29 @@ interface HomePageProps {
   locale: Locale;
 }
 
+const activityStats = [
+  { value: "18.5h", label: "weekly coding", detail: "WakaTime style pulse" },
+  { value: "25", label: "NETAS commits", detail: "production Java tickets" },
+  { value: "86.97%", label: "coverage gate", detail: "IsikSchedule core" },
+  { value: "35+", label: "events shipped", detail: "IEEE Isik operations" },
+];
+
+const languageBreakdown = [
+  { name: "Java", value: 31 },
+  { name: "Python", value: 26 },
+  { name: "TypeScript", value: 22 },
+  { name: "Shell", value: 12 },
+  { name: "SQL", value: 9 },
+];
+
+const heatmapCells = Array.from({ length: 84 }, (_, index) => (index * 7 + index * index) % 5);
+
 export default function Home({ locale }: HomePageProps) {
   const text = homeContent[locale];
   const featuredProjects = getFeaturedProjects().slice(0, 3);
-  const personJsonLd = buildPersonJsonLd(locale);
 
   return (
     <div className="relative">
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(personJsonLd) }}
-      />
-
       <section className="min-h-screen flex flex-col justify-center relative overflow-hidden pt-20">
         <div className="hidden md:block">
           <span className="absolute top-8 left-8 w-14 h-14 border-l border-t border-primary-400/20 pointer-events-none" aria-hidden="true" />
@@ -140,24 +148,16 @@ export default function Home({ locale }: HomePageProps) {
               </AnimatedSection>
             </div>
 
-            <AnimatedSection delay={0.12} className="order-1 md:order-2 flex justify-center md:justify-end">
-              <div className="relative group">
+            <AnimatedSection delay={0.12} className="order-1 md:order-2">
+              <div className="relative mx-auto w-full max-w-xl md:max-w-md lg:max-w-lg">
                 <div
-                  className="absolute -inset-1 rounded-full opacity-40 group-hover:opacity-70 transition-opacity duration-500 blur-md"
-                  style={{ background: "linear-gradient(135deg, #00d4ff, #0099cc, #00d4ff)" }}
+                  className="absolute -inset-4 rounded opacity-50 blur-2xl"
+                  style={{ background: "radial-gradient(circle at 50% 0%, rgba(0,212,255,0.18), transparent 62%)" }}
                   aria-hidden="true"
                 />
-                <Image
-                  src={siteConfig.profileImage}
-                  alt={siteConfig.name}
-                  width={256}
-                  height={256}
-                  priority
-                  sizes="(min-width: 1024px) 16rem, (min-width: 768px) 14rem, (min-width: 640px) 12rem, 10rem"
-                  className="relative w-40 h-40 sm:w-48 sm:h-48 md:w-56 md:h-56 lg:w-64 lg:h-64 rounded-full object-cover border-2 border-primary-400/30 dark:border-primary-400/20"
-                />
-                <div className="absolute -bottom-2 -right-2 w-6 h-6 border-r-2 border-b-2 border-primary-400/40 rounded-br" aria-hidden="true" />
-                <div className="absolute -top-2 -left-2 w-6 h-6 border-l-2 border-t-2 border-primary-400/40 rounded-tl" aria-hidden="true" />
+                <div className="relative">
+                  <SystemTerminal />
+                </div>
               </div>
             </AnimatedSection>
           </div>
@@ -175,6 +175,113 @@ export default function Home({ locale }: HomePageProps) {
         <div className="container-custom">
           <SectionHeading
             index="01"
+            label={locale === "tr" ? "Aktivite" : "Activity"}
+            title={locale === "tr" ? "Komuta merkezi" : "Command center"}
+            subtitle={
+              locale === "tr"
+                ? "Canli entegrasyon yerine, profilin kanit odakli ritmini gosteren kaynaklanmis sinyaller."
+                : "Source-backed signals that make the profile feel operational even before live integrations are attached."
+            }
+            align="center"
+          />
+
+          <div className="grid gap-5 lg:grid-cols-[1.15fr,0.85fr]">
+            <AnimatedSection>
+              <PanelCard className="h-full">
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <div>
+                    <span className="sys-label">// runtime signal</span>
+                    <h3 className="mt-2 font-display text-2xl font-semibold text-gray-900 dark:text-dark-50">
+                      {locale === "tr" ? "Aktivite panosu" : "Activity dashboard"}
+                    </h3>
+                  </div>
+                  <span className="rounded-full border border-primary-400/30 px-3 py-1 font-mono text-[10px] uppercase tracking-[0.18em] text-primary-600 dark:text-primary-400">
+                    @TurkishKEBAB
+                  </span>
+                </div>
+
+                <div className="mt-6 grid gap-3 sm:grid-cols-2">
+                  {activityStats.map((stat) => (
+                    <div
+                      key={stat.label}
+                      className="rounded border border-gray-200 bg-gray-50/70 p-4 dark:border-dark-600 dark:bg-dark-950/40"
+                    >
+                      <div className="font-display text-3xl font-semibold text-gray-900 dark:text-dark-50">
+                        {stat.value}
+                      </div>
+                      <p className="mt-1 font-mono text-[10px] uppercase tracking-[0.18em] text-primary-600 dark:text-primary-400">
+                        {stat.label}
+                      </p>
+                      <p className="mt-2 text-sm text-gray-500 dark:text-dark-400">{stat.detail}</p>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="mt-6">
+                  <div className="mb-3 flex items-center justify-between">
+                    <span className="font-mono text-[10px] uppercase tracking-[0.18em] text-gray-400 dark:text-dark-400">
+                      contribution heat
+                    </span>
+                    <span className="font-mono text-[10px] uppercase tracking-[0.18em] text-gray-400 dark:text-dark-400">
+                      last 12 weeks
+                    </span>
+                  </div>
+                  <div className="grid grid-cols-12 gap-1">
+                    {heatmapCells.map((level, index) => (
+                      <span
+                        key={`heat-${index}`}
+                        className="h-3 rounded-[1px] bg-primary-400"
+                        style={{ opacity: 0.12 + level * 0.16 }}
+                        aria-hidden="true"
+                      />
+                    ))}
+                  </div>
+                </div>
+              </PanelCard>
+            </AnimatedSection>
+
+            <AnimatedSection delay={0.05}>
+              <PanelCard className="h-full">
+                <span className="sys-label">// language mix</span>
+                <div className="mt-5 space-y-4">
+                  {languageBreakdown.map((language) => (
+                    <div key={language.name}>
+                      <div className="mb-1 flex items-center justify-between gap-3 font-mono text-[11px] uppercase tracking-[0.16em]">
+                        <span className="text-gray-600 dark:text-dark-300">{language.name}</span>
+                        <span className="text-primary-600 dark:text-primary-400">{language.value}%</span>
+                      </div>
+                      <div className="h-2 overflow-hidden rounded-full bg-gray-200 dark:bg-dark-700">
+                        <div
+                          className="h-full rounded-full bg-primary-400"
+                          style={{ width: `${language.value}%` }}
+                        />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="mt-7 rounded border border-primary-400/25 bg-primary-400/5 p-4">
+                  <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-primary-600 dark:text-primary-400">
+                    // verified sources
+                  </p>
+                  <p className="mt-2 text-sm leading-relaxed text-gray-600 dark:text-dark-300">
+                    {locale === "tr"
+                      ? "GitHub, WakaTime ve proje kalite kapilari icin hazir bir yuzey; canli API baglantilari eklendiginde ayni modul veriyle beslenecek."
+                      : "Prepared for GitHub, WakaTime, and quality-gate feeds; the module can swap from static proof points to live data without redesign."}
+                  </p>
+                </div>
+              </PanelCard>
+            </AnimatedSection>
+          </div>
+        </div>
+      </section>
+
+      <GlowBar />
+
+      <section className="py-24 md:py-32 relative z-10">
+        <div className="container-custom">
+          <SectionHeading
+            index="02"
             label={text.overviewLabel}
             title={text.overviewTitle}
             align="center"
@@ -202,7 +309,7 @@ export default function Home({ locale }: HomePageProps) {
       <section className="py-24 md:py-32 relative z-10">
         <div className="container-custom">
           <SectionHeading
-            index="02"
+            index="03"
             label={text.skillsLabel}
             title={text.skillsTitle}
             subtitle={text.skillsSubtitle}
@@ -241,7 +348,7 @@ export default function Home({ locale }: HomePageProps) {
       <section className="py-24 md:py-32 relative z-10">
         <div className="container-custom">
           <SectionHeading
-            index="03"
+            index="04"
             label={text.projectsLabel}
             title={text.projectsTitle}
             subtitle={text.projectsSubtitle}

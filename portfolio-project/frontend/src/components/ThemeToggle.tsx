@@ -5,23 +5,23 @@ import { FiMoon, FiSun } from "react-icons/fi";
 
 import { useLanguage } from "@/contexts/LanguageContext";
 
-const getInitialTheme = () => {
-  if (typeof window === "undefined") return false;
-  const savedTheme = localStorage.getItem("theme");
-  if (savedTheme) return savedTheme === "dark";
-  return window.matchMedia("(prefers-color-scheme: dark)").matches;
-};
-
 export default function ThemeToggle() {
-  const [isDark, setIsDark] = useState(getInitialTheme);
+  const [isReady, setIsReady] = useState(false);
+  const [isDark, setIsDark] = useState(false);
   const { t } = useLanguage();
 
   useEffect(() => {
-    if (typeof window === "undefined") return;
+    setIsDark(document.documentElement.classList.contains("dark"));
+    setIsReady(true);
+  }, []);
+
+  useEffect(() => {
+    if (!isReady) return;
+
     const theme = isDark ? "dark" : "light";
     localStorage.setItem("theme", theme);
     document.documentElement.classList.toggle("dark", isDark);
-  }, [isDark]);
+  }, [isDark, isReady]);
 
   return (
     <button
