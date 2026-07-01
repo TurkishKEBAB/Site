@@ -100,3 +100,60 @@ def test_cache_status_and_clear_cache(client, admin_headers, monkeypatch):
     assert cache_status.json()["cache_exists"] is True
     assert clear.status_code == 204
     assert cache_status_after.json()["cache_exists"] is False
+
+
+def test_get_github_stats(client, monkeypatch):
+    class DummyGitHubService:
+        async def fetch_stats(self, force_refresh=False):
+            return {
+                "public_repos": 32,
+                "total_stars": 47,
+                "total_pull_requests": 86,
+                "total_commits": 2400,
+                "commits_range": "all_time",
+            }
+
+    monkeypatch.setattr("app.api.v1.github.GitHubService", DummyGitHubService)
+
+    response = client.get("/api/v1/github/stats")
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["public_repos"] == 32
+    assert payload["total_commits"] == 2400
+
+
+def test_get_github_stats_unavailable(client, monkeypatch):
+    class DummyGitHubService:
+        async def fetch_stats(self, force_refresh=False):
+            return None
+
+    monkeypatch.setattr("app.api.v1.github.GitHubService", DummyGitHubService)
+
+    assert client.get("/api/v1/github/stats").status_code == 503
+
+
+def test_get_github_contributions(client, monkeypatch):
+    class DummyGitHubService:
+        async def fetch_contributions(self, force_refresh=False):
+            return {"total_contributions": 1234, "cells": [0, 1, 2, 3, 4]}
+
+    monkeypatch.setattr("app.api.v1.github.GitHubService", DummyGitHubService)
+
+    response = client.get("/api/v1/github/contributions")
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["total_contributions"] == 1234
+    assert payload["cells"] == [0, 1, 2, 3, 4]
+
+
+def test_build_commit_query_aliases_years():
+    from app.services.github_service import _build_commit_query
+
+    query = _build_commit_query(2023, 2025)
+
+    assert "y2023:" in query
+    assert "y2024:" in query
+    assert "y2025:" in query
+    assert '"2025-12-31T23:59:59Z"' in query

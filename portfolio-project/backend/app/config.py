@@ -39,6 +39,10 @@ class Settings(BaseSettings):
     GITHUB_API_TOKEN: Optional[str] = None
     GITHUB_CACHE_HOURS: int = 24
 
+    # WakaTime
+    WAKATIME_API_KEY: Optional[str] = None
+    WAKATIME_CACHE_HOURS: int = 24
+
     # Email (SMTP)
     SMTP_HOST: str = "smtp.gmail.com"
     SMTP_PORT: int = 587
