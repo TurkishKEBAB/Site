@@ -2,9 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { AnimatePresence, motion } from "motion/react";
-import { FiExternalLink, FiGithub, FiX } from "react-icons/fi";
-
-import { PanelCard } from "@/components/ui";
+import { FiArrowRight, FiExternalLink, FiGithub, FiX } from "react-icons/fi";
 
 export interface LocalizedProjectView {
   slug: string;
@@ -26,20 +24,20 @@ interface ProjectExplorerProps {
 const copy = {
   en: {
     featured: "Featured",
+    project: "Project",
     impact: "Impact",
     technology: "Technology stack",
     source: "Source",
-    demo: "Demo",
-    details: "Details",
+    demo: "Live demo",
     close: "Close project details",
   },
   tr: {
     featured: "One cikan",
+    project: "Proje",
     impact: "Etki",
     technology: "Teknoloji seti",
-    source: "Kaynak kod",
-    demo: "Demo",
-    details: "Detaylar",
+    source: "Kaynak",
+    demo: "Canli demo",
     close: "Proje detaylarini kapat",
   },
 } as const;
@@ -56,88 +54,53 @@ export default function ProjectExplorer({ locale, projects }: ProjectExplorerPro
 
   useEffect(() => {
     if (!selectedProject) return undefined;
-
     closeButtonRef.current?.focus();
+    document.body.style.overflow = "hidden";
 
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") {
-        setSelectedSlug(null);
-      }
+      if (event.key === "Escape") setSelectedSlug(null);
     };
 
     document.addEventListener("keydown", handleKeyDown);
-    return () => document.removeEventListener("keydown", handleKeyDown);
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown);
+      document.body.style.overflow = "";
+    };
   }, [selectedProject]);
 
   return (
     <>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-        {projects.map((project) => (
-          <PanelCard
+      <div className="border-t border-gray-200 dark:border-dark-600">
+        {projects.map((project, index) => (
+          <button
             key={project.slug}
-            as="article"
-            className="flex flex-col gap-4"
+            type="button"
             onClick={() => setSelectedSlug(project.slug)}
+            className="nx-row group relative grid w-full grid-cols-[40px,1fr] items-center gap-5 border-b border-gray-200 px-2 py-6 text-left transition-all hover:bg-primary-400/[0.04] hover:pl-4 dark:border-dark-600 md:grid-cols-[64px,1fr,auto] md:gap-6"
           >
-            <div className="flex items-start justify-between gap-3">
-              <div>
-                <h3 className="font-display text-xl font-semibold text-gray-900 dark:text-dark-50">
-                  {project.title}
-                </h3>
-                <p className="mt-2 text-sm text-gray-600 dark:text-dark-300">
-                  {project.summary}
-                </p>
-              </div>
-              {project.featured && (
-                <span className="rounded-full bg-amber-400 px-3 py-1 font-mono text-[10px] uppercase tracking-wider text-dark-950">
-                  {text.featured}
-                </span>
-              )}
+            <span className="font-mono text-[13px] text-gray-400 transition-colors group-hover:text-primary-500 dark:text-dark-400 dark:group-hover:text-primary-400">
+              {String(index).padStart(2, "0")}
+            </span>
+            <div>
+              <h3 className="flex flex-wrap items-center gap-3 font-display text-[clamp(1.15rem,2.3vw,1.5rem)] font-semibold text-gray-900 dark:text-dark-50">
+                {project.title}
+                {project.featured && (
+                  <span className="rounded-full bg-amber-400 px-2.5 py-1 font-mono text-[9px] uppercase tracking-[0.12em] text-dark-950">
+                    {text.featured}
+                  </span>
+                )}
+              </h3>
+              <p className="mt-1.5 max-w-[46rem] text-[13.5px] text-gray-500 dark:text-dark-300">{project.summary}</p>
             </div>
-
-            <div className="rounded border border-primary-400/20 bg-primary-400/5 p-4">
-              <p className="sys-label mb-2">// {text.impact}</p>
-              <p className="text-sm text-gray-700 dark:text-dark-200">{project.impact}</p>
+            <div className="hidden items-center gap-5 md:flex">
+              <span className="max-w-[210px] text-right font-mono text-[11px] text-gray-400 dark:text-dark-400">
+                {project.technologies.slice(0, 4).join(" · ")}
+              </span>
+              <span className="flex h-9 w-9 flex-none items-center justify-center rounded-full border border-gray-200 text-gray-400 transition-all group-hover:-rotate-45 group-hover:border-primary-400/40 group-hover:text-primary-500 dark:border-dark-600 dark:text-dark-400 dark:group-hover:text-primary-400">
+                <FiArrowRight size={15} />
+              </span>
             </div>
-
-            <div className="flex flex-wrap gap-2">
-              {project.technologies.map((tech) => (
-                <span
-                  key={`${project.slug}-${tech}`}
-                  className="rounded-full border border-gray-200 dark:border-dark-600 px-3 py-1 font-mono text-[10px] uppercase tracking-wide text-gray-500 dark:text-dark-300"
-                >
-                  {tech}
-                </span>
-              ))}
-            </div>
-
-            <div className="flex flex-wrap gap-2 pt-1">
-              {project.githubUrl && (
-                <a
-                  href={project.githubUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  onClick={(event) => event.stopPropagation()}
-                  className="btn-secondary text-xs"
-                >
-                  <FiGithub size={12} />
-                  {text.source}
-                </a>
-              )}
-              {project.demoUrl && (
-                <a
-                  href={project.demoUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  onClick={(event) => event.stopPropagation()}
-                  className="btn-primary text-xs"
-                >
-                  <FiExternalLink size={12} />
-                  {text.demo}
-                </a>
-              )}
-            </div>
-          </PanelCard>
+          </button>
         ))}
       </div>
 
@@ -147,20 +110,24 @@ export default function ProjectExplorer({ locale, projects }: ProjectExplorerPro
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[70] bg-black/60 backdrop-blur-sm p-4 flex items-center justify-center"
+            className="fixed inset-0 z-[80] flex items-center justify-center bg-dark-950/60 p-4 backdrop-blur-sm md:p-6"
             onClick={() => setSelectedSlug(null)}
           >
             <motion.div
-              initial={{ opacity: 0, scale: 0.96 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.96 }}
-              className="w-full max-w-3xl max-h-[88vh] overflow-y-auto rounded border border-gray-200 dark:border-dark-600 bg-white dark:bg-dark-900 p-6 md:p-8"
+              initial={{ opacity: 0, y: 14, scale: 0.98 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 14, scale: 0.98 }}
+              role="dialog"
+              aria-modal="true"
+              className="max-h-[86vh] w-full max-w-[660px] overflow-y-auto rounded-lg border border-gray-200 bg-white p-8 dark:border-dark-600 dark:bg-dark-900 md:p-9"
               onClick={(event) => event.stopPropagation()}
             >
               <div className="mb-5 flex items-start justify-between gap-4">
                 <div>
-                  <p className="sys-label mb-2">// {text.details}</p>
-                  <h3 className="font-display text-2xl md:text-3xl font-semibold text-gray-900 dark:text-dark-50">
+                  <span className="font-mono text-[11px] uppercase tracking-[0.24em] text-gray-400 dark:text-dark-400">
+                    {selectedProject.featured ? text.featured : text.project}
+                  </span>
+                  <h3 className="mt-2 font-display text-2xl font-bold tracking-tight text-gray-900 dark:text-dark-50 md:text-[26px]">
                     {selectedProject.title}
                   </h3>
                 </div>
@@ -168,62 +135,54 @@ export default function ProjectExplorer({ locale, projects }: ProjectExplorerPro
                   ref={closeButtonRef}
                   type="button"
                   onClick={() => setSelectedSlug(null)}
-                  className="rounded border border-gray-200 dark:border-dark-600 p-2 text-gray-500 dark:text-dark-300 hover:text-gray-900 dark:hover:text-dark-50"
                   aria-label={text.close}
+                  className="flex h-9 w-9 flex-none items-center justify-center rounded border border-gray-200 text-gray-500 transition-colors hover:border-primary-400/40 hover:text-primary-600 dark:border-dark-600 dark:text-dark-300 dark:hover:text-primary-400"
                 >
                   <FiX size={16} />
                 </button>
               </div>
 
-              <p className="text-base leading-relaxed text-gray-700 dark:text-dark-200">
-                {selectedProject.description}
-              </p>
+              <p className="text-[15px] leading-[1.7] text-gray-700 dark:text-dark-200">{selectedProject.description}</p>
 
-              <div className="mt-6 rounded border border-primary-400/20 bg-primary-400/5 p-5">
-                <p className="sys-label mb-2">// {text.impact}</p>
-                <p className="text-sm leading-relaxed text-gray-700 dark:text-dark-200">
+              <div className="my-5 rounded border border-primary-400/30 bg-primary-400/[0.05] p-5">
+                <div className="font-mono text-[11px] uppercase tracking-[0.18em] text-gray-400 dark:text-dark-400">
+                  {text.impact}
+                </div>
+                <p className="mt-2 text-[13.5px] leading-relaxed text-gray-700 dark:text-dark-200">
                   {selectedProject.impact}
                 </p>
               </div>
 
-              <div className="mt-6">
-                <p className="sys-label mb-3">// {text.technology}</p>
-                <div className="flex flex-wrap gap-2">
-                  {selectedProject.technologies.map((tech) => (
-                    <span
-                      key={`${selectedProject.slug}-modal-${tech}`}
-                      className="rounded-full border border-gray-200 dark:border-dark-600 px-3 py-1 font-mono text-[10px] uppercase tracking-wide text-gray-500 dark:text-dark-300"
-                    >
-                      {tech}
-                    </span>
-                  ))}
-                </div>
+              <h4 className="mb-2.5 font-display text-base font-semibold text-gray-900 dark:text-dark-50">
+                {text.technology}
+              </h4>
+              <div className="flex flex-wrap gap-1.5">
+                {selectedProject.technologies.map((tech) => (
+                  <span
+                    key={`${selectedProject.slug}-modal-${tech}`}
+                    className="rounded-full border border-gray-200 px-2.5 py-1 font-mono text-[10px] uppercase tracking-wide text-gray-500 dark:border-dark-600 dark:text-dark-300"
+                  >
+                    {tech}
+                  </span>
+                ))}
               </div>
 
-              <div className="mt-8 flex flex-wrap gap-3">
-                {selectedProject.githubUrl && (
-                  <a
-                    href={selectedProject.githubUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="btn-secondary"
-                  >
-                    <FiGithub size={14} />
-                    {text.source}
-                  </a>
-                )}
-                {selectedProject.demoUrl && (
-                  <a
-                    href={selectedProject.demoUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="btn-primary"
-                  >
-                    <FiExternalLink size={14} />
-                    {text.demo}
-                  </a>
-                )}
-              </div>
+              {(selectedProject.githubUrl || selectedProject.demoUrl) && (
+                <div className="mt-6 flex flex-wrap gap-3">
+                  {selectedProject.demoUrl && (
+                    <a href={selectedProject.demoUrl} target="_blank" rel="noopener noreferrer" className="btn-primary text-xs">
+                      <FiExternalLink size={13} />
+                      {text.demo}
+                    </a>
+                  )}
+                  {selectedProject.githubUrl && (
+                    <a href={selectedProject.githubUrl} target="_blank" rel="noopener noreferrer" className="btn-secondary text-xs">
+                      <FiGithub size={13} />
+                      {text.source}
+                    </a>
+                  )}
+                </div>
+              )}
             </motion.div>
           </motion.div>
         )}

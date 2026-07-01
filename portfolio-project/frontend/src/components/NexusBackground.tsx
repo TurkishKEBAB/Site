@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef } from "react";
+import { useEffect, useRef } from "react";
 
 export type NexusBackgroundMode = "nodes" | "grid" | "flow";
 
@@ -9,14 +9,46 @@ interface NodePoint {
   y: number;
   vx: number;
   vy: number;
-  radius: number;
-  label?: string;
+  r: number;
+  label: string | null;
+  lit: number;
+}
+
+interface GridPoint {
+  bx: number;
+  by: number;
+}
+
+interface FlowPoint {
+  x: number;
+  y: number;
 }
 
 const MODE_STORAGE_KEY = "nexus:bg-mode";
-const NODE_COUNT = 54;
-const CONNECTION_DISTANCE = 150;
-const TECH_LABELS = ["Java", "FastAPI", "Docker", "Redis", "Next.js", "CI/CD", "ELK"];
+
+// Faithful to the design's labeled node-network (nexus-profile.js).
+const LABELS = [
+  "Java",
+  "Spring",
+  "FastAPI",
+  "Python",
+  "Docker",
+  "K8s",
+  "PostgreSQL",
+  "Redis",
+  "Kafka",
+  "SonarQube",
+  "Next.js",
+  "TypeScript",
+  "ElasticSearch",
+  "CI/CD",
+  "RabbitMQ",
+  "AWS",
+];
+
+const NODE_COUNT = 34;
+const GRID_GAP = 40;
+const FLOW_COUNT = 90;
 
 const isNexusMode = (value: string | null): value is NexusBackgroundMode =>
   value === "nodes" || value === "grid" || value === "flow";
@@ -27,43 +59,30 @@ const randomFloat = () => {
     globalThis.crypto.getRandomValues(buffer);
     return buffer[0] / 4294967296;
   }
-
   return Math.random();
 };
 
 export default function NexusBackground() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const nodesRef = useRef<NodePoint[]>([]);
+  const gridRef = useRef<GridPoint[]>([]);
+  const flowRef = useRef<FlowPoint[]>([]);
   const modeRef = useRef<NexusBackgroundMode>("nodes");
   const mouseRef = useRef({ x: -9999, y: -9999 });
-  const rafRef = useRef<number>(0);
-  const frameRef = useRef(0);
+  const rafRef = useRef(0);
+  const timeRef = useRef(0);
   const isDarkRef = useRef(false);
-  const reducedMotionRef = useRef(false);
-
-  const createNodes = useCallback((width: number, height: number): NodePoint[] => {
-    return Array.from({ length: NODE_COUNT }, (_, index) => ({
-      x: randomFloat() * width,
-      y: randomFloat() * height,
-      vx: (randomFloat() - 0.5) * 0.32,
-      vy: (randomFloat() - 0.5) * 0.32,
-      radius: randomFloat() * 1.8 + 0.9,
-      label: index < TECH_LABELS.length ? TECH_LABELS[index] : undefined,
-    }));
-  }, []);
+  const reducedRef = useRef(false);
 
   useEffect(() => {
-    const savedMode = window.localStorage.getItem(MODE_STORAGE_KEY);
-    if (isNexusMode(savedMode)) {
-      modeRef.current = savedMode;
-    }
+    const saved = window.localStorage.getItem(MODE_STORAGE_KEY);
+    if (isNexusMode(saved)) modeRef.current = saved;
 
     const onModeChange = (event: Event) => {
-      const nextMode = (event as CustomEvent<NexusBackgroundMode>).detail;
-      if (!isNexusMode(nextMode)) return;
-
-      modeRef.current = nextMode;
-      window.localStorage.setItem(MODE_STORAGE_KEY, nextMode);
+      const next = (event as CustomEvent<NexusBackgroundMode>).detail;
+      if (!isNexusMode(next)) return;
+      modeRef.current = next;
+      window.localStorage.setItem(MODE_STORAGE_KEY, next);
     };
 
     window.addEventListener("nexus:bg-mode", onModeChange);
@@ -73,15 +92,16 @@ export default function NexusBackground() {
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
+    const ctx = canvas.getContext("2d", { alpha: true });
+    if (!ctx) return;
 
-    const context = canvas.getContext("2d", { alpha: true });
-    if (!context) return;
+    let width = 0;
+    let height = 0;
 
     const motionQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
-    reducedMotionRef.current = motionQuery.matches;
-
+    reducedRef.current = motionQuery.matches;
     const onMotionChange = (event: MediaQueryListEvent) => {
-      reducedMotionRef.current = event.matches;
+      reducedRef.current = event.matches;
     };
     motionQuery.addEventListener("change", onMotionChange);
 
@@ -89,156 +109,197 @@ export default function NexusBackground() {
       isDarkRef.current = document.documentElement.classList.contains("dark");
     };
     updateTheme();
-
     const themeObserver = new MutationObserver(updateTheme);
-    themeObserver.observe(document.documentElement, {
-      attributes: true,
-      attributeFilter: ["class"],
-    });
+    themeObserver.observe(document.documentElement, { attributes: true, attributeFilter: ["class"] });
+
+    const buildNodes = () => {
+      const nodes: NodePoint[] = [];
+      for (let i = 0; i < NODE_COUNT; i += 1) {
+        nodes.push({
+          x: randomFloat() * width,
+          y: randomFloat() * height,
+          vx: (randomFloat() - 0.5) * 0.32,
+          vy: (randomFloat() - 0.5) * 0.32,
+          r: randomFloat() * 1.6 + 0.9,
+          label: i < LABELS.length ? LABELS[i] : null,
+          lit: 0,
+        });
+      }
+      nodesRef.current = nodes;
+    };
+
+    const buildGrid = () => {
+      const grid: GridPoint[] = [];
+      for (let x = GRID_GAP; x < width; x += GRID_GAP) {
+        for (let y = GRID_GAP; y < height; y += GRID_GAP) {
+          grid.push({ bx: x, by: y });
+        }
+      }
+      gridRef.current = grid;
+    };
+
+    const buildFlow = () => {
+      const flow: FlowPoint[] = [];
+      for (let i = 0; i < FLOW_COUNT; i += 1) {
+        flow.push({ x: randomFloat() * width, y: randomFloat() * height });
+      }
+      flowRef.current = flow;
+    };
 
     const resize = () => {
       const dpr = Math.min(window.devicePixelRatio || 1, 2);
       const rect = canvas.getBoundingClientRect();
-      canvas.width = rect.width * dpr;
-      canvas.height = rect.height * dpr;
-      context.setTransform(dpr, 0, 0, dpr, 0, 0);
-      nodesRef.current = createNodes(rect.width, rect.height);
+      width = rect.width;
+      height = rect.height;
+      canvas.width = width * dpr;
+      canvas.height = height * dpr;
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      buildNodes();
+      buildGrid();
+      buildFlow();
     };
 
     const onMouseMove = (event: MouseEvent) => {
-      mouseRef.current = { x: event.clientX, y: event.clientY };
+      const rect = canvas.getBoundingClientRect();
+      mouseRef.current = { x: event.clientX - rect.left, y: event.clientY - rect.top };
     };
-
     const onMouseLeave = () => {
       mouseRef.current = { x: -9999, y: -9999 };
     };
 
-    const drawGrid = (width: number, height: number, accent: string) => {
-      const gap = 56;
-      const offset = reducedMotionRef.current ? 0 : (frameRef.current * 0.16) % gap;
-
-      context.lineWidth = 0.6;
-      context.strokeStyle = `rgba(${accent}, 0.08)`;
-
-      for (let x = -gap + offset; x < width + gap; x += gap) {
-        context.beginPath();
-        context.moveTo(x, 0);
-        context.lineTo(x, height);
-        context.stroke();
-      }
-
-      for (let y = -gap + offset; y < height + gap; y += gap) {
-        context.beginPath();
-        context.moveTo(0, y);
-        context.lineTo(width, y);
-        context.stroke();
-      }
-
-      context.strokeStyle = `rgba(${accent}, 0.18)`;
-      context.strokeRect(width * 0.08, height * 0.18, width * 0.24, height * 0.16);
-      context.strokeRect(width * 0.68, height * 0.54, width * 0.2, height * 0.18);
-    };
-
-    const drawFlow = (width: number, height: number, accent: string) => {
-      const lanes = 8;
-      const flow = reducedMotionRef.current ? 0 : frameRef.current * 0.9;
-
-      for (let index = 0; index < lanes; index += 1) {
-        const y = (height / lanes) * index + 42;
-        const alpha = 0.05 + index * 0.012;
-
-        context.beginPath();
-        context.moveTo(-80, y);
-        for (let x = -80; x <= width + 80; x += 80) {
-          const wave = Math.sin((x + flow + index * 60) * 0.008) * 28;
-          context.lineTo(x, y + wave);
-        }
-        context.strokeStyle = `rgba(${accent}, ${alpha})`;
-        context.lineWidth = 1;
-        context.stroke();
-      }
-
-      for (let index = 0; index < 18; index += 1) {
-        const x = ((index * 173 + flow * 1.7) % (width + 160)) - 80;
-        const y = ((index * 97) % height) + Math.sin(frameRef.current * 0.02 + index) * 16;
-        context.fillStyle = `rgba(${accent}, 0.18)`;
-        context.fillRect(x, y, 24, 1);
-      }
-    };
-
-    const drawNodes = (width: number, height: number, accent: string) => {
+    const renderNodes = (col: string) => {
       const nodes = nodesRef.current;
       const mouse = mouseRef.current;
+      const LINK = 150;
+      const MR = 180;
+      const CR = 230;
 
-      for (const node of nodes) {
-        if (!reducedMotionRef.current) {
-          const dx = node.x - mouse.x;
-          const dy = node.y - mouse.y;
-          const distance = Math.sqrt(dx * dx + dy * dy);
-
-          if (distance < 170 && distance > 0) {
-            const force = (1 - distance / 170) * 0.22;
-            node.vx += (dx / distance) * force;
-            node.vy += (dy / distance) * force;
+      for (const p of nodes) {
+        if (!reducedRef.current) {
+          const dx = p.x - mouse.x;
+          const dy = p.y - mouse.y;
+          const d = Math.sqrt(dx * dx + dy * dy);
+          if (d < MR && d > 0) {
+            const f = 1 - d / MR;
+            p.vx += (-dy / d) * f * 0.45 + (dx / d) * f * 0.12;
+            p.vy += (dx / d) * f * 0.45 + (dy / d) * f * 0.12;
           }
-
-          node.vx *= 0.985;
-          node.vy *= 0.985;
-          node.x += node.vx;
-          node.y += node.vy;
-
-          if (node.x < 0 || node.x > width) node.vx *= -1;
-          if (node.y < 0 || node.y > height) node.vy *= -1;
-          node.x = Math.max(0, Math.min(width, node.x));
-          node.y = Math.max(0, Math.min(height, node.y));
-        }
-
-        context.beginPath();
-        context.arc(node.x, node.y, node.radius, 0, Math.PI * 2);
-        context.fillStyle = `rgba(${accent}, 0.38)`;
-        context.fill();
-
-        if (node.label) {
-          context.font = "10px JetBrains Mono, ui-monospace, monospace";
-          context.fillStyle = `rgba(${accent}, 0.46)`;
-          context.fillText(node.label, node.x + 8, node.y - 8);
+          p.vx *= 0.97;
+          p.vy *= 0.97;
+          const sp = Math.sqrt(p.vx * p.vx + p.vy * p.vy);
+          if (sp > 0.8) {
+            p.vx = (p.vx / sp) * 0.8;
+            p.vy = (p.vy / sp) * 0.8;
+          }
+          p.x += p.vx;
+          p.y += p.vy;
+          if (p.x < 0 || p.x > width) p.vx *= -1;
+          if (p.y < 0 || p.y > height) p.vy *= -1;
+          p.x = Math.max(0, Math.min(width, p.x));
+          p.y = Math.max(0, Math.min(height, p.y));
+          const dm = Math.sqrt((p.x - mouse.x) ** 2 + (p.y - mouse.y) ** 2);
+          p.lit += ((dm < CR ? 1 - dm / CR : 0) - p.lit) * 0.12;
         }
       }
 
-      for (let i = 0; i < nodes.length; i += 1) {
-        for (let j = i + 1; j < nodes.length; j += 1) {
-          const dx = nodes[i].x - nodes[j].x;
-          const dy = nodes[i].y - nodes[j].y;
-          const distance = Math.sqrt(dx * dx + dy * dy);
-
-          if (distance < CONNECTION_DISTANCE) {
-            context.beginPath();
-            context.moveTo(nodes[i].x, nodes[i].y);
-            context.lineTo(nodes[j].x, nodes[j].y);
-            context.strokeStyle = `rgba(${accent}, ${(1 - distance / CONNECTION_DISTANCE) * 0.14})`;
-            context.lineWidth = 0.6;
-            context.stroke();
+      for (let a = 0; a < nodes.length; a += 1) {
+        for (let b = a + 1; b < nodes.length; b += 1) {
+          const ex = nodes[a].x - nodes[b].x;
+          const ey = nodes[a].y - nodes[b].y;
+          const ed = Math.sqrt(ex * ex + ey * ey);
+          if (ed < LINK) {
+            ctx.beginPath();
+            ctx.moveTo(nodes[a].x, nodes[a].y);
+            ctx.lineTo(nodes[b].x, nodes[b].y);
+            ctx.strokeStyle = `rgba(${col},${(1 - ed / LINK) * 0.12})`;
+            ctx.lineWidth = 0.6;
+            ctx.stroke();
           }
         }
+      }
+
+      ctx.font = "10px 'JetBrains Mono', ui-monospace, monospace";
+      for (const n of nodes) {
+        const md = Math.sqrt((n.x - mouse.x) ** 2 + (n.y - mouse.y) ** 2);
+        if (md < CR) {
+          ctx.beginPath();
+          ctx.moveTo(mouse.x, mouse.y);
+          ctx.lineTo(n.x, n.y);
+          ctx.strokeStyle = `rgba(${col},${(1 - md / CR) * 0.5})`;
+          ctx.lineWidth = 0.7;
+          ctx.stroke();
+        }
+        ctx.beginPath();
+        ctx.arc(n.x, n.y, n.r + n.lit * 1.6, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(${col},${0.28 + n.lit * 0.6})`;
+        ctx.fill();
+        if (n.label) {
+          ctx.fillStyle = `rgba(${col},${0.08 + n.lit * 0.8})`;
+          ctx.fillText(n.label, n.x + 8, n.y + 3);
+        }
+      }
+    };
+
+    const renderGrid = (col: string) => {
+      const grid = gridRef.current;
+      const mouse = mouseRef.current;
+      const R = 150;
+      const MAXO = 26;
+      for (const g of grid) {
+        const dx = g.bx - mouse.x;
+        const dy = g.by - mouse.y;
+        const d = Math.sqrt(dx * dx + dy * dy) || 1;
+        const force = reducedRef.current ? 0 : Math.max(0, 1 - d / R);
+        const off = force * MAXO;
+        const x = g.bx + (dx / d) * off;
+        const y = g.by + (dy / d) * off;
+        const r = 1 + force * 1.8;
+        const alpha = 0.12 + force * 0.6;
+        ctx.beginPath();
+        ctx.arc(x, y, r, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(${col},${alpha})`;
+        ctx.fill();
+      }
+    };
+
+    const renderFlow = (col: string) => {
+      const flow = flowRef.current;
+      const mouse = mouseRef.current;
+      timeRef.current += 0.004;
+      const t = timeRef.current;
+      for (const p of flow) {
+        const ang = Math.sin(p.x * 0.008 + t) + Math.cos(p.y * 0.008 - t) + Math.sin((p.x + p.y) * 0.004);
+        let vx = Math.cos(ang) * 0.7;
+        let vy = Math.sin(ang) * 0.7;
+        if (!reducedRef.current) {
+          const dx = p.x - mouse.x;
+          const dy = p.y - mouse.y;
+          const d = Math.sqrt(dx * dx + dy * dy);
+          if (d < 170 && d > 0) {
+            const f = (1 - d / 170) * 1.3;
+            vx += (dx / d) * f;
+            vy += (dy / d) * f;
+          }
+          p.x += vx;
+          p.y += vy;
+        }
+        if (p.x < 0) p.x = width;
+        if (p.x > width) p.x = 0;
+        if (p.y < 0) p.y = height;
+        if (p.y > height) p.y = 0;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, 1.3, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(${col},0.5)`;
+        ctx.fill();
       }
     };
 
     const render = () => {
-      const width = canvas.getBoundingClientRect().width;
-      const height = canvas.getBoundingClientRect().height;
-      const accent = isDarkRef.current ? "0, 212, 255" : "0, 150, 200";
-
-      frameRef.current += 1;
-      context.clearRect(0, 0, width, height);
-
-      if (modeRef.current === "grid") {
-        drawGrid(width, height, accent);
-      } else if (modeRef.current === "flow") {
-        drawFlow(width, height, accent);
-      } else {
-        drawNodes(width, height, accent);
-      }
-
+      ctx.clearRect(0, 0, width, height);
+      const col = isDarkRef.current ? "0,212,255" : "0,140,180";
+      if (modeRef.current === "grid") renderGrid(col);
+      else if (modeRef.current === "flow") renderFlow(col);
+      else renderNodes(col);
       rafRef.current = requestAnimationFrame(render);
     };
 
@@ -256,15 +317,23 @@ export default function NexusBackground() {
       motionQuery.removeEventListener("change", onMotionChange);
       themeObserver.disconnect();
     };
-  }, [createNodes]);
+  }, []);
 
   return (
-    <div aria-hidden="true" className="fixed inset-0 -z-10 pointer-events-none overflow-hidden">
-      <div className="absolute inset-0 bg-[#f4f4f8] dark:bg-dark-950" />
-      <div className="absolute inset-0 bg-glow-radial-light dark:bg-glow-radial" />
-      <div className="absolute inset-0 bg-dot-grid-light dark:bg-dot-grid-dark bg-grid-32 opacity-60" />
-      <canvas ref={canvasRef} className="absolute inset-0 h-full w-full" />
-      <div className="absolute inset-x-0 bottom-0 h-48 bg-gradient-to-t from-[#f4f4f8] to-transparent dark:from-dark-950" />
-    </div>
+    <>
+      <div aria-hidden="true" className="fixed inset-0 -z-10 overflow-hidden">
+        <div className="absolute inset-0 bg-[#f4f4f8] dark:bg-dark-950" />
+        <div className="absolute inset-0 bg-glow-radial-light dark:bg-glow-radial" />
+        <div className="absolute inset-0 bg-dot-grid-light bg-grid-32 opacity-60 dark:bg-dot-grid-dark" />
+        <canvas ref={canvasRef} className="absolute inset-0 h-full w-full" />
+        <div className="absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-[#f4f4f8] to-transparent dark:from-dark-950" />
+      </div>
+      <div aria-hidden="true" className="pointer-events-none fixed inset-0 z-0">
+        <span className="absolute left-5 top-5 h-8 w-8 border-l border-t border-primary-400/45" />
+        <span className="absolute right-5 top-5 h-8 w-8 border-r border-t border-primary-400/45" />
+        <span className="absolute bottom-5 left-5 h-8 w-8 border-b border-l border-primary-400/45" />
+        <span className="absolute bottom-5 right-5 h-8 w-8 border-b border-r border-primary-400/45" />
+      </div>
+    </>
   );
 }

@@ -50,7 +50,7 @@ describe("public route SSR", () => {
     expect(html).toContain("Profile.java");
     expect(html).toContain("PowerShell");
     expect(html).toContain("Command center");
-    expect(html).toContain(homeContent[locale].overviewCards[0].title);
+    expect(html).toContain("Featured systems");
     expect(html).toContain(homeContent[locale].secondaryCta);
     expect(html).not.toContain("Loading");
   });
@@ -72,7 +72,7 @@ describe("public route SSR", () => {
     const html = renderToStaticMarkup(<Projects locale={locale} />);
 
     expect(html).toContain("IsikSchedule architecture");
-    expect(html).toContain("Detailed project slice");
+    expect(html).toContain("All systems");
     expect(html).toContain(projectRecords[0].title[locale]);
     expect(html).not.toContain("No featured project");
   });

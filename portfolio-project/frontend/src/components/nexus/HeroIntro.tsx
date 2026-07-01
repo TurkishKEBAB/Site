@@ -1,0 +1,110 @@
+"use client";
+
+import { useEffect, useRef, useState } from "react";
+
+const ROLES = ["ENTERPRISE BACKEND", "CLOUD & DEVOPS", "QUALITY AUTOMATION"];
+
+/**
+ * Cinematic intro overlay (design's hero intro). On the first home visit of a
+ * session it covers the page and reveals each role title in turn, then lifts.
+ * Skipped under prefers-reduced-motion or once seen (sessionStorage). Click to skip.
+ */
+export default function HeroIntro() {
+  const [active, setActive] = useState(false);
+  const [index, setIndex] = useState(0);
+  const [wordShown, setWordShown] = useState(false);
+  const [out, setOut] = useState(false);
+  const finishRef = useRef<() => void>(() => {});
+
+  useEffect(() => {
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return undefined;
+    if (sessionStorage.getItem("nx-intro-done")) return undefined;
+
+    setActive(true);
+    document.body.style.overflow = "hidden";
+
+    let cursor = 0;
+    let cancelled = false;
+    const timers: Array<ReturnType<typeof setTimeout>> = [];
+    const wait = (ms: number, fn: () => void) => timers.push(setTimeout(fn, ms));
+
+    const finish = () => {
+      if (cancelled) return;
+      cancelled = true;
+      sessionStorage.setItem("nx-intro-done", "1");
+      setOut(true);
+      wait(520, () => {
+        setActive(false);
+        document.body.style.overflow = "";
+      });
+    };
+    finishRef.current = finish;
+
+    const step = () => {
+      if (cancelled) return;
+      if (cursor >= ROLES.length) {
+        finish();
+        return;
+      }
+      setIndex(cursor);
+      setWordShown(false);
+      wait(40, () => setWordShown(true));
+      wait(1200, () => {
+        setWordShown(false);
+        cursor += 1;
+        wait(320, step);
+      });
+    };
+    step();
+
+    return () => {
+      cancelled = true;
+      timers.forEach(clearTimeout);
+      document.body.style.overflow = "";
+    };
+  }, []);
+
+  if (!active) return null;
+
+  return (
+    <button
+      type="button"
+      aria-label="Skip intro"
+      onClick={() => finishRef.current()}
+      className={`fixed inset-0 z-[90] grid w-full cursor-pointer place-items-center bg-[#f4f4f8] transition-opacity duration-500 dark:bg-dark-950 ${
+        out ? "pointer-events-none opacity-0" : "opacity-100"
+      }`}
+    >
+      <span className="absolute inset-0 bg-glow-radial-light dark:bg-glow-radial" aria-hidden="true" />
+      <span className="relative block w-full max-w-[1000px] px-6 text-center">
+        <span className="mb-9 block font-mono text-[11px] uppercase tracking-[0.3em] text-gray-400 dark:text-dark-400">
+          SYSTEM.PROFILE · <b className="font-medium text-primary-500 dark:text-primary-400">v2026</b>
+        </span>
+        <span
+          className={`block font-display text-[clamp(2.2rem,8vw,5.6rem)] font-bold leading-none tracking-[-0.035em] text-gray-900 transition-all duration-[350ms] dark:text-dark-50 ${
+            wordShown ? "translate-y-0 opacity-100" : "translate-y-[18px] opacity-0"
+          }`}
+        >
+          {ROLES[index]}
+          <span
+            className={`mx-auto mt-[18px] block h-[3px] bg-primary-400 transition-[width] duration-[900ms] ${
+              wordShown ? "w-16" : "w-0"
+            }`}
+          />
+        </span>
+        <span className="mt-10 block font-mono text-xs tracking-[0.2em] text-gray-400 dark:text-dark-400">
+          <b className="text-primary-500 dark:text-primary-400">0{index + 1}</b> / 0{ROLES.length}
+        </span>
+        <span className="relative mx-auto mt-4 block h-px w-44 overflow-hidden bg-gray-200 dark:bg-dark-600">
+          <span
+            className="absolute inset-y-0 left-0 bg-primary-400 transition-[width] duration-500"
+            style={{ width: `${((index + 1) / ROLES.length) * 100}%` }}
+          />
+        </span>
+      </span>
+      <span className="absolute bottom-10 left-1/2 -translate-x-1/2 font-mono text-[10px] uppercase tracking-[0.2em] text-gray-400 dark:text-dark-400">
+        click to skip
+      </span>
+    </button>
+  );
+}
