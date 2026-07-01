@@ -349,6 +349,7 @@ export const skillGroups: SkillGroup[] = [
     "Production odakli API'ler, enterprise Java servisleri ve temiz sistem sinirlari.",
     [
       "Java",
+      "C#",
       "Spring Boot",
       "Python",
       "FastAPI",
@@ -377,6 +378,9 @@ export const skillGroups: SkillGroup[] = [
       "ElasticSearch",
       "Kibana",
       "RabbitMQ",
+      "Celery",
+      "Vagrant",
+      "Azure DevOps",
       "SonarQube",
     ],
   ),
@@ -392,7 +396,7 @@ export const skillGroups: SkillGroup[] = [
     "Test ve otomasyon",
     "Test-first debugging, structured quality gates, and reliable delivery pipelines.",
     "Test-first debugging, yapilandirilmis kalite kapilari ve guvenilir teslim pipeline'lari.",
-    ["Pytest", "JUnit", "CI/CD", "SonarQube", "GitLab", "Jira", "Test Automation", "Regression Design"],
+    ["Pytest", "JUnit", "CI/CD", "SonarQube", "GitLab", "Jira", "Maven", "Gradle", "Test Automation", "Regression Design"],
   ),
   skillGroup(
     "Research and AI-native tooling",
@@ -746,7 +750,7 @@ SELECTED HIGHLIGHTS
 - NETAS: 25 commits and 1,550 lines of code and tests across four Jira tickets on a production Java microservices platform.
 - Timezone case study: traced a silent UTC vs UTC+3 mismatch with YAML and ELK analysis, then documented remediation with 600+ lines of targeted tests.
 - IsikSchedule: built a dual-platform scheduling product serving ~1,000 active desktop users with a 13-algorithm engine and 86.97% coverage.
-- IEEE Isik: help coordinate 35+ technical events reaching 1,100+ students.
+- IEEE Isik (Vice President & Project Coordinator): coordinate 35+ technical events reaching 1,100+ students; SIU 2025 organization committee and IEEEXtreme'24 lead organizer.
 
 SELECTED PROJECTS
 - IsikSchedule Platform - FastAPI, Next.js, PostgreSQL, Redis, Docker, PyQt6
@@ -756,7 +760,16 @@ SELECTED PROJECTS
 - Portfolio Platform - FastAPI, Next.js, PostgreSQL, Docker
 
 KEY STACK
-Java, Spring Boot, Python, FastAPI, TypeScript, Next.js, Docker, Kubernetes, PostgreSQL, Redis, RabbitMQ, ElasticSearch, SonarQube, GitHub Actions.
+Java, C#, Spring Boot, Python, FastAPI, TypeScript, Next.js, Docker, Kubernetes, AWS, Azure DevOps, PostgreSQL, Redis, RabbitMQ, Celery, ElasticSearch, SonarQube, GitHub Actions.
+
+CERTIFICATIONS
+- Cloud & DevOps: Linux for Cloud & DevOps Engineers; Master System Design & Software Architecture; Networking Fundamentals (CCNA); DevSecOps.
+- AI & Engineering: A.I. & Machine Learning Bootcamp (Miuul); Data Structures + Algorithms; TechCamp.
+- Language: English C1 (Cambridge University & American Culture Institute); Java Programming (C ve Sistem Programcilari Dernegi).
+
+ACHIEVEMENTS
+- FIRST Robotics Competition (FRC) Houston World Championship Finalist - Team 7840 EMONER (2019).
+- TUBITAK 4009: research in physics, optics, and CRISPR-Cas9 technology.
 
 LINKS
 GitHub: https://github.com/TurkishKEBAB

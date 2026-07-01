@@ -22,6 +22,7 @@ const blips: Array<{ n: string; ring: number; quad: number }> = [
   { n: "Java", ring: 0, quad: 0 },
   { n: "Python", ring: 0, quad: 0 },
   { n: "TypeScript", ring: 1, quad: 0 },
+  { n: "C#", ring: 2, quad: 0 },
   { n: "Vue", ring: 2, quad: 0 },
   { n: "Docker", ring: 0, quad: 1 },
   { n: "Kubernetes", ring: 1, quad: 1 },

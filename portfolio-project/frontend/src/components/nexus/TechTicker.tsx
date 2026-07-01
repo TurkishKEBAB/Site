@@ -1,5 +1,5 @@
 const TICKER_TECH =
-  "Java · Spring Boot · FastAPI · Python · Docker · Kubernetes · PostgreSQL · Redis · ElasticSearch · SonarQube · GitHub Actions · RabbitMQ · Next.js";
+  "Java · Spring Boot · FastAPI · Python · C# · Docker · Kubernetes · AWS · PostgreSQL · Redis · ElasticSearch · SonarQube · GitHub Actions · Azure DevOps · RabbitMQ · Celery · Next.js";
 
 /**
  * Infinite tech-stack ticker (design hero motif). Pure CSS marquee — the

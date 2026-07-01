@@ -17,9 +17,17 @@ import {
   siteConfig,
   type Locale,
 } from "@/content/site";
+import type {
+  GitHubContributions,
+  GitHubStats,
+  WakaTimeStats,
+} from "@/lib/systemProfile";
 
 interface HomePageProps {
   locale: Locale;
+  waka?: WakaTimeStats | null;
+  github?: GitHubStats | null;
+  contributions?: GitHubContributions | null;
 }
 
 function Metric({ value, label, note }: { value: string; label: string; note: string }) {
@@ -38,7 +46,12 @@ function Metric({ value, label, note }: { value: string; label: string; note: st
   );
 }
 
-export default function Home({ locale }: HomePageProps) {
+export default function Home({
+  locale,
+  waka = null,
+  github = null,
+  contributions = null,
+}: HomePageProps) {
   const text = homeContent[locale];
   const featuredProjects = getFeaturedProjects().slice(0, 3);
   const tr = locale === "tr";
@@ -185,11 +198,16 @@ export default function Home({ locale }: HomePageProps) {
           title={tr ? "Komuta merkezi" : "Command center"}
           subtitle={
             tr
-              ? "WakaTime ve GitHub'tan beslenen kodlama ritmi. (Canli yigitokur.me panosunu yansitan temsili anlik goruntu.)"
-              : "Live coding rhythm pulled from WakaTime and GitHub. (Illustrative snapshot — mirrors the live yigitokur.me dashboard.)"
+              ? "WakaTime ve GitHub'tan beslenen canli kodlama ritmi."
+              : "Live coding rhythm pulled from WakaTime and GitHub."
           }
         />
-        <CommandCenter locale={locale} />
+        <CommandCenter
+          locale={locale}
+          waka={waka}
+          github={github}
+          contributions={contributions}
+        />
       </section>
 
       <div className="container-custom">
