@@ -1,5 +1,7 @@
 import axios, { AxiosError, AxiosInstance } from 'axios';
 
+import { parseApiError } from '@/lib/errors';
+
 const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000/api/v1';
 
@@ -60,6 +62,7 @@ api.interceptors.response.use(
   (response) => response,
   (error: AxiosError) => {
     const status = error.response?.status;
+    const parsedError = parseApiError(error);
     const skipGlobalErrorValue =
       (error.config?.headers as Record<string, unknown> | undefined)?.['X-Skip-Global-Error'];
     const shouldSkipGlobalError =
@@ -82,7 +85,10 @@ api.interceptors.response.use(
           new CustomEvent('api:error', {
             detail: {
               status,
-              message: error.message,
+              code: parsedError.code,
+              message: parsedError.message,
+              fields: parsedError.fields,
+              requestId: parsedError.requestId,
             },
           }),
         );

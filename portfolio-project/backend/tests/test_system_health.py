@@ -1,5 +1,22 @@
 """System health endpoint tests."""
 
+import asyncio
+
+from app import main as main_module
+
+
+class DummyCache:
+    redis_client = None
+
+    def __init__(self, calls):
+        self._calls = calls
+
+    async def connect(self):
+        self._calls.append("cache-connect")
+
+    async def disconnect(self):
+        self._calls.append("cache-disconnect")
+
 
 def test_live_endpoint_returns_alive(client):
     response = client.get("/live")
@@ -48,3 +65,31 @@ def test_cors_preflight_rejects_unlisted_methods(client):
     )
 
     assert response.status_code == 400
+
+
+def test_lifespan_initializes_observability_during_startup(monkeypatch):
+    calls = []
+
+    monkeypatch.setattr(
+        main_module,
+        "init_observability",
+        lambda: calls.append("observability"),
+    )
+    monkeypatch.setattr(main_module, "check_db_connection", lambda: True)
+    monkeypatch.setattr(
+        main_module,
+        "get_cache_service",
+        lambda: DummyCache(calls),
+    )
+
+    async def run_lifespan():
+        async with main_module.lifespan(main_module.app):
+            assert calls == ["observability", "cache-connect"]
+
+        assert calls == [
+            "observability",
+            "cache-connect",
+            "cache-disconnect",
+        ]
+
+    asyncio.run(run_lifespan())
