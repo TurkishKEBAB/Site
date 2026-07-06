@@ -8,6 +8,9 @@ const TICKER_TECH =
 export default function TechTicker() {
   return (
     <div
+      // Tech names are proper nouns; pin English casing so `uppercase` does
+      // not produce dotted İ (SPRİNG BOOT) when the document lang is "tr".
+      lang="en"
       className="relative z-10 overflow-hidden border-y border-gray-200 bg-black/[0.02] py-3.5 dark:border-dark-600 dark:bg-dark-800/30"
       aria-hidden="true"
     >

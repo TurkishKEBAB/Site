@@ -46,6 +46,10 @@ export function LanguageProvider({
 }: LanguageProviderProps) {
   const [language, setLanguageState] = useState<Locale>(initialLanguage);
 
+  // Resolve the persisted preference once on mount. This effect must not
+  // depend on `language`: re-running it after setLanguage would read the
+  // not-yet-updated storage and stomp the user's selection back to the old
+  // locale.
   useEffect(() => {
     if (typeof window === "undefined") {
       return;
@@ -53,18 +57,13 @@ export function LanguageProvider({
 
     const storedLanguage = window.localStorage.getItem("lang");
     const cookieLanguage = readCookieLanguage();
-    const resolvedLanguage =
+
+    setLanguageState((current) =>
       storedLanguage === "tr" || storedLanguage === "en"
         ? storedLanguage
-        : cookieLanguage ?? initialLanguage ?? defaultLocale;
-
-    if (resolvedLanguage !== language) {
-      setLanguageState(resolvedLanguage);
-      return;
-    }
-
-    document.documentElement.lang = resolvedLanguage;
-  }, [initialLanguage, language]);
+        : cookieLanguage ?? initialLanguage ?? defaultLocale ?? current,
+    );
+  }, [initialLanguage]);
 
   useEffect(() => {
     if (typeof window === "undefined") {
