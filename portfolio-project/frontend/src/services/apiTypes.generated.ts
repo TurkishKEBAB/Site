@@ -496,6 +496,27 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/github/contributions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Github Contributions
+         * @description Contribution-calendar heatmap levels for the Command Center.
+         *     Public, cached 24h; 503 when unavailable (no token / upstream error).
+         */
+        get: operations["get_github_contributions_api_v1_github_contributions_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/github/repos": {
         parameters: {
             query?: never;
@@ -509,6 +530,27 @@ export interface paths {
          *     Returns cached data unless force_refresh is True
          */
         get: operations["get_github_repos_api_v1_github_repos_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/github/stats": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Github Stats
+         * @description Aggregate GitHub profile stats for the Command Center.
+         *     Public, cached 24h; 503 when unavailable (no token / upstream error).
+         */
+        get: operations["get_github_stats_api_v1_github_stats_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -943,6 +985,27 @@ export interface paths {
          * @description Delete a translation (admin only)
          */
         delete: operations["delete_translation_api_v1_translations__language___key__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/wakatime/stats": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Wakatime Stats
+         * @description Normalized WakaTime coding stats for the Command Center.
+         *     Public, cached 24h; 503 when unavailable (no API key / upstream error).
+         */
+        get: operations["get_wakatime_stats_api_v1_wakatime_stats_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
         options?: never;
         head?: never;
         patch?: never;
@@ -1521,6 +1584,16 @@ export interface components {
             title?: string | null;
         };
         /**
+         * GitHubContributions
+         * @description Contribution calendar flattened to week-major 0..4 heatmap levels.
+         */
+        GitHubContributions: {
+            /** Cells */
+            cells: number[];
+            /** Total Contributions */
+            total_contributions: number;
+        };
+        /**
          * GitHubRefreshResponse
          * @description Response after manually refreshing GitHub cache
          */
@@ -1591,6 +1664,22 @@ export interface components {
              * @default 0
              */
             watchers: number;
+        };
+        /**
+         * GitHubStats
+         * @description Aggregate GitHub profile stats for the Command Center.
+         */
+        GitHubStats: {
+            /** Commits Range */
+            commits_range: string;
+            /** Public Repos */
+            public_repos: number;
+            /** Total Commits */
+            total_commits: number;
+            /** Total Pull Requests */
+            total_pull_requests: number;
+            /** Total Stars */
+            total_stars: number;
         };
         /**
          * ProjectCreate
@@ -2116,6 +2205,38 @@ export interface components {
             email: string;
             /** Password */
             password: string;
+        };
+        /**
+         * WakaTimeLanguage
+         * @description A single language slice in the weekly breakdown.
+         */
+        WakaTimeLanguage: {
+            /** Name */
+            name: string;
+            /** Percent */
+            percent: number;
+        };
+        /**
+         * WakaTimeStats
+         * @description Normalized WakaTime stats response.
+         */
+        WakaTimeStats: {
+            /** All Time Seconds */
+            all_time_seconds: number;
+            /** All Time Text */
+            all_time_text: string;
+            /** Daily Average Seconds */
+            daily_average_seconds: number;
+            /** Daily Average Text */
+            daily_average_text: string;
+            /** Languages */
+            languages: components["schemas"]["WakaTimeLanguage"][];
+            /** Last 7 Days Seconds */
+            last_7_days_seconds: number;
+            /** Last 7 Days Text */
+            last_7_days_text: string;
+            /** Range */
+            range: string;
         };
     };
     responses: never;
@@ -4696,6 +4817,89 @@ export interface operations {
             };
         };
     };
+    get_github_contributions_api_v1_github_contributions_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GitHubContributions"];
+                };
+            };
+            /** @description Bad request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Rate limited */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Internal server error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
     get_github_repos_api_v1_github_repos_get: {
         parameters: {
             query?: {
@@ -4716,6 +4920,89 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["GitHubRepo"][];
+                };
+            };
+            /** @description Bad request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Rate limited */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Internal server error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    get_github_stats_api_v1_github_stats_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GitHubStats"];
                 };
             };
             /** @description Bad request */
@@ -7394,6 +7681,89 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+            /** @description Bad request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Rate limited */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Internal server error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    get_wakatime_stats_api_v1_wakatime_stats_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WakaTimeStats"];
+                };
             };
             /** @description Bad request */
             400: {

@@ -43,11 +43,10 @@ const themeScript = `
   (function () {
     try {
       var saved = localStorage.getItem('theme');
-      var systemDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-      var isDark = saved ? saved === 'dark' : systemDark;
+      var isDark = saved ? saved === 'dark' : true;
       document.documentElement.classList[isDark ? 'add' : 'remove']('dark');
     } catch (error) {
-      document.documentElement.classList.remove('dark');
+      document.documentElement.classList.add('dark');
     }
   })();
 `;

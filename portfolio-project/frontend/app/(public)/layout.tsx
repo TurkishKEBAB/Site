@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 
-import AnimatedBackground from "@/components/AnimatedBackground";
+import NexusBackground from "@/components/NexusBackground";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
 
@@ -11,7 +11,7 @@ export default function PublicLayout({
 }>) {
   return (
     <div className="min-h-screen flex flex-col relative">
-      <AnimatedBackground />
+      <NexusBackground />
       <Navigation />
       <main className="flex-1 relative z-10">{children}</main>
       <footer className="relative z-10">

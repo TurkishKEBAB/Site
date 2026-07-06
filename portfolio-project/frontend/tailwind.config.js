@@ -71,8 +71,8 @@ export default {
       backgroundImage: {
         'dot-grid-dark': 'radial-gradient(circle at 1px 1px, rgba(0,212,255,0.06) 1px, transparent 0)',
         'dot-grid-light': 'radial-gradient(circle at 1px 1px, rgba(0,0,0,0.06) 1px, transparent 0)',
-        'glow-radial': 'radial-gradient(ellipse at 50% 0%, rgba(0,212,255,0.06) 0%, transparent 60%)',
-        'glow-radial-light': 'radial-gradient(ellipse at 50% 0%, rgba(0,150,200,0.04) 0%, transparent 60%)',
+        'glow-radial': 'radial-gradient(ellipse 80% 50% at 50% -10%, rgba(0,212,255,0.12) 0%, transparent 55%)',
+        'glow-radial-light': 'radial-gradient(ellipse 80% 50% at 50% -10%, rgba(0,150,200,0.06) 0%, transparent 55%)',
       },
       backgroundSize: {
         'grid-32': '32px 32px',

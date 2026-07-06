@@ -82,7 +82,7 @@
   /* System label */
   .sys-label {
     @apply font-mono text-[11px] font-medium tracking-[0.2em] uppercase;
-    @apply text-gray-400 dark:text-dark-400;
+    @apply text-gray-500 dark:text-dark-400;
   }
 
   /* Glow line */
@@ -200,4 +200,181 @@
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
   }
+}
+
+/* ══════════════════════════════════════════════════════════════
+   NEXUS · System Profile — signature motifs
+   (keyframes + effects Tailwind utilities can't express cleanly)
+   ══════════════════════════════════════════════════════════════ */
+
+/* ── hero name: cyan "OKUR" sheen + drawn underline ──────────── */
+.nx-two {
+  position: relative;
+  display: inline-block;
+  color: #00d4ff;
+}
+@supports ((-webkit-background-clip: text) or (background-clip: text)) {
+  .nx-two {
+    background-image: linear-gradient(
+      100deg,
+      #00d4ff 0%,
+      #b9f1ff 42%,
+      #83e8ff 52%,
+      #00d4ff 70%,
+      #00d4ff 100%
+    );
+    background-size: 240% 100%;
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    color: transparent;
+    animation: nx-name-sheen 5.5s linear infinite;
+  }
+}
+.nx-two::after {
+  content: "";
+  position: absolute;
+  left: -0.02em;
+  right: -0.05em;
+  bottom: 0.06em;
+  height: 4px;
+  border-radius: 2px;
+  background: linear-gradient(90deg, #00d4ff, #b9f1ff);
+  box-shadow: 0 0 14px rgba(0, 212, 255, 0.65);
+  transform-origin: left center;
+  animation:
+    nx-name-underline 1.1s cubic-bezier(0.25, 0.1, 0.25, 1) both,
+    nx-name-glow 3.2s ease-in-out 1.1s infinite;
+}
+@keyframes nx-name-sheen {
+  0% { background-position: 130% 0; }
+  100% { background-position: -130% 0; }
+}
+@keyframes nx-name-underline {
+  from { transform: scaleX(0); opacity: 0; }
+  to { transform: scaleX(1); opacity: 1; }
+}
+@keyframes nx-name-glow {
+  0%, 100% { box-shadow: 0 0 8px rgba(0, 212, 255, 0.45); }
+  50% { box-shadow: 0 0 22px rgba(0, 212, 255, 0.85); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .nx-two { animation: none; }
+  .nx-two::after { animation: none; transform: none; opacity: 1; }
+}
+
+/* ── tech ticker marquee ─────────────────────────────────────── */
+@keyframes nx-tick {
+  to { transform: translateX(-50%); }
+}
+.nx-ticker-track {
+  display: flex;
+  width: max-content;
+  animation: nx-tick 38s linear infinite;
+}
+.nx-ticker-track > span {
+  display: flex;
+  align-items: center;
+  gap: 44px;
+  padding-right: 44px;
+}
+.nx-ticker-track > span::after {
+  content: "\25C7";
+  color: #00d4ff;
+  opacity: 0.5;
+}
+
+/* ── rotating wordmark (YO.sys <-> Yiğit Okur) ───────────────── */
+.nx-wm {
+  display: inline-flex;
+  align-items: baseline;
+  white-space: nowrap;
+}
+.nx-wm .wm-exp {
+  display: inline-block;
+  overflow: hidden;
+  max-width: 0;
+  opacity: 0;
+  transition: max-width 0.55s cubic-bezier(0.25, 0.1, 0.25, 1), opacity 0.4s ease;
+}
+.nx-wm.show-full .wm-exp {
+  max-width: 5ch;
+  opacity: 1;
+}
+.nx-wm .wm-sp {
+  display: inline-block;
+  overflow: hidden;
+  max-width: 0;
+  white-space: pre;
+  transition: max-width 0.55s cubic-bezier(0.25, 0.1, 0.25, 1);
+}
+.nx-wm.show-full .wm-sp { max-width: 0.55ch; }
+.nx-wm .wm-sfx {
+  display: inline-block;
+  overflow: hidden;
+  max-width: 5ch;
+  opacity: 1;
+  transition: max-width 0.5s ease, opacity 0.35s ease;
+}
+.nx-wm.show-full .wm-sfx { max-width: 0; opacity: 0; }
+
+/* ── terminal: Java syntax + PowerShell pane ─────────────────── */
+.nx-term-surface {
+  background: rgba(8, 8, 18, 0.92);
+}
+.nx-java { tab-size: 4; }
+.nx-java .j-kw { color: #c792ea; }
+.nx-java .j-type { color: #7fd4ff; }
+.nx-java .j-str { color: #c3e88d; }
+.nx-java .j-com { color: #5a5a80; font-style: italic; }
+.nx-java .j-fn { color: #82aaff; }
+.nx-java .j-num { color: #f78c6c; }
+.nx-ps .ps-prompt { color: #ffd866; }
+.nx-ps .ps-path { color: #7fd4ff; }
+.nx-ps .ps-cmd { color: #eaf0ff; }
+.nx-ps .ps-err { color: #ff9a9a; }
+.nx-ps .ps-dim { color: #8ea6d8; }
+.nx-ps .ps-ok { color: #9be08a; }
+.nx-ps .c-key { color: #9fb6e6; }
+.nx-ps .c-val { color: #ffffff; }
+.nx-ps .c-dim { color: #8ea6d8; }
+.nx-ps .c-prompt { color: #ffd866; }
+.nx-ps .c-ok { color: #9be08a; }
+
+/* ── work index rows ─────────────────────────────────────────── */
+.nx-row::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: #00d4ff;
+  transform: scaleY(0);
+  transform-origin: top;
+  transition: transform 0.25s cubic-bezier(0.25, 0.1, 0.25, 1);
+}
+.nx-row:hover::before { transform: scaleY(1); }
+
+/* ── tech radar blips ────────────────────────────────────────── */
+.nx-radar svg { width: 100%; height: auto; overflow: visible; }
+.nx-radar .blip circle { fill: #00d4ff; transition: r 0.15s ease; cursor: default; }
+.nx-radar .blip-r1 circle { fill: rgba(0, 212, 255, 0.7); }
+.nx-radar .blip-r2 circle { fill: rgba(0, 212, 255, 0.45); }
+.nx-radar .blip-r3 circle { fill: rgba(0, 212, 255, 0.3); }
+.nx-radar .blip text {
+  fill: #8888a8;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.15s ease;
+}
+.nx-radar .blip:hover circle { r: 6.5; }
+.nx-radar .blip:hover text { opacity: 1; fill: #00d4ff; }
+
+/* ── toast ───────────────────────────────────────────────────── */
+@keyframes nx-toast-in {
+  from { opacity: 0; transform: translate(-50%, 16px); }
+  to { opacity: 1; transform: translate(-50%, 0); }
 }

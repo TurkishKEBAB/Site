@@ -57,6 +57,6 @@ export const buildPersonJsonLd = (locale: Locale) => ({
   address: {
     "@type": "PostalAddress",
     addressLocality: getLocaleValue(siteConfig.location, locale),
-    addressCountry: locale === "tr" ? "Turkiye" : "Turkey",
+    addressCountry: locale === "tr" ? "Türkiye" : "Turkey",
   },
 });

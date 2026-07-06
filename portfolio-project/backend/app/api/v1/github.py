@@ -9,7 +9,12 @@ from app.api.deps import get_current_user_optional, get_db, require_admin
 from app.config import get_settings
 from app.crud import github as github_crud
 from app.models.user import User
-from app.schemas.github import GitHubRepo, GitHubSyncResponse
+from app.schemas.github import (
+    GitHubContributions,
+    GitHubRepo,
+    GitHubStats,
+    GitHubSyncResponse,
+)
 from app.services.admin_audit import record_admin_action
 from app.services.github_service import GitHubService
 from fastapi import APIRouter, Depends, HTTPException, Query, status
@@ -140,3 +145,33 @@ async def clear_cache(
         target_type="github_repo",
     )
     return None
+
+
+@router.get("/stats", response_model=GitHubStats)
+async def get_github_stats():
+    """
+    Aggregate GitHub profile stats for the Command Center.
+    Public, cached 24h; 503 when unavailable (no token / upstream error).
+    """
+    stats = await GitHubService().fetch_stats()
+    if stats is None:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="GitHub stats unavailable",
+        )
+    return stats
+
+
+@router.get("/contributions", response_model=GitHubContributions)
+async def get_github_contributions():
+    """
+    Contribution-calendar heatmap levels for the Command Center.
+    Public, cached 24h; 503 when unavailable (no token / upstream error).
+    """
+    contributions = await GitHubService().fetch_contributions()
+    if contributions is None:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="GitHub contributions unavailable",
+        )
+    return contributions

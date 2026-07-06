@@ -33,7 +33,7 @@ export default function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-12 gap-10">
           <div className="md:col-span-5">
             <div className="font-mono text-2xl font-bold text-gray-900 dark:text-dark-50 tracking-tighter mb-3">
-              YO<span className="text-primary-500 dark:text-primary-400">.sys</span>
+              YO<span className="text-primary-600 dark:text-primary-400">.sys</span>
             </div>
             <p className="text-sm text-gray-600 dark:text-dark-300 leading-relaxed mb-5 max-w-sm">
               {getLocaleValue(
@@ -97,7 +97,7 @@ export default function Footer() {
 
         <div className="mt-10 pt-6 border-t border-gray-200 dark:border-dark-600/40">
           <div className="flex flex-col sm:flex-row justify-between items-center gap-2 font-mono text-[10px] tracking-wider uppercase text-gray-400 dark:text-dark-400">
-            <p>© {new Date().getFullYear()} Yigit Okur</p>
+            <p>© {new Date().getFullYear()} Yiğit Okur</p>
             <p>{copy.footerStack}</p>
           </div>
         </div>

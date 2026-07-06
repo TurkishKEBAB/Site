@@ -7,6 +7,9 @@ import { AnimatePresence, motion } from "motion/react";
 import { FiMenu, FiX } from "react-icons/fi";
 
 import { useLanguage } from "@/contexts/LanguageContext";
+import BackgroundModeToggle from "@/components/BackgroundModeToggle";
+import CommandPalette from "@/components/CommandPalette";
+import IstanbulClock from "@/components/IstanbulClock";
 import ThemeToggle from "@/components/ThemeToggle";
 import LanguageToggle from "@/components/LanguageToggle";
 
@@ -14,6 +17,7 @@ export default function Navigation() {
   const pathname = usePathname();
   const [isOpen, setIsOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const [wordmarkFull, setWordmarkFull] = useState(false);
   const { t } = useLanguage();
 
   const navItems = [
@@ -34,25 +38,37 @@ export default function Navigation() {
     setIsOpen(false);
   }, [pathname]);
 
+  // Rotating wordmark: YO.sys <-> Yiğit Okur (Y and O stay anchored).
+  useEffect(() => {
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    const interval = setInterval(() => setWordmarkFull((prev) => !prev), 3400);
+    return () => clearInterval(interval);
+  }, []);
+
   return (
     <motion.nav
       initial={{ y: -80, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
       transition={{ duration: 0.5, ease: [0.25, 0.1, 0.25, 1] }}
       className={`fixed w-full z-50 transition-all duration-300 ${
-        scrolled
-          ? "bg-white/80 dark:bg-dark-950/80 backdrop-blur-xl border-b border-gray-200/60 dark:border-dark-600/40"
+        scrolled || isOpen
+          ? "bg-white/95 dark:bg-dark-950/95 backdrop-blur-xl border-b border-gray-200/60 dark:border-dark-600/40"
           : "bg-transparent"
       }`}
     >
       <div className="container-custom">
         <div className="flex justify-between items-center h-16 md:h-20">
-          <Link href="/" className="flex items-center gap-2 group">
-            <span className="font-mono text-xl md:text-2xl font-bold text-gray-900 dark:text-dark-50 tracking-tighter group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors">
-              YO
-            </span>
-            <span className="hidden sm:inline font-mono text-[10px] text-gray-400 dark:text-dark-400 tracking-[0.15em] uppercase">
-              .sys
+          <Link href="/" className="flex w-[150px] items-center overflow-hidden sm:w-[172px]" aria-label="Yiğit Okur — YO.sys home">
+            <span
+              className={`nx-wm font-mono text-lg font-bold tracking-tight text-gray-900 dark:text-dark-50 sm:text-xl ${
+                wordmarkFull ? "show-full" : ""
+              }`}
+            >
+              Y<span className="wm-exp">iğit</span>
+              <span className="wm-sp"> </span>O<span className="wm-exp">kur</span>
+              <b className="wm-sfx font-medium uppercase tracking-[0.15em] text-primary-600 dark:text-primary-400" style={{ fontSize: "0.6em" }}>
+                .sys
+              </b>
             </span>
           </Link>
 
@@ -89,6 +105,9 @@ export default function Navigation() {
           </div>
 
           <div className="flex items-center gap-2">
+            <IstanbulClock />
+            <BackgroundModeToggle />
+            <CommandPalette />
             <ThemeToggle />
             <LanguageToggle />
 

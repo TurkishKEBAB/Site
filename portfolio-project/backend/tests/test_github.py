@@ -1,5 +1,6 @@
 """GitHub endpoint tests."""
 
+import asyncio
 from datetime import datetime
 
 
@@ -27,7 +28,9 @@ def test_get_repos_refreshes_cache_when_invalid(client, monkeypatch, admin_heade
 
     monkeypatch.setattr("app.api.v1.github.GitHubService", DummyGitHubService)
 
-    response = client.get("/api/v1/github/repos?force_refresh=true", headers=admin_headers)
+    response = client.get(
+        "/api/v1/github/repos?force_refresh=true", headers=admin_headers
+    )
 
     assert response.status_code == 200
     payload = response.json()
@@ -51,7 +54,9 @@ def test_get_repos_featured_filter(client, monkeypatch, admin_headers):
 
 def test_force_refresh_requires_admin(client, user_headers):
     unauth = client.get("/api/v1/github/repos?force_refresh=true")
-    forbidden = client.get("/api/v1/github/repos?force_refresh=true", headers=user_headers)
+    forbidden = client.get(
+        "/api/v1/github/repos?force_refresh=true", headers=user_headers
+    )
 
     assert unauth.status_code == 401
     assert forbidden.status_code == 403
@@ -100,3 +105,124 @@ def test_cache_status_and_clear_cache(client, admin_headers, monkeypatch):
     assert cache_status.json()["cache_exists"] is True
     assert clear.status_code == 204
     assert cache_status_after.json()["cache_exists"] is False
+
+
+def test_get_github_stats(client, monkeypatch):
+    class DummyGitHubService:
+        async def fetch_stats(self, force_refresh=False):
+            return {
+                "public_repos": 32,
+                "total_stars": 47,
+                "total_pull_requests": 86,
+                "total_commits": 2400,
+                "commits_range": "all_time",
+            }
+
+    monkeypatch.setattr("app.api.v1.github.GitHubService", DummyGitHubService)
+
+    response = client.get("/api/v1/github/stats")
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["public_repos"] == 32
+    assert payload["total_commits"] == 2400
+
+
+def test_get_github_stats_unavailable(client, monkeypatch):
+    class DummyGitHubService:
+        async def fetch_stats(self, force_refresh=False):
+            return None
+
+    monkeypatch.setattr("app.api.v1.github.GitHubService", DummyGitHubService)
+
+    assert client.get("/api/v1/github/stats").status_code == 503
+
+
+def test_get_github_contributions(client, monkeypatch):
+    class DummyGitHubService:
+        async def fetch_contributions(self, force_refresh=False):
+            return {"total_contributions": 1234, "cells": [0, 1, 2, 3, 4]}
+
+    monkeypatch.setattr("app.api.v1.github.GitHubService", DummyGitHubService)
+
+    response = client.get("/api/v1/github/contributions")
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["total_contributions"] == 1234
+    assert payload["cells"] == [0, 1, 2, 3, 4]
+
+
+def test_build_commit_query_aliases_years():
+    from app.services.github_service import _build_commit_query
+
+    query = _build_commit_query(2023, 2025)
+
+    assert "y2023:" in query
+    assert "y2024:" in query
+    assert "y2025:" in query
+    assert '"2025-12-31T23:59:59Z"' in query
+
+
+def test_github_stats_paginates_repo_stars(monkeypatch):
+    from app.services.github_service import GitHubService
+
+    class DummyCache:
+        def __init__(self):
+            self.saved = None
+
+        async def get(self, key):
+            return None
+
+        async def set(self, key, value, ttl):
+            self.saved = (key, value, ttl)
+
+    service = GitHubService()
+    service.api_token = "github-token"
+    service.username = "TurkishKEBAB"
+    service.cache = DummyCache()
+
+    repo_cursors = []
+
+    async def fake_graphql(client, query, variables):
+        if "repositories" in query:
+            repo_cursors.append(variables["repoCursor"])
+            if variables["repoCursor"] is None:
+                return {
+                    "user": {
+                        "createdAt": "2025-01-01T00:00:00Z",
+                        "pullRequests": {"totalCount": 2},
+                        "repositories": {
+                            "totalCount": 101,
+                            "nodes": [{"stargazerCount": 3}, {"stargazerCount": 5}],
+                            "pageInfo": {
+                                "hasNextPage": True,
+                                "endCursor": "cursor-2",
+                            },
+                        },
+                    }
+                }
+            return {
+                "user": {
+                    "createdAt": "2025-01-01T00:00:00Z",
+                    "pullRequests": {"totalCount": 2},
+                    "repositories": {
+                        "totalCount": 101,
+                        "nodes": [{"stargazerCount": 7}],
+                        "pageInfo": {"hasNextPage": False, "endCursor": None},
+                    },
+                }
+            }
+
+        return {"user": {"y2025": {"totalCommitContributions": 11}}}
+
+    monkeypatch.setattr(service, "_graphql", fake_graphql)
+
+    stats = asyncio.run(service.fetch_stats(force_refresh=True))
+
+    assert repo_cursors == [None, "cursor-2"]
+    assert stats["public_repos"] == 101
+    assert stats["total_stars"] == 15
+    assert stats["total_pull_requests"] == 2
+    assert stats["total_commits"] == 11
+    assert service.cache.saved[1] == stats

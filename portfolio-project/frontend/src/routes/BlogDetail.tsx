@@ -58,7 +58,7 @@ export default function BlogDetail({ locale, bundle }: BlogDetailPageProps) {
         <div className="mb-8">
           <Link
             href="/blog"
-            className="inline-flex items-center gap-2 font-mono text-xs tracking-wide text-primary-600 transition-colors hover:text-primary-500 dark:text-primary-400"
+            className="inline-flex items-center gap-2 font-mono text-xs tracking-wide text-primary-600 transition-colors hover:text-primary-600 dark:text-primary-400"
           >
             <FiArrowLeft size={14} />
             {locale === "tr" ? "Blog listesine don" : "Back to blog"}

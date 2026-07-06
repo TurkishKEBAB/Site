@@ -48,5 +48,20 @@ class GitHubRefreshResponse(BaseModel):
     updated: int
 
 
-# Alias for backward compatibility  
+# Alias for backward compatibility
 GitHubSyncResponse = GitHubRefreshResponse
+
+
+class GitHubStats(BaseModel):
+    """Aggregate GitHub profile stats for the Command Center."""
+    public_repos: int
+    total_stars: int
+    total_pull_requests: int
+    total_commits: int
+    commits_range: str
+
+
+class GitHubContributions(BaseModel):
+    """Contribution calendar flattened to week-major 0..4 heatmap levels."""
+    total_contributions: int
+    cells: List[int]

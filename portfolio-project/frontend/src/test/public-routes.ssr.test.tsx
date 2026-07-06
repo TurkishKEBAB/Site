@@ -47,7 +47,10 @@ describe("public route SSR", () => {
     const html = renderToStaticMarkup(<Home locale={locale} />);
 
     expect(html).toContain(homeContent[locale].heroTitleFirst);
-    expect(html).toContain(homeContent[locale].overviewCards[0].title);
+    expect(html).toContain("Profile.java");
+    expect(html).toContain("PowerShell");
+    expect(html).toContain("Command center");
+    expect(html).toContain("Featured systems");
     expect(html).toContain(homeContent[locale].secondaryCta);
     expect(html).not.toContain("Loading");
   });
@@ -57,6 +60,9 @@ describe("public route SSR", () => {
     const html = renderToStaticMarkup(<About locale={locale} />);
 
     expect(html).toContain(aboutContent[locale].pageSubtitle);
+    expect(html).toContain("Current signal");
+    expect(html).toContain("Career timeline");
+    expect(html).toContain("Tech radar");
     expect(html).toContain("Delivery with scale");
     expect(html).not.toContain("No experience found");
   });
@@ -65,7 +71,8 @@ describe("public route SSR", () => {
     const locale = "en";
     const html = renderToStaticMarkup(<Projects locale={locale} />);
 
-    expect(html).toContain("Detailed project slice");
+    expect(html).toContain("IsikSchedule architecture");
+    expect(html).toContain("All systems");
     expect(html).toContain(projectRecords[0].title[locale]);
     expect(html).not.toContain("No featured project");
   });

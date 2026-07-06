@@ -200,7 +200,7 @@ export default function ContactForm({ locale }: ContactFormProps) {
             </button>
             <a href={mailtoHref} className="btn-secondary text-xs">
               <FiMail size={12} />
-              {locale === "tr" ? "E-posta taslagi ac" : "Open email draft"}
+              {locale === "tr" ? "E-posta taslağı aç" : "Open email draft"}
             </a>
           </div>
         </div>
