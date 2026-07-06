@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import { AnimatePresence, motion } from "motion/react";
 import { FiGlobe } from "react-icons/fi";
 
@@ -10,18 +9,21 @@ import { useLanguage } from "@/contexts/LanguageContext";
 
 const languages: Array<{ code: Locale; name: string; label: string }> = [
   { code: "en", name: "English", label: "EN" },
-  { code: "tr", name: "Turkce", label: "TR" },
+  { code: "tr", name: "Türkçe", label: "TR" },
 ];
 
 export default function LanguageToggle() {
   const [open, setOpen] = useState(false);
-  const router = useRouter();
   const { language, setLanguage, t } = useLanguage();
 
   const handleLanguageChange = (value: Locale) => {
+    if (value === language) {
+      setOpen(false);
+      return;
+    }
+
     setLanguage(value);
     setOpen(false);
-    router.refresh();
   };
 
   return (

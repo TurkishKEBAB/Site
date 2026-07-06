@@ -110,7 +110,7 @@ export default function Projects({ locale }: ProjectsPageProps) {
         <NxSectionHead
           index="//"
           label={tr ? "Indeks" : "Index"}
-          title={tr ? "Tum sistemler" : "All systems"}
+          title={tr ? "Tüm sistemler" : "All systems"}
           subtitle={
             tr
               ? "Numarali proje girisleri. Aciklama, etki ve stack icin herhangi bir satira tikla."

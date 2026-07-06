@@ -38,7 +38,7 @@ export default function Navigation() {
     setIsOpen(false);
   }, [pathname]);
 
-  // Rotating wordmark: YO.sys <-> Yigit Okur (Y and O stay anchored).
+  // Rotating wordmark: YO.sys <-> Yiğit Okur (Y and O stay anchored).
   useEffect(() => {
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
     const interval = setInterval(() => setWordmarkFull((prev) => !prev), 3400);

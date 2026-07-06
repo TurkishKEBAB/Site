@@ -120,7 +120,7 @@ export default function Home({
                   </Magnetic>
                   <Magnetic>
                     <Link href="/projects" className="btn-secondary">
-                      <span>{tr ? "Calismalari gor" : "View work"}</span>
+                      <span>{tr ? "Çalışmaları gör" : "View work"}</span>
                     </Link>
                   </Magnetic>
                 </div>
@@ -171,7 +171,7 @@ export default function Home({
         <NxSectionHead
           index="00"
           label={tr ? "Telemetri" : "Telemetry"}
-          title={tr ? "Olculen teslim" : "Delivery, measured"}
+          title={tr ? "Ölçülen teslim" : "Delivery, measured"}
         />
         <div className="grid gap-5 sm:grid-cols-3">
           {impactMetrics.map((metric) => (
@@ -218,8 +218,8 @@ export default function Home({
       <section className="container-custom py-20 md:py-24">
         <NxSectionHead
           index="02"
-          label={tr ? "Secili calismalar" : "Selected work"}
-          title={tr ? "One cikan sistemler" : "Featured systems"}
+          label={tr ? "Seçili çalışmalar" : "Selected work"}
+          title={tr ? "Öne çıkan sistemler" : "Featured systems"}
           subtitle={
             tr
               ? "Urun olcegi, teknik derinlik ve teslim sorumlulugunu temsil eden odakli bir set."
@@ -246,7 +246,7 @@ export default function Home({
         </div>
         <div className="mt-7">
           <Link href="/projects" className="btn-secondary">
-            <span>{tr ? "Tum projeler" : "All projects"}</span>
+            <span>{tr ? "Tüm projeler" : "All projects"}</span>
             <FiArrowRight size={14} />
           </Link>
         </div>

@@ -20,7 +20,7 @@ interface CapabilityMatrixProps {
 const filters = (locale: Locale) =>
   locale === "tr"
     ? [
-        ["all", "Tumu"],
+        ["all", "Tümü"],
         ["backend", "Backend"],
         ["cloud", "Cloud"],
         ["product", "Urun"],

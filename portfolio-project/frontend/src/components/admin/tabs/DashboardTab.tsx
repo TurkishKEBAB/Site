@@ -10,7 +10,7 @@ export function DashboardTab({ text, username }: DashboardTabProps) {
     <div className="space-y-6">
       <div>
         <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
-          {text.welcomeUser}, {username || "Yigit"}! 👋
+          {text.welcomeUser}, {username || "Yiğit"}! 👋
         </h2>
         <p className="mt-2 text-gray-600 dark:text-gray-400">
           Backend bağlantısı aktif; projeler sekmesinden içerik oluşturabilir, istatistikleri anlık

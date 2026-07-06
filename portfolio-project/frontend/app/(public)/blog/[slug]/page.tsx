@@ -25,14 +25,14 @@ export async function generateMetadata({
 
   return {
     ...buildMetadata("blog", locale, `/blog/${slug}`),
-    title: `${bundle.post.title} | Yigit Okur`,
+    title: `${bundle.post.title} | Yiğit Okur`,
     description: bundle.post.excerpt,
     openGraph: {
       type: "article",
       url: `${getSiteUrl()}/blog/${bundle.post.slug}`,
-      title: `${bundle.post.title} | Yigit Okur`,
+      title: `${bundle.post.title} | Yiğit Okur`,
       description: bundle.post.excerpt,
-      siteName: "Yigit Okur",
+      siteName: "Yiğit Okur",
       images: [
         {
           url: bundle.post.cover_image || "/opengraph-image",
@@ -42,7 +42,7 @@ export async function generateMetadata({
     },
     twitter: {
       card: "summary_large_image",
-      title: `${bundle.post.title} | Yigit Okur`,
+      title: `${bundle.post.title} | Yiğit Okur`,
       description: bundle.post.excerpt,
       images: [bundle.post.cover_image || "/opengraph-image"],
     },

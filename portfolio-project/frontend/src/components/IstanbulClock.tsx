@@ -28,14 +28,17 @@ export default function IstanbulClock() {
       setTime(formatIstanbulTime());
     }, 1000);
 
+    let collapseTimer: number | undefined;
     const reveal = window.setInterval(() => {
       setExpanded(true);
-      window.setTimeout(() => setExpanded(false), 4200);
+      if (collapseTimer) window.clearTimeout(collapseTimer);
+      collapseTimer = window.setTimeout(() => setExpanded(false), 4200);
     }, 15000);
 
     return () => {
       window.clearInterval(timer);
       window.clearInterval(reveal);
+      if (collapseTimer) window.clearTimeout(collapseTimer);
     };
   }, []);
 

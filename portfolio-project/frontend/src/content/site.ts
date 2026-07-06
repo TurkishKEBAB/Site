@@ -133,14 +133,14 @@ export const defaultLocale: Locale = "en";
 export const localeCookieName = "preferred-locale";
 
 export const siteConfig = {
-  name: "Yigit Okur",
+  name: "Yiğit Okur",
   role: "Software Engineer",
   focus: "Cloud & DevOps",
   siteUrl: "https://yigitokur.me",
   email: "yigitokur@ieee.org",
   phone: "+90 535 573 3873",
   phoneHref: "tel:+905355733873",
-  location: localized("Bagcilar, Istanbul, Turkey", "Bagcilar, Istanbul, Turkiye"),
+  location: localized("Bağcılar, İstanbul, Turkey", "Bağcılar, İstanbul, Türkiye"),
   github: "https://github.com/TurkishKEBAB",
   linkedin: "https://www.linkedin.com/in/yigit-okur-050b5b278",
   twitter: "https://x.com/biznedenokuruz",
@@ -151,40 +151,40 @@ export const siteConfig = {
 
 const uiDictionaryDefinitions = {
   navHome: localized("Home", "Ana Sayfa"),
-  navAbout: localized("About", "Hakkimda"),
+  navAbout: localized("About", "Hakkımda"),
   navProjects: localized("Projects", "Projeler"),
   navBlog: localized("Blog", "Blog"),
-  navContact: localized("Contact", "Iletisim"),
+  navContact: localized("Contact", "İletişim"),
   navLanguage: localized("Language", "Dil"),
   navTheme: localized("Theme", "Tema"),
   footerNavigation: localized("Navigation", "Navigasyon"),
-  footerContact: localized("Contact", "Iletisim"),
+  footerContact: localized("Contact", "İletişim"),
   footerAvailability: localized(
     "Open to engineering collaborations",
-    "Muhendislik is birliklerine acik",
+    "Mühendislik iş birliklerine açık",
   ),
   footerStack: localized("Next.js / React / Tailwind CSS", "Next.js / React / Tailwind CSS"),
-  contactCopy: localized("Copy message", "Mesaji kopyala"),
-  contactCopied: localized("Copied", "Kopyalandi"),
-  contactMailFallback: localized("Open email draft", "E-posta taslagi ac"),
+  contactCopy: localized("Copy message", "Mesajı kopyala"),
+  contactCopied: localized("Copied", "Kopyalandı"),
+  contactMailFallback: localized("Open email draft", "E-posta taslağı aç"),
   contactRetry: localized("Try again", "Tekrar dene"),
   blogUnavailableTitle: localized(
     "Blog is temporarily unavailable",
-    "Blog gecici olarak ulasilamiyor",
+    "Blog geçici olarak ulaşılamıyor",
   ),
   blogUnavailableBody: localized(
     "The public site still loads from repo-canonical content, but blog posts depend on the API right now.",
-    "Public site repo-iceriginden yuklenmeye devam ediyor, ancak blog yazilari simdilik API bagimli.",
+    "Public site repo içeriğinden yüklenmeye devam ediyor, ancak blog yazıları şimdilik API bağımlı.",
   ),
-  blogBackToProjects: localized("View projects", "Projeleri gor"),
-  blogBackToAbout: localized("View profile", "Profili gor"),
-  loginBackHome: localized("Back to home", "Ana sayfaya don"),
-  notFoundTitle: localized("Page not found", "Sayfa bulunamadi"),
+  blogBackToProjects: localized("View projects", "Projeleri gör"),
+  blogBackToAbout: localized("View profile", "Profili gör"),
+  loginBackHome: localized("Back to home", "Ana sayfaya dön"),
+  notFoundTitle: localized("Page not found", "Sayfa bulunamadı"),
   notFoundBody: localized(
     "This route does not exist on the new public surface. The core profile content is available below.",
-    "Bu rota yeni public yuzeyde bulunmuyor. Asagidaki temel profil icerigine donebilirsiniz.",
+    "Bu rota yeni public yüzeyde bulunmuyor. Aşağıdaki temel profil içeriğine dönebilirsiniz.",
   ),
-  notFoundAction: localized("Return home", "Ana sayfaya don"),
+  notFoundAction: localized("Return home", "Ana sayfaya dön"),
 } satisfies Record<string, LocalizedString>;
 
 export const uiDictionary = buildLocaleMap((locale) =>
@@ -195,7 +195,7 @@ const homeRoleParts = ["ENTERPRISE BACKEND", "CLOUD & DEVOPS", "QUALITY AUTOMATI
 
 const homeDefinition = {
   heroEyebrow: localized("> init system.profile", "> sistem.profil baslatiliyor"),
-  heroTitleFirst: localized("YIGIT", "YIGIT"),
+  heroTitleFirst: localized("YİĞİT", "YİĞİT"),
   heroTitleSecond: localized("OKUR", "OKUR"),
   heroDescription: localized(
     "Third-year Software Engineering student at Isik University focused on enterprise backend systems, cloud delivery, and DevOps automation. At NETAS, I contributed production code across four Jira tickets and turned a silent timezone mismatch into a documented regression safety net with targeted tests.",
@@ -209,7 +209,7 @@ const homeDefinition = {
     "Open to backend, platform, DevOps, and quality-focused engineering teams.",
     "Backend, platform, DevOps ve kalite odakli muhendislik ekiplerine acigim.",
   ),
-  primaryCta: localized("Get in touch", "Iletisime gec"),
+  primaryCta: localized("Get in touch", "İletişime geç"),
   secondaryCta: localized("Download CV", "CV indir"),
   tertiaryCta: localized("View projects", "Projeleri gor"),
   overviewLabel: localized("Overview", "Genel bakis"),
@@ -220,13 +220,13 @@ const homeDefinition = {
     "Grouped by the stacks I actually use to ship backend, cloud, observability, and product work.",
     "Backend, cloud, observability ve urun teslimi icin gercekte kullandigim teknoloji gruplari.",
   ),
-  projectsLabel: localized("Featured work", "One cikan isler"),
-  projectsTitle: localized("Selected projects", "Secili projeler"),
+  projectsLabel: localized("Featured work", "Öne çıkan işler"),
+  projectsTitle: localized("Selected projects", "Seçili projeler"),
   projectsSubtitle: localized(
     "A focused set of systems that represent product scale, technical depth, and delivery ownership.",
     "Urun olgunlugu, teknik derinlik ve teslim sorumlulugunu birlikte gosteren odakli bir proje secimi.",
   ),
-  ctaLabel: localized("Contact", "Iletisim"),
+  ctaLabel: localized("Contact", "İletişim"),
   ctaTitle: localized("Let's build something sharp", "Birlikte keskin bir seyler uretelim"),
   ctaBody: localized(
     "If you want to discuss backend systems, cloud architecture, DevOps automation, or AI-native workflows, I am happy to connect.",
@@ -506,7 +506,7 @@ export const projectRecords: ProjectRecord[] = [
 
 const aboutDefinition = {
   pageLabel: localized("Profile dossier", "Profil dosyasi"),
-  pageTitle: localized("About", "Hakkimda"),
+  pageTitle: localized("About", "Hakkımda"),
   pageSubtitle: localized(
     "A third-year software engineering student building durable backend systems, cloud delivery paths, and high-ownership engineering leverage.",
     "Dayanikli backend sistemleri, cloud delivery surecleri ve yuksek sahiplik ureten bir ucuncu sinif yazilim muhendisligi ogrencisi.",
@@ -517,7 +517,7 @@ const aboutDefinition = {
     "I optimize for teams where code quality, diagnosis depth, and delivery ownership matter at the same time. The work I enjoy most sits at the intersection of enterprise defects, algorithm-heavy backend systems, and operationally reliable products.",
     "Kod kalitesi, teshis derinligi ve teslim sahipliginin ayni anda onem tasidigi ekiplere dogru ilerliyorum. En cok sevdigim problemler; enterprise defect'ler, algoritma agirlikli backend sistemleri ve operasyonel olarak guvenilir urunlerin kesisiminde yer aliyor.",
   ),
-  highlightsLabel: localized("Selected highlights", "Secili basliklar"),
+  highlightsLabel: localized("Selected highlights", "Seçili başlıklar"),
   highlightsTitle: localized("Recent proof points", "Son donem kanitlar"),
   highlights: [
     localized(
@@ -591,7 +591,7 @@ const contactValidationMessages = {
 
 const contactDefinition = {
   pageLabel: localized("Channel", "Kanal"),
-  pageTitle: localized("Get in touch", "Iletisime gec"),
+  pageTitle: localized("Get in touch", "İletişime geç"),
   pageSubtitle: localized(
     "The reliable path is direct contact first. The form still works when the API is healthy and degrades gracefully when it is not.",
     "Guvenilir yol once dogrudan iletisimdir. Form API saglikliyken calisir, degilse de zarif bicimde degrade olur.",
@@ -600,19 +600,19 @@ const contactDefinition = {
   formTitle: localized("Send a note", "Bir not birak"),
   formDescription: localized(
     "If the form request fails, your draft stays on the page and you can copy it or open a prepared email.",
-    "Form istegi basarisiz olursa taslagin sayfada kalir; kopyalayabilir veya hazir e-posta taslagi acabilirsin.",
+    "Form isteği başarısız olursa taslağın sayfada kalır; kopyalayabilir veya hazır e-posta taslağı açabilirsin.",
   ),
   fields: contactFieldLabels,
   placeholders: contactPlaceholders,
-  submit: localized("Send message", "Mesaji gonder"),
-  sending: localized("Sending...", "Gonderiliyor..."),
+  submit: localized("Send message", "Mesajı gönder"),
+  sending: localized("Sending...", "Gönderiliyor..."),
   success: localized(
     "Your message has been sent successfully.",
-    "Mesajiniz basariyla gonderildi.",
+    "Mesajınız başarıyla gönderildi.",
   ),
   failure: localized(
     "The contact API is unavailable right now. Your draft is still here so you can copy it or open an email draft instead.",
-    "Iletisim API'si su anda ulasilamiyor. Taslaginiz sayfada tutuldu; kopyalayabilir veya e-posta taslagi acabilirsiniz.",
+    "İletişim API'si şu anda ulaşılamıyor. Taslağınız sayfada tutuldu; kopyalayabilir veya e-posta taslağı açabilirsiniz.",
   ),
   validation: contactValidationMessages,
   infoTitle: localized("Direct channels", "Dogrudan kanallar"),
@@ -650,51 +650,51 @@ export const contactContent = buildLocaleMap(resolveContactContent) satisfies Re
 const seoDefinitions = {
   home: {
     title: localized(
-      "Yigit Okur | Software Engineer - Cloud & DevOps",
-      "Yigit Okur | Software Engineer - Cloud & DevOps",
+      "Yiğit Okur | Software Engineer - Cloud & DevOps",
+      "Yiğit Okur | Software Engineer - Cloud & DevOps",
     ),
     description: localized(
-      "Portfolio of Yigit Okur focused on backend systems, cloud-native architecture, DevOps automation, and high-impact engineering delivery.",
-      "Yigit Okur'un backend sistemleri, cloud-native mimari, DevOps otomasyonu ve yuksek etkili muhendislik teslimine odakli portfolyosu.",
+      "Portfolio of Yiğit Okur focused on backend systems, cloud-native architecture, DevOps automation, and high-impact engineering delivery.",
+      "Yiğit Okur'un backend sistemleri, cloud-native mimari, DevOps otomasyonu ve yüksek etkili mühendislik teslimine odaklı portfolyosu.",
     ),
   },
   about: {
-    title: localized("About | Yigit Okur", "Hakkimda | Yigit Okur"),
+    title: localized("About | Yiğit Okur", "Hakkımda | Yiğit Okur"),
     description: localized(
-      "Impact-oriented profile of Yigit Okur across enterprise debugging, scheduling systems, technical leadership, and research support.",
-      "Yigit Okur'un enterprise debugging, scheduling sistemleri, teknik liderlik ve arastirma destegini birlestiren etki odakli profili.",
+      "Impact-oriented profile of Yiğit Okur across enterprise debugging, scheduling systems, technical leadership, and research support.",
+      "Yiğit Okur'un enterprise debugging, scheduling sistemleri, teknik liderlik ve araştırma desteğini birleştiren etki odaklı profili.",
     ),
   },
   projects: {
-    title: localized("Projects | Yigit Okur", "Projeler | Yigit Okur"),
+    title: localized("Projects | Yiğit Okur", "Projeler | Yiğit Okur"),
     description: localized(
       "Selected engineering projects across scheduling optimization, defense telemetry, AI-native tooling, and platform delivery.",
       "Scheduling optimizasyonu, savunma telemetrisi, AI-native tooling ve platform teslimini kapsayan secili muhendislik projeleri.",
     ),
   },
   contact: {
-    title: localized("Contact | Yigit Okur", "Iletisim | Yigit Okur"),
+    title: localized("Contact | Yiğit Okur", "İletişim | Yiğit Okur"),
     description: localized(
       "Direct contact channels for software engineering collaboration, backend roles, and cloud-focused opportunities.",
       "Yazilim muhendisligi is birlikleri, backend roller ve cloud odakli firsatlar icin dogrudan iletisim kanallari.",
     ),
   },
   blog: {
-    title: localized("Blog | Yigit Okur", "Blog | Yigit Okur"),
+    title: localized("Blog | Yiğit Okur", "Blog | Yiğit Okur"),
     description: localized(
       "Engineering notes and case studies. Blog reliability improvements are planned via ISR in a later phase.",
       "Muhendislik notlari ve case study'ler. Blog guvenilirligi sonraki fazda ISR ile gelistirilecek.",
     ),
   },
   login: {
-    title: localized("Admin Login | Yigit Okur", "Admin Girisi | Yigit Okur"),
+    title: localized("Admin Login | Yiğit Okur", "Admin Girişi | Yiğit Okur"),
     description: localized(
       "Admin access for the portfolio control surface.",
       "Portfolyo yonetim yuzeyi icin admin erisimi.",
     ),
   },
   admin: {
-    title: localized("Admin | Yigit Okur", "Admin | Yigit Okur"),
+    title: localized("Admin | Yiğit Okur", "Admin | Yiğit Okur"),
     description: localized(
       "Authenticated portfolio administration surface.",
       "Kimlik dogrulanmis portfolyo yonetim yuzeyi.",
@@ -715,7 +715,7 @@ export const seoContent = Object.fromEntries(
 ) as Record<SeoPageKey, Record<Locale, SeoLocaleContent>>;
 
 export const defaultKeywords = [
-  "Yigit Okur",
+  "Yiğit Okur",
   "Software Engineer",
   "Backend Engineer",
   "Cloud DevOps",
@@ -726,12 +726,12 @@ export const defaultKeywords = [
   "Portfolio",
 ];
 
-export const resumeText = `Yigit Okur
+export const resumeText = `Yiğit Okur
 Software Engineer | Cloud & DevOps Focus
 Website: https://yigitokur.me
 Email: yigitokur@ieee.org
 Phone: +90 535 573 3873
-Location: Bagcilar, Istanbul, Turkey
+Location: Bağcılar, İstanbul, Turkey
 
 SUMMARY
 Third-year Software Engineering student at Isik University seeking a part-time software engineering or Cloud/DevOps role. Contributed to production systems at NETAS on an enterprise Java microservices platform and ships personal products with CI/CD, Docker, PostgreSQL, and SonarQube.

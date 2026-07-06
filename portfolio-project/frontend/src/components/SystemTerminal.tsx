@@ -14,7 +14,7 @@ const terminalTabs: Array<{ id: TerminalTab; label: string }> = [
 const JAVA_HTML = `<span class="j-kw">public class</span> <span class="j-type">Profile</span> {
     <span class="j-kw">public static</span> <span class="j-type">void</span> <span class="j-fn">main</span>(<span class="j-type">String</span>[] args) {
         <span class="j-type">String</span>[][] info = {
-            {<span class="j-str">"name"</span>,   <span class="j-str">"Yigit Okur"</span>},
+            {<span class="j-str">"name"</span>,   <span class="j-str">"Yiğit Okur"</span>},
             {<span class="j-str">"role"</span>,   <span class="j-str">"Software Engineer"</span>},
             {<span class="j-str">"focus"</span>,  <span class="j-str">"Cloud &amp; DevOps"</span>},
             {<span class="j-str">"edu"</span>,    <span class="j-str">"Isik University · SE '27"</span>},
@@ -37,7 +37,7 @@ const ps1 = () =>
 
 const profileOutput = [
   '<span class="c-prompt">&gt;</span> <span class="c-dim">init</span> system.profile',
-  '<span class="c-key">name</span>      <span class="c-val">Yigit Okur</span>',
+  '<span class="c-key">name</span>      <span class="c-val">Yiğit Okur</span>',
   '<span class="c-key">role</span>      <span class="c-val">Software Engineer</span>',
   '<span class="c-key">focus</span>     <span class="c-val">Cloud &amp; DevOps</span>',
   '<span class="c-key">edu</span>       <span class="c-val">Isik University · SE ’27</span>',
@@ -240,7 +240,7 @@ export default function SystemTerminal() {
               <span className="text-dark-50">system.profile</span>
             </div>
             {[
-              ["name", "Yigit Okur"],
+              ["name", "Yiğit Okur"],
               ["role", "Software Engineer"],
               ["focus", "Cloud & DevOps"],
               ["edu", "Isik University · SE ’27"],

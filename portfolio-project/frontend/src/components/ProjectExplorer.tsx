@@ -32,13 +32,13 @@ const copy = {
     close: "Close project details",
   },
   tr: {
-    featured: "One cikan",
+    featured: "Öne çıkan",
     project: "Proje",
     impact: "Etki",
     technology: "Teknoloji seti",
     source: "Kaynak",
-    demo: "Canli demo",
-    close: "Proje detaylarini kapat",
+    demo: "Canlı demo",
+    close: "Proje detaylarını kapat",
   },
 } as const;
 
@@ -79,7 +79,7 @@ export default function ProjectExplorer({ locale, projects }: ProjectExplorerPro
             className="nx-row group relative grid w-full grid-cols-[40px,1fr] items-center gap-5 border-b border-gray-200 px-2 py-6 text-left transition-all hover:bg-primary-400/[0.04] hover:pl-4 dark:border-dark-600 md:grid-cols-[64px,1fr,auto] md:gap-6"
           >
             <span className="font-mono text-[13px] text-gray-400 transition-colors group-hover:text-primary-500 dark:text-dark-400 dark:group-hover:text-primary-400">
-              {String(index).padStart(2, "0")}
+              {String(index + 1).padStart(2, "0")}
             </span>
             <div>
               <h3 className="flex flex-wrap items-center gap-3 font-display text-[clamp(1.15rem,2.3vw,1.5rem)] font-semibold text-gray-900 dark:text-dark-50">

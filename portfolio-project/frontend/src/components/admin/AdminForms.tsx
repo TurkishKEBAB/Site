@@ -80,7 +80,7 @@ const FORM_TEXT = {
       githubUrl: 'GitHub URL',
       demoUrl: 'Demo URL',
       displayOrder: 'Gosterim Sirasi',
-      featured: 'One cikan proje olarak isaretle',
+      featured: 'Öne çıkan proje olarak işaretle',
       technologies: 'Teknolojiler',
       loadingTechnologies: 'Teknolojiler yukleniyor...',
       noTechnology: 'Henuz teknoloji eklenmemis.',
@@ -772,7 +772,7 @@ export function TranslationEditor({ translations, onSave, loading, language }: T
 
   const languages = [
     { code: 'en', name: 'English', flag: 'GB' },
-    { code: 'tr', name: 'Turkce', flag: 'TR' },
+    { code: 'tr', name: 'Türkçe', flag: 'TR' },
   ];
 
   useEffect(() => {
