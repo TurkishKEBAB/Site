@@ -78,7 +78,7 @@ export default function HeroIntro() {
       <span className="absolute inset-0 bg-glow-radial-light dark:bg-glow-radial" aria-hidden="true" />
       <span className="relative block w-full max-w-[1000px] px-6 text-center">
         <span className="mb-9 block font-mono text-[11px] uppercase tracking-[0.3em] text-gray-400 dark:text-dark-400">
-          SYSTEM.PROFILE · <b className="font-medium text-primary-500 dark:text-primary-400">v2026</b>
+          SYSTEM.PROFILE · <b className="font-medium text-primary-600 dark:text-primary-400">v2026</b>
         </span>
         <span
           className={`block font-display text-[clamp(2.2rem,8vw,5.6rem)] font-bold leading-none tracking-[-0.035em] text-gray-900 transition-all duration-[350ms] dark:text-dark-50 ${
@@ -93,7 +93,7 @@ export default function HeroIntro() {
           />
         </span>
         <span className="mt-10 block font-mono text-xs tracking-[0.2em] text-gray-400 dark:text-dark-400">
-          <b className="text-primary-500 dark:text-primary-400">0{index + 1}</b> / 0{ROLES.length}
+          <b className="text-primary-600 dark:text-primary-400">0{index + 1}</b> / 0{ROLES.length}
         </span>
         <span className="relative mx-auto mt-4 block h-px w-44 overflow-hidden bg-gray-200 dark:bg-dark-600">
           <span

@@ -126,7 +126,7 @@ export default function About({ locale }: AboutPageProps) {
       <header className="max-w-3xl">
         <span className="flex items-center gap-2.5 font-mono text-[11px] uppercase tracking-[0.24em] text-gray-400 dark:text-dark-400">
           <span className="h-px w-5 bg-primary-400/60" aria-hidden="true" />
-          <span className="text-primary-500 dark:text-primary-400">//</span> {text.pageLabel}
+          <span className="text-primary-600 dark:text-primary-400">//</span> {text.pageLabel}
         </span>
         <ScrambleHeading
           as="h1"
@@ -142,7 +142,7 @@ export default function About({ locale }: AboutPageProps) {
           <span className="absolute left-0 top-0 h-5 w-5 border-l border-t border-primary-400/40" aria-hidden="true" />
           <span className="absolute bottom-0 right-0 h-5 w-5 border-b border-r border-primary-400/40" aria-hidden="true" />
           <span className="flex items-center gap-2.5 font-mono text-[11px] uppercase tracking-[0.24em] text-gray-400 dark:text-dark-400">
-            <span className="text-primary-500 dark:text-primary-400">01</span> {tr ? "Neyi optimize ediyorum" : "What I optimize for"}
+            <span className="text-primary-600 dark:text-primary-400">01</span> {tr ? "Neyi optimize ediyorum" : "What I optimize for"}
           </span>
           <p className="mt-3.5 text-[15px] leading-[1.7] text-gray-600 dark:text-dark-200">{text.journeyBody}</p>
         </div>
@@ -199,7 +199,7 @@ export default function About({ locale }: AboutPageProps) {
               <div className="group relative pb-7 pl-8 last:pb-0">
                 <span className="absolute left-0 top-1.5 h-2.5 w-2.5 rounded-full border-2 border-gray-300 bg-[#f4f4f8] transition-all group-hover:border-primary-400 group-hover:shadow-[0_0_0_4px_rgba(0,212,255,0.12)] dark:border-dark-500 dark:bg-dark-950" aria-hidden="true" />
                 <div className="flex flex-wrap items-baseline gap-x-3.5 gap-y-1 font-mono text-[10.5px] uppercase tracking-[0.06em]">
-                  <span className="text-primary-500 dark:text-primary-400">{getLocaleValue(entry.when, locale)}</span>
+                  <span className="text-primary-600 dark:text-primary-400">{getLocaleValue(entry.when, locale)}</span>
                   <span className="text-gray-400 dark:text-dark-400">{entry.where}</span>
                 </div>
                 <h4 className="mt-1.5 font-display text-[17px] font-semibold text-gray-900 dark:text-dark-50">

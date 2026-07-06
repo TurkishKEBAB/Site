@@ -47,7 +47,7 @@ export default function IstanbulClock() {
       type="button"
       onClick={() => setExpanded((current) => !current)}
       className="hidden xl:inline-flex h-9 items-center gap-2 overflow-hidden rounded border border-gray-200 bg-white/80 px-2.5 font-mono text-[10px] uppercase tracking-wide text-gray-500 transition-colors hover:border-primary-400/50 hover:text-primary-600 dark:border-dark-600 dark:bg-dark-800/50 dark:text-dark-300 dark:hover:text-primary-400"
-      aria-label={`Istanbul time ${time}`}
+      aria-label={`IST ${time} — Istanbul time`}
       title="Istanbul time"
     >
       <FiClock size={13} aria-hidden="true" />

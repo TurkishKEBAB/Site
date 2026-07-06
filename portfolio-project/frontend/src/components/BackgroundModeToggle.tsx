@@ -37,7 +37,7 @@ export default function BackgroundModeToggle() {
       type="button"
       onClick={cycleMode}
       className="hidden lg:inline-flex h-9 items-center gap-2 rounded border border-gray-200 bg-white/80 px-2.5 font-mono text-[10px] uppercase tracking-wide text-gray-500 transition-colors hover:border-primary-400/50 hover:text-primary-600 dark:border-dark-600 dark:bg-dark-800/50 dark:text-dark-300 dark:hover:text-primary-400"
-      aria-label={`Background mode: ${labels[mode]}`}
+      aria-label={`BG ${labels[mode]} — background mode`}
       title={`Background mode: ${labels[mode]}`}
     >
       <FiCpu size={13} aria-hidden="true" />

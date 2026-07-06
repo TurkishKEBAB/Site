@@ -64,7 +64,7 @@ export default function CommandCenter({ locale, waka, github, contributions }: C
     <div className="grid gap-5 md:grid-cols-[1fr,1.25fr]">
       <CornerFrame accent className="panel p-6 md:p-7">
         <span className="sys-label flex items-center gap-2">
-          <span className="text-primary-500 dark:text-primary-400">//</span> WakaTime
+          <span className="text-primary-600 dark:text-primary-400">//</span> WakaTime
         </span>
         {waka ? (
           <>
@@ -72,7 +72,7 @@ export default function CommandCenter({ locale, waka, github, contributions }: C
               {wakaStats.map((stat) => (
                 <div key={stat.label}>
                   <div className="font-display text-3xl font-bold tracking-tight text-gray-900 dark:text-dark-50">
-                    <span className="text-primary-500 dark:text-primary-400">{stat.value}</span>
+                    <span className="text-primary-600 dark:text-primary-400">{stat.value}</span>
                     {stat.unit}
                   </div>
                   <div className="mt-1 font-mono text-[9.5px] uppercase tracking-[0.14em] text-gray-400 dark:text-dark-400">
@@ -86,7 +86,7 @@ export default function CommandCenter({ locale, waka, github, contributions }: C
                 <div key={lang.name}>
                   <div className="mb-1.5 flex items-center justify-between font-mono text-[11px] text-gray-600 dark:text-dark-300">
                     <span>{lang.name}</span>
-                    <span className="text-primary-500 dark:text-primary-400">{lang.percent}%</span>
+                    <span className="text-primary-600 dark:text-primary-400">{lang.percent}%</span>
                   </div>
                   <div className="h-1.5 overflow-hidden rounded-full bg-gray-200 dark:bg-dark-600">
                     <div className="h-full rounded-full bg-primary-400" style={{ width: `${lang.percent}%` }} />
@@ -103,7 +103,7 @@ export default function CommandCenter({ locale, waka, github, contributions }: C
       <CornerFrame accent className="panel p-6 md:p-7">
         <div className="flex items-center justify-between gap-3">
           <span className="sys-label flex items-center gap-2">
-            <span className="text-primary-500 dark:text-primary-400">//</span> GitHub
+            <span className="text-primary-600 dark:text-primary-400">//</span> GitHub
           </span>
           <a
             href={siteConfig.github}
@@ -122,7 +122,7 @@ export default function CommandCenter({ locale, waka, github, contributions }: C
             {githubStats.map((stat) => (
               <div key={stat.label}>
                 <div className="font-display text-3xl font-bold tracking-tight text-gray-900 dark:text-dark-50">
-                  <span className="text-primary-500 dark:text-primary-400">{stat.value}</span>
+                  <span className="text-primary-600 dark:text-primary-400">{stat.value}</span>
                 </div>
                 <div className="mt-1 font-mono text-[9.5px] uppercase tracking-[0.14em] text-gray-400 dark:text-dark-400">
                   {stat.label}

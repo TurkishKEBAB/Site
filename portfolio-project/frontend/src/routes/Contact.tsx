@@ -19,7 +19,7 @@ export default function Contact({ locale }: ContactPageProps) {
       <header className="mb-12 max-w-3xl">
         <span className="flex items-center gap-2.5 font-mono text-[11px] uppercase tracking-[0.24em] text-gray-400 dark:text-dark-400">
           <span className="h-px w-5 bg-primary-400/60" aria-hidden="true" />
-          <span className="text-primary-500 dark:text-primary-400">//</span> {text.pageLabel}
+          <span className="text-primary-600 dark:text-primary-400">//</span> {text.pageLabel}
         </span>
         <ScrambleHeading
           as="h1"

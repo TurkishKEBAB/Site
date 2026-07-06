@@ -29,6 +29,7 @@ const copy = {
     technology: "Technology stack",
     source: "Source",
     demo: "Live demo",
+    webRepo: "Web repo",
     close: "Close project details",
   },
   tr: {
@@ -38,6 +39,7 @@ const copy = {
     technology: "Teknoloji seti",
     source: "Kaynak",
     demo: "Canlı demo",
+    webRepo: "Web reposu",
     close: "Proje detaylarını kapat",
   },
 } as const;
@@ -172,7 +174,7 @@ export default function ProjectExplorer({ locale, projects }: ProjectExplorerPro
                   {selectedProject.demoUrl && (
                     <a href={selectedProject.demoUrl} target="_blank" rel="noopener noreferrer" className="btn-primary text-xs">
                       <FiExternalLink size={13} />
-                      {text.demo}
+                      {selectedProject.demoUrl.includes("github.com") ? text.webRepo : text.demo}
                     </a>
                   )}
                   {selectedProject.githubUrl && (

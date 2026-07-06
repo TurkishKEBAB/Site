@@ -50,7 +50,7 @@ export default function Projects({ locale }: ProjectsPageProps) {
       <header className="max-w-3xl">
         <span className="flex items-center gap-2.5 font-mono text-[11px] uppercase tracking-[0.24em] text-gray-400 dark:text-dark-400">
           <span className="h-px w-5 bg-primary-400/60" aria-hidden="true" />
-          <span className="text-primary-500 dark:text-primary-400">//</span> {tr ? "Arsiv" : "Archive"}
+          <span className="text-primary-600 dark:text-primary-400">//</span> {tr ? "Arsiv" : "Archive"}
         </span>
         <ScrambleHeading
           as="h1"
@@ -85,7 +85,7 @@ export default function Projects({ locale }: ProjectsPageProps) {
                     key={`${node.kind}-${node.title}`}
                     className="rounded border border-gray-200 bg-white p-3.5 transition-all hover:-translate-y-0.5 hover:border-primary-400/40 hover:shadow-[0_0_24px_rgba(0,212,255,0.06)] dark:border-dark-600 dark:bg-dark-800/60"
                   >
-                    <div className="font-mono text-[9px] uppercase tracking-[0.16em] text-primary-500 dark:text-primary-400">
+                    <div className="font-mono text-[9px] uppercase tracking-[0.16em] text-primary-600 dark:text-primary-400">
                       {node.kind}
                     </div>
                     <div className="mt-1.5 font-display text-[15px] font-semibold text-gray-900 dark:text-dark-50">

@@ -76,7 +76,7 @@ export default function CapabilityMatrix({ locale, groups }: CapabilityMatrixPro
               }`}
             >
               <div className="flex items-baseline gap-3">
-                <span className="font-mono text-[11px] text-primary-500 dark:text-primary-400">{group.no}</span>
+                <span className="font-mono text-[11px] text-primary-600 dark:text-primary-400">{group.no}</span>
                 <h3 className="font-display text-lg font-semibold text-gray-900 dark:text-dark-50">{group.title}</h3>
               </div>
               <p className="mt-2 text-[13.5px] leading-relaxed text-gray-600 dark:text-dark-300">{group.summary}</p>

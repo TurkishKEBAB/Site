@@ -68,7 +68,7 @@ export default function Home({
                 <div className="mb-6 flex items-center gap-3.5">
                   <span className="h-px w-11 bg-primary-400/60" aria-hidden="true" />
                   <span className="font-mono text-[11px] uppercase tracking-[0.22em] text-gray-400 dark:text-dark-400">
-                    SYSTEM.PROFILE · <span className="text-primary-500 dark:text-primary-400">v2026</span>
+                    SYSTEM.PROFILE · <span className="text-primary-600 dark:text-primary-400">v2026</span>
                   </span>
                 </div>
               </AnimatedSection>
@@ -265,7 +265,7 @@ export default function Home({
             <span className="absolute bottom-0 left-0 h-6 w-6 border-b border-l border-primary-400/40" aria-hidden="true" />
             <span className="absolute bottom-0 right-0 h-6 w-6 border-b border-r border-primary-400/40" aria-hidden="true" />
             <div className="font-mono text-xs tracking-[0.1em] text-gray-400 dark:text-dark-400">
-              <span className="text-primary-500 dark:text-primary-400">&gt;</span> open channel --to yigit
+              <span className="text-primary-600 dark:text-primary-400">&gt;</span> open channel --to yigit
             </div>
             <h2 className="mt-4 font-display text-[clamp(2rem,4.5vw,2.8rem)] font-bold tracking-tight text-gray-900 dark:text-dark-50">
               {text.ctaTitle}

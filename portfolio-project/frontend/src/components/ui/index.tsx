@@ -64,7 +64,7 @@ export function SectionHeading({
       <div
         className={`sys-label mb-3 ${align === "center" ? "justify-center" : ""} flex items-center gap-2`}
       >
-        {index && <span className="text-primary-500 dark:text-primary-400">{index}</span>}
+        {index && <span className="text-primary-600 dark:text-primary-400">{index}</span>}
         <span>{label}</span>
       </div>
       <h2 className="section-title">{title}</h2>
