@@ -51,14 +51,14 @@ export default function Navigation() {
       animate={{ y: 0, opacity: 1 }}
       transition={{ duration: 0.5, ease: [0.25, 0.1, 0.25, 1] }}
       className={`fixed w-full z-50 transition-all duration-300 ${
-        scrolled
-          ? "bg-white/80 dark:bg-dark-950/80 backdrop-blur-xl border-b border-gray-200/60 dark:border-dark-600/40"
+        scrolled || isOpen
+          ? "bg-white/95 dark:bg-dark-950/95 backdrop-blur-xl border-b border-gray-200/60 dark:border-dark-600/40"
           : "bg-transparent"
       }`}
     >
       <div className="container-custom">
         <div className="flex justify-between items-center h-16 md:h-20">
-          <Link href="/" className="flex w-[150px] items-center overflow-hidden sm:w-[172px]" aria-label="YO.sys home">
+          <Link href="/" className="flex w-[150px] items-center overflow-hidden sm:w-[172px]" aria-label="Yiğit Okur — YO.sys home">
             <span
               className={`nx-wm font-mono text-lg font-bold tracking-tight text-gray-900 dark:text-dark-50 sm:text-xl ${
                 wordmarkFull ? "show-full" : ""

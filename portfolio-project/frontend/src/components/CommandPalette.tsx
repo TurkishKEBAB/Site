@@ -18,6 +18,7 @@ const commands: CommandPaletteAction[] = [
   { label: "Home", detail: "Open system profile", href: "/", external: false },
   { label: "About", detail: "Read current signal", href: "/about", external: false },
   { label: "Projects", detail: "Inspect architecture", href: "/projects", external: false },
+  { label: "Blog", detail: "Read engineering notes", href: "/blog", external: false },
   { label: "Contact", detail: "Open direct channels", href: "/contact", external: false },
   { label: "GitHub", detail: "@TurkishKEBAB", href: siteConfig.github, external: true },
 ];
@@ -85,7 +86,7 @@ export default function CommandPalette() {
         type="button"
         onClick={() => setOpen(true)}
         className="hidden md:inline-flex h-9 items-center gap-2 rounded border border-gray-200 bg-white/80 px-2.5 font-mono text-[10px] uppercase tracking-wide text-gray-500 transition-colors hover:border-primary-400/50 hover:text-primary-600 dark:border-dark-600 dark:bg-dark-800/50 dark:text-dark-300 dark:hover:text-primary-400"
-        aria-label="Open command palette"
+        aria-label="Cmd K — open command palette"
         title="Command palette"
       >
         <FiCommand size={13} aria-hidden="true" />
