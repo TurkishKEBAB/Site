@@ -1242,6 +1242,28 @@
         "title": "ExperienceUpdate",
         "type": "object"
       },
+      "GitHubContributions": {
+        "description": "Contribution calendar flattened to week-major 0..4 heatmap levels.",
+        "properties": {
+          "cells": {
+            "items": {
+              "type": "integer"
+            },
+            "title": "Cells",
+            "type": "array"
+          },
+          "total_contributions": {
+            "title": "Total Contributions",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "total_contributions",
+          "cells"
+        ],
+        "title": "GitHubContributions",
+        "type": "object"
+      },
       "GitHubRefreshResponse": {
         "description": "Response after manually refreshing GitHub cache",
         "properties": {
@@ -1384,6 +1406,40 @@
           "cached_at"
         ],
         "title": "GitHubRepo",
+        "type": "object"
+      },
+      "GitHubStats": {
+        "description": "Aggregate GitHub profile stats for the Command Center.",
+        "properties": {
+          "commits_range": {
+            "title": "Commits Range",
+            "type": "string"
+          },
+          "public_repos": {
+            "title": "Public Repos",
+            "type": "integer"
+          },
+          "total_commits": {
+            "title": "Total Commits",
+            "type": "integer"
+          },
+          "total_pull_requests": {
+            "title": "Total Pull Requests",
+            "type": "integer"
+          },
+          "total_stars": {
+            "title": "Total Stars",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "public_repos",
+          "total_stars",
+          "total_pull_requests",
+          "total_commits",
+          "commits_range"
+        ],
+        "title": "GitHubStats",
         "type": "object"
       },
       "ProjectCreate": {
@@ -2723,6 +2779,77 @@
           "password"
         ],
         "title": "UserLogin",
+        "type": "object"
+      },
+      "WakaTimeLanguage": {
+        "description": "A single language slice in the weekly breakdown.",
+        "properties": {
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "percent": {
+            "title": "Percent",
+            "type": "number"
+          }
+        },
+        "required": [
+          "name",
+          "percent"
+        ],
+        "title": "WakaTimeLanguage",
+        "type": "object"
+      },
+      "WakaTimeStats": {
+        "description": "Normalized WakaTime stats response.",
+        "properties": {
+          "all_time_seconds": {
+            "title": "All Time Seconds",
+            "type": "integer"
+          },
+          "all_time_text": {
+            "title": "All Time Text",
+            "type": "string"
+          },
+          "daily_average_seconds": {
+            "title": "Daily Average Seconds",
+            "type": "integer"
+          },
+          "daily_average_text": {
+            "title": "Daily Average Text",
+            "type": "string"
+          },
+          "languages": {
+            "items": {
+              "$ref": "#/components/schemas/WakaTimeLanguage"
+            },
+            "title": "Languages",
+            "type": "array"
+          },
+          "last_7_days_seconds": {
+            "title": "Last 7 Days Seconds",
+            "type": "integer"
+          },
+          "last_7_days_text": {
+            "title": "Last 7 Days Text",
+            "type": "string"
+          },
+          "range": {
+            "title": "Range",
+            "type": "string"
+          }
+        },
+        "required": [
+          "all_time_seconds",
+          "all_time_text",
+          "last_7_days_seconds",
+          "last_7_days_text",
+          "daily_average_seconds",
+          "daily_average_text",
+          "languages",
+          "range"
+        ],
+        "title": "WakaTimeStats",
         "type": "object"
       }
     },
@@ -5979,6 +6106,98 @@
         ]
       }
     },
+    "/api/v1/github/contributions": {
+      "get": {
+        "description": "Contribution-calendar heatmap levels for the Command Center.\nPublic, cached 24h; 503 when unavailable (no token / upstream error).",
+        "operationId": "get_github_contributions_api_v1_github_contributions_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GitHubContributions"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Bad request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not found"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Validation error"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Rate limited"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Internal server error"
+          }
+        },
+        "summary": "Get Github Contributions",
+        "tags": [
+          "GitHub"
+        ]
+      }
+    },
     "/api/v1/github/repos": {
       "get": {
         "description": "Get GitHub repositories\nReturns cached data unless force_refresh is True",
@@ -6109,6 +6328,98 @@
           }
         ],
         "summary": "Get Github Repos",
+        "tags": [
+          "GitHub"
+        ]
+      }
+    },
+    "/api/v1/github/stats": {
+      "get": {
+        "description": "Aggregate GitHub profile stats for the Command Center.\nPublic, cached 24h; 503 when unavailable (no token / upstream error).",
+        "operationId": "get_github_stats_api_v1_github_stats_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GitHubStats"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Bad request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not found"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Validation error"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Rate limited"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Internal server error"
+          }
+        },
+        "summary": "Get Github Stats",
         "tags": [
           "GitHub"
         ]
@@ -9561,6 +9872,98 @@
         "summary": "Set Translation",
         "tags": [
           "Translations"
+        ]
+      }
+    },
+    "/api/v1/wakatime/stats": {
+      "get": {
+        "description": "Normalized WakaTime coding stats for the Command Center.\nPublic, cached 24h; 503 when unavailable (no API key / upstream error).",
+        "operationId": "get_wakatime_stats_api_v1_wakatime_stats_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WakaTimeStats"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Bad request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not found"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Validation error"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Rate limited"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Internal server error"
+          }
+        },
+        "summary": "Get Wakatime Stats",
+        "tags": [
+          "WakaTime"
         ]
       }
     },
