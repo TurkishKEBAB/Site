@@ -1,5 +1,8 @@
 """WakaTime endpoint and service tests."""
 
+import asyncio
+import base64
+
 from app.services.wakatime_service import WakaTimeService
 
 
@@ -62,3 +65,70 @@ def test_summarize_languages_folds_into_other():
     assert len(result) == 6  # top 5 + Other
     assert result[0]["name"] == "Python"
     assert result[-1] == {"name": "Other", "percent": 7.0}
+
+
+def test_get_headers_uses_wakatime_basic_auth_username_format():
+    service = WakaTimeService()
+    service.api_key = "waka-secret"
+
+    expected = base64.b64encode(b"waka-secret:").decode("ascii")
+
+    assert service.get_headers() == {"Authorization": f"Basic {expected}"}
+
+
+def test_pending_wakatime_stats_are_not_cached(monkeypatch):
+    stale_stats = _mock_stats()
+
+    class DummyCache:
+        def __init__(self):
+            self.set_calls = []
+
+        async def get(self, key):
+            return stale_stats
+
+        async def set(self, key, value, ttl):
+            self.set_calls.append((key, value, ttl))
+
+    class DummyResponse:
+        def __init__(self, status_code, payload):
+            self.status_code = status_code
+            self._payload = payload
+
+        def raise_for_status(self):
+            return None
+
+        def json(self):
+            return self._payload
+
+    class DummyAsyncClient:
+        def __init__(self, *args, **kwargs):
+            self.calls = 0
+
+        async def __aenter__(self):
+            return self
+
+        async def __aexit__(self, exc_type, exc, traceback):
+            return False
+
+        async def get(self, url, headers):
+            self.calls += 1
+            if "all_time_since_today" in url:
+                return DummyResponse(
+                    200,
+                    {"data": {"total_seconds": 1000, "text": "16 mins"}},
+                )
+            return DummyResponse(202, {"data": {"is_up_to_date": False}})
+
+    monkeypatch.setattr(
+        "app.services.wakatime_service.httpx.AsyncClient", DummyAsyncClient
+    )
+
+    cache = DummyCache()
+    service = WakaTimeService()
+    service.api_key = "waka-secret"
+    service.cache = cache
+
+    result = asyncio.run(service.fetch_stats(force_refresh=True))
+
+    assert result == stale_stats
+    assert cache.set_calls == []

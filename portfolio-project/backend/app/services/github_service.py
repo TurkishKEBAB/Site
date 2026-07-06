@@ -2,6 +2,7 @@
 GitHub API Integration Service
 Fetches repository data with Redis caching (24h)
 """
+
 from datetime import datetime, timezone
 
 import httpx
@@ -23,14 +24,19 @@ _CONTRIB_LEVEL_MAP = {
 }
 
 _STATS_QUERY = """
-query($login: String!) {
+query($login: String!, $repoCursor: String) {
   user(login: $login) {
     createdAt
     pullRequests { totalCount }
     repositories(ownerAffiliations: OWNER, privacy: PUBLIC, first: 100,
+                 after: $repoCursor,
                  orderBy: {field: STARGAZERS, direction: DESC}) {
       totalCount
       nodes { stargazerCount }
+      pageInfo {
+        hasNextPage
+        endCursor
+      }
     }
   }
 }
@@ -55,7 +61,7 @@ def _build_commit_query(start_year: int, end_year: int) -> str:
     aliases = []
     for year in range(start_year, end_year + 1):
         aliases.append(
-            f'y{year}: contributionsCollection('
+            f"y{year}: contributionsCollection("
             f'from: "{year}-01-01T00:00:00Z", to: "{year}-12-31T23:59:59Z") '
             f"{{ totalCommitContributions }}"
         )
@@ -65,7 +71,7 @@ def _build_commit_query(start_year: int, end_year: int) -> str:
 
 class GitHubService:
     """Service for GitHub API integration"""
-    
+
     def __init__(self):
         self.username = settings.GITHUB_USERNAME
         self.api_token = settings.GITHUB_API_TOKEN
@@ -75,25 +81,27 @@ class GitHubService:
         self.cache_ttl = settings.GITHUB_CACHE_HOURS * 3600  # Convert hours to seconds
         self.stats_cache_key = "github_stats"
         self.contrib_cache_key = "github_contributions"
-    
+
     def get_headers(self) -> Dict[str, str]:
         """Get headers for GitHub API requests"""
         headers = {
             "Accept": "application/vnd.github.v3+json",
         }
-        
+
         if self.api_token:
             headers["Authorization"] = f"token {self.api_token}"
-        
+
         return headers
-    
-    async def fetch_user_repos(self, force_refresh: bool = False) -> List[Dict[str, Any]]:
+
+    async def fetch_user_repos(
+        self, force_refresh: bool = False
+    ) -> List[Dict[str, Any]]:
         """
         Fetch user repositories from GitHub API
-        
+
         Args:
             force_refresh: If True, bypass cache and fetch fresh data
-            
+
         Returns:
             List of repository data dictionaries
         """
@@ -103,26 +111,22 @@ class GitHubService:
             if cached_repos:
                 logger.info(f"Returning cached GitHub repos for {self.username}")
                 return cached_repos
-        
+
         logger.info(f"Fetching GitHub repos for {self.username} from API")
-        
+
         try:
             headers = self.get_headers()
-            
+
             async with httpx.AsyncClient() as client:
                 response = await client.get(
                     f"{self.base_url}/users/{self.username}/repos",
                     headers=headers,
-                    params={
-                        "sort": "updated",
-                        "per_page": 100,
-                        "type": "owner"
-                    },
-                    timeout=30.0
+                    params={"sort": "updated", "per_page": 100, "type": "owner"},
+                    timeout=30.0,
                 )
                 response.raise_for_status()
                 repos = response.json()
-            
+
             # Process repository data
             processed_repos = []
             for repo in repos:
@@ -138,69 +142,70 @@ class GitHubService:
                     "language": repo.get("language"),
                     "topics": repo.get("topics", []),
                     "last_updated": repo.get("updated_at"),
-                    "is_featured": repo["stargazers_count"] >= 5 or repo.get("homepage") is not None
+                    "is_featured": repo["stargazers_count"] >= 5
+                    or repo.get("homepage") is not None,
                 }
                 processed_repos.append(processed_repo)
-            
+
             # Sort by stars (descending)
             processed_repos.sort(key=lambda x: x["stars"], reverse=True)
-            
+
             # Cache the results
             await self.cache.set(self.cache_key, processed_repos, ttl=self.cache_ttl)
-            
+
             logger.info(f"Fetched and cached {len(processed_repos)} GitHub repos")
             return processed_repos
-        
+
         except httpx.HTTPError as e:
             logger.error(f"GitHub API error: {e}")
             raise
         except Exception as e:
             logger.error(f"Unexpected error fetching GitHub repos: {e}")
             raise
-    
+
     async def get_repo_details(self, repo_name: str) -> Optional[Dict[str, Any]]:
         """
         Fetch detailed information for a specific repository
-        
+
         Args:
             repo_name: Repository name
-            
+
         Returns:
             Repository data dictionary or None
         """
         try:
             headers = self.get_headers()
-            
+
             async with httpx.AsyncClient() as client:
                 response = await client.get(
                     f"{self.base_url}/repos/{self.username}/{repo_name}",
                     headers=headers,
-                    timeout=30.0
+                    timeout=30.0,
                 )
                 response.raise_for_status()
                 return response.json()
-        
+
         except httpx.HTTPError as e:
             logger.error(f"Error fetching repo {repo_name}: {e}")
             return None
-    
+
     async def get_cache_status(self) -> Dict[str, Any]:
         """
         Get cache status information
-        
+
         Returns:
             Dictionary with cache status
         """
         cached_repos = await self.cache.get(self.cache_key)
         ttl = await self.cache.ttl(self.cache_key)
-        
+
         return {
             "cached": cached_repos is not None,
             "count": len(cached_repos) if cached_repos else 0,
             "expires_in": ttl if ttl > 0 else 0,
-            "cache_hours": settings.GITHUB_CACHE_HOURS
+            "cache_hours": settings.GITHUB_CACHE_HOURS,
         }
-    
+
     async def clear_cache(self):
         """Clear GitHub repository cache"""
         await self.cache.delete(self.cache_key)
@@ -230,7 +235,9 @@ class GitHubService:
             raise RuntimeError(f"GitHub GraphQL errors: {payload['errors']}")
         return payload["data"]
 
-    async def fetch_stats(self, force_refresh: bool = False) -> Optional[Dict[str, Any]]:
+    async def fetch_stats(
+        self, force_refresh: bool = False
+    ) -> Optional[Dict[str, Any]]:
         """
         Aggregate profile stats via GraphQL: public repos, total stars,
         total PRs, and all-time commit contributions. Requires a token;
@@ -248,10 +255,28 @@ class GitHubService:
 
         try:
             async with httpx.AsyncClient(timeout=30.0) as client:
-                base = await self._graphql(client, _STATS_QUERY, {"login": self.username})
-                user = base["user"]
-                repos = user["repositories"]
-                total_stars = sum(node["stargazerCount"] for node in repos["nodes"])
+                repo_cursor = None
+                total_stars = 0
+                user: Dict[str, Any] | None = None
+                repos: Dict[str, Any] | None = None
+
+                while True:
+                    base = await self._graphql(
+                        client,
+                        _STATS_QUERY,
+                        {"login": self.username, "repoCursor": repo_cursor},
+                    )
+                    user = base["user"]
+                    repos = user["repositories"]
+                    total_stars += sum(
+                        node["stargazerCount"] for node in repos["nodes"]
+                    )
+
+                    page_info = repos.get("pageInfo") or {}
+                    next_cursor = page_info.get("endCursor")
+                    if not page_info.get("hasNextPage") or not next_cursor:
+                        break
+                    repo_cursor = next_cursor
 
                 start_year = int(user["createdAt"][:4])
                 end_year = datetime.now(timezone.utc).year
@@ -305,7 +330,9 @@ class GitHubService:
 
         try:
             async with httpx.AsyncClient(timeout=30.0) as client:
-                data = await self._graphql(client, _CONTRIB_QUERY, {"login": self.username})
+                data = await self._graphql(
+                    client, _CONTRIB_QUERY, {"login": self.username}
+                )
 
             calendar = data["user"]["contributionsCollection"]["contributionCalendar"]
             cells: List[int] = [

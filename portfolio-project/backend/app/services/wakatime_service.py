@@ -3,6 +3,7 @@ WakaTime API Integration Service
 Fetches coding-activity stats with Redis caching (24h) for the
 home-page Command Center. Uses the account Secret API Key (Basic auth).
 """
+
 import base64
 from typing import Any, Dict, List, Optional
 
@@ -29,7 +30,7 @@ class WakaTimeService:
 
     def get_headers(self) -> Dict[str, str]:
         """Basic auth header with the base64-encoded Secret API Key."""
-        encoded = base64.b64encode(self.api_key.encode("utf-8")).decode("ascii")
+        encoded = base64.b64encode(f"{self.api_key}:".encode("utf-8")).decode("ascii")
         return {"Authorization": f"Basic {encoded}"}
 
     @staticmethod
@@ -37,7 +38,10 @@ class WakaTimeService:
         """Keep the top N languages by percent, fold the rest into 'Other'."""
         ranked = sorted(
             (
-                {"name": lang.get("name", "Unknown"), "percent": float(lang.get("percent", 0.0))}
+                {
+                    "name": lang.get("name", "Unknown"),
+                    "percent": float(lang.get("percent", 0.0)),
+                }
                 for lang in languages
             ),
             key=lambda item: item["percent"],
@@ -49,9 +53,21 @@ class WakaTimeService:
             other_percent = round(sum(item["percent"] for item in rest), 1)
             if other_percent > 0:
                 top.append({"name": "Other", "percent": other_percent})
-        return [{"name": item["name"], "percent": round(item["percent"], 1)} for item in top]
+        return [
+            {"name": item["name"], "percent": round(item["percent"], 1)} for item in top
+        ]
 
-    async def fetch_stats(self, force_refresh: bool = False) -> Optional[Dict[str, Any]]:
+    @staticmethod
+    def _stats_are_pending(status_code: int, payload: Dict[str, Any]) -> bool:
+        """Return True when WakaTime says stats are still being processed."""
+        data = payload.get("data") if isinstance(payload, dict) else None
+        return status_code == 202 or (
+            isinstance(data, dict) and data.get("is_up_to_date") is False
+        )
+
+    async def fetch_stats(
+        self, force_refresh: bool = False
+    ) -> Optional[Dict[str, Any]]:
         """
         Fetch normalized WakaTime stats.
 
@@ -86,7 +102,17 @@ class WakaTimeService:
                 seven_resp.raise_for_status()
 
             all_time = all_time_resp.json().get("data", {})
-            seven = seven_resp.json().get("data", {})
+            seven_payload = seven_resp.json()
+            if self._stats_are_pending(seven_resp.status_code, seven_payload):
+                logger.warning(
+                    "WakaTime stats are still processing; keeping cached stats"
+                )
+                stale = await self.cache.get(self.cache_key)
+                if stale:
+                    return stale
+                return None
+
+            seven = seven_payload.get("data", {})
 
             stats = {
                 "all_time_seconds": int(all_time.get("total_seconds") or 0),
