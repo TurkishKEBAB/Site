@@ -75,4 +75,53 @@ describe("api service auth responses", () => {
     expect(redirectSpy).toHaveBeenCalledTimes(1);
     expect(window.location.pathname).toBe("/login");
   });
+
+  it("dispatches parsed API error details for global handlers", async () => {
+    const listener = vi.fn();
+    window.addEventListener("api:error", listener);
+
+    try {
+      await expect(
+        api.get("/contact/", {
+          adapter: async (config) => {
+            const response: AxiosResponse = {
+              data: {
+                success: false,
+                error: {
+                  code: "VALIDATION_ERROR",
+                  message: "Validation Error",
+                  fields: { email: "Invalid email" },
+                  request_id: "req-frontend",
+                },
+                detail: "Validation Error",
+              },
+              status: 422,
+              statusText: "422",
+              headers: {},
+              config,
+            };
+
+            throw new AxiosError(
+              "Request failed with status code 422",
+              undefined,
+              config,
+              undefined,
+              response,
+            );
+          },
+        }),
+      ).rejects.toMatchObject({ response: { status: 422 } });
+
+      expect(listener).toHaveBeenCalledTimes(1);
+      expect(listener.mock.calls[0][0].detail).toMatchObject({
+        status: 422,
+        code: "VALIDATION_ERROR",
+        message: "Validation Error",
+        fields: { email: "Invalid email" },
+        requestId: "req-frontend",
+      });
+    } finally {
+      window.removeEventListener("api:error", listener);
+    }
+  });
 });

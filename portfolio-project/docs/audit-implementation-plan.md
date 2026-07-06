@@ -328,28 +328,39 @@ Notlar:
 
 ## Faz 7 - Observability, API Contract ve Data Fetching
 
-Faz Durumu: `todo`
+Faz Durumu: `done`
 
 Amaç: Prod hatalarını izlenebilir hale getirmek ve frontend/backend contract drift riskini azaltmak.
 
 TODO:
 
-- [ ] Backend Sentry entegrasyonunu tasarla ve env gereksinimlerini dokümante et.
-- [ ] Frontend Sentry entegrasyonunu tasarla.
-- [ ] Release tag stratejisini belirle: git SHA veya deploy-provided release id.
-- [ ] Backend error response contract'ını standartlaştır.
-- [ ] Frontend merkezi `parseApiError` helper'ı ekle.
-- [ ] OpenAPI schema üretim akışını doğrula.
-- [ ] `openapi-typescript` ile generated API types dosyası üret.
-- [ ] CI'da generated type drift kontrolünü ekle.
-- [ ] TanStack Query kullanımını değerlendir.
-- [ ] Query key factory ve ilk public list endpoint hooklarını ekle.
+- [x] Backend Sentry entegrasyonunu tasarla ve env gereksinimlerini dokümante et.
+- [x] Frontend Sentry entegrasyonunu tasarla.
+- [x] Release tag stratejisini belirle: git SHA veya deploy-provided release id.
+- [x] Backend error response contract'ını standartlaştır.
+- [x] Frontend merkezi `parseApiError` helper'ı ekle.
+- [x] OpenAPI schema üretim akışını doğrula.
+- [x] `openapi-typescript` ile generated API types dosyası üret.
+- [x] CI'da generated type drift kontrolünü ekle.
+- [x] TanStack Query kullanımını değerlendir.
+- [x] Query key factory ve ilk public list endpoint hooklarını ekle.
 
 Kabul kriteri:
 
 - Prod hataları release bilgisiyle izlenebiliyor.
 - API response/error contract'ı tek yerde tanımlı.
 - Frontend servis tipleri backend schema değişimlerine karşı drift sinyali veriyor.
+
+Notlar:
+
+- Backend observability `app/services/observability.py` içinde opsiyonel Sentry bootstrap ile eklendi; `SENTRY_DSN` yokken lokal/dev akışı no-op kalıyor. Env gereksinimleri `backend/.env.example` ve `docs/observability-api-contract.md` içinde dokümante edildi.
+- Frontend observability `@sentry/nextjs` ile App Router instrumentation dosyalarına bağlandı: `instrumentation-client.ts`, `instrumentation.ts`, `sentry.server.config.ts`, `sentry.edge.config.ts`, `app/global-error.tsx`. Source map upload `SENTRY_AUTH_TOKEN` yokken dev/build akışını bloklamayacak şekilde kapalı.
+- Release stratejisi deploy git SHA öncelikli: explicit release env, GitHub/Railway/Vercel SHA, en sonda app version/env fallback.
+- Backend hata sözleşmesi `success: false`, `error.code`, `error.message`, opsiyonel `fields` ve `request_id` envelope'una standartlandı; eski istemciler için `detail` geçiş alanı korunuyor.
+- Frontend `parseApiError()` helper'ı standart envelope ve eski FastAPI `detail` payloadlarını tek yerde parse ediyor; `api:error` event detail'ı artık `code`, `fields` ve `requestId` içeriyor.
+- OpenAPI üretimi `backend/scripts/export_openapi.py` ile doğrulandı ve `backend/openapi.json` commitlenen contract haline getirildi. Frontend `npm run gen:api` ile `src/services/apiTypes.generated.ts` üretiyor.
+- CI drift kapıları eklendi: backend job `backend/openapi.json` diff'ini, frontend job `apiTypes.generated.ts` diff'ini fail ediyor.
+- TanStack Query client provider hiyerarşiye eklendi; ilk public list hook'ları `src/hooks/usePublicData.ts`, query key factory `src/lib/query/queryKeys.ts` içinde.
 
 Önerilen PR bölümü:
 

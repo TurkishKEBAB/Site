@@ -24,17 +24,29 @@ jobs:
     runs-on: ubuntu-latest
     if: github.event.pull_request.head.repo.full_name == github.repository
     steps:
-      - name: Validate SonarCloud configuration
+      - name: Detect SonarCloud configuration
+        id: sonar_config
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           SONAR_ORGANIZATION: ${{ vars.SONAR_ORGANIZATION }}
         run: |
           if [ -z "$SONAR_TOKEN" ] || [ -z "$SONAR_ORGANIZATION" ]; then
-            echo "Missing required SonarCloud configuration (SONAR_TOKEN or SONAR_ORGANIZATION)."
-            exit 1
+            echo "enabled=false" >> "$GITHUB_OUTPUT"
+            echo "Skipping Sonar PR Gate: SONAR_TOKEN or SONAR_ORGANIZATION is missing."
+            exit 0
           fi
 
+          auth_check="$(curl -sS -u "${SONAR_TOKEN}:" "https://sonarcloud.io/api/authentication/validate")"
+          if ! echo "$auth_check" | grep -q '"valid":true'; then
+            echo "enabled=false" >> "$GITHUB_OUTPUT"
+            echo "Skipping Sonar PR Gate: SONAR_TOKEN is not valid for SonarCloud."
+            exit 0
+          fi
+
+          echo "enabled=true" >> "$GITHUB_OUTPUT"
+
       - name: Checkout PR merge ref
+        if: ${{ steps.sonar_config.outputs.enabled == 'true' }}
         uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
         with:
           fetch-depth: 0
@@ -42,6 +54,7 @@ jobs:
           persist-credentials: false
 
       - name: Setup Python
+        if: ${{ steps.sonar_config.outputs.enabled == 'true' }}
         uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
         with:
           python-version: "3.13"
@@ -51,12 +64,14 @@ jobs:
             portfolio-project/backend/requirements-dev.txt
 
       - name: Install backend dependencies
+        if: ${{ steps.sonar_config.outputs.enabled == 'true' }}
         working-directory: portfolio-project
         run: |
           python -m pip install --upgrade pip
           pip install -r backend/requirements.txt -r backend/requirements-dev.txt
 
       - name: Generate backend coverage report
+        if: ${{ steps.sonar_config.outputs.enabled == 'true' }}
         working-directory: portfolio-project
         env:
           DATABASE_URL: sqlite:///./ci.db
@@ -69,6 +84,7 @@ jobs:
         run: python -m pytest -q
 
       - name: Setup Node
+        if: ${{ steps.sonar_config.outputs.enabled == 'true' }}
         uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version: "20"
@@ -76,6 +92,7 @@ jobs:
           cache-dependency-path: portfolio-project/frontend/package-lock.json
 
       - name: Install frontend dependencies
+        if: ${{ steps.sonar_config.outputs.enabled == 'true' }}
         working-directory: portfolio-project/frontend
         run: |
           for attempt in 1 2 3; do
@@ -90,10 +107,12 @@ jobs:
           done
 
       - name: Generate frontend coverage report
+        if: ${{ steps.sonar_config.outputs.enabled == 'true' }}
         working-directory: portfolio-project/frontend
         run: npm run test:coverage
 
       - name: SonarCloud scan (PR)
+        if: ${{ steps.sonar_config.outputs.enabled == 'true' }}
         uses: SonarSource/sonarqube-scan-action@fd88b7d7ccbaefd23d8f36f73b59db7a3d246602 # v6
         with:
           projectBaseDir: portfolio-project
