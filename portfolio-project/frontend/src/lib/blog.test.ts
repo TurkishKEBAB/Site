@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { fetchBlogPosts } from "./blog";
+import { fetchBlogPostMetadata, fetchBlogPosts } from "./blog";
 
 const successfulBlogResponse = {
   items: [
@@ -43,5 +43,27 @@ describe("server blog data fetching", () => {
       }),
     );
     expect(fetchSpy.mock.calls[0][1]).not.toHaveProperty("cache", "no-store");
+  });
+
+  it("fetches only the post detail needed for metadata", async () => {
+    const fetchSpy = vi.fn().mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: vi.fn().mockResolvedValue(successfulBlogResponse.items[0]),
+    });
+    vi.stubGlobal("fetch", fetchSpy);
+
+    await expect(
+      fetchBlogPostMetadata("building-constraint-aware-schedulers", "en"),
+    ).resolves.toMatchObject({
+      id: "post-1",
+      slug: "post",
+    });
+
+    expect(fetchSpy).toHaveBeenCalledTimes(1);
+    expect(fetchSpy).toHaveBeenCalledWith(
+      expect.stringContaining("/blog/building-constraint-aware-schedulers?language=en"),
+      expect.any(Object),
+    );
   });
 });

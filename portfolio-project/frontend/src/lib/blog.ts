@@ -127,6 +127,28 @@ export async function fetchBlogPosts(locale: Locale): Promise<{
   }
 }
 
+export async function fetchBlogPostMetadata(
+  slug: string,
+  locale: Locale,
+): Promise<BlogPost | null> {
+  try {
+    const response = await fetchJson<BlogPost>(
+      buildUrl(`/blog/${slug}`, {
+        language: locale,
+      }),
+    );
+
+    if (!response.data) {
+      return null;
+    }
+
+    return normalizeBlogPost(response.data);
+  } catch (error) {
+    console.error("Failed to fetch blog metadata", error);
+    return null;
+  }
+}
+
 export async function fetchBlogPostBundle(
   slug: string,
   locale: Locale,
