@@ -1,6 +1,7 @@
 """System health endpoint tests."""
 
 import asyncio
+from pathlib import Path
 
 from app import main as main_module
 
@@ -22,6 +23,14 @@ def test_live_endpoint_returns_alive(client):
     response = client.get("/live")
     assert response.status_code == 200
     assert response.json()["status"] == "alive"
+
+
+def test_container_healthcheck_uses_liveness_endpoint():
+    dockerfile = Path(__file__).resolve().parents[1] / "Dockerfile"
+    contents = dockerfile.read_text(encoding="utf-8")
+
+    assert "/live" in contents
+    assert "/health" not in contents
 
 
 def test_ready_returns_503_when_db_down(client, monkeypatch):

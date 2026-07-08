@@ -11,6 +11,8 @@ export interface BlogPostBundle {
 }
 
 const emptyBlogPosts: BlogPost[] = [];
+const BLOG_REVALIDATE_SECONDS = 300;
+const BLOG_FETCH_TIMEOUT_MS = 1500;
 
 const getApiBaseUrl = () =>
   (process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000/api/v1").replace(/\/$/, "");
@@ -50,8 +52,21 @@ const buildUrl = (pathname: string, params?: Record<string, string | number | bo
   return url.toString();
 };
 
+const createTimeoutSignal = () => {
+  if (typeof AbortSignal.timeout === "function") {
+    return AbortSignal.timeout(BLOG_FETCH_TIMEOUT_MS);
+  }
+
+  const controller = new AbortController();
+  setTimeout(() => controller.abort(), BLOG_FETCH_TIMEOUT_MS);
+  return controller.signal;
+};
+
 async function fetchJson<T>(url: string): Promise<{ status: number; data: T | null }> {
-  const response = await fetch(url, { cache: "no-store" });
+  const response = await fetch(url, {
+    next: { revalidate: BLOG_REVALIDATE_SECONDS },
+    signal: createTimeoutSignal(),
+  });
 
   if (!response.ok) {
     return { status: response.status, data: null };
@@ -109,6 +124,28 @@ export async function fetchBlogPosts(locale: Locale): Promise<{
   } catch (error) {
     console.error("Failed to fetch blog posts", error);
     return { posts: emptyBlogPosts, degraded: true };
+  }
+}
+
+export async function fetchBlogPostMetadata(
+  slug: string,
+  locale: Locale,
+): Promise<BlogPost | null> {
+  try {
+    const response = await fetchJson<BlogPost>(
+      buildUrl(`/blog/${slug}`, {
+        language: locale,
+      }),
+    );
+
+    if (!response.data) {
+      return null;
+    }
+
+    return normalizeBlogPost(response.data);
+  } catch (error) {
+    console.error("Failed to fetch blog metadata", error);
+    return null;
   }
 }
 

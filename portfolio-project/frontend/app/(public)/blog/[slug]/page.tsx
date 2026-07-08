@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
 import BlogDetail from "@/routes/BlogDetail";
-import { fetchBlogPostBundle } from "@/lib/blog";
+import { fetchBlogPostBundle, fetchBlogPostMetadata } from "@/lib/blog";
 import { getRequestLocale } from "@/lib/locale";
 import { buildMetadata, getSiteUrl } from "@/lib/metadata";
 
@@ -17,34 +17,34 @@ export async function generateMetadata({
 }: BlogDetailPageProps): Promise<Metadata> {
   const locale = await getRequestLocale();
   const { slug } = await params;
-  const bundle = await fetchBlogPostBundle(slug, locale);
+  const post = await fetchBlogPostMetadata(slug, locale);
 
-  if (!bundle.post) {
+  if (!post) {
     return buildMetadata("blog", locale, `/blog/${slug}`);
   }
 
   return {
     ...buildMetadata("blog", locale, `/blog/${slug}`),
-    title: `${bundle.post.title} | Yiğit Okur`,
-    description: bundle.post.excerpt,
+    title: `${post.title} | Yiğit Okur`,
+    description: post.excerpt,
     openGraph: {
       type: "article",
-      url: `${getSiteUrl()}/blog/${bundle.post.slug}`,
-      title: `${bundle.post.title} | Yiğit Okur`,
-      description: bundle.post.excerpt,
+      url: `${getSiteUrl()}/blog/${post.slug}`,
+      title: `${post.title} | Yiğit Okur`,
+      description: post.excerpt,
       siteName: "Yiğit Okur",
       images: [
         {
-          url: bundle.post.cover_image || "/opengraph-image",
-          alt: bundle.post.title,
+          url: post.cover_image || "/opengraph-image",
+          alt: post.title,
         },
       ],
     },
     twitter: {
       card: "summary_large_image",
-      title: `${bundle.post.title} | Yiğit Okur`,
-      description: bundle.post.excerpt,
-      images: [bundle.post.cover_image || "/opengraph-image"],
+      title: `${post.title} | Yiğit Okur`,
+      description: post.excerpt,
+      images: [post.cover_image || "/opengraph-image"],
     },
   };
 }
