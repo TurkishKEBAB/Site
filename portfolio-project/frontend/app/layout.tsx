@@ -29,7 +29,7 @@ export const metadata: Metadata = {
   creator: siteConfig.name,
   publisher: siteConfig.name,
   icons: {
-    icon: "/vite.svg",
+    icon: "/brand-icon.svg",
   },
 };
 
