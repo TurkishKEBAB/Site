@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useCallback, useContext, useState, type ReactNode } from "react";
+import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from "react";
 import { AnimatePresence, motion } from "motion/react";
 
 type ToastType = "success" | "error" | "info" | "warning";
@@ -35,10 +35,23 @@ export const useToast = () => {
 
 export const ToastProvider = ({ children }: ToastProviderProps) => {
   const [toasts, setToasts] = useState<Toast[]>([]);
+  const timers = useRef(new Map<string, number>());
 
-  const hideToast = useCallback((id: string) => {
-    setToasts((prev) => prev.filter((toast) => toast.id !== id));
+  const clearTimer = useCallback((id: string) => {
+    const handle = timers.current.get(id);
+    if (handle !== undefined) {
+      window.clearTimeout(handle);
+      timers.current.delete(id);
+    }
   }, []);
+
+  const hideToast = useCallback(
+    (id: string) => {
+      clearTimer(id);
+      setToasts((prev) => prev.filter((toast) => toast.id !== id));
+    },
+    [clearTimer],
+  );
 
   const showToast = useCallback(
     (type: ToastType, message: string, duration = 5000) => {
@@ -48,13 +61,22 @@ export const ToastProvider = ({ children }: ToastProviderProps) => {
       setToasts((prev) => [...prev, nextToast]);
 
       if (duration > 0) {
-        window.setTimeout(() => {
+        const handle = window.setTimeout(() => {
           hideToast(id);
         }, duration);
+        timers.current.set(id, handle);
       }
     },
     [hideToast],
   );
+
+  useEffect(() => {
+    const active = timers.current;
+    return () => {
+      active.forEach((handle) => window.clearTimeout(handle));
+      active.clear();
+    };
+  }, []);
 
   const getToastStyles = (type: ToastType) => {
     switch (type) {
