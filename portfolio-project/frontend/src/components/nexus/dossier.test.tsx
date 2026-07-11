@@ -1,0 +1,92 @@
+import { cleanup, fireEvent, render, screen, within } from "@testing-library/react";
+import { afterEach, describe, expect, it, vi } from "vitest";
+
+import { careerGraph } from "@/content/careerGraph";
+import { projectDetails } from "@/content/projectDetails";
+
+import { CareerMap } from "./CareerMap";
+import { DiagramGallery } from "./DiagramGallery";
+import { ProjectDossierModal, type DossierLabels, type DossierProject } from "./ProjectDossierModal";
+import { ProjectIndex } from "./ProjectIndex";
+
+afterEach(() => cleanup());
+
+const labels: DossierLabels = {
+  featured: "Featured", project: "Project", dossier: "dossier",
+  overview: "overview", architecture: "architecture", decisions: "decisions", engLog: "eng·log", gallery: "gallery",
+  impact: "Impact", techStack: "Technology stack", close: "Close project details",
+  context: "context", decision: "decision", tradeoff: "trade-off", galleryHint: "add",
+};
+
+const isik: DossierProject = {
+  slug: "isikschedule-platform",
+  title: "IsikSchedule Platform",
+  summary: "Constraint-aware scheduling platform.",
+  description: "Shared scheduling domain powering desktop and web.",
+  impact: "~1,000 active users; 86.97% coverage.",
+  technologies: ["FastAPI", "Next.js", "PostgreSQL"],
+  featured: true,
+  details: projectDetails["isikschedule-platform"],
+};
+
+describe("ProjectIndex", () => {
+  it("renders numbered rows and fires onSelect with the project", () => {
+    const onSelect = vi.fn();
+    const projects: DossierProject[] = [isik, { ...isik, slug: "second", title: "Second System", featured: false }];
+    render(<ProjectIndex projects={projects} onSelect={onSelect} featuredLabel="Featured" />);
+
+    expect(screen.getByText("01")).toBeInTheDocument();
+    expect(screen.getByText("02")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: /IsikSchedule Platform/ }));
+    expect(onSelect).toHaveBeenCalledWith(isik);
+  });
+});
+
+describe("ProjectDossierModal", () => {
+  it("returns null without a project", () => {
+    const { container } = render(<ProjectDossierModal project={null} onClose={vi.fn()} labels={labels} />);
+    expect(container).toBeEmptyDOMElement();
+  });
+
+  it("renders dossier tabs and switches to the decisions (ADR) tab", () => {
+    render(<ProjectDossierModal project={isik} onClose={vi.fn()} labels={labels} />);
+    // overview is default
+    expect(screen.getByText("Technology stack")).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("tab", { name: "decisions" }));
+    expect(screen.getByText("ADR-001")).toBeInTheDocument();
+    expect(screen.getByText("One scheduling core, two clients")).toBeInTheDocument();
+  });
+
+  it("closes on Escape and on the close button", () => {
+    const onClose = vi.fn();
+    render(<ProjectDossierModal project={isik} onClose={onClose} labels={labels} />);
+    fireEvent.keyDown(document, { key: "Escape" });
+    expect(onClose).toHaveBeenCalledTimes(1);
+    // the close button lives inside the dialog (the backdrop button shares the label)
+    const dialog = screen.getByRole("dialog");
+    fireEvent.click(within(dialog).getByRole("button", { name: "Close project details" }));
+    expect(onClose).toHaveBeenCalledTimes(2);
+  });
+});
+
+describe("DiagramGallery", () => {
+  it("switches renderer when a chip is picked", () => {
+    render(<DiagramGallery diagrams={projectDetails["isikschedule-platform"].diagrams} />);
+    // first diagram is the C4 model
+    expect(screen.getByRole("tab", { name: /C4 Model/ })).toHaveAttribute("aria-selected", "true");
+
+    fireEvent.click(screen.getByRole("tab", { name: /Class — solver core/ }));
+    expect(screen.getByText("+ solve(sections): Timetable")).toBeInTheDocument();
+  });
+});
+
+describe("CareerMap", () => {
+  it("shows the first node's story and advances with the stepper", () => {
+    render(<CareerMap lanes={careerGraph.lanes} nodes={careerGraph.nodes} links={careerGraph.links} />);
+    expect(screen.getByText(/init — Software Engineering/)).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "Next entry" }));
+    expect(screen.getByRole("heading", { name: "Core curriculum lands" })).toBeInTheDocument();
+  });
+});
