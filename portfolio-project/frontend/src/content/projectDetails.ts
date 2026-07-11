@@ -366,7 +366,7 @@ const details: Record<string, ProjectDetail> = {
     ],
   },
 
-  "teknofest-sarkan": {
+  "teknofest-sarkan-uav-defense-platform": {
     metrics: [
       { value: "3rd", label: "final rank", note: "among 700+ projects" },
       { value: "200K ₺", label: "budget managed", note: "165K ₺ TÜBİTAK grant" },
@@ -465,7 +465,7 @@ const details: Record<string, ProjectDetail> = {
     ],
   },
 
-  "agentic-ide": {
+  "agentic-ide-thesis-project": {
     metrics: [
       { value: "4", label: "loop stages", note: "observe · plan · approve · apply" },
       { value: "0", label: "VS Code forks", note: "extends Monaco directly" },
@@ -571,7 +571,7 @@ const details: Record<string, ProjectDetail> = {
     ],
   },
 
-  "web-crawler": {
+  "automated-web-crawler": {
     metrics: [
       { value: "89.9%", label: "success rate", note: "across runs" },
       { value: "100%", label: "robots.txt respect", note: "hard-enforced" },
@@ -666,7 +666,7 @@ const details: Record<string, ProjectDetail> = {
     ],
   },
 
-  "portfolio-platform": {
+  "portfolio-platform-web-desktop": {
     metrics: [
       { value: "60+", label: "API endpoints", note: "FastAPI backend" },
       { value: "24h", label: "GitHub cache", note: "rate-limit shield" },
