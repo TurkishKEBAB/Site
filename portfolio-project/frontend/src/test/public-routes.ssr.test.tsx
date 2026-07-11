@@ -27,16 +27,6 @@ vi.mock("@/components/AnimatedSection", () => ({
   default: ({ children }: { children: ReactNode }) => <>{children}</>,
 }));
 
-vi.mock("@/components/ProjectExplorer", () => ({
-  default: ({ projects }: { projects: Array<{ title: string }> }) => (
-    <div data-testid="project-explorer">
-      {projects.map((project) => (
-        <span key={project.title}>{project.title}</span>
-      ))}
-    </div>
-  ),
-}));
-
 vi.mock("@/components/ContactForm", () => ({
   default: () => <div data-testid="contact-form">contact-form</div>,
 }));
@@ -61,7 +51,7 @@ describe("public route SSR", () => {
 
     expect(html).toContain(aboutContent[locale].pageSubtitle);
     expect(html).toContain("Current signal");
-    expect(html).toContain("Career timeline");
+    expect(html).toContain("Career map");
     expect(html).toContain("Tech radar");
     expect(html).toContain("Delivery with scale");
     expect(html).not.toContain("No experience found");

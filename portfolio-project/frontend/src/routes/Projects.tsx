@@ -1,8 +1,17 @@
+"use client";
+
+import { useState } from "react";
 import { FiArrowRight } from "react-icons/fi";
 
 import NxSectionHead from "@/components/nexus/NxSectionHead";
 import ScrambleHeading from "@/components/nexus/ScrambleHeading";
-import ProjectExplorer, { type LocalizedProjectView } from "@/components/ProjectExplorer";
+import {
+  ProjectDossierModal,
+  type DossierLabels,
+  type DossierProject,
+} from "@/components/nexus/ProjectDossierModal";
+import { ProjectIndex } from "@/components/nexus/ProjectIndex";
+import { projectDetails } from "@/content/projectDetails";
 import { getLocaleValue, projectRecords, type Locale } from "@/content/site";
 
 interface ProjectsPageProps {
@@ -29,20 +38,36 @@ const archTiers = (tr: boolean): ArchNode[][] => [
   ],
 ];
 
+const dossierLabels = (tr: boolean): DossierLabels =>
+  tr
+    ? {
+        featured: "Öne çıkan", project: "Proje", dossier: "dosya",
+        overview: "genel", architecture: "mimari", decisions: "kararlar", engLog: "gelişim·kaydı", gallery: "galeri",
+        impact: "Etki", techStack: "Teknoloji seti", close: "Proje detaylarını kapat",
+        context: "bağlam", decision: "karar", tradeoff: "ödünleşim", galleryHint: "şuraya ekle:",
+      }
+    : {
+        featured: "Featured", project: "Project", dossier: "dossier",
+        overview: "overview", architecture: "architecture", decisions: "decisions", engLog: "eng·log", gallery: "gallery",
+        impact: "Impact", techStack: "Technology stack", close: "Close project details",
+        context: "context", decision: "decision", tradeoff: "trade-off", galleryHint: "add",
+      };
+
 export default function Projects({ locale }: ProjectsPageProps) {
   const tr = locale === "tr";
   const tiers = archTiers(tr);
+  const labels = dossierLabels(tr);
+  const [selected, setSelected] = useState<DossierProject | null>(null);
 
-  const localizedProjects: LocalizedProjectView[] = projectRecords.map((project) => ({
+  const dossierProjects: DossierProject[] = projectRecords.map((project) => ({
     slug: project.slug,
     title: getLocaleValue(project.title, locale),
     summary: getLocaleValue(project.summary, locale),
     description: getLocaleValue(project.description, locale),
     impact: getLocaleValue(project.impact, locale),
     technologies: project.technologies,
-    githubUrl: project.githubUrl,
-    demoUrl: project.demoUrl,
     featured: project.featured,
+    details: projectDetails[project.slug],
   }));
 
   return (
@@ -113,12 +138,14 @@ export default function Projects({ locale }: ProjectsPageProps) {
           title={tr ? "Tüm sistemler" : "All systems"}
           subtitle={
             tr
-              ? "Numarali proje girisleri. Aciklama, etki ve stack icin herhangi bir satira tikla."
-              : "Numbered project entries. Click any row for the description, impact, and stack."
+              ? "Numarali proje girisleri. Mimari, kararlar, gelisim kaydi ve galeri iceren tam dosya icin herhangi bir satira tikla."
+              : "Numbered project entries. Click any row for the full dossier — architecture, decisions, log, gallery."
           }
         />
-        <ProjectExplorer locale={locale} projects={localizedProjects} />
+        <ProjectIndex projects={dossierProjects} onSelect={setSelected} featuredLabel={labels.featured} />
       </section>
+
+      <ProjectDossierModal project={selected} onClose={() => setSelected(null)} labels={labels} />
     </div>
   );
 }

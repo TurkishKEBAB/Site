@@ -1,8 +1,10 @@
 import AnimatedSection from "@/components/AnimatedSection";
 import CapabilityMatrix, { type CapabilityGroup } from "@/components/nexus/CapabilityMatrix";
+import { CareerMap } from "@/components/nexus/CareerMap";
 import NxSectionHead from "@/components/nexus/NxSectionHead";
 import ScrambleHeading from "@/components/nexus/ScrambleHeading";
 import TechRadar from "@/components/nexus/TechRadar";
+import { careerGraph } from "@/content/careerGraph";
 import {
   aboutContent,
   getLocaleValue,
@@ -46,63 +48,6 @@ const nowCards = [
     body: {
       en: "Part-time SWE, backend, cloud platform & DevOps.",
       tr: "Part-time SWE, backend, cloud platform ve DevOps.",
-    },
-  },
-];
-
-const timeline = [
-  {
-    when: { en: "Jan 2026 – Feb 2026", tr: "Oca 2026 – Sub 2026" },
-    where: "NETAS Telekom",
-    title: { en: "Software Engineering Intern", tr: "Yazilim Muhendisligi Stajyeri" },
-    body: {
-      en: "25 commits and 1,550 lines of code & tests across four Jira tickets; traced a silent UTC vs UTC+3 mismatch with ELK and locked it down with 600+ test lines.",
-      tr: "Dort Jira ticket boyunca 25 commit ve 1.550 satir kod & test; sessiz UTC vs UTC+3 uyumsuzlugunu ELK ile izleyip 600+ satir testle sabitledim.",
-    },
-  },
-  {
-    when: { en: "Dec 2025 – Present", tr: "Ara 2025 – Devam" },
-    where: "AdaLab",
-    title: { en: "Research Assistant", tr: "Arastirma Asistani" },
-    body: {
-      en: "Academic data-analytics lab — supporting AI and data-analytics research alongside coursework.",
-      tr: "Akademik veri-analitigi lab — ders yukunun yaninda AI ve veri-analitigi arastirmasina destek.",
-    },
-  },
-  {
-    when: { en: "Nov 2025 – Jan 2026", tr: "Kas 2025 – Oca 2026" },
-    where: "Arch of Sigma · Remote",
-    title: { en: "Project Management Intern", tr: "Proje Yonetimi Stajyeri" },
-    body: {
-      en: "Coordinated cross-functional architecture project delivery and reporting.",
-      tr: "Fonksiyonlar arasi mimari proje teslimini ve raporlamasini koordine ettim.",
-    },
-  },
-  {
-    when: { en: "Feb 2024 – Present", tr: "Sub 2024 – Devam" },
-    where: "Isik University · CSE",
-    title: { en: "Student Assistant", tr: "Ogrenci Asistani" },
-    body: {
-      en: "Supporting the Computer Science & Engineering department across coursework and labs.",
-      tr: "Bilgisayar Bilimleri & Muhendisligi bolumunu dersler ve laboratuvarlarda destekliyorum.",
-    },
-  },
-  {
-    when: { en: "Ongoing", tr: "Suregelen" },
-    where: "IEEE Isik",
-    title: { en: "Leadership & Coordination", tr: "Liderlik & Koordinasyon" },
-    body: {
-      en: "Help coordinate 35+ technical events reaching 1,100+ students.",
-      tr: "1.100+ ogrenciye ulasan 35+ teknik etkinligin koordinasyonuna destek.",
-    },
-  },
-  {
-    when: { en: "2023 – 2027", tr: "2023 – 2027" },
-    where: "Isik University",
-    title: { en: "B.Sc. Software Engineering", tr: "Lisans, Yazilim Muhendisligi" },
-    body: {
-      en: "Third-year — focused on backend systems, cloud delivery, and quality engineering.",
-      tr: "Ucuncu sinif — backend sistemleri, cloud teslimi ve kalite muhendisligine odakli.",
     },
   },
 ];
@@ -189,29 +134,19 @@ export default function About({ locale }: AboutPageProps) {
         </div>
       </section>
 
-      {/* 04 — timeline */}
+      {/* 04 — career map */}
       <section className="mt-20">
-        <NxSectionHead index="04" label={tr ? "Yon" : "Trajectory"} title={tr ? "Kariyer zaman cizgisi" : "Career timeline"} />
-        <div className="relative ml-2">
-          <span className="absolute bottom-1.5 left-[5px] top-1.5 w-px bg-gray-200 dark:bg-dark-600" aria-hidden="true" />
-          {timeline.map((entry, index) => (
-            <AnimatedSection key={`${entry.where}-${index}`} delay={index * 0.03}>
-              <div className="group relative pb-7 pl-8 last:pb-0">
-                <span className="absolute left-0 top-1.5 h-2.5 w-2.5 rounded-full border-2 border-gray-300 bg-[#f4f4f8] transition-all group-hover:border-primary-400 group-hover:shadow-[0_0_0_4px_rgba(0,212,255,0.12)] dark:border-dark-500 dark:bg-dark-950" aria-hidden="true" />
-                <div className="flex flex-wrap items-baseline gap-x-3.5 gap-y-1 font-mono text-[10.5px] uppercase tracking-[0.06em]">
-                  <span className="text-primary-600 dark:text-primary-400">{getLocaleValue(entry.when, locale)}</span>
-                  <span className="text-gray-400 dark:text-dark-400">{entry.where}</span>
-                </div>
-                <h4 className="mt-1.5 font-display text-[17px] font-semibold text-gray-900 dark:text-dark-50">
-                  {getLocaleValue(entry.title, locale)}
-                </h4>
-                <p className="mt-1.5 max-w-3xl text-[13px] leading-relaxed text-gray-600 dark:text-dark-300">
-                  {getLocaleValue(entry.body, locale)}
-                </p>
-              </div>
-            </AnimatedSection>
-          ))}
-        </div>
+        <NxSectionHead
+          index="04"
+          label={tr ? "Yon" : "Trajectory"}
+          title={tr ? "Kariyer haritasi" : "Career map"}
+          subtitle={
+            tr
+              ? "Dallanan bir git grafigi olarak kariyer — hikayesini okumak icin bir dugume tikla."
+              : "Career as a branching git graph — click a node to read its story."
+          }
+        />
+        <CareerMap lanes={careerGraph.lanes} nodes={careerGraph.nodes} links={careerGraph.links} />
       </section>
 
       {/* 05 — capabilities */}
