@@ -11,6 +11,44 @@
     --color-accent: 0 212 255;
     --color-accent-hex: #00d4ff;
     --color-gold: #f0b400;
+
+    /* YO.sys semantic tokens — light (dark overrides in .dark below).
+       Ported design components consume these; hardcoded cyan tints
+       (rgba(0,212,255,…)) stay literal in both themes. */
+    --text-1: #0f172a;
+    --text-body: #334155;
+    --text-muted: #4b5563;
+    --text-faint: #9ca3af;
+    --accent-text: #0099cc;
+    --border-1: #e5e7eb;
+    --surface-card: rgba(255, 255, 255, 0.8);
+    --surface-card-solid: #ffffff;
+    --bg-page: #f4f4f8;
+    --gold-400: #f0b400;
+    --status-green: #10b981;
+    --syn-keyword: #7c3aed;
+    --syn-fn: #2563eb;
+    --syn-err: #dc2626;
+    --primary-300: #83e8ff;
+    --primary-400: #00d4ff;
+    --primary-700: #007aa3;
+    --dark-500: #3a3a60;
+  }
+
+  .dark {
+    --text-1: #e8e8f0;
+    --text-body: #d0d0e0;
+    --text-muted: #8888a8;
+    --text-faint: #5a5a80;
+    --accent-text: #00d4ff;
+    --border-1: #1e1e3e;
+    --surface-card: rgba(18, 18, 42, 0.6);
+    --surface-card-solid: #0a0a14;
+    --bg-page: #06060e;
+    --status-green: #34d399;
+    --syn-keyword: #c792ea;
+    --syn-fn: #82aaff;
+    --syn-err: #ff9a9a;
   }
 
   html {
@@ -377,4 +415,38 @@
 @keyframes nx-toast-in {
   from { opacity: 0; transform: translate(-50%, 16px); }
   to { opacity: 1; transform: translate(-50%, 0); }
+}
+
+/* ── dossier modal + diagram transitions ─────────────────────── */
+@keyframes nx-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes nx-slide-up {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes nx-c4-in {
+  from { opacity: 0; transform: scale(0.97); }
+  to { opacity: 1; transform: scale(1); }
+}
+@keyframes nx-c4-out {
+  from { opacity: 0; transform: scale(1.03); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+/* ── project index rows (nx-row hover: cyan bar + wash + arrow) ─ */
+.nx-index-row:hover {
+  background: rgba(0, 212, 255, 0.04);
+  padding-left: 16px !important;
+}
+.nx-index-row:hover .nx-index-num { color: var(--accent-text); }
+.nx-index-row:hover .nx-index-arrow {
+  transform: rotate(-45deg);
+  border-color: rgba(0, 212, 255, 0.4);
+  color: var(--accent-text);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .nx-index-row:hover { padding-left: 8px !important; }
 }
