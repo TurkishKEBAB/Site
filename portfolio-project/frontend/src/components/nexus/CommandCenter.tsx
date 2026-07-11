@@ -1,7 +1,12 @@
+"use client";
+
+import { useState } from "react";
 import { FiGithub } from "react-icons/fi";
 
+import { ExpandChip, GitHubDetailView, TelemetryModal, WakaDetailView } from "@/components/nexus/TelemetryDashboard";
 import { CornerFrame } from "@/components/ui";
 import { siteConfig, type Locale } from "@/content/site";
+import { githubDetail, wakaDetail } from "@/content/telemetryDetail";
 import type {
   GitHubContributions,
   GitHubStats,
@@ -42,6 +47,8 @@ function Unavailable({ locale }: { locale: Locale }) {
 
 export default function CommandCenter({ locale, waka, github, contributions }: CommandCenterProps) {
   const tr = locale === "tr";
+  const [expanded, setExpanded] = useState<null | "waka" | "github">(null);
+  const expandLabel = tr ? "genislet" : "expand";
 
   const wakaStats = waka
     ? [
@@ -61,11 +68,15 @@ export default function CommandCenter({ locale, waka, github, contributions }: C
     : [];
 
   return (
-    <div className="grid gap-5 md:grid-cols-[1fr,1.25fr]">
+    <>
+      <div className="grid gap-5 md:grid-cols-[1fr,1.25fr]">
       <CornerFrame accent className="panel p-6 md:p-7">
-        <span className="sys-label flex items-center gap-2">
-          <span className="text-primary-600 dark:text-primary-400">//</span> WakaTime
-        </span>
+        <div className="flex items-center justify-between gap-3">
+          <span className="sys-label flex items-center gap-2">
+            <span className="text-primary-600 dark:text-primary-400">//</span> WakaTime
+          </span>
+          <ExpandChip onClick={() => setExpanded("waka")} label={expandLabel} />
+        </div>
         {waka ? (
           <>
             <div className="mt-5 flex flex-wrap gap-x-8 gap-y-4">
@@ -105,16 +116,19 @@ export default function CommandCenter({ locale, waka, github, contributions }: C
           <span className="sys-label flex items-center gap-2">
             <span className="text-primary-600 dark:text-primary-400">//</span> GitHub
           </span>
-          <a
-            href={siteConfig.github}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="rounded border border-gray-200 px-2.5 py-1 font-mono text-xs text-gray-500 transition-colors hover:border-primary-400/40 hover:text-primary-600 dark:border-dark-600 dark:text-dark-300 dark:hover:text-primary-400"
-          >
-            <span className="inline-flex items-center gap-1.5">
-              <FiGithub size={12} aria-hidden="true" />@{githubHandle}
-            </span>
-          </a>
+          <div className="flex items-center gap-2">
+            <a
+              href={siteConfig.github}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="rounded border border-gray-200 px-2.5 py-1 font-mono text-xs text-gray-500 transition-colors hover:border-primary-400/40 hover:text-primary-600 dark:border-dark-600 dark:text-dark-300 dark:hover:text-primary-400"
+            >
+              <span className="inline-flex items-center gap-1.5">
+                <FiGithub size={12} aria-hidden="true" />@{githubHandle}
+              </span>
+            </a>
+            <ExpandChip onClick={() => setExpanded("github")} label={expandLabel} />
+          </div>
         </div>
 
         {github ? (
@@ -159,6 +173,26 @@ export default function CommandCenter({ locale, waka, github, contributions }: C
           </>
         ) : null}
       </CornerFrame>
-    </div>
+      </div>
+
+      <TelemetryModal
+        open={expanded === "waka"}
+        label="WakaTime · Dashboard"
+        title={tr ? "Aktivite ozeti" : "Activity overview"}
+        meta={tr ? "son 7 gun · anlik goruntu" : "last 7 days · snapshot"}
+        onClose={() => setExpanded(null)}
+      >
+        <WakaDetailView detail={wakaDetail} />
+      </TelemetryModal>
+      <TelemetryModal
+        open={expanded === "github"}
+        label={`GitHub · @${githubHandle}`}
+        title={tr ? "Analitik & aktivite" : "Analytics & activity"}
+        meta={tr ? "public profil · gunluk guncellenir" : "public profile · updated daily"}
+        onClose={() => setExpanded(null)}
+      >
+        <GitHubDetailView stats={githubStats} detail={githubDetail} />
+      </TelemetryModal>
+    </>
   );
 }
