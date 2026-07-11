@@ -1,10 +1,9 @@
 import AnimatedSection from "@/components/AnimatedSection";
 import CapabilityMatrix, { type CapabilityGroup } from "@/components/nexus/CapabilityMatrix";
-import { CareerMap } from "@/components/nexus/CareerMap";
+import { CareerViews } from "@/components/nexus/CareerViews";
 import NxSectionHead from "@/components/nexus/NxSectionHead";
 import ScrambleHeading from "@/components/nexus/ScrambleHeading";
 import TechRadar from "@/components/nexus/TechRadar";
-import { careerGraph } from "@/content/careerGraph";
 import {
   aboutContent,
   getLocaleValue,
@@ -146,7 +145,7 @@ export default function About({ locale }: AboutPageProps) {
               : "Career as a branching git graph — click a node to read its story."
           }
         />
-        <CareerMap lanes={careerGraph.lanes} nodes={careerGraph.nodes} links={careerGraph.links} />
+        <CareerViews graphLabel={tr ? "grafik" : "graph"} logLabel={tr ? "kayit" : "log"} />
       </section>
 
       {/* 05 — capabilities */}
