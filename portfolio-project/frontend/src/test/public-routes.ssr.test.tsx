@@ -37,8 +37,8 @@ describe("public route SSR", () => {
     const html = renderToStaticMarkup(<Home locale={locale} />);
 
     expect(html).toContain(homeContent[locale].heroTitleFirst);
+    expect(html).toContain("yofetch");
     expect(html).toContain("Profile.java");
-    expect(html).toContain("PowerShell");
     expect(html).toContain("Command center");
     expect(html).toContain("Featured systems");
     expect(html).toContain(homeContent[locale].secondaryCta);

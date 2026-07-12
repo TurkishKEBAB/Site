@@ -1,16 +1,23 @@
 "use client";
 
-import { useEffect, useRef, useState, type KeyboardEvent } from "react";
+import { useEffect, useRef, useState, type CSSProperties, type KeyboardEvent } from "react";
 
-type TerminalTab = "sh" | "java" | "ps";
+/* uptime epoch — first semester of the SE program */
+const UPTIME_EPOCH = Date.parse("2023-09-18T09:00:00+03:00");
 
-const terminalTabs: Array<{ id: TerminalTab; label: string }> = [
-  { id: "sh", label: "profile.sh" },
-  { id: "java", label: "Profile.java" },
-  { id: "ps", label: "PowerShell" },
+const fetchRows: Array<[string, string]> = [
+  ["os", "YO.sys v2026 LTS"],
+  ["host", "Isik University · SE '27"],
+  ["kernel", "6.1-enterprise-lts"],
+  ["shell", "java / spring / aws"],
+  ["focus", "Cloud & DevOps"],
 ];
 
-// Syntax-highlighted Java source (faithful to the design's Profile.java).
+const palette = [
+  "var(--dark-600)", "var(--syn-err)", "var(--status-green)", "var(--gold-400)",
+  "var(--syn-fn)", "var(--syn-keyword)", "var(--primary-400)", "var(--dark-100)",
+];
+
 const JAVA_HTML = `<span class="j-kw">public class</span> <span class="j-type">Profile</span> {
     <span class="j-kw">public static</span> <span class="j-type">void</span> <span class="j-fn">main</span>(<span class="j-type">String</span>[] args) {
         <span class="j-type">String</span>[][] info = {
@@ -29,12 +36,6 @@ const JAVA_HTML = `<span class="j-kw">public class</span> <span class="j-type">P
     }
 }`;
 
-const escapeHtml = (value: string) =>
-  value.replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;");
-
-const ps1 = () =>
-  `<span class="ps-prompt">PS</span> <span class="ps-path">${String.raw`C:\dev\yigit-okur`}</span><span class="ps-prompt">&gt;</span>`;
-
 const profileOutput = [
   '<span class="c-prompt">&gt;</span> <span class="c-dim">init</span> system.profile',
   '<span class="c-key">name</span>      <span class="c-val">Yiğit Okur</span>',
@@ -46,285 +47,223 @@ const profileOutput = [
   '<span class="c-prompt">&gt;</span> <span class="c-ok">profile loaded</span>',
 ];
 
-interface PsLine {
+const escapeHtml = (v: string) => v.replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;");
+const ps1 = '<span class="ps-path">yigit@yo-sys</span><span class="ps-dim">:~</span> <span class="ps-prompt">❯</span>';
+
+const pad2 = (n: number) => String(n).padStart(2, "0");
+const fmtUptime = (ms: number) => {
+  const s = Math.max(0, Math.floor(ms / 1000));
+  return `${Math.floor(s / 86400)}d ${pad2(Math.floor(s / 3600) % 24)}:${pad2(Math.floor(s / 60) % 60)}:${pad2(s % 60)}`;
+};
+
+/* corner bracket for the photo frame */
+const bracket = (pos: string): CSSProperties => ({
+  position: "absolute", width: 14, height: 14, pointerEvents: "none",
+  ...(pos.includes("t") ? { top: 6, borderTop: "1px solid rgba(0,212,255,0.8)" } : { bottom: 6, borderBottom: "1px solid rgba(0,212,255,0.8)" }),
+  ...(pos.includes("l") ? { left: 6, borderLeft: "1px solid rgba(0,212,255,0.8)" } : { right: 6, borderRight: "1px solid rgba(0,212,255,0.8)" }),
+});
+
+interface Line {
   id: number;
   html: string;
 }
 
-const introLines: PsLine[] = [
-  { id: -2, html: '<span class="ps-dim">Windows PowerShell · javac / java ready</span>' },
-  { id: -1, html: '<span class="ps-dim">Type a command or press ▶ Run.</span>' },
-];
+type Tab = "fetch" | "java" | "shell";
 
-export default function SystemTerminal() {
-  const [activeTab, setActiveTab] = useState<TerminalTab>("sh");
-  const [psLines, setPsLines] = useState<PsLine[]>(introLines);
-  const [psInput, setPsInput] = useState("");
+/**
+ * Hero terminal: traffic lights + 3 tabs (yofetch, Profile.java, shell).
+ * yofetch = neofetch-style ID panel — duotone photo with scanline sweep, live
+ * uptime, status, palette blocks. shell = a working toy shell in the house
+ * palette (help / dir / ls / uptime / yofetch / javac / java / cls).
+ */
+export default function SystemTerminal({ profileSrc = "/profile.jpg", className = "" }: { profileSrc?: string; className?: string }) {
+  const [tab, setTab] = useState<Tab>("fetch");
+  const [rawPhoto, setRawPhoto] = useState(false);
+  const [now, setNow] = useState(() => Date.now());
+  const [lines, setLines] = useState<Line[]>([
+    { id: -2, html: '<span class="ps-dim">yo-shell 2.0 · javac / java ready</span>' },
+    { id: -1, html: '<span class="ps-dim">Type a command or press ▶ Run.</span>' },
+  ]);
+  const [input, setInput] = useState("");
   const [busy, setBusy] = useState(false);
-
-  const compiledRef = useRef(false);
-  const busyRef = useRef(false);
+  const compiled = useRef(false);
   const idRef = useRef(0);
-  const reducedRef = useRef(false);
   const outRef = useRef<HTMLDivElement>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
-  const tabRefs = useRef<Array<HTMLButtonElement | null>>([]);
 
   useEffect(() => {
-    reducedRef.current = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const t = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(t);
   }, []);
-
   useEffect(() => {
     if (outRef.current) outRef.current.scrollTop = outRef.current.scrollHeight;
-  }, [psLines]);
+  }, [lines]);
 
-  const sleep = (ms: number) =>
-    new Promise<void>((resolve) => setTimeout(resolve, reducedRef.current ? 0 : ms));
-
+  const sleep = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
   const push = (html: string) => {
     idRef.current += 1;
     const id = idRef.current;
-    setPsLines((prev) => [...prev, { id, html }]);
-  };
-
-  const setBusyState = (value: boolean) => {
-    busyRef.current = value;
-    setBusy(value);
-    if (!value) setTimeout(() => inputRef.current?.focus(), 0);
-  };
-
-  const typeOut = async (lines: string[]) => {
-    for (const line of lines) {
-      push(line);
-      await sleep(120);
-    }
+    setLines((p) => [...p, { id, html }]);
   };
 
   const exec = async (raw: string) => {
     const cmd = raw.trim();
     const low = cmd.toLowerCase();
-    push(`${ps1()} <span class="ps-cmd">${escapeHtml(raw)}</span>`);
-
+    push(`${ps1} <span class="ps-cmd">${escapeHtml(raw)}</span>`);
     if (cmd === "") return;
-    if (low === "cls" || low === "clear") {
-      setPsLines([]);
-      return;
-    }
+    if (low === "cls" || low === "clear") { setLines([]); return; }
     if (low === "help") {
       push('<span class="ps-dim">Commands:</span>');
       push('  <span class="ps-ok">javac Profile.java</span>  <span class="ps-dim">compile the source</span>');
       push('  <span class="ps-ok">java Profile</span>        <span class="ps-dim">run → prints the profile</span>');
-      push('  <span class="ps-ok">dir</span> · <span class="ps-ok">cls</span> · <span class="ps-ok">help</span>');
+      push('  <span class="ps-ok">yofetch</span>             <span class="ps-dim">system summary</span>');
+      push('  <span class="ps-ok">ls</span> · <span class="ps-ok">uptime</span> · <span class="ps-ok">cls</span> · <span class="ps-ok">help</span>');
       return;
     }
-    if (low === "dir" || low === "ls" || low === "gci") {
-      push('<span class="ps-dim">Mode   Name</span>');
-      push("-a---  Profile.java");
-      if (compiledRef.current) push("-a---  Profile.class");
+    if (low === "dir" || low === "ls") {
+      push(`<span class="ps-ok">Profile.java</span>${compiled.current ? '  <span class="ps-dim">Profile.class</span>' : ""}`);
       return;
+    }
+    if (low === "uptime") {
+      push(`<span class="ps-dim">up</span> <span class="ps-ok">${fmtUptime(Date.now() - UPTIME_EPOCH)}</span> <span class="ps-dim">· load: coursework + NETAS backlog</span>`);
+      return;
+    }
+    if (low === "yofetch" || low === "neofetch") {
+      setBusy(true);
+      for (const line of profileOutput) { push(line); await sleep(90); }
+      setBusy(false); return;
     }
     if (low === "javac profile.java" || low === "javac profile") {
-      setBusyState(true);
-      await sleep(520);
-      compiledRef.current = true;
+      setBusy(true); await sleep(520);
+      compiled.current = true;
       push('<span class="ps-dim"># compiled → Profile.class</span>');
-      setBusyState(false);
-      return;
+      setBusy(false); return;
     }
     if (low === "java profile" || low === "java profile.class") {
-      if (!compiledRef.current) {
+      if (!compiled.current) {
         push('<span class="ps-err">Error: Could not find or load main class Profile</span>');
         push('<span class="ps-dim">Run </span><span class="ps-ok">javac Profile.java</span><span class="ps-dim"> first.</span>');
         return;
       }
-      setBusyState(true);
-      await typeOut(profileOutput);
-      setBusyState(false);
-      return;
+      setBusy(true);
+      for (const line of profileOutput) { push(line); await sleep(120); }
+      setBusy(false); return;
     }
     const first = cmd.split(/\s+/)[0];
-    push(
-      `<span class="ps-err">${escapeHtml(first)} : The term '${escapeHtml(
-        first,
-      )}' is not recognized as a name of a cmdlet, function, or operable program.</span>`,
-    );
-  };
-
-  const typeInto = async (value: string) => {
-    if (reducedRef.current) {
-      setPsInput(value);
-      return;
-    }
-    setPsInput("");
-    for (let i = 0; i <= value.length; i += 1) {
-      setPsInput(value.slice(0, i));
-      await sleep(38);
-    }
+    push(`<span class="ps-err">yo-shell: command not found: ${escapeHtml(first)}</span> <span class="ps-dim">— try</span> <span class="ps-ok">help</span>`);
   };
 
   const runAll = async () => {
-    if (busyRef.current) return;
-    compiledRef.current = false;
-    setBusyState(true);
-    await typeInto("javac Profile.java");
-    setPsInput("");
+    if (busy) return;
+    compiled.current = false;
+    setBusy(true);
     await exec("javac Profile.java");
     await sleep(340);
-    await typeInto("java Profile");
-    setPsInput("");
     await exec("java Profile");
-    setBusyState(false);
+    setBusy(false);
   };
 
-  const onPsKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
-    if (busyRef.current) {
-      event.preventDefault();
-      return;
-    }
-    if (event.key === "Enter") {
-      event.preventDefault();
-      const value = psInput;
-      setPsInput("");
-      void exec(value);
+  const onShellKey = (e: KeyboardEvent<HTMLInputElement>) => {
+    if (busy) { e.preventDefault(); return; }
+    if (e.key === "Enter") {
+      e.preventDefault();
+      const v = input;
+      setInput("");
+      void exec(v);
     }
   };
 
-  const onTabKeyDown = (event: KeyboardEvent<HTMLButtonElement>, index: number) => {
-    if (event.key !== "ArrowLeft" && event.key !== "ArrowRight") return;
-    event.preventDefault();
-    const next =
-      event.key === "ArrowRight"
-        ? (index + 1) % terminalTabs.length
-        : (index - 1 + terminalTabs.length) % terminalTabs.length;
-    setActiveTab(terminalTabs[next].id);
-    tabRefs.current[next]?.focus();
-  };
+  const tabs: Array<[Tab, string]> = [["fetch", "yofetch"], ["java", "Profile.java"], ["shell", "shell"]];
+  const mono: CSSProperties = { fontFamily: "var(--font-mono)", fontSize: 12, lineHeight: 1.8 };
+  const keyStyle: CSSProperties = { color: "var(--primary-400)", display: "inline-block", minWidth: 64, flexShrink: 0 };
+  const chip: CSSProperties = { borderRadius: 3, padding: "2px 6px", background: "rgba(0,212,255,0.08)", border: "1px solid rgba(0,212,255,0.28)", color: "var(--primary-400)" };
 
   return (
-    <div className="nx-term-surface overflow-hidden rounded-lg border border-dark-600/70 shadow-[0_24px_60px_rgba(0,0,0,0.45)] backdrop-blur">
-      <div className="flex items-center gap-2 border-b border-dark-600/70 bg-black/30 px-4 py-2.5">
-        <span className="h-2.5 w-2.5 rounded-full" style={{ background: "#ff5f57" }} />
-        <span className="h-2.5 w-2.5 rounded-full" style={{ background: "#febc2e" }} />
-        <span className="h-2.5 w-2.5 rounded-full" style={{ background: "#28c840" }} />
-        <div className="ml-2 flex flex-1 gap-0.5" role="tablist" aria-label="Profile terminal tabs">
-          {terminalTabs.map((tab, index) => {
-            const selected = activeTab === tab.id;
-            return (
-              <button
-                key={tab.id}
-                ref={(el) => {
-                  tabRefs.current[index] = el;
-                }}
-                type="button"
-                role="tab"
-                aria-selected={selected}
-                tabIndex={selected ? 0 : -1}
-                onClick={() => setActiveTab(tab.id)}
-                onKeyDown={(event) => onTabKeyDown(event, index)}
-                className={`min-w-0 flex-1 truncate rounded-t px-2.5 py-1.5 text-center font-mono text-[11px] tracking-tight transition-colors ${
-                  selected ? "bg-dark-900/80 text-primary-400" : "text-dark-400 hover:text-dark-200"
-                }`}
-              >
-                {tab.label}
-              </button>
-            );
-          })}
+    <div className={`nx-term-surface ${className}`} style={{ overflow: "hidden", borderRadius: 8, border: "1px solid rgba(30,30,62,0.7)", boxShadow: "var(--shadow-terminal)", backdropFilter: "blur(8px)", background: "rgba(10,10,20,0.72)" }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 8, borderBottom: "1px solid rgba(30,30,62,0.7)", background: "rgba(0,0,0,0.3)", padding: "10px 16px" }}>
+        <span style={{ width: 10, height: 10, borderRadius: 9999, background: "var(--traffic-red)" }} />
+        <span style={{ width: 10, height: 10, borderRadius: 9999, background: "var(--traffic-yellow)" }} />
+        <span style={{ width: 10, height: 10, borderRadius: 9999, background: "var(--traffic-green)" }} />
+        <div style={{ marginLeft: 8, display: "flex", flex: 1, gap: 2 }} role="tablist">
+          {tabs.map(([id, label]) => (
+            <button key={id} type="button" role="tab" aria-selected={tab === id} onClick={() => setTab(id)}
+              style={{ minWidth: 0, flex: 1, borderRadius: "4px 4px 0 0", padding: "6px 10px", textAlign: "center", fontFamily: "var(--font-mono)", fontSize: 11, letterSpacing: "-0.01em", border: "none", cursor: "pointer", transition: "color 200ms", background: tab === id ? "rgba(10,10,20,0.8)" : "transparent", color: tab === id ? "var(--primary-400)" : "var(--dark-400)" }}>
+              {label}
+            </button>
+          ))}
         </div>
       </div>
 
-      <div className="relative">
-        {activeTab === "sh" && (
-          <div className="min-h-[16rem] px-5 py-5 font-mono text-[12.5px] leading-[1.9] md:min-h-[17rem]">
-            <div>
-              <span className="text-primary-400">&gt;</span> <span className="text-dark-400">init</span>{" "}
-              <span className="text-dark-50">system.profile</span>
-            </div>
-            {[
-              ["name", "Yiğit Okur"],
-              ["role", "Software Engineer"],
-              ["focus", "Cloud & DevOps"],
-              ["edu", "Isik University · SE ’27"],
-            ].map(([key, value]) => (
-              <div key={key}>
-                <span className="inline-block w-20 text-dark-400">{key}</span>
-                <span className="text-dark-50">{value}</span>
-              </div>
-            ))}
-            <div>
-              <span className="inline-block w-20 text-dark-400">status</span>
-              <span className="text-emerald-400">[ available ]</span>
-            </div>
-            <div className="mt-1.5 flex items-center gap-3">
-              <img src="/profile.jpg" alt="" className="h-11 w-11 rounded border border-primary-400/40 object-cover" />
-              <span className="text-dark-400">// part-time SWE &amp; cloud roles</span>
-            </div>
-            <div className="mt-1">
-              <span className="text-primary-400">&gt;</span> <span className="text-emerald-400">profile loaded</span>{" "}
-              <span className="inline-block w-2 animate-blink bg-primary-400 text-transparent">_</span>
-            </div>
-          </div>
-        )}
-
-        {activeTab === "java" && (
-          <pre
-            className="nx-java m-0 min-h-[16rem] overflow-auto whitespace-pre px-5 py-5 font-mono text-[12.5px] leading-[1.85] text-dark-300 md:min-h-[17rem]"
-            dangerouslySetInnerHTML={{ __html: JAVA_HTML }}
-          />
-        )}
-
-        {activeTab === "ps" && (
-          <div className="nx-ps flex min-h-[16rem] flex-col font-mono text-[12.5px] md:min-h-[17rem]" style={{ background: "#012456", color: "#eaf0ff" }}>
-            <div className="flex flex-wrap items-center justify-between gap-2 border-b border-white/10 bg-black/20 px-3.5 py-2.5">
-              <span className="text-[10.5px] leading-relaxed" style={{ color: "#9fb6e6" }}>
-                Run{" "}
-                <code className="rounded px-1.5 py-0.5" style={{ background: "rgba(255,255,255,0.07)", color: "#ffd866" }}>
-                  javac Profile.java
-                </code>{" "}
-                then{" "}
-                <code className="rounded px-1.5 py-0.5" style={{ background: "rgba(255,255,255,0.07)", color: "#ffd866" }}>
-                  java Profile
-                </code>
-              </span>
-              <button
-                type="button"
-                onClick={() => void runAll()}
-                disabled={busy}
-                className="rounded px-3 py-1.5 font-mono text-[11px] font-bold tracking-tight transition-colors disabled:opacity-60"
-                style={{ background: "#ffd866", color: "#012456" }}
-              >
-                ▶ Run
+      {tab === "fetch" ? (
+        <div style={{ display: "flex", gap: 16, minHeight: 272, padding: 18, ...mono }}>
+          {/* — photo: cyan duotone + scanline sweep + HUD brackets — */}
+          {profileSrc ? (
+            <div style={{ position: "relative", width: "clamp(120px, 40%, 158px)", flexShrink: 0, alignSelf: "stretch", minHeight: 208, overflow: "hidden", borderRadius: 4, border: "1px solid rgba(0,212,255,0.35)", boxShadow: "0 0 28px rgba(0,212,255,0.12)" }}>
+              <img src={profileSrc} alt="Yiğit Okur" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", objectPosition: "50% 30%", filter: rawPhoto ? "none" : "grayscale(0.7) contrast(1.06) brightness(0.95)", transition: "filter 300ms var(--ease-nx)" }} />
+              <div aria-hidden="true" style={{ position: "absolute", inset: 0, background: "rgba(0,212,255,0.35)", mixBlendMode: "color", opacity: rawPhoto ? 0 : 1, transition: "opacity 300ms var(--ease-nx)" }} />
+              <div aria-hidden="true" style={{ position: "absolute", inset: 0, background: "repeating-linear-gradient(0deg, rgba(0,212,255,0.05) 0px, rgba(0,212,255,0.05) 1px, transparent 1px, transparent 3px)", opacity: rawPhoto ? 0 : 1, transition: "opacity 300ms var(--ease-nx)" }} />
+              <div aria-hidden="true" style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(6,6,14,0.6), transparent 40%)" }} />
+              {!rawPhoto ? <div aria-hidden="true" style={{ position: "absolute", left: 0, right: 0, top: 0, height: 44, background: "linear-gradient(to bottom, transparent, rgba(0,212,255,0.16), transparent)", borderBottom: "1px solid rgba(0,212,255,0.4)", animation: "nx-scan 4.5s linear infinite" }} /> : null}
+              <span aria-hidden="true" style={bracket("tl")} />
+              <span aria-hidden="true" style={bracket("tr")} />
+              <span aria-hidden="true" style={bracket("bl")} />
+              <span aria-hidden="true" style={bracket("br")} />
+              <button type="button" aria-pressed={rawPhoto} onClick={(e) => { e.stopPropagation(); setRawPhoto((r) => !r); }}
+                style={{ position: "absolute", right: 8, top: 8, borderRadius: 3, border: "1px solid rgba(0,212,255,0.35)", background: "rgba(6,6,14,0.6)", backdropFilter: "blur(2px)", padding: "2px 7px", fontFamily: "var(--font-mono)", fontSize: 9, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--primary-300)", cursor: "pointer" }}>
+                {rawPhoto ? "◂ duotone" : "original"}
               </button>
+              <div style={{ position: "absolute", left: 10, bottom: 8, fontSize: 9.5, letterSpacing: "0.12em", color: "rgba(232,232,240,0.85)" }}>ID·OKUR_Y</div>
             </div>
-
-            <div ref={outRef} className="flex-1 overflow-y-auto px-3.5 pb-1 pt-3 leading-[1.8]" style={{ maxHeight: "20rem" }}>
-              {psLines.map((line) => (
-                <div
-                  key={line.id}
-                  className="whitespace-pre-wrap break-words"
-                  dangerouslySetInnerHTML={{ __html: line.html }}
-                />
-              ))}
+          ) : null}
+          {/* — readout — */}
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div><span style={{ color: "var(--primary-400)", fontWeight: 700 }}>yigit</span><span style={{ color: "var(--dark-400)" }}>@</span><span style={{ color: "var(--primary-400)", fontWeight: 700 }}>yo-sys</span></div>
+            <div aria-hidden="true" style={{ height: 1, background: "var(--dark-600)", margin: "6px 0 8px" }} />
+            {fetchRows.map(([k, v]) => (
+              <div key={k} style={{ display: "flex", gap: 8 }}><span style={keyStyle}>{k}</span><span style={{ color: "var(--dark-50)", minWidth: 0 }}>{v}</span></div>
+            ))}
+            <div style={{ display: "flex", gap: 8 }}><span style={keyStyle}>uptime</span><span style={{ color: "var(--dark-50)", fontVariantNumeric: "tabular-nums" }}>{fmtUptime(now - UPTIME_EPOCH)}</span></div>
+            <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+              <span style={keyStyle}>status</span>
+              <span style={{ width: 7, height: 7, borderRadius: 9999, background: "var(--status-green)", boxShadow: "0 0 8px rgba(52,211,153,0.8)", animation: "nx-pulse-glow 2s ease-in-out infinite" }} />
+              <span style={{ color: "var(--status-green)" }}>[ available ]</span>
             </div>
-
-            <div className="flex items-baseline gap-2 px-3.5 pb-3 pt-0.5">
-              <span dangerouslySetInnerHTML={{ __html: ps1() }} />
-              <input
-                ref={inputRef}
-                value={psInput}
-                onChange={(event) => setPsInput(event.target.value)}
-                onKeyDown={onPsKeyDown}
-                disabled={busy}
-                autoComplete="off"
-                spellCheck={false}
-                placeholder="type a command…"
-                aria-label="PowerShell input"
-                className="min-w-0 flex-1 bg-transparent font-mono text-[12.5px] outline-none placeholder:text-[#5f78ad]"
-                style={{ color: "#eaf0ff", caretColor: "#ffd866" }}
-              />
+            <div aria-hidden="true" style={{ display: "flex", gap: 3, marginTop: 10 }}>
+              {palette.map((c, i) => <span key={`a${i}`} style={{ width: 15, height: 9, borderRadius: 1.5, background: c, opacity: 0.55 }} />)}
+            </div>
+            <div aria-hidden="true" style={{ display: "flex", gap: 3, marginTop: 3 }}>
+              {palette.map((c, i) => <span key={`b${i}`} style={{ width: 15, height: 9, borderRadius: 1.5, background: c }} />)}
+            </div>
+            <div style={{ marginTop: 8 }}>
+              <span style={{ color: "var(--primary-400)" }}>❯</span>{" "}
+              <span style={{ display: "inline-block", width: 8, background: "var(--primary-400)", color: "transparent", animation: "nx-blink 1.2s step-end infinite" }}>_</span>
             </div>
           </div>
-        )}
-      </div>
+        </div>
+      ) : null}
+
+      {tab === "java" ? (
+        <pre className="nx-java" style={{ margin: 0, minHeight: 272, overflow: "auto", whiteSpace: "pre", padding: 20, lineHeight: 1.85, color: "var(--dark-300)", fontFamily: "var(--font-mono)", fontSize: 12.5 }} dangerouslySetInnerHTML={{ __html: JAVA_HTML }} />
+      ) : null}
+
+      {tab === "shell" ? (
+        <div className="nx-ps" style={{ display: "flex", minHeight: 272, flexDirection: "column", background: "var(--term-ps-bg)", color: "var(--dark-50)", fontFamily: "var(--font-mono)", fontSize: 12.5 }}>
+          <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", justifyContent: "space-between", gap: 8, borderBottom: "1px solid rgba(0,212,255,0.14)", background: "rgba(0,0,0,0.2)", padding: "10px 14px" }}>
+            <span style={{ fontSize: 10.5, lineHeight: 1.6, color: "var(--dark-300)" }}>
+              Run <code style={chip}>javac Profile.java</code> then <code style={chip}>java Profile</code>
+            </span>
+            <button type="button" onClick={runAll} disabled={busy} style={{ borderRadius: 4, border: "none", padding: "6px 12px", fontFamily: "var(--font-mono)", fontSize: 11, fontWeight: 700, cursor: "pointer", background: "var(--primary-400)", color: "var(--dark-950)", boxShadow: "var(--glow-btn)", opacity: busy ? 0.6 : 1 }}>▶ Run</button>
+          </div>
+          <div ref={outRef} style={{ flex: 1, overflowY: "auto", padding: "12px 14px 4px", lineHeight: 1.8, maxHeight: 320 }}>
+            {lines.map((l) => <div key={l.id} style={{ whiteSpace: "pre-wrap", wordBreak: "break-word" }} dangerouslySetInnerHTML={{ __html: l.html }} />)}
+          </div>
+          <div style={{ display: "flex", alignItems: "baseline", gap: 8, padding: "2px 14px 12px" }}>
+            <span dangerouslySetInnerHTML={{ __html: ps1 }} />
+            <input value={input} onChange={(e) => setInput(e.target.value)} onKeyDown={onShellKey}
+              disabled={busy} autoComplete="off" spellCheck={false} placeholder="type a command…" aria-label="Shell input"
+              style={{ minWidth: 0, flex: 1, background: "transparent", border: "none", outline: "none", fontFamily: "var(--font-mono)", fontSize: 12.5, color: "var(--dark-50)", caretColor: "var(--primary-400)" }} />
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }

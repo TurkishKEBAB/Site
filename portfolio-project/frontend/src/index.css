@@ -33,6 +33,21 @@
     --primary-400: #00d4ff;
     --primary-700: #007aa3;
     --dark-500: #3a3a60;
+
+    /* terminal — always-dark surface, fixed regardless of theme */
+    --dark-50: #e8e8f0;
+    --dark-100: #d0d0e0;
+    --dark-300: #8888a8;
+    --dark-400: #5a5a80;
+    --dark-600: #1e1e3e;
+    --dark-950: #06060e;
+    --traffic-red: #ff5f57;
+    --traffic-yellow: #febc2e;
+    --traffic-green: #28c840;
+    --shadow-terminal: 0 24px 60px rgba(0, 0, 0, 0.45);
+    --term-ps-bg: #0a0a14;
+    --glow-btn: 0 0 20px rgba(0, 212, 255, 0.25);
+    --ease-nx: cubic-bezier(0.25, 0.1, 0.25, 1);
   }
 
   .dark {
@@ -433,6 +448,25 @@
 @keyframes nx-c4-out {
   from { opacity: 0; transform: scale(1.03); }
   to { opacity: 1; transform: scale(1); }
+}
+
+/* ── yofetch terminal: scanline sweep, caret blink, status pulse ─ */
+@keyframes nx-scan {
+  0% { transform: translateY(-12px); }
+  100% { transform: translateY(240px); }
+}
+@keyframes nx-blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+@keyframes nx-pulse-glow {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.45; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .nx-term-surface [style*="nx-scan"],
+  .nx-term-surface [style*="nx-blink"],
+  .nx-term-surface [style*="nx-pulse-glow"] { animation: none !important; }
 }
 
 /* ── project index rows (nx-row hover: cyan bar + wash + arrow) ─ */
