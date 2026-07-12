@@ -36,8 +36,8 @@ export function SkillsTab({
       </div>
 
       <div className="overflow-x-auto">
-        <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-          <thead className="bg-gray-50 dark:bg-gray-900/30">
+        <table className="min-w-full divide-y divide-gray-200 dark:divide-dark-600">
+          <thead className="bg-gray-50 dark:bg-dark-800/60">
             <tr>
               <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
                 İsim
@@ -51,7 +51,7 @@ export function SkillsTab({
               <th className="px-4 py-3" />
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-200 bg-white dark:divide-gray-700 dark:bg-gray-900/20">
+          <tbody className="divide-y divide-gray-200 bg-white dark:divide-dark-600 dark:bg-gray-900/20">
             {skillsLoading && (
               <tr>
                 <td colSpan={4} className="px-4 py-6 text-center text-sm text-gray-500 dark:text-gray-400">
@@ -69,7 +69,7 @@ export function SkillsTab({
             )}
 
             {!skillsLoading && skills.map((skill) => (
-              <tr key={skill.id} className="hover:bg-gray-50 dark:hover:bg-gray-900/40">
+              <tr key={skill.id} className="hover:bg-primary-400/[0.04]">
                 <td className="px-4 py-3 text-sm font-medium text-gray-900 dark:text-gray-100">
                   {skill.name || "—"}
                 </td>

@@ -5,7 +5,9 @@ import { motion } from 'motion/react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { AxiosError } from 'axios';
+import { FiLogOut } from 'react-icons/fi';
 import api from '../services/api';
+import { CornerFrame } from '../components/ui';
 
 import { useAuth } from '../contexts/AuthContext';
 import { useLanguage } from '../contexts/LanguageContext';
@@ -921,73 +923,79 @@ export default function Admin() {
   ];
 
   return (
-    <div className="min-h-screen bg-gray-100 pt-20 pb-12 dark:bg-gray-900">
+    <div className="min-h-screen pt-20 pb-12">
       <div className="container-custom">
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="mb-8 flex items-start justify-between"
+          className="mb-8 flex flex-wrap items-end justify-between gap-4"
         >
           <div>
-            <h1 className="mb-2 text-4xl font-bold text-gray-900 dark:text-white">{text.adminPanel}</h1>
-            <p className="text-gray-600 dark:text-gray-400">
-              {text.welcome}, {user?.username || 'Admin'} 👋
+            <span className="sys-label flex items-center gap-2">
+              <span className="text-primary-600 dark:text-primary-400">//</span> ADMIN.CONTROL
+            </span>
+            <h1 className="mt-2 font-display text-4xl font-bold tracking-tight text-gray-900 dark:text-dark-50">
+              {text.adminPanel}
+            </h1>
+            <p className="mt-1.5 font-mono text-xs text-gray-500 dark:text-dark-400">
+              {text.welcome}, {user?.username || 'Admin'} ·{' '}
+              <span className="text-emerald-500 dark:text-emerald-400">[ session active ]</span>
             </p>
           </div>
           <button
             onClick={handleLogout}
-            className="flex items-center gap-2 rounded-lg bg-red-600 px-4 py-2 text-white transition hover:bg-red-700"
+            className="inline-flex items-center gap-2 rounded border border-gray-200 px-4 py-2 font-mono text-xs uppercase tracking-wide text-gray-600 transition-colors hover:border-red-400/50 hover:text-red-500 dark:border-dark-600 dark:text-dark-300 dark:hover:text-red-400"
           >
-            <span>🚪</span>
+            <FiLogOut size={14} aria-hidden="true" />
             {text.logout}
           </button>
         </motion.div>
 
-        <div className="mb-8 grid gap-6 md:grid-cols-4">
+        <div className="mb-8 grid gap-5 md:grid-cols-4">
           {statsCards.map((stat) => (
             <motion.div
               key={stat.label}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: stat.delay }}
-              className={`rounded-xl border-l-4 ${stat.color} bg-white p-6 shadow-lg dark:bg-gray-800`}
             >
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-gray-500 dark:text-gray-400">{stat.label}</p>
-                  <p className="mt-1 text-3xl font-bold text-gray-900 dark:text-white">
-                    {statsLoading ? '—' : stat.value}
-                  </p>
-                  {!statsLoading && stat.subtitle && (
-                    <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">{stat.subtitle}</p>
-                  )}
-                </div>
-                <div className="text-4xl">{stat.icon}</div>
-              </div>
+              <CornerFrame accent className="panel h-full p-5">
+                <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-gray-500 dark:text-dark-400">
+                  {stat.label}
+                </p>
+                <p className="mt-2 font-display text-[2.2rem] font-bold leading-none tracking-tight">
+                  <span className="text-primary-600 dark:text-primary-400">{statsLoading ? '—' : stat.value}</span>
+                </p>
+                {!statsLoading && stat.subtitle && (
+                  <p className="mt-2 font-mono text-[11px] text-gray-400 dark:text-dark-400">{stat.subtitle}</p>
+                )}
+              </CornerFrame>
             </motion.div>
           ))}
         </div>
 
-        <div className="mb-6 rounded-xl bg-white shadow-lg dark:bg-gray-800">
-          <div className="flex border-b border-gray-200 dark:border-gray-700">
-            {adminTabs.map((tab) => (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={`flex items-center gap-2 px-6 py-4 font-medium transition-colors ${
-                  activeTab === tab.id
-                    ? 'border-b-2 border-primary-600 text-primary-600'
-                    : 'text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white'
-                }`}
-              >
-                <span>{tab.icon}</span>
-                <span>{tab.label}</span>
-              </button>
-            ))}
-          </div>
+        <div className="mb-6 flex flex-wrap gap-1 border-b border-gray-200 dark:border-dark-600">
+          {adminTabs.map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={`relative px-4 py-3 font-mono text-xs uppercase tracking-wide transition-colors ${
+                activeTab === tab.id
+                  ? 'text-primary-600 dark:text-primary-400'
+                  : 'text-gray-500 hover:text-gray-900 dark:text-dark-400 dark:hover:text-dark-50'
+              }`}
+            >
+              {activeTab === tab.id && <span className="text-primary-400" aria-hidden="true">[ </span>}
+              {tab.label}
+              {activeTab === tab.id && <span className="text-primary-400" aria-hidden="true"> ]</span>}
+              {activeTab === tab.id && (
+                <span className="absolute inset-x-3 -bottom-px h-px bg-primary-400" aria-hidden="true" />
+              )}
+            </button>
+          ))}
         </div>
 
-        <div className="rounded-xl bg-white p-8 shadow-lg dark:bg-gray-800">
+        <div className="panel p-6 md:p-8">
           {activeTab === 'dashboard' && (
             <DashboardTab text={text} username={user?.username} />
           )}
