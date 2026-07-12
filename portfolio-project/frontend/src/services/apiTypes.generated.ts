@@ -1925,6 +1925,13 @@ export interface components {
              * @default 0
              */
             display_order: number;
+            /**
+             * Domain
+             * @description CapabilityMatrix group
+             * @default backend
+             * @enum {string}
+             */
+            domain: "backend" | "cloud" | "product" | "testing" | "research";
             /** Icon */
             icon?: string | null;
             /**
@@ -1935,10 +1942,12 @@ export interface components {
             /** Name */
             name: string;
             /**
-             * Proficiency
-             * @description Proficiency level 0-100
+             * Ring
+             * @description TechRadar ring
+             * @default assess
+             * @enum {string}
              */
-            proficiency: number;
+            ring: "adopt" | "trial" | "assess" | "hold";
             /**
              * Translations
              * @default []
@@ -1957,15 +1966,24 @@ export interface components {
              * @default 0
              */
             display_order: number;
+            /**
+             * Domain
+             * @description CapabilityMatrix group
+             * @default backend
+             * @enum {string}
+             */
+            domain: "backend" | "cloud" | "product" | "testing" | "research";
             /** Icon */
             icon?: string | null;
             /** Name */
             name: string;
             /**
-             * Proficiency
-             * @description Proficiency level 0-100
+             * Ring
+             * @description TechRadar ring
+             * @default assess
+             * @enum {string}
              */
-            proficiency: number;
+            ring: "adopt" | "trial" | "assess" | "hold";
             /** Translations */
             translations?: components["schemas"]["SkillTranslationCreate"][] | null;
         };
@@ -2031,12 +2049,14 @@ export interface components {
             category?: string | null;
             /** Display Order */
             display_order?: number | null;
+            /** Domain */
+            domain?: ("backend" | "cloud" | "product" | "testing" | "research") | null;
             /** Icon */
             icon?: string | null;
             /** Name */
             name?: string | null;
-            /** Proficiency */
-            proficiency?: number | null;
+            /** Ring */
+            ring?: ("adopt" | "trial" | "assess" | "hold") | null;
         };
         /**
          * TechnologyCreate

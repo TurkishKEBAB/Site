@@ -162,7 +162,8 @@ describe("admin tab components", () => {
             id: "skill-1",
             name: "TypeScript",
             category: "Frontend",
-            proficiency: 90,
+            domain: "product",
+            ring: "adopt",
             order_index: 1,
           },
         ]}
@@ -178,7 +179,8 @@ describe("admin tab components", () => {
     fireEvent.click(screen.getByRole("button", { name: "Delete" }));
 
     expect(screen.getByText("TypeScript")).toBeInTheDocument();
-    expect(screen.getByText("90%")).toBeInTheDocument();
+    expect(screen.getByText("product")).toBeInTheDocument();
+    expect(screen.getByText("adopt")).toBeInTheDocument();
     expect(onCreateSkill).toHaveBeenCalledTimes(1);
     expect(onEditSkill).toHaveBeenCalledWith(expect.objectContaining({ id: "skill-1" }));
     expect(onDeleteSkill).toHaveBeenCalledWith("skill-1");

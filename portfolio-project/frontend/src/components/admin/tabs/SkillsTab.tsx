@@ -46,7 +46,7 @@ export function SkillsTab({
                 Kategori
               </th>
               <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
-                Yeterlilik
+                Alan · Halka
               </th>
               <th className="px-4 py-3" />
             </tr>
@@ -77,7 +77,9 @@ export function SkillsTab({
                   {skill.category || "—"}
                 </td>
                 <td className="px-4 py-3 text-sm text-gray-600 dark:text-gray-300">
-                  {skill.proficiency}%
+                  <span className="font-mono text-xs uppercase tracking-wide text-primary-600 dark:text-primary-400">{skill.domain}</span>
+                  <span className="mx-1.5 text-gray-300 dark:text-dark-500">·</span>
+                  <span className="font-mono text-xs uppercase tracking-wide text-gray-500 dark:text-dark-300">{skill.ring}</span>
                 </td>
                 <td className="px-4 py-3 text-right text-sm">
                   <div className="flex justify-end gap-2">

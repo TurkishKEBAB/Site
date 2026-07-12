@@ -1,11 +1,14 @@
 """
 Skill Schemas
-Skills with proficiency levels and translations
+Skills with domain (capability group) + ring (tech-radar) and translations
 """
 from pydantic import BaseModel, Field, ConfigDict
-from typing import Optional, List
+from typing import Optional, List, Literal
 from datetime import datetime
 import uuid
+
+SkillDomain = Literal["backend", "cloud", "product", "testing", "research"]
+SkillRing = Literal["adopt", "trial", "assess", "hold"]
 
 
 class SkillTranslationBase(BaseModel):
@@ -33,7 +36,8 @@ class SkillBase(BaseModel):
     """Base skill schema"""
     name: str = Field(..., min_length=1, max_length=100)
     category: str = Field(..., min_length=1, max_length=50)
-    proficiency: int = Field(..., ge=0, le=100, description="Proficiency level 0-100")
+    domain: SkillDomain = Field("backend", description="CapabilityMatrix group")
+    ring: SkillRing = Field("assess", description="TechRadar ring")
     icon: Optional[str] = Field(None, max_length=500)
     display_order: int = 0
 
@@ -47,7 +51,8 @@ class SkillUpdate(BaseModel):
     """Skill update schema (all fields optional)"""
     name: Optional[str] = Field(None, min_length=1, max_length=100)
     category: Optional[str] = Field(None, min_length=1, max_length=50)
-    proficiency: Optional[int] = Field(None, ge=0, le=100)
+    domain: Optional[SkillDomain] = None
+    ring: Optional[SkillRing] = None
     icon: Optional[str] = Field(None, max_length=500)
     display_order: Optional[int] = None
 

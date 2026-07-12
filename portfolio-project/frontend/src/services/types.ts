@@ -131,11 +131,15 @@ export interface BlogPostCreate {
 }
 
 // Skill Types
+export type SkillDomain = "backend" | "cloud" | "product" | "testing" | "research";
+export type SkillRing = "adopt" | "trial" | "assess" | "hold";
+
 export interface Skill {
   id: string;
   name: string;
   category: string;
-  proficiency: number;  // Backend uses proficiency (0-100)
+  domain: SkillDomain;
+  ring: SkillRing;
   icon?: string;
   icon_url?: string;
   color?: string;
@@ -145,7 +149,8 @@ export interface Skill {
 export interface SkillCreate {
   name: string;
   category: string;
-  proficiency: number;
+  domain: SkillDomain;
+  ring: SkillRing;
   icon_url?: string | null;
   color?: string;
   order_index?: number;
@@ -154,7 +159,8 @@ export interface SkillCreate {
 export interface SkillUpdate {
   name?: string;
   category?: string;
-  proficiency?: number;
+  domain?: SkillDomain;
+  ring?: SkillRing;
   icon_url?: string | null;
   color?: string;
   order_index?: number;

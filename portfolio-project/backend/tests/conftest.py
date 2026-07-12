@@ -196,7 +196,8 @@ def create_skill(db_session: Session):
         skill = Skill(
             name=overrides.get("name", f"Skill {idx}"),
             category=overrides.get("category", "Backend"),
-            proficiency=overrides.get("proficiency", 80),
+            domain=overrides.get("domain", "backend"),
+            ring=overrides.get("ring", "assess"),
             display_order=overrides.get("display_order", idx),
         )
         db_session.add(skill)

@@ -2059,6 +2059,19 @@
             "title": "Display Order",
             "type": "integer"
           },
+          "domain": {
+            "default": "backend",
+            "description": "CapabilityMatrix group",
+            "enum": [
+              "backend",
+              "cloud",
+              "product",
+              "testing",
+              "research"
+            ],
+            "title": "Domain",
+            "type": "string"
+          },
           "icon": {
             "anyOf": [
               {
@@ -2082,12 +2095,17 @@
             "title": "Name",
             "type": "string"
           },
-          "proficiency": {
-            "description": "Proficiency level 0-100",
-            "maximum": 100.0,
-            "minimum": 0.0,
-            "title": "Proficiency",
-            "type": "integer"
+          "ring": {
+            "default": "assess",
+            "description": "TechRadar ring",
+            "enum": [
+              "adopt",
+              "trial",
+              "assess",
+              "hold"
+            ],
+            "title": "Ring",
+            "type": "string"
           },
           "translations": {
             "default": [],
@@ -2101,7 +2119,6 @@
         "required": [
           "name",
           "category",
-          "proficiency",
           "id",
           "created_at"
         ],
@@ -2122,6 +2139,19 @@
             "title": "Display Order",
             "type": "integer"
           },
+          "domain": {
+            "default": "backend",
+            "description": "CapabilityMatrix group",
+            "enum": [
+              "backend",
+              "cloud",
+              "product",
+              "testing",
+              "research"
+            ],
+            "title": "Domain",
+            "type": "string"
+          },
           "icon": {
             "anyOf": [
               {
@@ -2140,12 +2170,17 @@
             "title": "Name",
             "type": "string"
           },
-          "proficiency": {
-            "description": "Proficiency level 0-100",
-            "maximum": 100.0,
-            "minimum": 0.0,
-            "title": "Proficiency",
-            "type": "integer"
+          "ring": {
+            "default": "assess",
+            "description": "TechRadar ring",
+            "enum": [
+              "adopt",
+              "trial",
+              "assess",
+              "hold"
+            ],
+            "title": "Ring",
+            "type": "string"
           },
           "translations": {
             "anyOf": [
@@ -2164,8 +2199,7 @@
         },
         "required": [
           "name",
-          "category",
-          "proficiency"
+          "category"
         ],
         "title": "SkillCreate",
         "type": "object"
@@ -2309,6 +2343,24 @@
             ],
             "title": "Display Order"
           },
+          "domain": {
+            "anyOf": [
+              {
+                "enum": [
+                  "backend",
+                  "cloud",
+                  "product",
+                  "testing",
+                  "research"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Domain"
+          },
           "icon": {
             "anyOf": [
               {
@@ -2334,18 +2386,22 @@
             ],
             "title": "Name"
           },
-          "proficiency": {
+          "ring": {
             "anyOf": [
               {
-                "maximum": 100.0,
-                "minimum": 0.0,
-                "type": "integer"
+                "enum": [
+                  "adopt",
+                  "trial",
+                  "assess",
+                  "hold"
+                ],
+                "type": "string"
               },
               {
                 "type": "null"
               }
             ],
-            "title": "Proficiency"
+            "title": "Ring"
           }
         },
         "title": "SkillUpdate",

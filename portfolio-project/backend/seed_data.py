@@ -656,11 +656,32 @@ def seed_skills(db: Session) -> None:
             "icon": "📦",
         },
     ]
+    domain_by_category = {
+        "Cloud & DevOps": "cloud",
+        "Architecture": "backend",
+        "Backend": "backend",
+        "Testing & Automation": "testing",
+        "Frontend": "product",
+        "Languages": "backend",
+        "AI & Data": "research",
+        "Tooling": "cloud",
+    }
+
+    def _ring(prof: int) -> str:
+        if prof >= 88:
+            return "adopt"
+        if prof >= 78:
+            return "trial"
+        if prof >= 66:
+            return "assess"
+        return "hold"
+
     for index, item in enumerate(skills_data, start=1):
         skill = Skill(
             name=item["name"],
             category=item["category"],
-            proficiency=item["proficiency"],
+            domain=domain_by_category.get(item["category"], "backend"),
+            ring=_ring(item["proficiency"]),
             icon=item["icon"],
             display_order=index,
         )

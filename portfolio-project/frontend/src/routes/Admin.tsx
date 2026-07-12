@@ -696,7 +696,8 @@ export default function Admin() {
     setSkillFormValues({
       name: skill.name || '',
       category: skill.category || '',
-      proficiency: skill.proficiency || 50,
+      domain: skill.domain || 'backend',
+      ring: skill.ring || 'assess',
       iconUrl: skill.icon_url || '',
     });
     setActiveSkill(skill);
@@ -721,7 +722,8 @@ export default function Admin() {
         await skillService.createSkill({
           name: values.name.trim(),
           category: values.category.trim(),
-          proficiency: values.proficiency,
+          domain: values.domain,
+          ring: values.ring,
           icon_url: values.iconUrl.trim() || null,
         });
 
@@ -730,7 +732,8 @@ export default function Admin() {
         await skillService.updateSkill(activeSkill.id, {
           name: values.name.trim(),
           category: values.category.trim(),
-          proficiency: values.proficiency,
+          domain: values.domain,
+          ring: values.ring,
           icon_url: values.iconUrl.trim() || null,
         });
 

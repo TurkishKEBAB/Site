@@ -1,6 +1,6 @@
 """
 Skill Models
-Skills with proficiency levels and translations
+Skills with domain (capability group) + ring (tech-radar) and translations
 """
 from sqlalchemy import Column, String, Integer, DateTime, ForeignKey, UniqueConstraint
 from sqlalchemy.dialects.postgresql import UUID
@@ -13,24 +13,27 @@ from app.database import Base
 
 class Skill(Base):
     """
-    Skill model with proficiency levels (0-100)
-    Categories: Programming Languages, Computer Science, Soft Skills, Languages
+    Skill model aligned with the public site.
+    `domain` is the CapabilityMatrix group (backend/cloud/product/testing/research);
+    `ring` is the TechRadar ring (adopt/trial/assess/hold). `category` is a free-form
+    label (e.g. "Programming Languages").
     """
     __tablename__ = "skills"
-    
+
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, index=True)
     name = Column(String(100), nullable=False)
     category = Column(String(50), nullable=False, index=True)
-    proficiency = Column(Integer, nullable=False)  # 0-100
+    domain = Column(String(50), nullable=False, server_default="backend", index=True)  # capability group
+    ring = Column(String(20), nullable=False, server_default="assess")  # tech-radar ring
     icon = Column(String(500), nullable=True)
     display_order = Column(Integer, default=0)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
-    
+
     # Relationships
     translations = relationship("SkillTranslation", back_populates="skill", cascade="all, delete-orphan")
-    
+
     def __repr__(self):
-        return f"<Skill {self.name} - {self.proficiency}%>"
+        return f"<Skill {self.name} - {self.domain}/{self.ring}>"
     
     class Config:
         from_attributes = True

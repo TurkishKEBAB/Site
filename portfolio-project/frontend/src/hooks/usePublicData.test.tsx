@@ -110,7 +110,8 @@ describe("public data query hooks", () => {
         id: "skill-1",
         name: "TypeScript",
         category: "Frontend",
-        proficiency: 90,
+        domain: "product",
+        ring: "adopt",
         order_index: 1,
       },
     ];
