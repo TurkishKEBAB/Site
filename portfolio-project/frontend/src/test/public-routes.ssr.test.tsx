@@ -61,7 +61,7 @@ describe("public route SSR", () => {
     const locale = "en";
     const html = renderToStaticMarkup(<Projects locale={locale} />);
 
-    expect(html).toContain("IsikSchedule architecture");
+    expect(html).toContain("Archive");
     expect(html).toContain("All systems");
     expect(html).toContain(projectRecords[0].title[locale]);
     expect(html).not.toContain("No featured project");

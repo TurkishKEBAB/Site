@@ -197,7 +197,7 @@ export default function SystemTerminal({ profileSrc = "/profile.jpg", className 
         <div style={{ display: "flex", gap: 16, minHeight: 272, padding: 18, ...mono }}>
           {/* — photo: cyan duotone + scanline sweep + HUD brackets — */}
           {profileSrc ? (
-            <div style={{ position: "relative", width: "clamp(120px, 40%, 158px)", flexShrink: 0, alignSelf: "stretch", minHeight: 208, overflow: "hidden", borderRadius: 4, border: "1px solid rgba(0,212,255,0.35)", boxShadow: "0 0 28px rgba(0,212,255,0.12)" }}>
+            <button type="button" onClick={() => setRawPhoto((r) => !r)} aria-pressed={rawPhoto} title={rawPhoto ? "Apply cyan duotone" : "Show original photo"} style={{ position: "relative", display: "block", width: "clamp(120px, 40%, 158px)", flexShrink: 0, alignSelf: "stretch", minHeight: 208, overflow: "hidden", borderRadius: 4, border: "1px solid rgba(0,212,255,0.35)", boxShadow: "0 0 28px rgba(0,212,255,0.12)", padding: 0, background: "transparent", cursor: "pointer" }}>
               <img src={profileSrc} alt="Yiğit Okur" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", objectPosition: "50% 30%", filter: rawPhoto ? "none" : "grayscale(0.7) contrast(1.06) brightness(0.95)", transition: "filter 300ms var(--ease-nx)" }} />
               <div aria-hidden="true" style={{ position: "absolute", inset: 0, background: "rgba(0,212,255,0.35)", mixBlendMode: "color", opacity: rawPhoto ? 0 : 1, transition: "opacity 300ms var(--ease-nx)" }} />
               <div aria-hidden="true" style={{ position: "absolute", inset: 0, background: "repeating-linear-gradient(0deg, rgba(0,212,255,0.05) 0px, rgba(0,212,255,0.05) 1px, transparent 1px, transparent 3px)", opacity: rawPhoto ? 0 : 1, transition: "opacity 300ms var(--ease-nx)" }} />
@@ -207,12 +207,12 @@ export default function SystemTerminal({ profileSrc = "/profile.jpg", className 
               <span aria-hidden="true" style={bracket("tr")} />
               <span aria-hidden="true" style={bracket("bl")} />
               <span aria-hidden="true" style={bracket("br")} />
-              <button type="button" aria-pressed={rawPhoto} onClick={(e) => { e.stopPropagation(); setRawPhoto((r) => !r); }}
-                style={{ position: "absolute", right: 8, top: 8, borderRadius: 3, border: "1px solid rgba(0,212,255,0.35)", background: "rgba(6,6,14,0.6)", backdropFilter: "blur(2px)", padding: "2px 7px", fontFamily: "var(--font-mono)", fontSize: 9, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--primary-300)", cursor: "pointer" }}>
+              <span aria-hidden="true"
+                style={{ position: "absolute", right: 8, top: 8, borderRadius: 3, border: "1px solid rgba(0,212,255,0.35)", background: "rgba(6,6,14,0.6)", backdropFilter: "blur(2px)", padding: "2px 7px", fontFamily: "var(--font-mono)", fontSize: 9, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--primary-300)" }}>
                 {rawPhoto ? "◂ duotone" : "original"}
-              </button>
-              <div style={{ position: "absolute", left: 10, bottom: 8, fontSize: 9.5, letterSpacing: "0.12em", color: "rgba(232,232,240,0.85)" }}>ID·OKUR_Y</div>
-            </div>
+              </span>
+              <span style={{ position: "absolute", left: 10, bottom: 8, fontSize: 9.5, letterSpacing: "0.12em", color: "rgba(232,232,240,0.85)" }}>ID·OKUR_Y</span>
+            </button>
           ) : null}
           {/* — readout — */}
           <div style={{ flex: 1, minWidth: 0 }}>
