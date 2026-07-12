@@ -109,12 +109,14 @@ export function TelemetryModal({ open, label, title, meta, onClose, children }: 
   );
 }
 
-export function WakaDetailView({ detail }: { detail: WakaDetail }) {
+export function WakaDetailView({ stats, languages, detail }: { stats: Array<{ value: string; unit?: string; label: string }>; languages: NamedPercent[]; detail: WakaDetail }) {
   return (
     <div>
       <div style={{ display: "flex", flexWrap: "wrap", alignItems: "flex-end", gap: "20px 48px" }}>
-        <Stat value={detail.total7d} label="Last 7 days" size={44} />
-        {detail.overview.map((s) => <Stat key={s.label} value={s.value} label={s.label} note={s.note} size={24} />)}
+        {stats.map((s, i) => <Stat key={s.label} value={s.value} unit={s.unit} label={s.label} size={i === 0 ? 44 : 24} />)}
+        {detail.overview
+          .filter((o) => o.label === "Most active")
+          .map((o) => <Stat key={o.label} value={o.value} label={o.label} note={o.note} size={24} />)}
       </div>
       <Divider />
       <SectionLabel>AI coding</SectionLabel>
@@ -135,8 +137,8 @@ export function WakaDetailView({ detail }: { detail: WakaDetail }) {
       <Divider />
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 40 }}>
         <div>
-          <SectionLabel>Languages · last 7 days</SectionLabel>
-          <Bars rows={detail.languages7d} />
+          <SectionLabel>Languages · share</SectionLabel>
+          <Bars rows={languages.length ? languages : detail.languages7d} />
         </div>
         <div>
           <SectionLabel>Projects · last 7 days</SectionLabel>
@@ -161,8 +163,9 @@ export function WakaDetailView({ detail }: { detail: WakaDetail }) {
   );
 }
 
-export function GitHubDetailView({ stats, detail }: { stats: Array<{ value: string; label: string }>; detail: GitHubDetail }) {
-  const cells = useMemo(() => heatCells(7 * 52, 311.7), []);
+export function GitHubDetailView({ stats, cells, detail }: { stats: Array<{ value: string; label: string }>; cells: number[]; detail: GitHubDetail }) {
+  const fallback = useMemo(() => heatCells(7 * 52, 311.7), []);
+  const graphCells = cells.length ? cells : fallback;
   const months = ["AUG", "SEP", "OCT", "NOV", "DEC", "JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL"];
   return (
     <div>
@@ -183,7 +186,7 @@ export function GitHubDetailView({ stats, detail }: { stats: Array<{ value: stri
       <Divider />
       <SectionLabel>Contribution graph · last 52 weeks</SectionLabel>
       <div aria-hidden="true" style={{ display: "grid", gridAutoFlow: "column", gridTemplateRows: "repeat(7, 1fr)", gap: 3 }}>
-        {cells.map((level, i) => (
+        {graphCells.map((level, i) => (
           <span key={i} style={{ aspectRatio: "1", borderRadius: 2, backgroundColor: level === 0 ? "var(--border-1)" : `rgba(0,212,255,${HEAT[level]})` }} />
         ))}
       </div>

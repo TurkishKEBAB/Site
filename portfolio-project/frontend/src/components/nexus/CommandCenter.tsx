@@ -182,7 +182,7 @@ export default function CommandCenter({ locale, waka, github, contributions }: C
         meta={tr ? "son 7 gun · anlik goruntu" : "last 7 days · snapshot"}
         onClose={() => setExpanded(null)}
       >
-        <WakaDetailView detail={wakaDetail} />
+        <WakaDetailView stats={wakaStats} languages={waka?.languages ?? []} detail={wakaDetail} />
       </TelemetryModal>
       <TelemetryModal
         open={expanded === "github"}
@@ -191,7 +191,7 @@ export default function CommandCenter({ locale, waka, github, contributions }: C
         meta={tr ? "public profil · gunluk guncellenir" : "public profile · updated daily"}
         onClose={() => setExpanded(null)}
       >
-        <GitHubDetailView stats={githubStats} detail={githubDetail} />
+        <GitHubDetailView stats={githubStats} cells={contributions?.cells ?? []} detail={githubDetail} />
       </TelemetryModal>
     </>
   );
