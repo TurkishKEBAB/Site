@@ -167,7 +167,7 @@ export default function About({ locale }: AboutPageProps) {
           title={tr ? "Adopt · dene · degerlendir" : "Adopt · trial · assess"}
           subtitle={tr ? "Stack'imin bugun durdugu yer — adi icin bir blip'in uzerine gel." : "Where my stack sits today — hover a blip for the name."}
         />
-        <TechRadar locale={locale} />
+        <TechRadar locale={locale} blips={[]} />
       </section>
 
       {/* 07 — impact metrics */}

@@ -1,7 +1,9 @@
 import { type Locale } from "@/content/site";
+import type { RadarBlip } from "@/lib/skills";
 
 interface TechRadarProps {
   locale: Locale;
+  blips: RadarBlip[];
 }
 
 const C = 200;
@@ -18,26 +20,6 @@ const ringLabels = (locale: Locale) =>
     ? ["Adopt", "Dene", "Degerlendir", "Beklet"]
     : ["Adopt", "Trial", "Assess", "Hold"];
 
-const blips: Array<{ n: string; ring: number; quad: number }> = [
-  { n: "Java", ring: 0, quad: 0 },
-  { n: "Python", ring: 0, quad: 0 },
-  { n: "TypeScript", ring: 1, quad: 0 },
-  { n: "C#", ring: 2, quad: 0 },
-  { n: "Vue", ring: 2, quad: 0 },
-  { n: "Docker", ring: 0, quad: 1 },
-  { n: "Kubernetes", ring: 1, quad: 1 },
-  { n: "AWS", ring: 2, quad: 1 },
-  { n: "Vercel", ring: 1, quad: 1 },
-  { n: "SonarQube", ring: 0, quad: 2 },
-  { n: "GH Actions", ring: 0, quad: 2 },
-  { n: "Kibana", ring: 1, quad: 2 },
-  { n: "RabbitMQ", ring: 2, quad: 2 },
-  { n: "Clean Arch", ring: 0, quad: 3 },
-  { n: "Microservices", ring: 1, quad: 3 },
-  { n: "RAG", ring: 2, quad: 3 },
-  { n: "LLM agents", ring: 2, quad: 3 },
-];
-
 const qPos = [
   [300, 24],
   [100, 24],
@@ -46,37 +28,47 @@ const qPos = [
 ];
 
 interface PlacedBlip {
-  n: string;
+  name: string;
   ring: number;
   x: number;
   y: number;
 }
 
-const placedBlips: PlacedBlip[] = (() => {
+const ringIndex: Record<RadarBlip["ring"], number> = {
+  adopt: 0,
+  trial: 1,
+  assess: 2,
+  hold: 3,
+};
+
+const placeBlips = (blips: RadarBlip[]): PlacedBlip[] => {
   const result: PlacedBlip[] = [];
   for (let quad = 0; quad < 4; quad += 1) {
-    const arr = blips.filter((b) => b.quad === quad);
+    const arr = blips.filter((b) => b.quadrant === quad);
     arr.forEach((b, i) => {
       const a0 = quad * 90 + 14;
       const a1 = quad * 90 + 76;
       const angle = ((a0 + (a1 - a0) * ((i + 0.5) / arr.length)) * Math.PI) / 180;
-      const rr = ringMid[b.ring];
+      const ring = ringIndex[b.ring];
+      const rr = ringMid[ring];
       result.push({
-        n: b.n,
-        ring: b.ring,
+        name: b.name,
+        ring,
         x: C + rr * Math.cos(angle),
         y: C - rr * Math.sin(angle),
       });
     });
   }
   return result;
-})();
+};
 
 /**
  * Tech radar (design idea #14). Adopt/Trial/Assess/Hold rings × four
  * quadrants; hover a blip to reveal its label (CSS, see .nx-radar in index.css).
  */
-export default function TechRadar({ locale }: TechRadarProps) {
+export default function TechRadar({ locale, blips }: TechRadarProps) {
+  const placedBlips = placeBlips(blips);
+
   return (
     <div className="grid items-center gap-9 md:grid-cols-[minmax(0,420px),1fr]">
       <div className="nx-radar">
@@ -107,10 +99,10 @@ export default function TechRadar({ locale }: TechRadarProps) {
             </text>
           ))}
           {placedBlips.map((b) => (
-            <g key={b.n} className={`blip blip-r${b.ring}`}>
+            <g key={b.name} className={`blip blip-r${b.ring}`}>
               <circle cx={b.x.toFixed(1)} cy={b.y.toFixed(1)} r="4.5" />
               <text x={(b.x + 8).toFixed(1)} y={(b.y + 3).toFixed(1)}>
-                {b.n}
+                {b.name}
               </text>
             </g>
           ))}
