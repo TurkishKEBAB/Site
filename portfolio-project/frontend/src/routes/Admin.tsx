@@ -14,12 +14,14 @@ import { useLanguage } from '../contexts/LanguageContext';
 import { useToast } from '../components/Toast';
 import { skillService } from '../services/skillService';
 import { experienceService } from '../services/experienceService';
+import { blogService } from '../services/blogService';
 import { contactService, ContactMessageResponse } from '../services/contactService';
 import { technologyService, Technology } from '../services/technologyService';
-import type { Skill, Experience } from '../services/types';
+import type { BlogPost, BlogTranslationCreate, Experience, Skill } from '../services/types';
 import type { AdminCopy, AdminProject, AdminTabId, Stats } from '../components/admin/types';
 import {
   DashboardTab,
+  BlogTab,
   ExperiencesTab,
   MessagesTab,
   ProjectsTab,
@@ -40,6 +42,13 @@ import {
   TranslationEditor,
   AdminLanguage,
 } from '../components/admin/AdminForms';
+import {
+  BlogForm,
+  BlogFormValues,
+  BlogTranslationEditor,
+  BlogTranslationMap,
+  defaultBlogFormValues,
+} from '../components/admin/BlogForms';
 import { useAdminModalFocusTrap } from '../lib/admin/useAdminModalFocusTrap';
 
 export default function Admin() {
@@ -76,6 +85,11 @@ export default function Admin() {
     deleting: adminLanguage === 'tr' ? 'Siliniyor...' : 'Deleting...',
     translate: adminLanguage === 'tr' ? 'Ceviriler' : 'Translations',
     images: adminLanguage === 'tr' ? 'Resimler' : 'Images',
+    blogManagement: adminLanguage === 'tr' ? 'Blog Yonetimi' : 'Blog Management',
+    addBlogPost: adminLanguage === 'tr' ? '+ Yeni Yazi Ekle' : '+ Add Blog Post',
+    blogTranslations: adminLanguage === 'tr' ? 'Ceviriler' : 'Translations',
+    published: adminLanguage === 'tr' ? 'Yayinda' : 'Published',
+    draft: adminLanguage === 'tr' ? 'Taslak' : 'Draft',
     sessionExpired:
       adminLanguage === 'tr'
         ? 'Oturum sureniz doldu. Lutfen tekrar giris yapin.'
@@ -106,6 +120,22 @@ export default function Admin() {
   const [projectActionId, setProjectActionId] = useState<string | null>(null);
   const [technologies, setTechnologies] = useState<Technology[]>([]);
   const [loadingTechnologies, setLoadingTechnologies] = useState(false);
+
+  // Blog state
+  const [blogPosts, setBlogPosts] = useState<BlogPost[]>([]);
+  const [blogPostsLoading, setBlogPostsLoading] = useState(false);
+  const [blogModalOpen, setBlogModalOpen] = useState(false);
+  const [blogFormMode, setBlogFormMode] = useState<'create' | 'edit'>('create');
+  const [blogFormValues, setBlogFormValues] = useState<BlogFormValues>({
+    ...defaultBlogFormValues,
+  });
+  const [blogFormSubmitting, setBlogFormSubmitting] = useState(false);
+  const [activeBlogPost, setActiveBlogPost] = useState<BlogPost | null>(null);
+  const [blogActionId, setBlogActionId] = useState<string | null>(null);
+  const [blogTranslationModalOpen, setBlogTranslationModalOpen] = useState(false);
+  const [currentBlogPostForTranslations, setCurrentBlogPostForTranslations] = useState<BlogPost | null>(null);
+  const [blogTranslationsLoading, setBlogTranslationsLoading] = useState(false);
+  const [blogTranslations, setBlogTranslations] = useState<BlogTranslationMap>({});
 
   // Image Manager state
   const [imageManagerOpen, setImageManagerOpen] = useState(false);
@@ -152,6 +182,8 @@ export default function Admin() {
   const experienceModalRef = useRef<HTMLDivElement>(null);
   const imageManagerModalRef = useRef<HTMLDivElement>(null);
   const translationModalRef = useRef<HTMLDivElement>(null);
+  const blogModalRef = useRef<HTMLDivElement>(null);
+  const blogTranslationModalRef = useRef<HTMLDivElement>(null);
 
   const handleLogout = useCallback(() => {
     logout();
@@ -264,6 +296,24 @@ export default function Admin() {
     }
   }, [handleApiError]);
 
+  const loadBlogPosts = useCallback(async () => {
+    setBlogPostsLoading(true);
+    try {
+      const response = await blogService.getAdminPosts({
+        limit: 100,
+        language: adminLanguage,
+      });
+      setBlogPosts(Array.isArray(response.items) ? response.items : []);
+    } catch (error) {
+      handleApiError(
+        error,
+        adminLanguage === 'tr' ? 'Blog yazilari yuklenemedi.' : 'Failed to load blog posts.',
+      );
+    } finally {
+      setBlogPostsLoading(false);
+    }
+  }, [adminLanguage, handleApiError]);
+
   const loadTechnologies = useCallback(async () => {
     setLoadingTechnologies(true);
     try {
@@ -323,6 +373,8 @@ export default function Admin() {
   useEffect(() => {
     if (activeTab === 'projects') {
       loadProjects();
+    } else if (activeTab === 'blog') {
+      loadBlogPosts();
     } else if (activeTab === 'skills') {
       loadSkills();
     } else if (activeTab === 'experiences') {
@@ -330,7 +382,7 @@ export default function Admin() {
     } else if (activeTab === 'messages') {
       loadMessages();
     }
-  }, [activeTab, loadProjects, loadSkills, loadExperiences, loadMessages]);
+  }, [activeTab, loadProjects, loadBlogPosts, loadSkills, loadExperiences, loadMessages]);
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
@@ -342,6 +394,13 @@ export default function Admin() {
         setTranslationModalOpen(false);
         setCurrentProjectForTranslations(null);
         setCurrentTranslations({});
+        return;
+      }
+
+      if (blogTranslationModalOpen) {
+        setBlogTranslationModalOpen(false);
+        setCurrentBlogPostForTranslations(null);
+        setBlogTranslations({});
         return;
       }
 
@@ -377,6 +436,15 @@ export default function Admin() {
           setProjectFormValues({ ...defaultProjectFormValues });
           setActiveProject(null);
         }
+        return;
+      }
+
+      if (blogModalOpen) {
+        if (!blogFormSubmitting) {
+          setBlogModalOpen(false);
+          setBlogFormValues({ ...defaultBlogFormValues });
+          setActiveBlogPost(null);
+        }
       }
     };
 
@@ -385,6 +453,9 @@ export default function Admin() {
   }, [
     experienceFormSubmitting,
     experienceModalOpen,
+    blogFormSubmitting,
+    blogModalOpen,
+    blogTranslationModalOpen,
     imageManagerOpen,
     projectFormSubmitting,
     projectModalOpen,
@@ -396,10 +467,12 @@ export default function Admin() {
   const activeModalRef = (
     [
       [translationModalOpen, translationModalRef],
+      [blogTranslationModalOpen, blogTranslationModalRef],
       [imageManagerOpen, imageManagerModalRef],
       [experienceModalOpen, experienceModalRef],
       [skillModalOpen, skillModalRef],
       [projectModalOpen, projectModalRef],
+      [blogModalOpen, blogModalRef],
     ] as const
   ).find(([isOpen]) => isOpen)?.[1] ?? null;
 
@@ -408,6 +481,170 @@ export default function Admin() {
   const normalizeOptional = (value: string) => {
     const trimmed = value.trim();
     return trimmed.length > 0 ? trimmed : null;
+  };
+
+  const blogPostToFormValues = (post: BlogPost): BlogFormValues => ({
+    title: post.title || '',
+    slug: post.slug || '',
+    excerpt: post.excerpt || '',
+    content: post.content || '',
+    coverImage: post.cover_image || '',
+    tags: (post.tags || []).join(', '),
+    readingTime: post.reading_time ?? post.read_time ?? 0,
+    published: post.published ?? Boolean(post.is_published),
+  });
+
+  const openCreateBlogModal = () => {
+    setBlogFormMode('create');
+    setBlogFormValues({ ...defaultBlogFormValues });
+    setActiveBlogPost(null);
+    setBlogModalOpen(true);
+  };
+
+  const openEditBlogModal = (post: BlogPost) => {
+    setBlogFormMode('edit');
+    setBlogFormValues(blogPostToFormValues(post));
+    setActiveBlogPost(post);
+    setBlogModalOpen(true);
+  };
+
+  const closeBlogModal = (force = false) => {
+    if (blogFormSubmitting && !force) {
+      return;
+    }
+    setBlogModalOpen(false);
+    setBlogFormValues({ ...defaultBlogFormValues });
+    setActiveBlogPost(null);
+  };
+
+  const handleBlogSubmit = async (values: BlogFormValues) => {
+    setBlogFormSubmitting(true);
+
+    const tags = values.tags
+      .split(',')
+      .map((tag) => tag.trim())
+      .filter(Boolean)
+      .filter((tag, index, all) => all.indexOf(tag) === index);
+
+    const payload = {
+      title: values.title.trim(),
+      content: values.content,
+      excerpt: normalizeOptional(values.excerpt) || undefined,
+      cover_image: normalizeOptional(values.coverImage) || undefined,
+      tags,
+      reading_time: values.readingTime || undefined,
+      published: values.published,
+    };
+
+    try {
+      if (blogFormMode === 'create') {
+        await blogService.createPost({
+          ...payload,
+          slug: normalizeOptional(values.slug) || undefined,
+        });
+        showToast('success', adminLanguage === 'tr' ? 'Yazi olusturuldu.' : 'Blog post created.');
+      } else if (activeBlogPost) {
+        await blogService.updatePost(activeBlogPost.id, payload);
+        showToast('success', adminLanguage === 'tr' ? 'Yazi guncellendi.' : 'Blog post updated.');
+      }
+
+      closeBlogModal(true);
+      await loadBlogPosts();
+    } catch (error) {
+      handleApiError(
+        error,
+        adminLanguage === 'tr' ? 'Yazi kaydedilemedi.' : 'Blog post could not be saved.',
+      );
+    } finally {
+      setBlogFormSubmitting(false);
+    }
+  };
+
+  const handleDeleteBlogPost = async (postId: string) => {
+    const post = blogPosts.find((item) => item.id === postId);
+    const confirmed = window.confirm(
+      adminLanguage === 'tr'
+        ? 'Bu blog yazisini silmek istediginizden emin misiniz?'
+        : `Are you sure you want to delete "${post?.title || 'this post'}"?`,
+    );
+    if (!confirmed) {
+      return;
+    }
+
+    setBlogActionId(postId);
+    try {
+      await blogService.deletePost(postId);
+      showToast('success', adminLanguage === 'tr' ? 'Yazi silindi.' : 'Blog post deleted.');
+      await loadBlogPosts();
+    } catch (error) {
+      handleApiError(
+        error,
+        adminLanguage === 'tr' ? 'Yazi silinemedi.' : 'Blog post could not be deleted.',
+      );
+    } finally {
+      setBlogActionId(null);
+    }
+  };
+
+  const loadBlogTranslations = async (post: BlogPost) => {
+    setBlogTranslationsLoading(true);
+    try {
+      const detail = await blogService.getAdminPost(post.id);
+      const translationMap: BlogTranslationMap = {};
+      (detail.translations || []).forEach((translation) => {
+        if (translation.language === 'en' || translation.language === 'tr') {
+          translationMap[translation.language] = translation;
+        }
+      });
+      setBlogTranslations(translationMap);
+    } catch (error) {
+      handleApiError(
+        error,
+        adminLanguage === 'tr' ? 'Ceviriler yuklenemedi.' : 'Translations could not be loaded.',
+      );
+    } finally {
+      setBlogTranslationsLoading(false);
+    }
+  };
+
+  const openBlogTranslationModal = async (post: BlogPost) => {
+    setCurrentBlogPostForTranslations(post);
+    setBlogTranslationModalOpen(true);
+    await loadBlogTranslations(post);
+  };
+
+  const closeBlogTranslationModal = () => {
+    setBlogTranslationModalOpen(false);
+    setCurrentBlogPostForTranslations(null);
+    setBlogTranslations({});
+  };
+
+  const handleSaveBlogTranslation = async (
+    languageCode: 'en' | 'tr',
+    data: BlogTranslationCreate,
+  ) => {
+    if (!currentBlogPostForTranslations) {
+      return;
+    }
+
+    try {
+      await blogService.addTranslation(currentBlogPostForTranslations.id, {
+        ...data,
+        language: languageCode,
+      });
+      showToast(
+        'success',
+        adminLanguage === 'tr'
+          ? `${languageCode.toUpperCase()} cevirisi kaydedildi.`
+          : `${languageCode.toUpperCase()} translation saved.`,
+      );
+      await loadBlogTranslations(currentBlogPostForTranslations);
+    } catch (error) {
+      handleApiError(
+        error,
+        adminLanguage === 'tr' ? 'Ceviri kaydedilemedi.' : 'Translation could not be saved.',
+      );
+    }
   };
 
   const openCreateProjectModal = () => {
@@ -918,6 +1155,7 @@ export default function Admin() {
   ];
 
   const adminTabs: Array<{ id: AdminTabId; label: string; icon: string }> = [
+    { id: 'blog', label: 'Blog', icon: 'blog' },
     { id: 'dashboard', label: text.dashboard, icon: '📊' },
     { id: 'projects', label: text.projects, icon: '📁' },
     { id: 'skills', label: text.skills, icon: '⚡' },
@@ -1018,6 +1256,20 @@ export default function Admin() {
             />
           )}
 
+          {activeTab === 'blog' && (
+            <BlogTab
+              text={text}
+              posts={blogPosts}
+              postsLoading={blogPostsLoading}
+              postActionId={blogActionId}
+              dateLocale={dateLocale}
+              onCreatePost={openCreateBlogModal}
+              onEditPost={openEditBlogModal}
+              onDeletePost={handleDeleteBlogPost}
+              onOpenTranslationManager={openBlogTranslationModal}
+            />
+          )}
+
           {activeTab === 'skills' && (
             <SkillsTab
               text={text}
@@ -1086,6 +1338,88 @@ export default function Admin() {
               loadingTechnologies={loadingTechnologies}
               language={adminLanguage}
             />
+          </div>
+        </div>
+      )}
+
+      {blogModalOpen && (
+        <div role="dialog" aria-modal="true" className="fixed inset-0 z-50 flex items-center justify-center bg-dark-950/80 px-4 py-8">
+          <div
+            ref={blogModalRef}
+            tabIndex={-1}
+            data-admin-modal="blog"
+            className="panel max-h-[90vh] w-full max-w-4xl overflow-y-auto p-6 md:p-8"
+          >
+            <div className="mb-6 flex items-center justify-between gap-4">
+              <div>
+                <span className="sys-label">// CONTENT.BLOG</span>
+                <h3 className="mt-2 font-display text-2xl font-bold text-gray-900 dark:text-dark-50">
+                  {blogFormMode === 'create'
+                    ? adminLanguage === 'tr'
+                      ? 'Yeni yazi'
+                      : 'New blog post'
+                    : adminLanguage === 'tr'
+                      ? 'Yaziyi duzenle'
+                      : 'Edit blog post'}
+                </h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => closeBlogModal()}
+                className="rounded border border-dark-600 px-3 py-2 font-mono text-xs text-gray-500 transition hover:border-primary-400 hover:text-primary-400"
+                aria-label="Close Blog editor"
+              >
+                ×
+              </button>
+            </div>
+            <BlogForm
+              initialValues={blogFormValues}
+              onSubmit={handleBlogSubmit}
+              onCancel={() => closeBlogModal()}
+              loading={blogFormSubmitting}
+              mode={blogFormMode}
+              language={adminLanguage}
+            />
+          </div>
+        </div>
+      )}
+
+      {blogTranslationModalOpen && currentBlogPostForTranslations && (
+        <div role="dialog" aria-modal="true" className="fixed inset-0 z-50 flex items-center justify-center bg-dark-950/80 p-4">
+          <div
+            ref={blogTranslationModalRef}
+            tabIndex={-1}
+            data-admin-modal="blog-translation"
+            className="panel max-h-[90vh] w-full max-w-4xl overflow-y-auto p-6 md:p-8"
+          >
+            <div className="mb-6 flex items-center justify-between gap-4">
+              <div>
+                <span className="sys-label">// CONTENT.BLOG.TRANSLATIONS</span>
+                <h3 className="mt-2 font-display text-2xl font-bold text-gray-900 dark:text-dark-50">
+                  {currentBlogPostForTranslations.title}
+                </h3>
+              </div>
+              <button
+                type="button"
+                onClick={closeBlogTranslationModal}
+                className="rounded border border-dark-600 px-3 py-2 font-mono text-xs text-gray-500 transition hover:border-primary-400 hover:text-primary-400"
+                aria-label="Close Blog translations"
+              >
+                ×
+              </button>
+            </div>
+            {blogTranslationsLoading ? (
+              <p className="py-8 text-center font-mono text-xs uppercase tracking-wide text-gray-500 dark:text-dark-400">
+                {adminLanguage === 'tr' ? 'Ceviriler yukleniyor...' : 'Loading translations...'}
+              </p>
+            ) : (
+              <BlogTranslationEditor
+                translations={blogTranslations}
+                onSave={handleSaveBlogTranslation}
+                loading={blogTranslationsLoading}
+                language={adminLanguage}
+              />
+            )}
           </div>
         </div>
       )}
