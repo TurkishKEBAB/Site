@@ -81,7 +81,6 @@ export interface ImpactMetric {
 export interface SkillGroup {
   title: LocalizedString;
   summary: LocalizedString;
-  skills: string[];
 }
 
 export interface ProjectRecord {
@@ -337,7 +336,6 @@ const skillGroup = (
 ): SkillGroup => ({
   title: localized(titleEn, titleTr),
   summary: localized(summaryEn, summaryTr),
-  skills: [],
 });
 
 export const skillGroups: SkillGroup[] = [

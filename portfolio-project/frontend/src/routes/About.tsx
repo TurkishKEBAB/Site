@@ -1,16 +1,14 @@
+"use client";
+
 import AnimatedSection from "@/components/AnimatedSection";
 import CapabilityMatrix, { type CapabilityGroup } from "@/components/nexus/CapabilityMatrix";
 import { CareerViews } from "@/components/nexus/CareerViews";
 import NxSectionHead from "@/components/nexus/NxSectionHead";
 import ScrambleHeading from "@/components/nexus/ScrambleHeading";
 import TechRadar from "@/components/nexus/TechRadar";
-import {
-  aboutContent,
-  getLocaleValue,
-  impactMetrics,
-  skillGroups,
-  type Locale,
-} from "@/content/site";
+import { aboutContent, getLocaleValue, impactMetrics, type Locale } from "@/content/site";
+import { useSkillsQuery } from "@/hooks/usePublicData";
+import { toCapabilityGroups, toRadarBlips } from "@/lib/skills";
 
 interface AboutPageProps {
   locale: Locale;
@@ -51,19 +49,15 @@ const nowCards = [
   },
 ];
 
-const domains = ["backend", "cloud", "product", "testing", "research"];
-
 export default function About({ locale }: AboutPageProps) {
   const text = aboutContent[locale];
   const tr = locale === "tr";
 
-  const capabilityGroups: CapabilityGroup[] = skillGroups.map((group, index) => ({
-    no: `/0${index + 1}`,
-    domain: domains[index] ?? "backend",
-    title: getLocaleValue(group.title, locale),
-    summary: getLocaleValue(group.summary, locale),
-    skills: group.skills,
-  }));
+  const { data, isError, isLoading, refetch } = useSkillsQuery(locale);
+  const skills = data ?? [];
+  const capabilityGroups: CapabilityGroup[] = toCapabilityGroups(skills, locale);
+  const radarBlips = toRadarBlips(skills);
+  const hasSkills = !isLoading && !isError && skills.length > 0;
 
   return (
     <div className="container-custom pb-16 pt-28 md:pt-32">
@@ -156,7 +150,30 @@ export default function About({ locale }: AboutPageProps) {
           title={tr ? "Teknik sistem" : "Technical system"}
           subtitle={tr ? "Matrisi odaklamak icin domain'e gore filtrele." : "Filter by domain to focus the matrix."}
         />
-        <CapabilityMatrix locale={locale} groups={capabilityGroups} />
+        {isLoading ? (
+          <p role="status" className="font-mono text-xs uppercase tracking-[0.16em] text-gray-500 dark:text-dark-400">
+            {tr ? "Yetenekler yukleniyor..." : "Loading skills..."}
+          </p>
+        ) : isError ? (
+          <div role="alert" className="border-t border-gray-200 py-6 dark:border-dark-600">
+            <p className="font-mono text-xs uppercase tracking-[0.16em] text-red-500">
+              {tr ? "Yetenekler yuklenemedi." : "Skills could not be loaded."}
+            </p>
+            <button
+              type="button"
+              onClick={() => void refetch()}
+              className="mt-4 rounded border border-primary-400/50 px-4 py-2 font-mono text-xs uppercase tracking-wide text-primary-600 transition hover:bg-primary-400/10 dark:text-primary-400"
+            >
+              {tr ? "Tekrar dene" : "Try again"}
+            </button>
+          </div>
+        ) : hasSkills ? (
+          <CapabilityMatrix locale={locale} groups={capabilityGroups} />
+        ) : (
+          <p className="font-mono text-xs uppercase tracking-[0.16em] text-gray-500 dark:text-dark-400">
+            {tr ? "Henuz yetenek bulunmuyor." : "No skills found yet."}
+          </p>
+        )}
       </section>
 
       {/* 06 — tech radar */}
@@ -167,7 +184,7 @@ export default function About({ locale }: AboutPageProps) {
           title={tr ? "Adopt · dene · degerlendir" : "Adopt · trial · assess"}
           subtitle={tr ? "Stack'imin bugun durdugu yer — adi icin bir blip'in uzerine gel." : "Where my stack sits today — hover a blip for the name."}
         />
-        <TechRadar locale={locale} blips={[]} />
+        {hasSkills ? <TechRadar locale={locale} blips={radarBlips} /> : null}
       </section>
 
       {/* 07 — impact metrics */}

@@ -32,6 +32,21 @@ vi.mock("@/components/ContactForm", () => ({
 }));
 
 vi.mock("@/hooks/usePublicData", () => ({
+  useSkillsQuery: () => ({
+    data: [
+      {
+        id: "managed-skill",
+        name: "Managed skill",
+        category: "Tools",
+        domain: "cloud",
+        ring: "trial",
+        display_order: 1,
+      },
+    ],
+    isError: false,
+    isLoading: false,
+    refetch: vi.fn(),
+  }),
   useProjectsQuery: () => ({
     data: {
       items: [
@@ -78,6 +93,7 @@ describe("public route SSR", () => {
     expect(html).toContain("Career map");
     expect(html).toContain("Tech radar");
     expect(html).toContain("Delivery with scale");
+    expect(html).toContain("Managed skill");
     expect(html).not.toContain("No experience found");
   });
 
