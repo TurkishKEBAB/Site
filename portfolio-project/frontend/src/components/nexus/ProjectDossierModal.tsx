@@ -29,6 +29,9 @@ export interface DossierLabels {
   decision: string;
   tradeoff: string;
   galleryHint: string;
+  dossierLoading?: string;
+  dossierUnavailable?: string;
+  retryDossier?: string;
 }
 
 const adrChip = (status: string): CSSProperties => {
@@ -44,10 +47,31 @@ const adrChip = (status: string): CSSProperties => {
 const dtStyle: CSSProperties = { fontFamily: "var(--font-mono)", fontSize: 10, textTransform: "uppercase", letterSpacing: "0.14em", color: "var(--text-faint)", paddingTop: 2 };
 const ddStyle: CSSProperties = { margin: 0, fontSize: 13, lineHeight: 1.65, color: "var(--text-body)" };
 
-function OverviewTab({ project, metrics, labels }: { project: DossierProject; metrics?: DossierMetric[]; labels: DossierLabels }) {
+function OverviewTab({
+  project,
+  metrics,
+  labels,
+  dossierLoading,
+  dossierError,
+  onRetryDossier,
+}: {
+  project: DossierProject;
+  metrics?: DossierMetric[];
+  labels: DossierLabels;
+  dossierLoading?: boolean;
+  dossierError?: boolean;
+  onRetryDossier?: () => void;
+}) {
   return (
     <div>
       <p style={{ margin: 0, maxWidth: "48rem", fontSize: 15, lineHeight: 1.7, color: "var(--text-body)" }}>{project.description}</p>
+      {dossierLoading ? <p role="status" style={{ margin: "14px 0 0", fontFamily: "var(--font-mono)", fontSize: 10.5, color: "var(--text-faint)" }}>{labels.dossierLoading ?? "Loading dossier..."}</p> : null}
+      {dossierError ? (
+        <div role="alert" style={{ margin: "14px 0 0", border: "1px dashed rgba(248,113,113,0.5)", borderRadius: 4, padding: "12px 14px", color: "var(--text-muted)" }}>
+          <span style={{ fontFamily: "var(--font-mono)", fontSize: 10.5 }}>{labels.dossierUnavailable ?? "Dossier unavailable."}</span>
+          {onRetryDossier ? <button type="button" onClick={onRetryDossier} style={{ marginLeft: 12, border: "1px solid var(--border-1)", borderRadius: 3, background: "transparent", padding: "4px 8px", color: "var(--accent-text)", cursor: "pointer", fontFamily: "var(--font-mono)", fontSize: 10 }}>{labels.retryDossier ?? "Retry dossier"}</button> : null}
+        </div>
+      ) : null}
       {metrics && metrics.length ? (
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", gap: 10, margin: "22px 0" }}>
           {metrics.map((m) => (
@@ -59,10 +83,10 @@ function OverviewTab({ project, metrics, labels }: { project: DossierProject; me
           ))}
         </div>
       ) : null}
-      <div style={{ margin: "20px 0", borderRadius: 4, border: "1px solid rgba(0,212,255,0.3)", background: "rgba(0,212,255,0.05)", padding: 20 }}>
+      {project.impact ? <div style={{ margin: "20px 0", borderRadius: 4, border: "1px solid rgba(0,212,255,0.3)", background: "rgba(0,212,255,0.05)", padding: 20 }}>
         <div style={{ fontFamily: "var(--font-mono)", fontSize: 11, textTransform: "uppercase", letterSpacing: "0.18em", color: "var(--text-faint)" }}>{labels.impact}</div>
         <p style={{ margin: "8px 0 0", fontSize: 13.5, lineHeight: 1.6, color: "var(--text-body)" }}>{project.impact}</p>
-      </div>
+      </div> : null}
       <h4 style={{ margin: "0 0 10px", fontFamily: "var(--font-display)", fontSize: 16, fontWeight: 600, color: "var(--text-1)" }}>{labels.techStack}</h4>
       <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
         {(project.technologies || []).map((t) => <Tag key={t}>{t}</Tag>)}
@@ -98,7 +122,21 @@ type TabId = "overview" | "arch" | "adr" | "log" | "gallery";
  * tabs: overview / architecture (C4 zoom + diagrams) / decisions (ADRs) /
  * eng-log / gallery. Without details it stays the compact 660px dialog.
  */
-export function ProjectDossierModal({ project, onClose, labels }: { project: DossierProject | null; onClose: () => void; labels: DossierLabels }) {
+export function ProjectDossierModal({
+  project,
+  onClose,
+  labels,
+  dossierLoading,
+  dossierError,
+  onRetryDossier,
+}: {
+  project: DossierProject | null;
+  onClose: () => void;
+  labels: DossierLabels;
+  dossierLoading?: boolean;
+  dossierError?: boolean;
+  onRetryDossier?: () => void;
+}) {
   const [tab, setTab] = useState<TabId>("overview");
   const closeRef = useRef<HTMLButtonElement>(null);
   const slug = project ? project.slug || project.title : null;
@@ -168,7 +206,7 @@ export function ProjectDossierModal({ project, onClose, labels }: { project: Dos
 
         {/* — body — */}
         <div style={{ flex: compact ? "none" : "1 1 auto", overflowY: "auto", padding: compact ? "20px 36px 36px" : "24px 34px 34px" }}>
-          {tab === "overview" ? <OverviewTab project={project} metrics={d?.metrics} labels={labels} /> : null}
+          {tab === "overview" ? <OverviewTab project={project} metrics={d?.metrics} labels={labels} dossierLoading={dossierLoading} dossierError={dossierError} onRetryDossier={onRetryDossier} /> : null}
 
           {tab === "arch" && d ? (d.diagrams && d.diagrams.length ? <DiagramGallery diagrams={d.diagrams} /> : (d.c4 && d.c4.length ? <C4Diagram levels={d.c4} /> : null)) : null}
 

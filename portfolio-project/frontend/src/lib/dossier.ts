@@ -248,13 +248,8 @@ const mapDiagram = (diagram: ProjectDossier["diagrams"][number]): Diagram => {
   };
 };
 
-export function toDossierProject(
-  project: Project,
-  dossier: ProjectDossier | null,
-  _locale: Locale,
-): DossierProject {
-  const details: ProjectDetail | undefined = dossier
-    ? {
+const toProjectDetail = (dossier: ProjectDossier): ProjectDetail => {
+  const details: ProjectDetail = {
         metrics: byOrder(dossier.metrics).map((metric) => ({
           value: metric.value,
           label: metric.label,
@@ -284,8 +279,7 @@ export function toDossierProject(
           caption: item.caption,
           hint: item.hint ?? undefined,
         })),
-      }
-    : undefined;
+      };
 
   if (details && details.c4.length > 0) {
     details.diagrams = [
@@ -300,6 +294,14 @@ export function toDossierProject(
     ];
   }
 
+  return details;
+};
+
+export function toDossierProject(
+  project: Project,
+  dossier: ProjectDossier | null,
+  _locale: Locale,
+): DossierProject {
   return {
     slug: project.slug,
     title: project.title,
@@ -308,6 +310,17 @@ export function toDossierProject(
     impact: dossier?.impact ?? "",
     technologies: (project.technologies || []).map((technology) => technology.name),
     featured: project.featured,
-    details,
+    details: dossier ? toProjectDetail(dossier) : undefined,
+  };
+}
+
+export function mergeDossierProject(
+  project: DossierProject,
+  dossier: ProjectDossier | null,
+): DossierProject {
+  return {
+    ...project,
+    impact: dossier?.impact ?? "",
+    details: dossier ? toProjectDetail(dossier) : undefined,
   };
 }

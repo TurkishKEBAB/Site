@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { isAxiosError } from "axios";
 
 import NxSectionHead from "@/components/nexus/NxSectionHead";
 import ScrambleHeading from "@/components/nexus/ScrambleHeading";
@@ -11,7 +12,8 @@ import {
 } from "@/components/nexus/ProjectDossierModal";
 import { ProjectIndex } from "@/components/nexus/ProjectIndex";
 import type { Locale } from "@/content/site";
-import { useProjectsQuery } from "@/hooks/usePublicData";
+import { useProjectDossierQuery, useProjectsQuery } from "@/hooks/usePublicData";
+import { mergeDossierProject } from "@/lib/dossier";
 import { mapProjectsToDossierProjects } from "@/lib/projects";
 
 interface ProjectsPageProps {
@@ -25,12 +27,14 @@ const dossierLabels = (tr: boolean): DossierLabels =>
         overview: "genel", architecture: "mimari", decisions: "kararlar", engLog: "gelişim·kaydı", gallery: "galeri",
         impact: "Etki", techStack: "Teknoloji seti", close: "Proje detaylarını kapat",
         context: "bağlam", decision: "karar", tradeoff: "ödünleşim", galleryHint: "şuraya ekle:",
+        dossierLoading: "Dosya yükleniyor...", dossierUnavailable: "Dosya kullanılamıyor.", retryDossier: "Dosyayı tekrar dene",
       }
     : {
         featured: "Featured", project: "Project", dossier: "dossier",
         overview: "overview", architecture: "architecture", decisions: "decisions", engLog: "eng·log", gallery: "gallery",
         impact: "Impact", techStack: "Technology stack", close: "Close project details",
         context: "context", decision: "decision", tradeoff: "trade-off", galleryHint: "add",
+        dossierLoading: "Loading dossier...", dossierUnavailable: "Dossier unavailable.", retryDossier: "Retry dossier",
       };
 
 export default function Projects({ locale }: ProjectsPageProps) {
@@ -39,6 +43,12 @@ export default function Projects({ locale }: ProjectsPageProps) {
   const [selected, setSelected] = useState<DossierProject | null>(null);
   const { data, isError, isLoading, refetch } = useProjectsQuery({ limit: 100, language: locale });
   const dossierProjects = mapProjectsToDossierProjects(data?.items ?? [], locale);
+  const dossierQuery = useProjectDossierQuery(selected?.slug ?? null, locale);
+  const dossierMissing = isAxiosError(dossierQuery.error) && dossierQuery.error.response?.status === 404;
+  const dossierError = Boolean(selected && dossierQuery.isError && !dossierMissing);
+  const selectedProject = selected
+    ? mergeDossierProject(selected, dossierMissing ? null : dossierQuery.data ?? null)
+    : null;
 
   return (
     <div className="container-custom pb-16 pt-28 md:pt-32">
@@ -97,7 +107,14 @@ export default function Projects({ locale }: ProjectsPageProps) {
         )}
       </section>
 
-      <ProjectDossierModal project={selected} onClose={() => setSelected(null)} labels={labels} />
+      <ProjectDossierModal
+        project={selectedProject}
+        onClose={() => setSelected(null)}
+        labels={labels}
+        dossierLoading={Boolean(selected && dossierQuery.isLoading)}
+        dossierError={dossierError}
+        onRetryDossier={() => void dossierQuery.refetch()}
+      />
     </div>
   );
 }

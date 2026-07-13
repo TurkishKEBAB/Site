@@ -99,6 +99,22 @@ describe("ProjectDossierModal", () => {
     fireEvent.click(within(dialog).getByRole("button", { name: "Close project details" }));
     expect(onClose).toHaveBeenCalledTimes(2);
   });
+
+  it("shows a retry action when the dossier request fails", () => {
+    const retry = vi.fn();
+    render(
+      <ProjectDossierModal
+        project={{ ...isik, details: undefined }}
+        dossierError
+        onRetryDossier={retry}
+        onClose={vi.fn()}
+        labels={labels}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: /retry dossier/i }));
+    expect(retry).toHaveBeenCalledTimes(1);
+  });
 });
 
 describe("DiagramGallery", () => {

@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 
 import { blogService } from "@/services/blogService";
+import { dossierService } from "@/services/dossierService";
 import { experienceService } from "@/services/experienceService";
 import { projectService } from "@/services/projectService";
 import { skillService } from "@/services/skillService";
@@ -16,6 +17,15 @@ export function useProjectsQuery(params?: ProjectListParams) {
   return useQuery({
     queryKey: queryKeys.projects.list(params),
     queryFn: () => projectService.getProjects(params),
+  });
+}
+
+export function useProjectDossierQuery(slug: string | null, language: string) {
+  return useQuery({
+    queryKey: queryKeys.dossiers.detail(slug ?? "", language),
+    queryFn: () => dossierService.getPublicDossier(slug as string, language),
+    enabled: Boolean(slug),
+    retry: 1,
   });
 }
 

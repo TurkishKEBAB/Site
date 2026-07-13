@@ -1,16 +1,13 @@
 import { describe, expect, it } from "vitest";
 
-import { projectDetails } from "@/content/projectDetails";
-import { projectRecords } from "@/content/site";
 import type { Project } from "@/services/types";
 import { mapProjectsToDossierProjects } from "./projects";
 
 describe("mapProjectsToDossierProjects", () => {
-  it("uses API project fields while preserving static dossier data", () => {
-    const curatedProject = projectRecords[0];
+  it("uses API project fields without static dossier data", () => {
     const apiProject: Project = {
       id: "project-api-1",
-      slug: curatedProject.slug,
+      slug: "managed-project",
       title: "Managed project title",
       short_description: "Managed project summary",
       description: "Managed project description",
@@ -27,15 +24,15 @@ describe("mapProjectsToDossierProjects", () => {
     const [mapped] = mapProjectsToDossierProjects([apiProject], "en");
 
     expect(mapped).toMatchObject({
-      slug: curatedProject.slug,
+      slug: "managed-project",
       title: "Managed project title",
       summary: "Managed project summary",
       description: "Managed project description",
       technologies: ["FastAPI", "PostgreSQL"],
       featured: true,
-      details: projectDetails[curatedProject.slug],
+      impact: "",
+      details: undefined,
     });
-    expect(mapped.impact).toBe(curatedProject.impact.en);
   });
 
   it("falls back to the description when the API has no short description", () => {
