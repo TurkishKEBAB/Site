@@ -117,3 +117,13 @@ def test_dossier_payload_rejects_duplicate_diagram_ids():
 
     with pytest.raises(ValidationError):
         ProjectDossierUpsert.model_validate(data)
+
+
+def test_dossier_migration_revision():
+    from pathlib import Path
+
+    migration = Path("backend/alembic/versions/20260713_0005_project_dossier.py")
+    assert migration.exists()
+    source = migration.read_text(encoding="utf-8")
+    assert 'revision: str = "20260713_0005"' in source
+    assert 'down_revision: Union[str, None] = "20260713_0004"' in source
