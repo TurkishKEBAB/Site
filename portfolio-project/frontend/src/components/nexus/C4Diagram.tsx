@@ -2,7 +2,7 @@
 
 import { Fragment, useState, type CSSProperties } from "react";
 
-import type { C4Level, C4Node, C4NodeKind } from "@/content/projectDetails";
+import type { C4Level, C4Node, C4NodeKind } from "@/lib/dossier";
 
 import { Icon } from "./Icon";
 

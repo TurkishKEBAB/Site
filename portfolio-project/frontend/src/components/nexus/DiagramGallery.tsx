@@ -11,7 +11,7 @@ import type {
   SchemaData,
   SequenceData,
   TiersData,
-} from "@/content/projectDetails";
+} from "@/lib/dossier";
 
 import { C4Diagram } from "./C4Diagram";
 import { Icon } from "./Icon";

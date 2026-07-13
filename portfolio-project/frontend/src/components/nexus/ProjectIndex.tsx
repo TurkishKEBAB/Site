@@ -1,5 +1,5 @@
 import { Icon } from "./Icon";
-import type { DossierProject } from "./ProjectDossierModal";
+import type { DossierProject } from "@/lib/dossier";
 import { Tag } from "./Tag";
 
 const EASE = "cubic-bezier(0.25,0.1,0.25,1)";

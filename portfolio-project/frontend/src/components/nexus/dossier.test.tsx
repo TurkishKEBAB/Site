@@ -2,12 +2,13 @@ import { cleanup, fireEvent, render, screen, within } from "@testing-library/rea
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { careerGraph } from "@/content/careerGraph";
-import { projectDetails } from "@/content/projectDetails";
+import type { ProjectDetail } from "@/lib/dossier";
 
 import { CareerMap } from "./CareerMap";
 import { DiagramGallery } from "./DiagramGallery";
-import { ProjectDossierModal, type DossierLabels, type DossierProject } from "./ProjectDossierModal";
+import { ProjectDossierModal, type DossierLabels } from "./ProjectDossierModal";
 import { ProjectIndex } from "./ProjectIndex";
+import type { DossierProject } from "@/lib/dossier";
 
 afterEach(() => cleanup());
 
@@ -18,6 +19,36 @@ const labels: DossierLabels = {
   context: "context", decision: "decision", tradeoff: "trade-off", galleryHint: "add",
 };
 
+const dossierDetails: ProjectDetail = {
+  metrics: [{ value: "86.97%", label: "coverage" }],
+  c4: [{ label: "Context", tiers: [[{ kind: "person", title: "Student" }]] }],
+  adrs: [{
+    id: "ADR-001",
+    title: "One scheduling core, two clients",
+    status: "Accepted",
+    context: "Shared domain avoids divergent scheduling behavior.",
+    decision: "Keep the solver core independent from both clients.",
+  }],
+  log: [],
+  diagrams: [
+    {
+      id: "c4",
+      kind: "c4",
+      title: "C4 Model",
+      data: [{ label: "Context", tiers: [[{ kind: "person", title: "Student" }]] }],
+    },
+    {
+      id: "schema",
+      kind: "schema",
+      title: "Class — solver core",
+      data: {
+        tiers: [[{ name: "Timetable", kind: "class", rows: ["+ solve(sections): Timetable"] }]],
+      },
+    },
+  ],
+  gallery: [],
+};
+
 const isik: DossierProject = {
   slug: "isikschedule-platform",
   title: "IsikSchedule Platform",
@@ -26,7 +57,7 @@ const isik: DossierProject = {
   impact: "~1,000 active users; 86.97% coverage.",
   technologies: ["FastAPI", "Next.js", "PostgreSQL"],
   featured: true,
-  details: projectDetails["isikschedule-platform"],
+  details: dossierDetails,
 };
 
 describe("ProjectIndex", () => {
@@ -72,7 +103,7 @@ describe("ProjectDossierModal", () => {
 
 describe("DiagramGallery", () => {
   it("switches renderer when a chip is picked", () => {
-    render(<DiagramGallery diagrams={projectDetails["isikschedule-platform"].diagrams} />);
+    render(<DiagramGallery diagrams={dossierDetails.diagrams} />);
     // first diagram is the C4 model
     expect(screen.getByRole("tab", { name: /C4 Model/ })).toHaveAttribute("aria-selected", "true");
 

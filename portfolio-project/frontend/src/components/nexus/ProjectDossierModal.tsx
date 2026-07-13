@@ -2,7 +2,9 @@
 
 import { useEffect, useRef, useState, type CSSProperties } from "react";
 
-import type { DossierMetric, ProjectDetail } from "@/content/projectDetails";
+import type { DossierMetric, DossierProject } from "@/lib/dossier";
+
+export type { DossierProject } from "@/lib/dossier";
 
 import { C4Diagram } from "./C4Diagram";
 import { DiagramGallery } from "./DiagramGallery";
@@ -10,17 +12,6 @@ import { Icon } from "./Icon";
 import { Tag } from "./Tag";
 
 const EASE = "cubic-bezier(0.25,0.1,0.25,1)";
-
-export interface DossierProject {
-  slug: string;
-  title: string;
-  summary: string;
-  description: string;
-  impact: string;
-  technologies: string[];
-  featured: boolean;
-  details?: ProjectDetail;
-}
 
 export interface DossierLabels {
   featured: string;
