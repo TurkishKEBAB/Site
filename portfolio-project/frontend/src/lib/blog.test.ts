@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { fetchBlogPostMetadata, fetchBlogPosts } from "./blog";
+import { fetchBlogPostBundle, fetchBlogPostMetadata, fetchBlogPosts } from "./blog";
 
 const successfulBlogResponse = {
   items: [
@@ -22,7 +22,7 @@ describe("server blog data fetching", () => {
     vi.restoreAllMocks();
   });
 
-  it("uses ISR caching and a timeout signal for the blog list fetch", async () => {
+  it("uses no-store and a timeout signal for the editable blog list fetch", async () => {
     const fetchSpy = vi.fn().mockResolvedValue({
       ok: true,
       status: 200,
@@ -38,11 +38,10 @@ describe("server blog data fetching", () => {
     expect(fetchSpy).toHaveBeenCalledWith(
       expect.stringContaining("/blog/?published_only=true&language=en&limit=100"),
       expect.objectContaining({
-        next: { revalidate: 300 },
+        cache: "no-store",
         signal: expect.any(AbortSignal),
       }),
     );
-    expect(fetchSpy.mock.calls[0][1]).not.toHaveProperty("cache", "no-store");
   });
 
   it("fetches only the post detail needed for metadata", async () => {
@@ -62,8 +61,36 @@ describe("server blog data fetching", () => {
 
     expect(fetchSpy).toHaveBeenCalledTimes(1);
     expect(fetchSpy).toHaveBeenCalledWith(
-      expect.stringContaining("/blog/building-constraint-aware-schedulers?language=en"),
-      expect.any(Object),
+      expect.stringContaining(
+        "/blog/building-constraint-aware-schedulers?language=en&count_view=false",
+      ),
+      expect.objectContaining({ cache: "no-store" }),
     );
+  });
+
+  it("counts one view for the detail bundle and keeps both requests fresh", async () => {
+    const fetchSpy = vi
+      .fn()
+      .mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: vi.fn().mockResolvedValue(successfulBlogResponse.items[0]),
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: vi.fn().mockResolvedValue(successfulBlogResponse),
+      });
+    vi.stubGlobal("fetch", fetchSpy);
+
+    await expect(fetchBlogPostBundle("post", "en")).resolves.toMatchObject({
+      status: "ok",
+      post: { id: "post-1" },
+    });
+
+    expect(fetchSpy).toHaveBeenCalledTimes(2);
+    expect(fetchSpy.mock.calls[0][0]).toContain("/blog/post?language=en&count_view=true");
+    expect(fetchSpy.mock.calls[0][1]).toMatchObject({ cache: "no-store" });
+    expect(fetchSpy.mock.calls[1][1]).toMatchObject({ cache: "no-store" });
   });
 });
