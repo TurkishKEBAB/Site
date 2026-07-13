@@ -37,6 +37,8 @@
 
 ## Phase 0: Documentation and baseline
 
+**Status:** Complete. The design and master TODO are committed in ef3e4b4; frontend baseline passed 12 tests and focused backend Blog baseline passed 6 tests with --no-cov because single-file coverage cannot meet the repository threshold.
+
 ### Task 0.1: Record the validated design
 
 **Files:**
@@ -105,6 +107,31 @@ git commit -m "docs(portfolio): define admin-driven harmony phases"
 ### Phase 1 outcome
 
 An admin can create a draft, verify it is not public, edit content and tags, save EN/TR translations, publish it, see it immediately on /blog, open /blog/[slug], and delete it. A non-admin cannot list or read drafts. Existing public Blog cards, Markdown rendering, degraded state, metadata, and related-post behavior remain intact.
+
+**Implementation status:** Code, focused tests, frontend quality checks, OpenAPI/type generation, and production build are complete. Manual browser acceptance remains pending until the local API/database services are running.
+
+**Completed checklist:**
+
+- [x] Task 1.1: backend red-green contract tests for draft isolation, admin list/detail, tags/translations, and explicit view counting.
+- [x] Task 1.2: Blog tags model, schema, fixture support, and Alembic migration.
+- [x] Task 1.3: protected admin routes, public draft isolation, and count_view behavior.
+- [x] Task 1.4: backend OpenAPI and frontend generated API types.
+- [x] Task 1.5: frontend Blog service, admin endpoints, types, and service tests.
+- [x] Task 1.6: NEXUS Blog tab, forms, translation editor, and component tests.
+- [x] Task 1.7: Admin.tsx Blog CRUD orchestration, modal focus handling, toasts, and error paths.
+- [x] Task 1.8: uncached public Blog fetches and metadata/detail view-count separation.
+- [ ] Task 1.9 manual browser acceptance: requires a running API and database.
+
+**Verification evidence:**
+
+- Backend Blog tests: 10 passed with coverage disabled for the focused file.
+- Backend full suite: 118 passed with coverage disabled.
+- Frontend full suite: 17 files, 53 tests passed.
+- Frontend lint and type-check: passed.
+- Frontend production build: passed; /blog and /blog/[slug] are dynamic server-rendered routes.
+- API type drift check: passed.
+- Alembic offline history: 20260713_0004 is the current head and follows 20260713_0003.
+- Repository-wide coverage-enabled backend run is environment-blocked by Python 3.14 plus passlib/coverage bcrypt backend behavior; the same suite passes with --no-cov.
 
 ### Task 1.1: Write failing backend contract tests
 
