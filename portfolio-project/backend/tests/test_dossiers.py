@@ -127,3 +127,63 @@ def test_dossier_migration_revision():
     source = migration.read_text(encoding="utf-8")
     assert 'revision: str = "20260713_0005"' in source
     assert 'down_revision: Union[str, None] = "20260713_0004"' in source
+
+
+def test_dossier_public_read_is_ordered(client, create_project, admin_headers):
+    project = create_project(slug="dossier-project")
+    response = client.put(
+        f"/api/v1/dossiers/projects/{project.id}",
+        headers=admin_headers,
+        json=valid_dossier_payload(),
+    )
+
+    assert response.status_code == 200
+    public = client.get("/api/v1/dossiers/dossier-project?language=en")
+    assert public.status_code == 200
+    assert public.json()["impact"] == "Built a reliable scheduling workflow."
+    assert public.json()["metrics"][0]["label"] == "coverage"
+
+
+def test_dossier_mutations_are_admin_only(client, create_project, user_headers):
+    project = create_project(slug="protected-dossier")
+    response = client.put(
+        f"/api/v1/dossiers/projects/{project.id}",
+        headers=user_headers,
+        json=valid_dossier_payload(),
+    )
+
+    assert response.status_code == 403
+
+
+def test_invalid_replace_keeps_previous_aggregate(client, create_project, admin_headers):
+    project = create_project(slug="atomic-dossier")
+    assert client.put(
+        f"/api/v1/dossiers/projects/{project.id}",
+        headers=admin_headers,
+        json=valid_dossier_payload(),
+    ).status_code == 200
+
+    invalid = valid_dossier_payload()
+    invalid["gallery"] = [{"id": "x", "src": "javascript:bad", "caption": "x"}]
+    rejected = client.put(
+        f"/api/v1/dossiers/projects/{project.id}",
+        headers=admin_headers,
+        json=invalid,
+    )
+    assert rejected.status_code == 422
+
+    unchanged = client.get("/api/v1/dossiers/atomic-dossier")
+    assert unchanged.json()["metrics"][0]["label"] == "coverage"
+
+
+def test_project_delete_cascades_dossier(client, create_project, admin_headers):
+    project = create_project(slug="cascade-dossier")
+    assert client.put(
+        f"/api/v1/dossiers/projects/{project.id}",
+        headers=admin_headers,
+        json=valid_dossier_payload(),
+    ).status_code == 200
+    assert client.delete(
+        f"/api/v1/projects/{project.id}", headers=admin_headers
+    ).status_code == 204
+    assert client.get("/api/v1/dossiers/cascade-dossier").status_code == 404

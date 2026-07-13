@@ -6,6 +6,7 @@ from urllib.parse import urlparse
 import uuid
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
+from pydantic_core import PydanticCustomError
 
 
 class DossierSchema(BaseModel):
@@ -82,8 +83,7 @@ class DossierAdrCreate(DossierSchema):
 
 
 class DossierAdrResponse(DossierAdrCreate):
-    row_id: uuid.UUID = Field(alias="id")
-    model_config = ConfigDict(from_attributes=True, populate_by_name=True)
+    id: str
 
 
 class DossierLogEntryCreate(DossierSchema):
@@ -96,8 +96,7 @@ class DossierLogEntryCreate(DossierSchema):
 
 
 class DossierLogEntryResponse(DossierLogEntryCreate):
-    row_id: uuid.UUID = Field(alias="id")
-    model_config = ConfigDict(from_attributes=True, populate_by_name=True)
+    hash: str
 
 
 class SequenceMessage(DossierSchema):
@@ -193,8 +192,7 @@ class DossierDiagramCreate(DossierSchema):
 
 
 class DossierDiagramResponse(DossierDiagramCreate):
-    row_id: uuid.UUID = Field(alias="id")
-    model_config = ConfigDict(from_attributes=True, populate_by_name=True)
+    id: str
 
 
 class DossierGalleryItemCreate(DossierSchema):
@@ -212,12 +210,14 @@ class DossierGalleryItemCreate(DossierSchema):
             return value
         if parsed.scheme in {"http", "https"} and parsed.netloc:
             return value
-        raise ValueError("gallery source must be a site-relative or http(s) URL")
+        raise PydanticCustomError(
+            "invalid_gallery_source",
+            "gallery source must be a site-relative or http(s) URL",
+        )
 
 
 class DossierGalleryItemResponse(DossierGalleryItemCreate):
-    row_id: uuid.UUID = Field(alias="id")
-    model_config = ConfigDict(from_attributes=True, populate_by_name=True)
+    id: str
 
 
 class ProjectDossierUpsert(DossierSchema):
