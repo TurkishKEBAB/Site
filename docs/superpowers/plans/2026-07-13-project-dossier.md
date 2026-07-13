@@ -48,7 +48,7 @@
 
 - Modify `frontend/src/hooks/usePublicData.ts`, `routes/Projects.tsx`, and `lib/projects.ts`.
 - Create `frontend/src/routes/Projects.test.tsx` for selected-project loading and degraded state.
-- Create `frontend/src/components/admin/DossierForms.tsx`, `DossierEditor.tsx`, and its test.
+- Create `frontend/src/components/admin/DossierEditor.tsx` and its test.
 - Modify admin types, project tab, tab index, and `routes/Admin.tsx`.
 - Delete `frontend/src/content/projectDetails.ts` only after the import audit passes.
 
@@ -107,7 +107,7 @@ Routes:
 - C4 levels own ordered `c4_nodes`.
 - Schemas expose `c4`, `log`, and `gallery` aliases at the API boundary.
 
-- [ ] **Step 1: Write failing schema tests.**
+- [x] **Step 1: Write failing schema tests.**
 
 ```python
 from decimal import Decimal
@@ -158,7 +158,7 @@ def test_dossier_payload_rejects_duplicate_diagram_ids():
         ProjectDossierUpsert.model_validate(data)
 ```
 
-- [ ] **Step 2: Run the focused test and verify the red state.**
+- [x] **Step 2: Run the focused test and verify the red state.**
 
 ```powershell
 cd portfolio-project
@@ -167,7 +167,7 @@ python -m pytest backend/tests/test_dossiers.py -q --no-cov
 
 Expected: collection/import failure because the dossier schema does not exist.
 
-- [ ] **Step 3: Implement ORM models and Pydantic schemas.**
+- [x] **Step 3: Implement ORM models and Pydantic schemas.**
 
 Use UUID primary keys and the existing `Base` style. Define a unique
 `project_id` foreign key on `ProjectDossier`; child foreign keys use
@@ -183,7 +183,7 @@ labels/text, non-negative orders and numeric values, allowed C4/diagram/flow
 kinds, duplicate child ids, and gallery sources beginning with `/` or using
 `http(s)`.
 
-- [ ] **Step 4: Run schema tests and model import checks.**
+- [x] **Step 4: Run schema tests and model import checks.**
 
 ```powershell
 python -m pytest backend/tests/test_dossiers.py -q --no-cov
@@ -192,7 +192,7 @@ python -m compileall backend/app/models/dossier.py backend/app/schemas/dossier.p
 
 Expected: schema tests pass.
 
-- [ ] **Step 5: Commit the typed contract.**
+- [x] **Step 5: Commit the typed contract.**
 
 ```powershell
 git add backend/app/models/dossier.py backend/app/schemas/dossier.py backend/app/models/__init__.py backend/tests/test_dossiers.py
@@ -211,7 +211,7 @@ git commit -m "feat(backend): add typed project dossier contract"
 - Revision is `20260713_0005`; down revision is `20260713_0004`.
 - Downgrade drops child tables first, then `project_dossiers`.
 
-- [ ] **Step 1: Add a migration revision test.**
+- [x] **Step 1: Add a migration revision test.**
 
 ```python
 def test_dossier_migration_revision():
@@ -223,7 +223,7 @@ def test_dossier_migration_revision():
     assert 'down_revision: Union[str, None] = "20260713_0004"' in source
 ```
 
-- [ ] **Step 2: Run the test and observe the red state.**
+- [x] **Step 2: Run the test and observe the red state.**
 
 ```powershell
 python -m pytest backend/tests/test_dossiers.py::test_dossier_migration_revision -q --no-cov
@@ -231,14 +231,14 @@ python -m pytest backend/tests/test_dossiers.py::test_dossier_migration_revision
 
 Expected: FAIL because the migration file does not exist yet.
 
-- [ ] **Step 3: Add the Alembic revision.**
+- [x] **Step 3: Add the Alembic revision.**
 
 Create all eight tables with UUID keys, unique root ownership, child indexes,
 non-negative order defaults, `sa.Numeric(18, 4)` metric values,
 `sa.JSON()` diagram data, and cascade foreign keys. Keep existing project and
 project-image tables untouched.
 
-- [ ] **Step 4: Run offline migration checks.**
+- [x] **Step 4: Run offline migration checks.**
 
 ```powershell
 python -m compileall backend/alembic/versions/20260713_0005_project_dossier.py
@@ -248,7 +248,7 @@ Select-String -Path $env:TEMP\dossier-migration.sql -Pattern "project_dossiers|d
 
 Expected: revision compiles and offline SQL contains all tables and cascades.
 
-- [ ] **Step 5: Commit the migration.**
+- [x] **Step 5: Commit the migration.**
 
 ```powershell
 git add backend/alembic/versions/20260713_0005_project_dossier.py
@@ -271,7 +271,7 @@ git commit -m "feat(backend): add project dossier migration"
 - `upsert_dossier(db, project_id, payload) -> ProjectDossierResponse`
 - `delete_dossier(db, project_id) -> bool`
 
-- [ ] **Step 1: Write failing route and transaction tests.**
+- [x] **Step 1: Write failing route and transaction tests.**
 
 ```python
 def test_dossier_public_read_is_ordered(client, create_project, admin_headers):
@@ -308,7 +308,7 @@ def test_project_delete_cascades_dossier(client, create_project, admin_headers):
     assert client.get("/api/v1/dossiers/cascade-dossier").status_code == 404
 ```
 
-- [ ] **Step 2: Run focused tests and verify the red state.**
+- [x] **Step 2: Run focused tests and verify the red state.**
 
 ```powershell
 python -m pytest backend/tests/test_dossiers.py -q --no-cov
@@ -316,7 +316,7 @@ python -m pytest backend/tests/test_dossiers.py -q --no-cov
 
 Expected: FAIL because CRUD and router functions are absent.
 
-- [ ] **Step 3: Implement ordered serializer and atomic CRUD.**
+- [x] **Step 3: Implement ordered serializer and atomic CRUD.**
 
 Load every child with `joinedload`, serialize to the public/admin response,
 and sort by the declared order. In `upsert_dossier`, find the project,
@@ -325,14 +325,14 @@ relationships, insert validated rows in request order, flush, commit, reload,
 and return. Roll back and re-raise on every exception; child helpers must not
 commit independently.
 
-- [ ] **Step 4: Implement router and audit actions.**
+- [x] **Step 4: Implement router and audit actions.**
 
 Mount `dossiers.router` at `/dossiers`. Public GET uses
 `Query("en", pattern="^(tr|en)$")`; admin GET/PUT/DELETE use
 `require_admin`. Map missing project/dossier to 404 and record
 `project_dossier.create/update/delete` through `record_admin_action`.
 
-- [ ] **Step 5: Run focused and regression backend tests.**
+- [x] **Step 5: Run focused and regression backend tests.**
 
 ```powershell
 python -m pytest backend/tests/test_dossiers.py -q --no-cov
@@ -341,7 +341,7 @@ python -m pytest backend/tests/test_projects_admin.py backend/tests/test_admin_a
 
 Expected: all focused dossier, project, and audit tests pass.
 
-- [ ] **Step 6: Commit the backend API.**
+- [x] **Step 6: Commit the backend API.**
 
 ```powershell
 git add backend/app/crud/dossier.py backend/app/api/v1/dossiers.py backend/app/api/v1/__init__.py backend/tests/test_dossiers.py
@@ -365,7 +365,7 @@ git commit -m "feat(backend): expose project dossier API"
 - `apiEndpoints.dossiers.admin(projectId)` is `/dossiers/projects/{projectId}`.
 - `dossierService.getPublicDossier(slug, language?)`, `getAdminDossier(projectId)`, `upsertDossier(projectId, payload)`, and `deleteDossier(projectId)`.
 
-- [ ] **Step 1: Export OpenAPI and write failing service tests.**
+- [x] **Step 1: Export OpenAPI and write failing service tests.**
 
 ```powershell
 cd portfolio-project
@@ -390,13 +390,13 @@ it("saves one complete admin payload", async () => {
 
 Expected initial focused run: FAIL because endpoint mappings and service methods are absent.
 
-- [ ] **Step 2: Implement typed endpoints and service.**
+- [x] **Step 2: Implement typed endpoints and service.**
 
 Add API-derived dossier interfaces, preserve existing `Project` compatibility,
 pass `{ params: { language } }` only when supplied, and send the complete PUT
 payload unchanged.
 
-- [ ] **Step 3: Regenerate and check API types.**
+- [x] **Step 3: Regenerate and check API types.**
 
 ```powershell
 npm run gen:api
@@ -406,7 +406,7 @@ npm run test -- --run src/services/dossierService.test.ts
 
 Expected: generated files are stable and focused service tests pass.
 
-- [ ] **Step 4: Commit the service boundary.**
+- [x] **Step 4: Commit the service boundary.**
 
 ```powershell
 git add ../backend/openapi.json src/services/apiTypes.generated.ts src/services/api.ts src/services/types.ts src/services/dossierService.ts src/services/dossierService.test.ts
@@ -429,7 +429,7 @@ git commit -m "feat(frontend): add project dossier service contract"
 - `toDossierProject(project: Project, dossier: ProjectDossier | null, locale: Locale): DossierProject` is pure.
 - `DossierProject.details` is optional and no renderer imports `content/projectDetails`.
 
-- [ ] **Step 1: Write failing mapper tests.**
+- [x] **Step 1: Write failing mapper tests.**
 
 ```typescript
 it("maps an API dossier into ordered renderer data", () => {
@@ -445,7 +445,7 @@ it("returns a compact project when dossier is absent", () => {
 });
 ```
 
-- [ ] **Step 2: Run focused test and verify the red state.**
+- [x] **Step 2: Run focused test and verify the red state.**
 
 ```powershell
 cd portfolio-project/frontend
@@ -454,20 +454,20 @@ npm run test -- --run src/lib/dossier.test.ts
 
 Expected: FAIL because mapper and neutral types do not exist.
 
-- [ ] **Step 3: Move structural types and implement mapper.**
+- [x] **Step 3: Move structural types and implement mapper.**
 
 Move C4, diagram, metric, ADR, log, and gallery types from
 `content/projectDetails.ts` to `lib/dossier.ts`. Convert snake_case API
 fields, sort every child collection, and prepend the C4 diagram when levels
 exist. Use API impact with EN fallback and `""` when there is no dossier.
 
-- [ ] **Step 4: Update renderer imports and local fixtures.**
+- [x] **Step 4: Update renderer imports and local fixtures.**
 
 Replace static type imports with `@/lib/dossier`. Build dossier fixtures
 locally from neutral types and retain coverage for modal tabs, C4 zoom, and
 diagram rendering.
 
-- [ ] **Step 5: Run focused tests and commit.**
+- [x] **Step 5: Run focused tests and commit.**
 
 ```powershell
 npm run test -- --run src/lib/dossier.test.ts src/components/nexus/dossier.test.tsx
@@ -492,7 +492,7 @@ git commit -m "refactor(frontend): align dossier renderers with API types"
 - `mapProjectsToDossierProjects` maps only project API data and leaves `details` undefined.
 - Modal props include optional dossier loading/error/retry state.
 
-- [ ] **Step 1: Write failing public wiring tests.**
+- [x] **Step 1: Write failing public wiring tests.**
 
 ```typescript
 it("does not import static dossier data in the public project mapper", () => {
@@ -506,7 +506,7 @@ it("shows a retry action for a failed dossier request", () => {
 });
 ```
 
-- [ ] **Step 2: Run tests and verify the red state.**
+- [x] **Step 2: Run tests and verify the red state.**
 
 ```powershell
 npm run test -- --run src/lib/dossier.test.ts src/components/nexus/dossier.test.tsx
@@ -514,19 +514,19 @@ npm run test -- --run src/lib/dossier.test.ts src/components/nexus/dossier.test.
 
 Expected: FAIL because query state and retry props are absent.
 
-- [ ] **Step 3: Implement selected-project query lifecycle.**
+- [x] **Step 3: Implement selected-project query lifecycle.**
 
 Use existing TanStack Query conventions. Keep the modal open while the dossier
 loads, map the selected project through `toDossierProject`, treat 404 as a
 compact empty dossier, and show retry UI for other failures.
 
-- [ ] **Step 4: Remove static reads from `lib/projects.ts`.**
+- [x] **Step 4: Remove static reads from `lib/projects.ts`.**
 
 Delete `projectDetails` and `projectRecords` lookups. Continue mapping title,
 summary, description, technologies, and featured from the projects API; dossier
 impact and technical details come only from the dossier query.
 
-- [ ] **Step 5: Verify and commit.**
+- [x] **Step 5: Verify and commit.**
 
 ```powershell
 npm run test -- --run src/lib/dossier.test.ts src/components/nexus/dossier.test.tsx src/routes/Projects.test.tsx
@@ -540,7 +540,6 @@ git commit -m "feat(frontend): load project dossiers on demand"
 
 **Files:**
 
-- Create: `frontend/src/components/admin/DossierForms.tsx`
 - Create: `frontend/src/components/admin/DossierEditor.tsx`
 - Create: `frontend/src/components/admin/DossierEditor.test.tsx`
 - Modify: admin types, `tabs/ProjectsTab.tsx`, `tabs/index.ts`, and `routes/Admin.tsx`
@@ -548,10 +547,10 @@ git commit -m "feat(frontend): load project dossiers on demand"
 **Interfaces:**
 
 - `DossierFormValues` mirrors `ProjectDossierUpsert` in camelCase at the React boundary.
-- `DossierEditor` accepts `initialValues`, `loading`, `saving`, `onSubmit`, and `onCancel`.
+- `DossierEditor` accepts `initialValues`, `loading`, `language`, `onSubmit`, and `onCancel`.
 - `ProjectsTab` receives `onOpenDossierManager(project)`.
 
-- [ ] **Step 1: Write the failing editor test.**
+- [x] **Step 1: Write the failing editor test.**
 
 ```typescript
 it("edits overview and metrics and submits one aggregate payload", async () => {
@@ -569,7 +568,7 @@ it("edits overview and metrics and submits one aggregate payload", async () => {
 });
 ```
 
-- [ ] **Step 2: Run the test and verify the red state.**
+- [x] **Step 2: Run the test and verify the red state.**
 
 ```powershell
 cd portfolio-project/frontend
@@ -578,27 +577,27 @@ npm run test -- --run src/components/admin/DossierEditor.test.tsx
 
 Expected: FAIL because the editor does not exist.
 
-- [ ] **Step 3: Implement typed dynamic sections.**
+- [x] **Step 3: Implement typed dynamic sections.**
 
 Create tabs for overview, metrics, C4, ADRs, engineering log, diagrams, and
 gallery. Add/remove/reorder immutably, assign display order, render controlled
 labeled inputs, and show required/unsafe-path validation. Diagram forms offer
 the five supported kinds and typed fields; no arbitrary JSON textarea.
 
-- [ ] **Step 4: Connect Admin.tsx and preserve image management.**
+- [x] **Step 4: Connect Admin.tsx and preserve image management.**
 
 Add a dossier action to project rows. Load the protected dossier by project id;
 on 404 use `emptyDossierFormValues`. Convert camelCase to the snake_case PUT
 payload, call `upsertDossier`, close and refresh on success, and route failures
 through `handleApiError`. Do not change image-manager behavior.
 
-- [ ] **Step 5: Verify and commit.**
+- [x] **Step 5: Verify and commit.**
 
 ```powershell
 npm run test -- --run src/components/admin/DossierEditor.test.tsx src/components/admin/tabs/AdminTabs.test.tsx
 npm run lint
 npm run type-check
-git add src/components/admin/DossierForms.tsx src/components/admin/DossierEditor.tsx src/components/admin/DossierEditor.test.tsx src/components/admin/types.ts src/components/admin/tabs/ProjectsTab.tsx src/components/admin/tabs/index.ts src/routes/Admin.tsx
+git add src/components/admin/DossierEditor.tsx src/components/admin/DossierEditor.test.tsx src/components/admin/types.ts src/components/admin/tabs/ProjectsTab.tsx src/routes/Admin.tsx
 git commit -m "feat(frontend): add project dossier editor"
 ```
 
@@ -614,7 +613,7 @@ git commit -m "feat(frontend): add project dossier editor"
 
 - `rg -n "projectDetails|content/projectDetails" portfolio-project/frontend/src` returns no matches.
 
-- [ ] **Step 1: Audit static imports.**
+- [x] **Step 1: Audit static imports.**
 
 ```powershell
 cd portfolio-project/frontend
@@ -623,12 +622,12 @@ rg -n "projectDetails|content/projectDetails" src
 
 Expected: only fixtures/type references from earlier tasks remain.
 
-- [ ] **Step 2: Replace remaining fixture imports.**
+- [x] **Step 2: Replace remaining fixture imports.**
 
 Use local fixtures built from `@/lib/dossier`; do not add a static fallback or
 reintroduce `projectRecords` into the public project mapper.
 
-- [ ] **Step 3: Delete the static dossier map and verify no matches.**
+- [x] **Step 3: Delete the static dossier map and verify no matches.**
 
 ```powershell
 Remove-Item -LiteralPath src/content/projectDetails.ts
@@ -637,14 +636,14 @@ rg -n "projectDetails|content/projectDetails" src
 
 Expected: no matches.
 
-- [ ] **Step 4: Record Phase 4 evidence.**
+- [x] **Step 4: Record Phase 4 evidence.**
 
 Update the Phase 4 checklist in
 `docs/superpowers/plans/2026-07-13-admin-driven-harmony.md` with commits,
 test counts, OpenAPI/type generation, Alembic revision, and static-import audit.
 Do not mark later phases complete.
 
-- [ ] **Step 5: Run the complete quality gate.**
+- [x] **Step 5: Run the complete quality gate.**
 
 From `portfolio-project`:
 
@@ -672,7 +671,13 @@ git status --short
 Expected: all suites pass; any diff-check warning is limited to pre-existing
 `layout.tsx` trailing whitespace; neither user file is staged.
 
-- [ ] **Step 6: Commit roadmap evidence and use completion skills.**
+- [x] **Step 6: Commit roadmap evidence and use completion skills.**
+
+## Completion note
+
+Phase 4 was implemented on `feature/frontend-yosys-dossier`. The admin editor is
+implemented in `DossierEditor.tsx` (the planned `DossierForms.tsx` split was not
+needed), and the static dossier map was removed after the source audit passed.
 
 ```powershell
 git add docs/superpowers/plans/2026-07-13-admin-driven-harmony.md

@@ -710,26 +710,25 @@ npm run build
 - Modify: portfolio-project/backend/app/models/__init__.py and api/v1/__init__.py
 - Test: portfolio-project/backend/tests/test_dossiers.py
 
-- [ ] Model one-to-one ProjectDossier and ordered child tables for metrics, C4 nodes, ADRs, log entries, diagrams, and gallery items.
-- [ ] Add cascade foreign keys and display_order columns.
-- [ ] Validate labels, URLs, C4 levels, and non-negative metric values.
-- [ ] Add public reads and admin-only mutations.
-- [ ] Acceptance: the aggregate can be created, updated atomically, read by project slug, and deleted with its project.
+- [x] Model one-to-one ProjectDossier and ordered child tables for metrics, C4 nodes, ADRs, log entries, diagrams, and gallery items.
+- [x] Add cascade foreign keys and display_order columns.
+- [x] Validate labels, URLs, C4 levels, and non-negative metric values.
+- [x] Add public reads and admin-only mutations.
+- [x] Acceptance: the aggregate can be created, updated atomically, read by project slug, and deleted with its project.
 
 ### Task 4.2: Add dossier editing to Projects admin
 
 **Files:**
 
-- Create: portfolio-project/frontend/src/components/admin/DossierForms.tsx
 - Create: portfolio-project/frontend/src/components/admin/DossierEditor.tsx
 - Modify: portfolio-project/frontend/src/routes/Admin.tsx
 - Modify: portfolio-project/frontend/src/components/admin/tabs/ProjectsTab.tsx
 - Test: portfolio-project/frontend/src/components/admin/DossierEditor.test.tsx
 
-- [ ] Add overview, metrics, C4, ADR, engineering log, diagrams, and gallery tabs.
-- [ ] Submit one validated aggregate payload.
-- [ ] Preserve existing image-manager behavior until gallery replacement is accepted.
-- [ ] Acceptance: admin-authored dossier renders in the public project modal.
+- [x] Add overview, metrics, C4, ADR, engineering log, diagrams, and gallery tabs.
+- [x] Submit one validated aggregate payload.
+- [x] Preserve existing image-manager behavior until gallery replacement is accepted.
+- [x] Acceptance: admin-authored dossier renders in the public project modal.
 
 ### Task 4.3: Replace static dossier reads
 
@@ -741,9 +740,11 @@ npm run build
 - Retire after acceptance: portfolio-project/frontend/src/content/projectDetails.ts
 - Test: portfolio-project/frontend/src/components/nexus/dossier.test.tsx
 
-- [ ] Test API dossier to DossierProject transformation first.
-- [ ] Implement transformation and degraded/empty dossier state.
-- [ ] Acceptance: public code no longer imports projectDetails.ts.
+- [x] Test API dossier to DossierProject transformation first.
+- [x] Implement transformation and degraded/empty dossier state.
+- [x] Acceptance: public code no longer imports projectDetails.ts.
+
+**Phase 4 verification:** The typed dossier aggregate, migration `20260713_0005`, protected/public API, generated OpenAPI contract, admin editor, and API-backed public rendering are implemented. Backend passes `128 passed`; frontend passes `26 files, 72 tests`; `npm run lint`, `npm run type-check`, `npm run check:api-types`, and `npm run build` pass. `projectDetails.ts` was deleted after the source import audit returned no matches. Commits: `23e6d68`, `51b9b0d`, `707906d`, `3b8a211`, `2770e3f`, `0130ce3`, `4f841e4`, `ba357e3`, and `7084b1e`. Final `git diff --check` reports only the pre-existing trailing whitespace in the user-modified `app/layout.tsx`; `layout.tsx` and `next-env.d.ts` remain unstaged.
 
 ---
 
