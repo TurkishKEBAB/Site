@@ -7,11 +7,12 @@ import math
 import uuid
 from typing import List
 
-from app.api.deps import get_db, require_admin
+from app.api.deps import get_current_user_optional, get_db, require_admin
 from app.crud import blog as blog_crud
 from app.models.user import User
 from app.schemas.blog import (
     BlogPostCreate,
+    BlogPostDetail,
     BlogPostListResponse,
     BlogPostResponse,
     BlogPostUpdate,
@@ -31,10 +32,17 @@ async def get_blog_posts(
     language: str = Query("en", pattern="^(tr|en)$"),
     published_only: bool = True,
     db: Session = Depends(get_db),
+    current_user: User | None = Depends(get_current_user_optional),
 ):
     """
     Get list of blog posts with pagination
     """
+    if not published_only and (current_user is None or not current_user.is_admin):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Admin access required to list draft blog posts",
+        )
+
     total = blog_crud.get_blog_count(db, published_only=published_only)
     pages = math.ceil(total / limit) if limit else 1
     page = skip // limit + 1 if limit else 1
@@ -67,27 +75,85 @@ async def search_blog_posts(
     )
 
 
+@router.get("/admin", response_model=BlogPostListResponse)
+async def get_admin_blog_posts(
+    skip: int = Query(0, ge=0),
+    limit: int = Query(20, ge=1, le=100),
+    language: str = Query("en", pattern="^(tr|en)$"),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_admin),
+):
+    """Get published and draft blog posts for administrators."""
+    total = blog_crud.get_blog_count(db, published_only=False)
+    pages = math.ceil(total / limit) if limit else 1
+    page = skip // limit + 1 if limit else 1
+    posts = blog_crud.get_blog_posts(
+        db,
+        skip=skip,
+        limit=limit,
+        language=language,
+        published_only=False,
+    )
+
+    return {
+        "items": posts,
+        "total": total,
+        "page": page,
+        "size": limit,
+        "pages": max(pages, 1),
+    }
+
+
+@router.get("/admin/{post_id}", response_model=BlogPostDetail)
+async def get_admin_blog_post(
+    post_id: uuid.UUID,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_admin),
+):
+    """Get a blog post and all translations for administrators."""
+    post = blog_crud.get_blog_post_by_id(db, post_id=post_id)
+    if not post:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Blog post not found",
+        )
+    return post
+
+
 @router.get("/{slug}", response_model=BlogPostResponse)
 async def get_blog_post(
     slug: str,
     language: str = Query("en", pattern="^(tr|en)$"),
+    count_view: bool = Query(True),
     db: Session = Depends(get_db),
 ):
     """
     Get a specific blog post by slug
     Also increments view count
     """
-    post = blog_crud.get_blog_post_by_slug(db, slug=slug, language=language)
+    post = blog_crud.get_blog_post_by_slug(
+        db,
+        slug=slug,
+        language=language,
+        published_only=True,
+    )
 
     if not post:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Blog post not found"
         )
 
-    # Increment view count
+    if not count_view:
+        return post
+
     blog_crud.increment_blog_views(db, post.id)
 
-    refreshed = blog_crud.get_blog_post_by_slug(db, slug=slug, language=language)
+    refreshed = blog_crud.get_blog_post_by_slug(
+        db,
+        slug=slug,
+        language=language,
+        published_only=True,
+    )
     if not refreshed:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -174,7 +240,7 @@ async def delete_blog_post(
     return None
 
 
-@router.post("/{post_id}/translations", response_model=BlogPostResponse)
+@router.post("/{post_id}/translations", response_model=BlogPostDetail)
 async def add_blog_translation(
     post_id: uuid.UUID,
     translation_data: BlogTranslationCreate,

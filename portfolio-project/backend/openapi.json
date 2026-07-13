@@ -114,6 +114,14 @@
             "title": "Slug",
             "type": "string"
           },
+          "tags": {
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 20,
+            "title": "Tags",
+            "type": "array"
+          },
           "title": {
             "maxLength": 255,
             "minLength": 1,
@@ -206,6 +214,14 @@
             ],
             "title": "Slug"
           },
+          "tags": {
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 20,
+            "title": "Tags",
+            "type": "array"
+          },
           "title": {
             "maxLength": 255,
             "minLength": 1,
@@ -232,6 +248,143 @@
           "content"
         ],
         "title": "BlogPostCreate",
+        "type": "object"
+      },
+      "BlogPostDetail": {
+        "description": "Blog post detail with translations",
+        "properties": {
+          "author_id": {
+            "format": "uuid",
+            "title": "Author Id",
+            "type": "string"
+          },
+          "author_username": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Author Username"
+          },
+          "content": {
+            "minLength": 1,
+            "title": "Content",
+            "type": "string"
+          },
+          "cover_image": {
+            "anyOf": [
+              {
+                "format": "uri",
+                "maxLength": 2083,
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cover Image"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "excerpt": {
+            "anyOf": [
+              {
+                "maxLength": 500,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Excerpt"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "published": {
+            "default": false,
+            "title": "Published",
+            "type": "boolean"
+          },
+          "published_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Published At"
+          },
+          "reading_time": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reading Time"
+          },
+          "slug": {
+            "title": "Slug",
+            "type": "string"
+          },
+          "tags": {
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 20,
+            "title": "Tags",
+            "type": "array"
+          },
+          "title": {
+            "maxLength": 255,
+            "minLength": 1,
+            "title": "Title",
+            "type": "string"
+          },
+          "translations": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/BlogTranslation"
+            },
+            "title": "Translations",
+            "type": "array"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "title": "Updated At",
+            "type": "string"
+          },
+          "views": {
+            "default": 0,
+            "title": "Views",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "title",
+          "content",
+          "id",
+          "slug",
+          "author_id",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "BlogPostDetail",
         "type": "object"
       },
       "BlogPostList": {
@@ -335,6 +488,21 @@
             ],
             "title": "Reading Time"
           },
+          "tags": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "maxItems": 20,
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tags"
+          },
           "title": {
             "anyOf": [
               {
@@ -350,6 +518,71 @@
           }
         },
         "title": "BlogPostUpdate",
+        "type": "object"
+      },
+      "BlogTranslation": {
+        "description": "Blog translation response schema",
+        "properties": {
+          "blog_post_id": {
+            "format": "uuid",
+            "title": "Blog Post Id",
+            "type": "string"
+          },
+          "content": {
+            "minLength": 1,
+            "title": "Content",
+            "type": "string"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "excerpt": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Excerpt"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "language": {
+            "maxLength": 5,
+            "minLength": 2,
+            "pattern": "^(tr|en|de|fr)$",
+            "title": "Language",
+            "type": "string"
+          },
+          "title": {
+            "maxLength": 255,
+            "minLength": 1,
+            "title": "Title",
+            "type": "string"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "title": "Updated At",
+            "type": "string"
+          }
+        },
+        "required": [
+          "language",
+          "title",
+          "content",
+          "id",
+          "blog_post_id",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "BlogTranslation",
         "type": "object"
       },
       "BlogTranslationCreate": {
@@ -3848,6 +4081,11 @@
             "description": "Internal server error"
           }
         },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "summary": "Get Blog Posts",
         "tags": [
           "Blog"
@@ -3954,6 +4192,248 @@
           }
         ],
         "summary": "Create Blog Post",
+        "tags": [
+          "Blog"
+        ]
+      }
+    },
+    "/api/v1/blog/admin": {
+      "get": {
+        "description": "Get published and draft blog posts for administrators.",
+        "operationId": "get_admin_blog_posts_api_v1_blog_admin_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "skip",
+            "required": false,
+            "schema": {
+              "default": 0,
+              "minimum": 0,
+              "title": "Skip",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 20,
+              "maximum": 100,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "language",
+            "required": false,
+            "schema": {
+              "default": "en",
+              "pattern": "^(tr|en)$",
+              "title": "Language",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BlogPostList"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Bad request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not found"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Validation error"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Rate limited"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Internal server error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Get Admin Blog Posts",
+        "tags": [
+          "Blog"
+        ]
+      }
+    },
+    "/api/v1/blog/admin/{post_id}": {
+      "get": {
+        "description": "Get a blog post and all translations for administrators.",
+        "operationId": "get_admin_blog_post_api_v1_blog_admin__post_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "post_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Post Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BlogPostDetail"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Bad request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not found"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Validation error"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Rate limited"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Internal server error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Get Admin Blog Post",
         "tags": [
           "Blog"
         ]
@@ -4340,7 +4820,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/BlogPost"
+                  "$ref": "#/components/schemas/BlogPostDetail"
                 }
               }
             },
@@ -4451,6 +4931,16 @@
               "pattern": "^(tr|en)$",
               "title": "Language",
               "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "count_view",
+            "required": false,
+            "schema": {
+              "default": true,
+              "title": "Count View",
+              "type": "boolean"
             }
           }
         ],

@@ -38,6 +38,7 @@ class BlogPostBase(BaseModel):
     excerpt: Optional[str] = Field(None, max_length=500)
     cover_image: Optional[HttpUrl] = None
     published: bool = False
+    tags: List[str] = Field(default_factory=list, max_length=20)
 
 
 class BlogPostCreate(BlogPostBase):
@@ -55,6 +56,7 @@ class BlogPostUpdate(BaseModel):
     cover_image: Optional[HttpUrl] = None
     published: Optional[bool] = None
     reading_time: Optional[int] = Field(None, ge=0)
+    tags: Optional[List[str]] = Field(None, max_length=20)
 
 
 class BlogPost(BlogPostBase):

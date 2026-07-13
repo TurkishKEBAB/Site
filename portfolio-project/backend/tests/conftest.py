@@ -269,6 +269,7 @@ def create_blog_post(db_session: Session, admin_user):
             title=overrides.get("title", f"Post {idx}"),
             content=overrides.get("content", "Sample content"),
             excerpt=overrides.get("excerpt", "Sample excerpt"),
+            tags=overrides.get("tags", []),
             author_id=overrides.get("author_id", admin_user.id),
             published=overrides.get("published", True),
             reading_time=overrides.get("reading_time", 5),

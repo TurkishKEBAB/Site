@@ -189,6 +189,46 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/blog/admin": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Admin Blog Posts
+         * @description Get published and draft blog posts for administrators.
+         */
+        get: operations["get_admin_blog_posts_api_v1_blog_admin_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/blog/admin/{post_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Admin Blog Post
+         * @description Get a blog post and all translations for administrators.
+         */
+        get: operations["get_admin_blog_post_api_v1_blog_admin__post_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/blog/search": {
         parameters: {
             query?: never;
@@ -1144,6 +1184,8 @@ export interface components {
             reading_time?: number | null;
             /** Slug */
             slug: string;
+            /** Tags */
+            tags?: string[];
             /** Title */
             title: string;
             /**
@@ -1177,10 +1219,71 @@ export interface components {
             reading_time?: number | null;
             /** Slug */
             slug?: string | null;
+            /** Tags */
+            tags?: string[];
             /** Title */
             title: string;
             /** Translations */
             translations?: components["schemas"]["BlogTranslationCreate"][] | null;
+        };
+        /**
+         * BlogPostDetail
+         * @description Blog post detail with translations
+         */
+        BlogPostDetail: {
+            /**
+             * Author Id
+             * Format: uuid
+             */
+            author_id: string;
+            /** Author Username */
+            author_username?: string | null;
+            /** Content */
+            content: string;
+            /** Cover Image */
+            cover_image?: string | null;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Excerpt */
+            excerpt?: string | null;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Published
+             * @default false
+             */
+            published: boolean;
+            /** Published At */
+            published_at?: string | null;
+            /** Reading Time */
+            reading_time?: number | null;
+            /** Slug */
+            slug: string;
+            /** Tags */
+            tags?: string[];
+            /** Title */
+            title: string;
+            /**
+             * Translations
+             * @default []
+             */
+            translations: components["schemas"]["BlogTranslation"][];
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string;
+            /**
+             * Views
+             * @default 0
+             */
+            views: number;
         };
         /**
          * BlogPostList
@@ -1213,8 +1316,44 @@ export interface components {
             published?: boolean | null;
             /** Reading Time */
             reading_time?: number | null;
+            /** Tags */
+            tags?: string[] | null;
             /** Title */
             title?: string | null;
+        };
+        /**
+         * BlogTranslation
+         * @description Blog translation response schema
+         */
+        BlogTranslation: {
+            /**
+             * Blog Post Id
+             * Format: uuid
+             */
+            blog_post_id: string;
+            /** Content */
+            content: string;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Excerpt */
+            excerpt?: string | null;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Language */
+            language: string;
+            /** Title */
+            title: string;
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string;
         };
         /**
          * BlogTranslationCreate
@@ -3122,6 +3261,178 @@ export interface operations {
             };
         };
     };
+    get_admin_blog_posts_api_v1_blog_admin_get: {
+        parameters: {
+            query?: {
+                skip?: number;
+                limit?: number;
+                language?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BlogPostList"];
+                };
+            };
+            /** @description Bad request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Rate limited */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Internal server error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    get_admin_blog_post_api_v1_blog_admin__post_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                post_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BlogPostDetail"];
+                };
+            };
+            /** @description Bad request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Rate limited */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Internal server error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
     search_blog_posts_api_v1_blog_search_get: {
         parameters: {
             query: {
@@ -3402,7 +3713,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["BlogPost"];
+                    "application/json": components["schemas"]["BlogPostDetail"];
                 };
             };
             /** @description Bad request */
@@ -3474,6 +3785,7 @@ export interface operations {
         parameters: {
             query?: {
                 language?: string;
+                count_view?: boolean;
             };
             header?: never;
             path: {
