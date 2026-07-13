@@ -81,18 +81,18 @@ export default function TechRadar({ locale, blips }: TechRadarProps) {
               r={r}
               fill="none"
               stroke={index === 0 ? "rgba(0,212,255,0.4)" : "currentColor"}
-              className={index === 0 ? "" : "text-gray-200 dark:text-dark-600"}
+              className={index === 0 ? "" : "text-gray-200 dark:text-dark-500"}
             />
           ))}
-          <line x1={C} y1={4} x2={C} y2={396} className="text-gray-200 dark:text-dark-600" stroke="currentColor" strokeDasharray="2 4" />
-          <line x1={4} y1={C} x2={396} y2={C} className="text-gray-200 dark:text-dark-600" stroke="currentColor" strokeDasharray="2 4" />
+          <line x1={C} y1={4} x2={C} y2={396} className="text-gray-200 dark:text-dark-500" stroke="currentColor" strokeDasharray="2 4" />
+          <line x1={4} y1={C} x2={396} y2={C} className="text-gray-200 dark:text-dark-500" stroke="currentColor" strokeDasharray="2 4" />
           {quadLabels(locale).map((label, index) => (
             <text
               key={label}
               x={qPos[index][0]}
               y={qPos[index][1]}
               textAnchor="middle"
-              className="fill-gray-400 font-mono uppercase tracking-[0.1em] dark:fill-dark-400"
+              className="fill-gray-400 font-mono uppercase tracking-[0.1em] dark:fill-dark-300"
               fontSize="11"
             >
               {label}

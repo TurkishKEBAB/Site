@@ -15,5 +15,9 @@ describe("TechRadar", () => {
     const label = screen.getByText("Admin-created skill");
     expect(label.closest("g")).toHaveClass("blip-r1");
     expect(screen.queryByText("Java")).not.toBeInTheDocument();
+
+    const radar = screen.getByLabelText("Tech radar");
+    expect(radar.querySelectorAll("circle")[1]).toHaveClass("dark:text-dark-500");
+    expect(screen.getByText("Languages")).toHaveClass("dark:fill-dark-300");
   });
 });

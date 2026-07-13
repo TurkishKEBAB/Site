@@ -412,9 +412,9 @@
 /* ── tech radar blips ────────────────────────────────────────── */
 .nx-radar svg { width: 100%; height: auto; overflow: visible; }
 .nx-radar .blip circle { fill: #00d4ff; transition: r 0.15s ease; cursor: default; }
-.nx-radar .blip-r1 circle { fill: rgba(0, 212, 255, 0.7); }
-.nx-radar .blip-r2 circle { fill: rgba(0, 212, 255, 0.45); }
-.nx-radar .blip-r3 circle { fill: rgba(0, 212, 255, 0.3); }
+.nx-radar .blip-r1 circle { fill: rgba(0, 212, 255, 0.8); }
+.nx-radar .blip-r2 circle { fill: rgba(0, 212, 255, 0.6); }
+.nx-radar .blip-r3 circle { fill: rgba(0, 212, 255, 0.45); }
 .nx-radar .blip text {
   fill: #8888a8;
   font-family: var(--font-mono);
