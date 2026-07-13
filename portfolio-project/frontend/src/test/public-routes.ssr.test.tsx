@@ -68,6 +68,13 @@ vi.mock("@/hooks/usePublicData", () => ({
     isLoading: false,
     refetch: vi.fn(),
   }),
+  useProjectDossierQuery: () => ({
+    data: null,
+    error: null,
+    isError: false,
+    isLoading: false,
+    refetch: vi.fn(),
+  }),
 }));
 
 describe("public route SSR", () => {
