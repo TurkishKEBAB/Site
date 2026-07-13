@@ -1,7 +1,7 @@
 import type { ContactMessageResponse } from "@/services/contactService";
 import type { Experience, Skill } from "@/services/types";
 
-export type AdminTabId = "dashboard" | "projects" | "skills" | "experiences" | "messages";
+export type AdminTabId = "dashboard" | "projects" | "blog" | "skills" | "experiences" | "messages";
 
 export interface Stats {
   projects: number;
@@ -55,6 +55,11 @@ export interface AdminCopy {
   translate: string;
   images: string;
   sessionExpired: string;
+  blogManagement: string;
+  addBlogPost: string;
+  blogTranslations: string;
+  published: string;
+  draft: string;
 }
 
 export type AdminSkill = Skill;

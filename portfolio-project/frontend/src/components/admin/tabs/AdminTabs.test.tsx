@@ -2,7 +2,15 @@ import { fireEvent, render, screen, within } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
 import type { AdminProject } from "@/components/admin/types";
-import { DashboardTab, ExperiencesTab, MessagesTab, ProjectsTab, SkillsTab } from "./index";
+import type { BlogPost } from "@/services/types";
+import {
+  BlogTab,
+  DashboardTab,
+  ExperiencesTab,
+  MessagesTab,
+  ProjectsTab,
+  SkillsTab,
+} from "./index";
 
 const projectText = {
   projectManagement: "Projects Management",
@@ -36,6 +44,19 @@ const messageText = {
   deleting: "Deleting...",
 };
 
+const blogText = {
+  blogManagement: "Blog Management",
+  addBlogPost: "Add Blog Post",
+  blogTranslations: "Translations",
+  published: "Published",
+  draft: "Draft",
+  edit: "Edit",
+  delete: "Delete",
+  deleting: "Deleting...",
+  yes: "Yes",
+  no: "No",
+};
+
 const baseProject: AdminProject = {
   id: "project-1",
   title: "Portfolio Site",
@@ -51,7 +72,53 @@ const baseProject: AdminProject = {
   createdAt: "2026-04-20T12:00:00Z",
 };
 
+const baseBlogPost: BlogPost = {
+  id: "post-1",
+  title: "Published note",
+  slug: "published-note",
+  content: "Body",
+  excerpt: "Excerpt",
+  published: true,
+  views: 4,
+  reading_time: 3,
+  tags: ["fastapi"],
+  created_at: "2026-07-13T12:00:00Z",
+  updated_at: "2026-07-13T12:00:00Z",
+};
+
 describe("admin tab components", () => {
+  it("renders Blog rows and forwards create, edit, delete, and translation actions", () => {
+    const onCreate = vi.fn();
+    const onEdit = vi.fn();
+    const onDelete = vi.fn();
+    const onTranslate = vi.fn();
+
+    render(
+      <BlogTab
+        text={blogText}
+        posts={[{ ...baseBlogPost, title: "Draft note", published: false }]}
+        postsLoading={false}
+        postActionId={null}
+        dateLocale="en-US"
+        onCreatePost={onCreate}
+        onEditPost={onEdit}
+        onDeletePost={onDelete}
+        onOpenTranslationManager={onTranslate}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "Add Blog Post" }));
+    fireEvent.click(screen.getByRole("button", { name: "Translations" }));
+    fireEvent.click(screen.getByRole("button", { name: "Edit" }));
+    fireEvent.click(screen.getByRole("button", { name: "Delete" }));
+
+    expect(onCreate).toHaveBeenCalledTimes(1);
+    expect(onTranslate).toHaveBeenCalledWith(expect.objectContaining({ id: "post-1" }));
+    expect(onEdit).toHaveBeenCalledWith(expect.objectContaining({ id: "post-1" }));
+    expect(onDelete).toHaveBeenCalledWith("post-1");
+    expect(screen.getByText("Draft")).toBeInTheDocument();
+  });
+
   it("renders dashboard copy with the current admin username", () => {
     render(<DashboardTab text={{ welcomeUser: "Welcome" }} username="Ada" />);
 
