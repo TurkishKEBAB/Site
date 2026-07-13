@@ -169,7 +169,7 @@ export interface Skill {
   icon?: string;
   icon_url?: string;
   color?: string;
-  order_index: number;
+  display_order: number;
 }
 
 export interface SkillCreate {
@@ -179,7 +179,7 @@ export interface SkillCreate {
   ring: SkillRing;
   icon_url?: string | null;
   color?: string;
-  order_index?: number;
+  display_order?: number;
 }
 
 export interface SkillUpdate {
@@ -189,7 +189,7 @@ export interface SkillUpdate {
   ring?: SkillRing;
   icon_url?: string | null;
   color?: string;
-  order_index?: number;
+  display_order?: number;
 }
 
 // Experience Types

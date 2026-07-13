@@ -312,7 +312,7 @@ describe("admin tab components", () => {
             category: "Frontend",
             domain: "product",
             ring: "adopt",
-            order_index: 1,
+            display_order: 1,
           },
         ]}
         skillsLoading={false}

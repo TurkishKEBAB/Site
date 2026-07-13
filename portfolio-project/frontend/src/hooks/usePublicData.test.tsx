@@ -112,7 +112,7 @@ describe("public data query hooks", () => {
         category: "Frontend",
         domain: "product",
         ring: "adopt",
-        order_index: 1,
+        display_order: 1,
       },
     ];
     vi.mocked(skillService.getSkills).mockResolvedValue(payload);
