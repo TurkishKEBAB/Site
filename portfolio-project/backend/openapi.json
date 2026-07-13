@@ -787,29 +787,7 @@
         "title": "Body_upload_project_image_api_v1_projects__project_id__upload_image_post",
         "type": "object"
       },
-      "C4DiagramData-Input": {
-        "properties": {
-          "kind": {
-            "const": "c4",
-            "title": "Kind",
-            "type": "string"
-          },
-          "levels": {
-            "items": {
-              "$ref": "#/components/schemas/DossierC4LevelCreate"
-            },
-            "maxItems": 8,
-            "title": "Levels",
-            "type": "array"
-          }
-        },
-        "required": [
-          "kind"
-        ],
-        "title": "C4DiagramData",
-        "type": "object"
-      },
-      "C4DiagramData-Output": {
+      "C4DiagramData": {
         "properties": {
           "kind": {
             "const": "c4",
@@ -1409,7 +1387,7 @@
           "data": {
             "discriminator": {
               "mapping": {
-                "c4": "#/components/schemas/C4DiagramData-Input",
+                "c4": "#/components/schemas/C4DiagramData",
                 "matrix": "#/components/schemas/MatrixDiagramData",
                 "schema": "#/components/schemas/SchemaDiagramData",
                 "sequence": "#/components/schemas/SequenceDiagramData",
@@ -1419,7 +1397,7 @@
             },
             "oneOf": [
               {
-                "$ref": "#/components/schemas/C4DiagramData-Input"
+                "$ref": "#/components/schemas/C4DiagramData"
               },
               {
                 "$ref": "#/components/schemas/SequenceDiagramData"
@@ -1492,7 +1470,7 @@
           "data": {
             "discriminator": {
               "mapping": {
-                "c4": "#/components/schemas/C4DiagramData-Output",
+                "c4": "#/components/schemas/C4DiagramData",
                 "matrix": "#/components/schemas/MatrixDiagramData",
                 "schema": "#/components/schemas/SchemaDiagramData",
                 "sequence": "#/components/schemas/SequenceDiagramData",
@@ -1502,7 +1480,7 @@
             },
             "oneOf": [
               {
-                "$ref": "#/components/schemas/C4DiagramData-Output"
+                "$ref": "#/components/schemas/C4DiagramData"
               },
               {
                 "$ref": "#/components/schemas/SequenceDiagramData"

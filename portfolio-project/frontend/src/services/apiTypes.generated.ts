@@ -1468,17 +1468,7 @@ export interface components {
             file: string;
         };
         /** C4DiagramData */
-        "C4DiagramData-Input": {
-            /**
-             * @description discriminator enum property added by openapi-typescript
-             * @enum {string}
-             */
-            kind: "c4";
-            /** Levels */
-            levels?: components["schemas"]["DossierC4LevelCreate"][];
-        };
-        /** C4DiagramData */
-        "C4DiagramData-Output": {
+        C4DiagramData: {
             /**
              * @description discriminator enum property added by openapi-typescript
              * @enum {string}
@@ -1723,7 +1713,7 @@ export interface components {
         /** DossierDiagramCreate */
         DossierDiagramCreate: {
             /** Data */
-            data: components["schemas"]["C4DiagramData-Input"] | components["schemas"]["SequenceDiagramData"] | components["schemas"]["SchemaDiagramData"] | components["schemas"]["TiersDiagramData"] | components["schemas"]["MatrixDiagramData"];
+            data: components["schemas"]["C4DiagramData"] | components["schemas"]["SequenceDiagramData"] | components["schemas"]["SchemaDiagramData"] | components["schemas"]["TiersDiagramData"] | components["schemas"]["MatrixDiagramData"];
             /**
              * Display Order
              * @default 0
@@ -1744,7 +1734,7 @@ export interface components {
         /** DossierDiagramResponse */
         DossierDiagramResponse: {
             /** Data */
-            data: components["schemas"]["C4DiagramData-Output"] | components["schemas"]["SequenceDiagramData"] | components["schemas"]["SchemaDiagramData"] | components["schemas"]["TiersDiagramData"] | components["schemas"]["MatrixDiagramData"];
+            data: components["schemas"]["C4DiagramData"] | components["schemas"]["SequenceDiagramData"] | components["schemas"]["SchemaDiagramData"] | components["schemas"]["TiersDiagramData"] | components["schemas"]["MatrixDiagramData"];
             /**
              * Display Order
              * @default 0
