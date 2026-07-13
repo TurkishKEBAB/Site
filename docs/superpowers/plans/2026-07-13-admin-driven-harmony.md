@@ -673,11 +673,11 @@ npm run build
 - Modify: portfolio-project/frontend/src/routes/About.tsx
 - Test: portfolio-project/frontend/src/lib/skills.test.ts and public SSR tests
 
-- [ ] Test grouping by domain, order_index sorting, and ring mapping.
-- [ ] Implement toCapabilityGroups(skills, locale) returning CapabilityGroup.
-- [ ] Replace TechRadar's static blips with a typed input.
-- [ ] Preserve four quadrant layout through an explicit quadrant field or deterministic category mapping.
-- [ ] Acceptance: an admin-created skill appears in its domain group and radar ring.
+- [x] Test grouping by domain, `display_order` sorting, and ring mapping.
+- [x] Implement `toCapabilityGroups(skills, locale)` returning `CapabilityGroup`.
+- [x] Replace TechRadar's static blips with a typed input.
+- [x] Preserve four quadrant layout through a deterministic category mapping.
+- [x] Acceptance: an admin-created skill appears in its domain group and radar ring.
 
 ### Task 3.2: Wire live skills into About
 
@@ -688,9 +688,11 @@ npm run build
 - Modify: portfolio-project/frontend/src/hooks/usePublicData.ts only if client fetching is selected
 - Test: portfolio-project/frontend/src/test/public-routes.ssr.test.tsx
 
-- [ ] Add loading, error, and empty states.
-- [ ] Use skillService.getSkills(language) and the existing query key when client fetching is selected.
-- [ ] Acceptance: About has no API-independent capability/radar item list.
+- [x] Add loading, error/retry, and empty states.
+- [x] Use `skillService.getSkills(language)` through the existing `useSkillsQuery` query key.
+- [x] Acceptance: About has no API-independent capability/radar item list.
+
+**Phase 3 verification:** Frontend tests pass (`22 files, 64 tests`); `npm run lint`, `npm run type-check`, `npm run check:api-types`, and `npm run build` pass; backend full suite passes (`118 passed`, no coverage gate). The backend Skills contract remained unchanged. User-created skills now flow through `display_order`, `domain`, `ring`, and deterministic category-to-quadrant mapping.
 
 ---
 
