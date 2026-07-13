@@ -113,7 +113,7 @@ Deliver the scope described above. Acceptance: an admin can create a draft, veri
 
 ### Phase 2: Technologies and project index
 
-Add a protected Technologies tab over the existing technology CRUD. Make the project editor use the managed technology catalog. Replace `Projects.tsx` `projectRecords` reads with the projects API for title, summary, description, impact, technologies, featured state, and ordering. Keep dossier data static until Phase 4. Acceptance: an admin project edit changes the public project index.
+Add a protected Technologies tab over the existing technology CRUD. Make the project editor use the managed technology catalog. Replace `Projects.tsx` `projectRecords` reads with the projects API for title, summary (`short_description`), description, technologies, featured state, and ordering. The current backend `Project` schema has no `impact` field, so keep dossier impact copy static until the Phase 4 content contract adds that field. Keep dossier data static until Phase 4. Acceptance: an admin project edit changes the public project index.
 
 ### Phase 3: Skills, CapabilityMatrix, and TechRadar
 

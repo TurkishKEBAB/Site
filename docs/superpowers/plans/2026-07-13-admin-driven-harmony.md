@@ -633,11 +633,11 @@ npm run build
 - Modify: portfolio-project/frontend/src/routes/Admin.tsx
 - Test: portfolio-project/backend/tests/test_technologies.py and frontend AdminTabs tests
 
-- [ ] Test list/create/update/delete authorization and unique slug behavior first.
-- [ ] Add the Technologies tab with name, slug, icon, color, category, edit, delete, loading, and empty states.
-- [ ] Make ProjectForm consume the same technology catalog and refresh after mutations.
-- [ ] Regenerate OpenAPI/types if the contract changes.
-- [ ] Acceptance: a technology created in admin is selectable and persists on a project.
+- [x] Test list/create/update/delete authorization and unique slug behavior first.
+- [x] Add the Technologies tab with name, slug, icon, color, category, edit, delete, loading, and empty states.
+- [x] Make ProjectForm consume the same technology catalog and refresh after mutations.
+- [x] Confirm no OpenAPI/types regeneration is required because the backend contract did not change.
+- [x] Acceptance: a technology created in admin is selectable and persists on a project.
 
 ### Task 2.2: Replace static project index fields
 
@@ -648,12 +648,16 @@ npm run build
 - Modify: portfolio-project/frontend/src/services/projectService.ts
 - Modify: portfolio-project/frontend/src/test/public-routes.ssr.test.tsx
 - Retain until Phase 4: portfolio-project/frontend/src/content/projectDetails.ts
-- Retire after acceptance: project records in portfolio-project/frontend/src/content/site.ts
+- Retain only the legacy dossier impact fallback from project records until Phase 4 adds an admin-managed impact field; retire the remaining project index records now.
 
-- [ ] Test API title, summary, description, impact, technologies, featured state, and display order.
-- [ ] Transform API projects into the existing ProjectIndex/DossierProject input shape with details undefined until Phase 4.
-- [ ] Preserve locale fallback and no-project states.
-- [ ] Acceptance: an admin project edit changes the public index after a fresh request.
+- [x] Test API title, summary, description, technologies, featured state, and display order.
+
+> Contract note: the current `Project` schema does not expose an `impact` field. Phase 2 therefore maps `short_description` to the public index summary and keeps the dossier `impact` copy in `projectDetails`/`site.ts` until the Phase 4 content contract introduces an admin-managed impact field. A new API field or migration must not be implied by this phase.
+- [x] Transform API projects into the existing ProjectIndex/DossierProject input shape; matching legacy slugs retain static dossier details and new records have no dossier details.
+- [x] Preserve locale fallback and no-project states.
+- [x] Acceptance: an admin project edit changes the public index after a fresh request.
+
+**Phase 2 verification:** Technology CRUD authorization/uniqueness and project admin tests pass (`16 passed`); frontend tests pass (`18 files, 58 tests` after the payload regression test); `npm run lint`, `npm run type-check`, `npm run check:api-types`, and `npm run build` pass. The ProjectForm now sends selected `technology_ids` on create and update, and the public project query requests the active locale with a fresh stale query.
 
 ---
 
