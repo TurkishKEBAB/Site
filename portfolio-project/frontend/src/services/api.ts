@@ -122,12 +122,28 @@ export const apiEndpoints = {
       `/projects/${projectId}/images/${imageId}`,
   },
 
+  dossiers: {
+    public: (slug: string) => `/dossiers/${slug}`,
+    admin: (projectId: string) => `/dossiers/projects/${projectId}`,
+  },
+
+  technologies: {
+    list: '/technologies/',
+    detail: (id: string) => `/technologies/${id}`,
+    create: '/technologies/',
+    update: (id: string) => `/technologies/${id}`,
+    delete: (id: string) => `/technologies/${id}`,
+  },
+
   blog: {
     list: '/blog/',
     detail: (slug: string) => `/blog/${slug}`,
+    adminList: '/blog/admin',
+    adminDetail: (postId: string) => `/blog/admin/${postId}`,
     create: '/blog/',
     update: (postId: string) => `/blog/${postId}`,
     delete: (postId: string) => `/blog/${postId}`,
+    addTranslation: (postId: string) => `/blog/${postId}/translations`,
   },
 
   skills: {

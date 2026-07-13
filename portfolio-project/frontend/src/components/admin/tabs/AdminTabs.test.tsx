@@ -2,13 +2,24 @@ import { fireEvent, render, screen, within } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
 import type { AdminProject } from "@/components/admin/types";
-import { DashboardTab, ExperiencesTab, MessagesTab, ProjectsTab, SkillsTab } from "./index";
+import type { BlogPost } from "@/services/types";
+import type { Technology } from "@/services/technologyService";
+import {
+  BlogTab,
+  DashboardTab,
+  ExperiencesTab,
+  MessagesTab,
+  ProjectsTab,
+  SkillsTab,
+  TechnologiesTab,
+} from "./index";
 
 const projectText = {
   projectManagement: "Projects Management",
   addProject: "Add Project",
   translate: "Translations",
   images: "Images",
+  dossier: "Dossier",
   edit: "Edit",
   delete: "Delete",
   deleting: "Deleting...",
@@ -36,6 +47,29 @@ const messageText = {
   deleting: "Deleting...",
 };
 
+const blogText = {
+  blogManagement: "Blog Management",
+  addBlogPost: "Add Blog Post",
+  blogTranslations: "Translations",
+  published: "Published",
+  draft: "Draft",
+  edit: "Edit",
+  delete: "Delete",
+  deleting: "Deleting...",
+  yes: "Yes",
+  no: "No",
+};
+
+const technologyText = {
+  technologyManagement: "Technology Management",
+  addTechnology: "Add Technology",
+  edit: "Edit",
+  delete: "Delete",
+  deleting: "Deleting...",
+  technologyLoading: "Loading technologies...",
+  noTechnologies: "No technologies found.",
+};
+
 const baseProject: AdminProject = {
   id: "project-1",
   title: "Portfolio Site",
@@ -51,7 +85,122 @@ const baseProject: AdminProject = {
   createdAt: "2026-04-20T12:00:00Z",
 };
 
+const baseBlogPost: BlogPost = {
+  id: "post-1",
+  title: "Published note",
+  slug: "published-note",
+  content: "Body",
+  excerpt: "Excerpt",
+  published: true,
+  views: 4,
+  reading_time: 3,
+  tags: ["fastapi"],
+  created_at: "2026-07-13T12:00:00Z",
+  updated_at: "2026-07-13T12:00:00Z",
+};
+
+const baseTechnology: Technology = {
+  id: "technology-1",
+  name: "FastAPI",
+  slug: "fastapi",
+  icon: "fastapi",
+  category: "Backend",
+  color: "#009688",
+  created_at: "2026-07-13T12:00:00Z",
+};
+
 describe("admin tab components", () => {
+  it("renders technologies and forwards create, edit, and delete actions", () => {
+    const onCreate = vi.fn();
+    const onEdit = vi.fn();
+    const onDelete = vi.fn();
+
+    render(
+      <TechnologiesTab
+        text={technologyText}
+        technologies={[baseTechnology]}
+        technologiesLoading={false}
+        technologyActionId={null}
+        onCreateTechnology={onCreate}
+        onEditTechnology={onEdit}
+        onDeleteTechnology={onDelete}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "Add Technology" }));
+    fireEvent.click(screen.getByRole("button", { name: "Edit" }));
+    fireEvent.click(screen.getByRole("button", { name: "Delete" }));
+
+    expect(screen.getByText("FastAPI")).toBeInTheDocument();
+    expect(screen.getAllByText("fastapi").length).toBeGreaterThanOrEqual(1);
+    expect(onCreate).toHaveBeenCalledTimes(1);
+    expect(onEdit).toHaveBeenCalledWith(baseTechnology);
+    expect(onDelete).toHaveBeenCalledWith("technology-1");
+  });
+
+  it("renders technology loading and empty states", () => {
+    const noop = vi.fn();
+    const { rerender } = render(
+      <TechnologiesTab
+        text={technologyText}
+        technologies={[]}
+        technologiesLoading
+        technologyActionId={null}
+        onCreateTechnology={noop}
+        onEditTechnology={noop}
+        onDeleteTechnology={noop}
+      />,
+    );
+
+    expect(screen.getByText(/loading/i)).toBeInTheDocument();
+
+    rerender(
+      <TechnologiesTab
+        text={technologyText}
+        technologies={[]}
+        technologiesLoading={false}
+        technologyActionId={null}
+        onCreateTechnology={noop}
+        onEditTechnology={noop}
+        onDeleteTechnology={noop}
+      />,
+    );
+
+    expect(screen.getByText(/no technologies/i)).toBeInTheDocument();
+  });
+
+  it("renders Blog rows and forwards create, edit, delete, and translation actions", () => {
+    const onCreate = vi.fn();
+    const onEdit = vi.fn();
+    const onDelete = vi.fn();
+    const onTranslate = vi.fn();
+
+    render(
+      <BlogTab
+        text={blogText}
+        posts={[{ ...baseBlogPost, title: "Draft note", published: false }]}
+        postsLoading={false}
+        postActionId={null}
+        dateLocale="en-US"
+        onCreatePost={onCreate}
+        onEditPost={onEdit}
+        onDeletePost={onDelete}
+        onOpenTranslationManager={onTranslate}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "Add Blog Post" }));
+    fireEvent.click(screen.getByRole("button", { name: "Translations" }));
+    fireEvent.click(screen.getByRole("button", { name: "Edit" }));
+    fireEvent.click(screen.getByRole("button", { name: "Delete" }));
+
+    expect(onCreate).toHaveBeenCalledTimes(1);
+    expect(onTranslate).toHaveBeenCalledWith(expect.objectContaining({ id: "post-1" }));
+    expect(onEdit).toHaveBeenCalledWith(expect.objectContaining({ id: "post-1" }));
+    expect(onDelete).toHaveBeenCalledWith("post-1");
+    expect(screen.getByText("Draft")).toBeInTheDocument();
+  });
+
   it("renders dashboard copy with the current admin username", () => {
     render(<DashboardTab text={{ welcomeUser: "Welcome" }} username="Ada" />);
 
@@ -64,6 +213,7 @@ describe("admin tab components", () => {
     const onEditProject = vi.fn();
     const onDeleteProject = vi.fn();
     const onOpenImageManager = vi.fn();
+    const onOpenDossierManager = vi.fn();
     const onOpenTranslationManager = vi.fn();
 
     render(
@@ -87,6 +237,7 @@ describe("admin tab components", () => {
         onEditProject={onEditProject}
         onDeleteProject={onDeleteProject}
         onOpenImageManager={onOpenImageManager}
+        onOpenDossierManager={onOpenDossierManager}
         onOpenTranslationManager={onOpenTranslationManager}
       />,
     );
@@ -100,11 +251,13 @@ describe("admin tab components", () => {
 
     fireEvent.click(firstRowActions.getByRole("button", { name: /Translations/ }));
     fireEvent.click(firstRowActions.getByRole("button", { name: /Images/ }));
+    fireEvent.click(firstRowActions.getByRole("button", { name: "Dossier" }));
     fireEvent.click(firstRowActions.getByRole("button", { name: "Edit" }));
     fireEvent.click(firstRowActions.getByRole("button", { name: "Delete" }));
 
     expect(onOpenTranslationManager).toHaveBeenCalledWith(baseProject);
     expect(onOpenImageManager).toHaveBeenCalledWith(baseProject);
+    expect(onOpenDossierManager).toHaveBeenCalledWith(baseProject);
     expect(onEditProject).toHaveBeenCalledWith(baseProject);
     expect(onDeleteProject).toHaveBeenCalledWith(baseProject);
     expect(screen.getByText("Yes")).toBeInTheDocument();
@@ -125,6 +278,7 @@ describe("admin tab components", () => {
         onEditProject={noop}
         onDeleteProject={noop}
         onOpenImageManager={noop}
+        onOpenDossierManager={noop}
         onOpenTranslationManager={noop}
       />,
     );
@@ -142,6 +296,7 @@ describe("admin tab components", () => {
         onEditProject={noop}
         onDeleteProject={noop}
         onOpenImageManager={noop}
+        onOpenDossierManager={noop}
         onOpenTranslationManager={noop}
       />,
     );
@@ -162,8 +317,9 @@ describe("admin tab components", () => {
             id: "skill-1",
             name: "TypeScript",
             category: "Frontend",
-            proficiency: 90,
-            order_index: 1,
+            domain: "product",
+            ring: "adopt",
+            display_order: 1,
           },
         ]}
         skillsLoading={false}
@@ -178,7 +334,8 @@ describe("admin tab components", () => {
     fireEvent.click(screen.getByRole("button", { name: "Delete" }));
 
     expect(screen.getByText("TypeScript")).toBeInTheDocument();
-    expect(screen.getByText("90%")).toBeInTheDocument();
+    expect(screen.getByText("product")).toBeInTheDocument();
+    expect(screen.getByText("adopt")).toBeInTheDocument();
     expect(onCreateSkill).toHaveBeenCalledTimes(1);
     expect(onEditSkill).toHaveBeenCalledWith(expect.objectContaining({ id: "skill-1" }));
     expect(onDeleteSkill).toHaveBeenCalledWith("skill-1");

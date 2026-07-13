@@ -98,3 +98,90 @@ def test_add_blog_translation_success_and_not_found(client, admin_headers, creat
 
     assert ok.status_code == 200
     assert missing.status_code == 404
+
+
+def test_public_blog_never_exposes_drafts(client, create_blog_post):
+    create_blog_post(
+        slug="hidden-draft",
+        title="Hidden Draft",
+        content="secret",
+        published=False,
+    )
+
+    listed = client.get("/api/v1/blog/?published_only=true")
+    searched = client.get("/api/v1/blog/search?q=Hidden")
+    detail = client.get("/api/v1/blog/hidden-draft")
+
+    assert listed.status_code == 200
+    assert listed.json()["total"] == 0
+    assert searched.status_code == 200
+    assert searched.json() == []
+    assert detail.status_code == 404
+
+
+def test_admin_blog_list_is_the_only_draft_list(
+    client,
+    admin_headers,
+    user_headers,
+    create_blog_post,
+):
+    create_blog_post(
+        slug="admin-draft",
+        title="Admin Draft",
+        content="secret",
+        published=False,
+    )
+
+    forbidden = client.get(
+        "/api/v1/blog/?published_only=false",
+        headers=user_headers,
+    )
+    unauthenticated = client.get("/api/v1/blog/admin")
+    admin_list = client.get("/api/v1/blog/admin", headers=admin_headers)
+
+    assert forbidden.status_code == 403
+    assert unauthenticated.status_code == 401
+    assert admin_list.status_code == 200
+    assert admin_list.json()["items"][0]["slug"] == "admin-draft"
+
+
+def test_admin_blog_detail_returns_tags_and_translations(
+    client,
+    admin_headers,
+    create_blog_post,
+):
+    post = create_blog_post(
+        slug="localized-post",
+        tags=["python", "fastapi"],
+    )
+    translated = client.post(
+        f"/api/v1/blog/{post.id}/translations",
+        headers=admin_headers,
+        json={
+            "language": "tr",
+            "title": "Yerel Yazi",
+            "content": "Icerik",
+            "excerpt": "Ozet",
+        },
+    )
+    detail = client.get(
+        f"/api/v1/blog/admin/{post.id}",
+        headers=admin_headers,
+    )
+
+    assert translated.status_code == 200
+    assert detail.status_code == 200
+    assert detail.json()["tags"] == ["python", "fastapi"]
+    assert detail.json()["translations"][0]["language"] == "tr"
+
+
+def test_blog_detail_view_count_is_explicit(client, create_blog_post):
+    create_blog_post(slug="view-flag", views=0)
+
+    metadata = client.get("/api/v1/blog/view-flag?count_view=false")
+    viewed = client.get("/api/v1/blog/view-flag?count_view=true")
+
+    assert metadata.status_code == 200
+    assert metadata.json()["views"] == 0
+    assert viewed.status_code == 200
+    assert viewed.json()["views"] == 1

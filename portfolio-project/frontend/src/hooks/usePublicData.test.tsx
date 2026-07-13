@@ -6,10 +6,12 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
   useBlogPostsQuery,
   useExperiencesQuery,
+  useProjectDossierQuery,
   useProjectsQuery,
   useSkillsQuery,
 } from "@/hooks/usePublicData";
 import { blogService } from "@/services/blogService";
+import { dossierService } from "@/services/dossierService";
 import { experienceService } from "@/services/experienceService";
 import { projectService } from "@/services/projectService";
 import { skillService } from "@/services/skillService";
@@ -24,6 +26,12 @@ import type {
 vi.mock("@/services/blogService", () => ({
   blogService: {
     getPosts: vi.fn(),
+  },
+}));
+
+vi.mock("@/services/dossierService", () => ({
+  dossierService: {
+    getPublicDossier: vi.fn(),
   },
 }));
 
@@ -89,6 +97,20 @@ describe("public data query hooks", () => {
     expect(result.current.data).toBe(payload);
   });
 
+  it("loads a dossier for the selected project and locale", async () => {
+    const payload = { project_slug: "demo", impact: "impact" } as never;
+    vi.mocked(dossierService.getPublicDossier).mockResolvedValue(payload);
+
+    const { result } = renderHook(() => useProjectDossierQuery("demo", "tr"), {
+      wrapper: createWrapper(),
+    });
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+
+    expect(dossierService.getPublicDossier).toHaveBeenCalledWith("demo", "tr");
+    expect(result.current.data).toBe(payload);
+  });
+
   it("loads blog posts with the provided list params", async () => {
     const params = { limit: 3, published_only: true, language: "tr" };
     const payload = emptyPage<BlogPost>([]);
@@ -110,8 +132,9 @@ describe("public data query hooks", () => {
         id: "skill-1",
         name: "TypeScript",
         category: "Frontend",
-        proficiency: 90,
-        order_index: 1,
+        domain: "product",
+        ring: "adopt",
+        display_order: 1,
       },
     ];
     vi.mocked(skillService.getSkills).mockResolvedValue(payload);

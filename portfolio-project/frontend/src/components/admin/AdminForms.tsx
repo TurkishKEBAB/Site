@@ -1,7 +1,7 @@
 import { ChangeEvent, FormEvent, useEffect, useState } from 'react';
 
 import { Technology } from '../../services/technologyService';
-import type { ProjectTranslation } from '../../services/types';
+import type { ProjectTranslation, SkillDomain, SkillRing } from '../../services/types';
 
 export type AdminLanguage = 'en' | 'tr';
 export type { ProjectImage } from '../../services/types';
@@ -36,14 +36,19 @@ export const defaultProjectFormValues: ProjectFormValues = {
 export interface SkillFormValues {
   name: string;
   category: string;
-  proficiency: number;
+  domain: SkillDomain;
+  ring: SkillRing;
   iconUrl: string;
 }
+
+export const SKILL_DOMAINS: SkillDomain[] = ['backend', 'cloud', 'product', 'testing', 'research'];
+export const SKILL_RINGS: SkillRing[] = ['adopt', 'trial', 'assess', 'hold'];
 
 export const defaultSkillFormValues: SkillFormValues = {
   name: '',
   category: '',
-  proficiency: 50,
+  domain: 'backend',
+  ring: 'assess',
   iconUrl: '',
 };
 
@@ -96,8 +101,8 @@ const FORM_TEXT = {
       name: 'Beceri Adi',
       category: 'Kategori',
       categoryPlaceholder: 'Kategori Secin',
-      proficiency: 'Yeterlilik (%)',
-      proficiencyLabel: 'Yeterlilik yuzdesi',
+      domain: 'Alan (Matris grubu)',
+      ring: 'Radar halkasi',
       iconUrl: 'Ikon URL',
       cancel: 'Iptal',
       saving: 'Kaydediliyor...',
@@ -159,8 +164,8 @@ const FORM_TEXT = {
       name: 'Skill Name',
       category: 'Category',
       categoryPlaceholder: 'Select Category',
-      proficiency: 'Proficiency (%)',
-      proficiencyLabel: 'Proficiency percentage',
+      domain: 'Domain (Matrix group)',
+      ring: 'Radar ring',
       iconUrl: 'Icon URL',
       cancel: 'Cancel',
       saving: 'Saving...',
@@ -441,11 +446,7 @@ export function SkillForm({ initialValues, onSubmit, onCancel, loading, mode, la
   const handleChange = (event: ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = event.target;
 
-    if (name === 'proficiency') {
-      setValues((prev) => ({ ...prev, [name]: Number(value) || 0 }));
-    } else {
-      setValues((prev) => ({ ...prev, [name]: value }));
-    }
+    setValues((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
@@ -501,26 +502,40 @@ export function SkillForm({ initialValues, onSubmit, onCancel, loading, mode, la
           </select>
         </div>
 
-        <div>
-          <label htmlFor="skill-proficiency" className="block text-sm font-medium text-gray-700 dark:text-gray-200">
-            {text.proficiency} <span className="text-red-500">*</span>
-          </label>
-          <div className="flex items-center gap-4">
-            <input
-              id="skill-proficiency"
-              type="range"
-              name="proficiency"
-              min="0"
-              max="100"
-              step="5"
-              value={values.proficiency}
+        <div className="grid gap-4 sm:grid-cols-2">
+          <div>
+            <label htmlFor="skill-domain" className="block text-sm font-medium text-gray-700 dark:text-gray-200">
+              {text.domain} <span className="text-red-500">*</span>
+            </label>
+            <select
+              id="skill-domain"
+              name="domain"
+              value={values.domain}
               onChange={handleChange}
-              className="flex-1"
-              aria-label={text.proficiencyLabel}
-            />
-            <span className="w-12 text-sm font-semibold text-gray-700 dark:text-gray-200">
-              {values.proficiency}%
-            </span>
+              required
+              className="mt-1 w-full rounded-lg border border-gray-300 bg-white p-2.5 text-gray-900 shadow-sm focus:border-primary-500 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100"
+            >
+              {SKILL_DOMAINS.map((option) => (
+                <option key={option} value={option}>{option}</option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label htmlFor="skill-ring" className="block text-sm font-medium text-gray-700 dark:text-gray-200">
+              {text.ring} <span className="text-red-500">*</span>
+            </label>
+            <select
+              id="skill-ring"
+              name="ring"
+              value={values.ring}
+              onChange={handleChange}
+              required
+              className="mt-1 w-full rounded-lg border border-gray-300 bg-white p-2.5 text-gray-900 shadow-sm focus:border-primary-500 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100"
+            >
+              {SKILL_RINGS.map((option) => (
+                <option key={option} value={option}>{option}</option>
+              ))}
+            </select>
           </div>
         </div>
 

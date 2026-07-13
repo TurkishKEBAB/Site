@@ -44,7 +44,7 @@ const themeScript = `
   (function () {
     try {
       var saved = localStorage.getItem('theme');
-      var isDark = saved ? saved === 'dark' : true;
+      var isDark = saved !== 'light';
       document.documentElement.classList[isDark ? 'add' : 'remove']('dark');
     } catch (error) {
       document.documentElement.classList.add('dark');
@@ -61,7 +61,7 @@ export default function RootLayout({
     <html
       lang={defaultLocale}
       suppressHydrationWarning
-      className={`${inter.variable} ${mono.variable} ${display.variable}`}
+      className={`${inter.variable} ${mono.variable} ${display.variable} dark`}
     >
       <body suppressHydrationWarning>
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />

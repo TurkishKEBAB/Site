@@ -4,7 +4,7 @@ Combines all v1 endpoints
 """
 from fastapi import APIRouter
 
-from app.api.v1 import auth, blog, projects, skills, experiences, contact, github, wakatime, translations, admin, technologies
+from app.api.v1 import auth, blog, dossiers, projects, skills, experiences, contact, github, wakatime, translations, admin, technologies
 
 # Create main v1 router
 api_router = APIRouter()
@@ -21,3 +21,4 @@ api_router.include_router(github.router, prefix="/github", tags=["GitHub"])
 api_router.include_router(wakatime.router, prefix="/wakatime", tags=["WakaTime"])
 api_router.include_router(translations.router, prefix="/translations", tags=["Translations"])
 api_router.include_router(technologies.router, prefix="/technologies", tags=["Technologies"])
+api_router.include_router(dossiers.router, prefix="/dossiers", tags=["Dossiers"])

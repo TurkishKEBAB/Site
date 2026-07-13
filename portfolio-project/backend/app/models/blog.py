@@ -2,7 +2,17 @@
 Blog Models
 Blog posts and translations
 """
-from sqlalchemy import Column, String, Text, Boolean, Integer, DateTime, ForeignKey, UniqueConstraint
+from sqlalchemy import (
+    Boolean,
+    Column,
+    DateTime,
+    ForeignKey,
+    Integer,
+    JSON,
+    String,
+    Text,
+    UniqueConstraint,
+)
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
@@ -28,6 +38,7 @@ class BlogPost(Base):
     published_at = Column(DateTime(timezone=True), nullable=True)
     views = Column(Integer, default=0, index=True)
     reading_time = Column(Integer, nullable=True)  # in minutes
+    tags = Column(JSON, nullable=False, default=list, server_default="[]")
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
     

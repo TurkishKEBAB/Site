@@ -33,7 +33,8 @@ def test_admin_stats_success(client, admin_headers, db_session):
     skill = Skill(
         name="Python",
         category="Backend",
-        proficiency=90
+        domain="backend",
+        ring="adopt"
     )
     db_session.add(skill)
     

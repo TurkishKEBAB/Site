@@ -196,7 +196,8 @@ def create_skill(db_session: Session):
         skill = Skill(
             name=overrides.get("name", f"Skill {idx}"),
             category=overrides.get("category", "Backend"),
-            proficiency=overrides.get("proficiency", 80),
+            domain=overrides.get("domain", "backend"),
+            ring=overrides.get("ring", "assess"),
             display_order=overrides.get("display_order", idx),
         )
         db_session.add(skill)
@@ -268,6 +269,7 @@ def create_blog_post(db_session: Session, admin_user):
             title=overrides.get("title", f"Post {idx}"),
             content=overrides.get("content", "Sample content"),
             excerpt=overrides.get("excerpt", "Sample excerpt"),
+            tags=overrides.get("tags", []),
             author_id=overrides.get("author_id", admin_user.id),
             published=overrides.get("published", True),
             reading_time=overrides.get("reading_time", 5),

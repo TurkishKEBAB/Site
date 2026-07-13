@@ -6,3 +6,4 @@ export * from './blogService';
 export * from './contactService';
 export * from './skillService';
 export * from './experienceService';
+export * from './dossierService';

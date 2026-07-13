@@ -52,7 +52,7 @@ def get_skills(
     if category:
         query = query.filter(Skill.category == category)
     
-    query = query.order_by(Skill.category, Skill.display_order, Skill.proficiency.desc())
+    query = query.order_by(Skill.category, Skill.display_order, Skill.name)
     skills = query.offset(skip).limit(limit).all()
 
     return [_apply_skill_translation(skill, language) for skill in skills]
@@ -106,7 +106,8 @@ def create_skill(db: Session, skill: SkillCreate) -> Skill:
     db_skill = Skill(
         name=skill.name,
         category=skill.category,
-        proficiency=skill.proficiency,
+        domain=skill.domain,
+        ring=skill.ring,
         icon=skill.icon,
         display_order=skill.display_order
     )

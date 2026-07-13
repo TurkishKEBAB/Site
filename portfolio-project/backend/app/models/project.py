@@ -34,6 +34,12 @@ class Project(Base):
     translations = relationship("ProjectTranslation", back_populates="project", cascade="all, delete-orphan")
     project_technologies = relationship("ProjectTechnology", back_populates="project", cascade="all, delete-orphan")
     images = relationship("ProjectImage", back_populates="project", cascade="all, delete-orphan")
+    dossier = relationship(
+        "ProjectDossier",
+        back_populates="project",
+        uselist=False,
+        cascade="all, delete-orphan",
+    )
     # Direct relationship to technologies through association table
     technologies = relationship(
         "Technology",

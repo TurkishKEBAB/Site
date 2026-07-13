@@ -1,49 +1,54 @@
-import { FiArrowRight } from "react-icons/fi";
+"use client";
+
+import { useState } from "react";
+import { isAxiosError } from "axios";
 
 import NxSectionHead from "@/components/nexus/NxSectionHead";
 import ScrambleHeading from "@/components/nexus/ScrambleHeading";
-import ProjectExplorer, { type LocalizedProjectView } from "@/components/ProjectExplorer";
-import { getLocaleValue, projectRecords, type Locale } from "@/content/site";
+import {
+  ProjectDossierModal,
+  type DossierLabels,
+  type DossierProject,
+} from "@/components/nexus/ProjectDossierModal";
+import { ProjectIndex } from "@/components/nexus/ProjectIndex";
+import type { Locale } from "@/content/site";
+import { useProjectDossierQuery, useProjectsQuery } from "@/hooks/usePublicData";
+import { mergeDossierProject } from "@/lib/dossier";
+import { mapProjectsToDossierProjects } from "@/lib/projects";
 
 interface ProjectsPageProps {
   locale: Locale;
 }
 
-interface ArchNode {
-  kind: string;
-  title: string;
-  sub: string;
-}
-
-const archTiers = (tr: boolean): ArchNode[][] => [
-  [
-    { kind: tr ? "Istemci" : "Client", title: tr ? "Masaustu" : "Desktop", sub: tr ? "PyQt6 · ~1.000 kullanici" : "PyQt6 · ~1,000 users" },
-    { kind: tr ? "Istemci" : "Client", title: "Web", sub: "Next.js · JWT" },
-  ],
-  [{ kind: "Gateway", title: "FastAPI", sub: "REST · JWT / RBAC" }],
-  [{ kind: tr ? "Cekirdek" : "Core", title: "Scheduling Engine", sub: "13 algorithms · 86.97% cov" }],
-  [
-    { kind: tr ? "Veri" : "Data", title: "PostgreSQL", sub: tr ? "birincil depo" : "primary store" },
-    { kind: "Cache", title: "Redis", sub: tr ? "oturum · kuyruk" : "sessions · queue" },
-    { kind: "Worker", title: "Celery", sub: tr ? "async isler" : "async jobs" },
-  ],
-];
+const dossierLabels = (tr: boolean): DossierLabels =>
+  tr
+    ? {
+        featured: "Öne çıkan", project: "Proje", dossier: "dosya",
+        overview: "genel", architecture: "mimari", decisions: "kararlar", engLog: "gelişim·kaydı", gallery: "galeri",
+        impact: "Etki", techStack: "Teknoloji seti", close: "Proje detaylarını kapat",
+        context: "bağlam", decision: "karar", tradeoff: "ödünleşim", galleryHint: "şuraya ekle:",
+        dossierLoading: "Dosya yükleniyor...", dossierUnavailable: "Dosya kullanılamıyor.", retryDossier: "Dosyayı tekrar dene",
+      }
+    : {
+        featured: "Featured", project: "Project", dossier: "dossier",
+        overview: "overview", architecture: "architecture", decisions: "decisions", engLog: "eng·log", gallery: "gallery",
+        impact: "Impact", techStack: "Technology stack", close: "Close project details",
+        context: "context", decision: "decision", tradeoff: "trade-off", galleryHint: "add",
+        dossierLoading: "Loading dossier...", dossierUnavailable: "Dossier unavailable.", retryDossier: "Retry dossier",
+      };
 
 export default function Projects({ locale }: ProjectsPageProps) {
   const tr = locale === "tr";
-  const tiers = archTiers(tr);
-
-  const localizedProjects: LocalizedProjectView[] = projectRecords.map((project) => ({
-    slug: project.slug,
-    title: getLocaleValue(project.title, locale),
-    summary: getLocaleValue(project.summary, locale),
-    description: getLocaleValue(project.description, locale),
-    impact: getLocaleValue(project.impact, locale),
-    technologies: project.technologies,
-    githubUrl: project.githubUrl,
-    demoUrl: project.demoUrl,
-    featured: project.featured,
-  }));
+  const labels = dossierLabels(tr);
+  const [selected, setSelected] = useState<DossierProject | null>(null);
+  const { data, isError, isLoading, refetch } = useProjectsQuery({ limit: 100, language: locale });
+  const dossierProjects = mapProjectsToDossierProjects(data?.items ?? [], locale);
+  const dossierQuery = useProjectDossierQuery(selected?.slug ?? null, locale);
+  const dossierMissing = isAxiosError(dossierQuery.error) && dossierQuery.error.response?.status === 404;
+  const dossierError = Boolean(selected && dossierQuery.isError && !dossierMissing);
+  const selectedProject = selected
+    ? mergeDossierProject(selected, dossierMissing ? null : dossierQuery.data ?? null)
+    : null;
 
   return (
     <div className="container-custom pb-16 pt-28 md:pt-32">
@@ -64,47 +69,6 @@ export default function Projects({ locale }: ProjectsPageProps) {
         </p>
       </header>
 
-      {/* system map */}
-      <section className="mt-16">
-        <NxSectionHead
-          index="//"
-          label={tr ? "Sistem haritasi" : "System map"}
-          title="IsikSchedule architecture"
-          subtitle={
-            tr
-              ? "Masaustu ve web'i besleyen tek bir scheduling cekirdegi. Vurgulamak icin bir servisin uzerine gel."
-              : "One shared scheduling core powering desktop & web. Hover a service to highlight it."
-          }
-        />
-        <div className="flex items-stretch gap-0 overflow-x-auto pb-3 pt-1">
-          {tiers.map((tier, tierIndex) => (
-            <div key={tier.map((node) => node.title).join("-")} className="flex items-stretch">
-              <div className="flex min-w-[150px] flex-col justify-center gap-3">
-                {tier.map((node) => (
-                  <div
-                    key={`${node.kind}-${node.title}`}
-                    className="rounded border border-gray-200 bg-white p-3.5 transition-all hover:-translate-y-0.5 hover:border-primary-400/40 hover:shadow-[0_0_24px_rgba(0,212,255,0.06)] dark:border-dark-600 dark:bg-dark-800/60"
-                  >
-                    <div className="font-mono text-[9px] uppercase tracking-[0.16em] text-primary-600 dark:text-primary-400">
-                      {node.kind}
-                    </div>
-                    <div className="mt-1.5 font-display text-[15px] font-semibold text-gray-900 dark:text-dark-50">
-                      {node.title}
-                    </div>
-                    <div className="mt-1 text-[11.5px] text-gray-400 dark:text-dark-400">{node.sub}</div>
-                  </div>
-                ))}
-              </div>
-              {tierIndex < tiers.length - 1 && (
-                <div className="flex flex-none items-center px-3.5 text-gray-400 dark:text-dark-400" aria-hidden="true">
-                  <FiArrowRight size={22} />
-                </div>
-              )}
-            </div>
-          ))}
-        </div>
-      </section>
-
       {/* project index */}
       <section className="mt-20">
         <NxSectionHead
@@ -113,12 +77,44 @@ export default function Projects({ locale }: ProjectsPageProps) {
           title={tr ? "Tüm sistemler" : "All systems"}
           subtitle={
             tr
-              ? "Numarali proje girisleri. Aciklama, etki ve stack icin herhangi bir satira tikla."
-              : "Numbered project entries. Click any row for the description, impact, and stack."
+              ? "Numarali proje girisleri. Mimari, kararlar, gelisim kaydi ve galeri iceren tam dosya icin herhangi bir satira tikla."
+              : "Numbered project entries. Click any row for the full dossier — architecture, decisions, log, gallery."
           }
         />
-        <ProjectExplorer locale={locale} projects={localizedProjects} />
+        {isLoading ? (
+          <p role="status" className="border-t border-gray-200 py-8 text-center font-mono text-xs uppercase tracking-[0.16em] text-gray-500 dark:border-dark-600 dark:text-dark-400">
+            {tr ? "Proje indeksi yukleniyor..." : "Loading project index..."}
+          </p>
+        ) : isError ? (
+          <div role="alert" className="border-t border-gray-200 py-8 text-center dark:border-dark-600">
+            <p className="font-mono text-xs uppercase tracking-[0.16em] text-red-500">
+              {tr ? "Proje indeksi yuklenemedi." : "Project index is unavailable."}
+            </p>
+            <button
+              type="button"
+              onClick={() => void refetch()}
+              className="mt-4 rounded border border-primary-400/50 px-4 py-2 font-mono text-xs uppercase tracking-wide text-primary-600 transition hover:bg-primary-400/10 dark:text-primary-400"
+            >
+              {tr ? "Tekrar dene" : "Try again"}
+            </button>
+          </div>
+        ) : dossierProjects.length ? (
+          <ProjectIndex projects={dossierProjects} onSelect={setSelected} featuredLabel={labels.featured} />
+        ) : (
+          <p className="border-t border-gray-200 py-8 text-center font-mono text-xs uppercase tracking-[0.16em] text-gray-500 dark:border-dark-600 dark:text-dark-400">
+            {tr ? "Henuz proje bulunmuyor." : "No projects found yet."}
+          </p>
+        )}
       </section>
+
+      <ProjectDossierModal
+        project={selectedProject}
+        onClose={() => setSelected(null)}
+        labels={labels}
+        dossierLoading={Boolean(selected && dossierQuery.isLoading)}
+        dossierError={dossierError}
+        onRetryDossier={() => void dossierQuery.refetch()}
+      />
     </div>
   );
 }

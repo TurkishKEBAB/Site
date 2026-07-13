@@ -11,7 +11,6 @@ export interface BlogPostBundle {
 }
 
 const emptyBlogPosts: BlogPost[] = [];
-const BLOG_REVALIDATE_SECONDS = 300;
 const BLOG_FETCH_TIMEOUT_MS = 1500;
 
 const getApiBaseUrl = () =>
@@ -64,7 +63,7 @@ const createTimeoutSignal = () => {
 
 async function fetchJson<T>(url: string): Promise<{ status: number; data: T | null }> {
   const response = await fetch(url, {
-    next: { revalidate: BLOG_REVALIDATE_SECONDS },
+    cache: "no-store",
     signal: createTimeoutSignal(),
   });
 
@@ -135,6 +134,7 @@ export async function fetchBlogPostMetadata(
     const response = await fetchJson<BlogPost>(
       buildUrl(`/blog/${slug}`, {
         language: locale,
+        count_view: false,
       }),
     );
 
@@ -157,6 +157,7 @@ export async function fetchBlogPostBundle(
     const postResponse = await fetchJson<BlogPost>(
       buildUrl(`/blog/${slug}`, {
         language: locale,
+        count_view: true,
       }),
     );
 

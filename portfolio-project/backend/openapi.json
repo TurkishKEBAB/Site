@@ -1,6 +1,94 @@
 {
   "components": {
     "schemas": {
+      "AdminProjectDossierResponse": {
+        "properties": {
+          "adrs": {
+            "items": {
+              "$ref": "#/components/schemas/DossierAdrResponse"
+            },
+            "title": "Adrs",
+            "type": "array"
+          },
+          "c4": {
+            "items": {
+              "$ref": "#/components/schemas/DossierC4LevelResponse"
+            },
+            "title": "C4",
+            "type": "array"
+          },
+          "diagrams": {
+            "items": {
+              "$ref": "#/components/schemas/DossierDiagramResponse"
+            },
+            "title": "Diagrams",
+            "type": "array"
+          },
+          "gallery": {
+            "items": {
+              "$ref": "#/components/schemas/DossierGalleryItemResponse"
+            },
+            "title": "Gallery",
+            "type": "array"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "impact": {
+            "title": "Impact",
+            "type": "string"
+          },
+          "impact_en": {
+            "title": "Impact En",
+            "type": "string"
+          },
+          "impact_tr": {
+            "title": "Impact Tr",
+            "type": "string"
+          },
+          "log": {
+            "items": {
+              "$ref": "#/components/schemas/DossierLogEntryResponse"
+            },
+            "title": "Log",
+            "type": "array"
+          },
+          "metrics": {
+            "items": {
+              "$ref": "#/components/schemas/DossierMetricResponse"
+            },
+            "title": "Metrics",
+            "type": "array"
+          },
+          "project_id": {
+            "format": "uuid",
+            "title": "Project Id",
+            "type": "string"
+          },
+          "project_slug": {
+            "title": "Project Slug",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "project_id",
+          "project_slug",
+          "impact",
+          "metrics",
+          "c4",
+          "adrs",
+          "log",
+          "diagrams",
+          "gallery",
+          "impact_en",
+          "impact_tr"
+        ],
+        "title": "AdminProjectDossierResponse",
+        "type": "object"
+      },
       "AdminStatsResponse": {
         "description": "Dashboard statistics for the admin panel.",
         "properties": {
@@ -114,6 +202,14 @@
             "title": "Slug",
             "type": "string"
           },
+          "tags": {
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 20,
+            "title": "Tags",
+            "type": "array"
+          },
           "title": {
             "maxLength": 255,
             "minLength": 1,
@@ -206,6 +302,14 @@
             ],
             "title": "Slug"
           },
+          "tags": {
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 20,
+            "title": "Tags",
+            "type": "array"
+          },
           "title": {
             "maxLength": 255,
             "minLength": 1,
@@ -232,6 +336,143 @@
           "content"
         ],
         "title": "BlogPostCreate",
+        "type": "object"
+      },
+      "BlogPostDetail": {
+        "description": "Blog post detail with translations",
+        "properties": {
+          "author_id": {
+            "format": "uuid",
+            "title": "Author Id",
+            "type": "string"
+          },
+          "author_username": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Author Username"
+          },
+          "content": {
+            "minLength": 1,
+            "title": "Content",
+            "type": "string"
+          },
+          "cover_image": {
+            "anyOf": [
+              {
+                "format": "uri",
+                "maxLength": 2083,
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cover Image"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "excerpt": {
+            "anyOf": [
+              {
+                "maxLength": 500,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Excerpt"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "published": {
+            "default": false,
+            "title": "Published",
+            "type": "boolean"
+          },
+          "published_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Published At"
+          },
+          "reading_time": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reading Time"
+          },
+          "slug": {
+            "title": "Slug",
+            "type": "string"
+          },
+          "tags": {
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 20,
+            "title": "Tags",
+            "type": "array"
+          },
+          "title": {
+            "maxLength": 255,
+            "minLength": 1,
+            "title": "Title",
+            "type": "string"
+          },
+          "translations": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/BlogTranslation"
+            },
+            "title": "Translations",
+            "type": "array"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "title": "Updated At",
+            "type": "string"
+          },
+          "views": {
+            "default": 0,
+            "title": "Views",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "title",
+          "content",
+          "id",
+          "slug",
+          "author_id",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "BlogPostDetail",
         "type": "object"
       },
       "BlogPostList": {
@@ -335,6 +576,21 @@
             ],
             "title": "Reading Time"
           },
+          "tags": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "maxItems": 20,
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tags"
+          },
           "title": {
             "anyOf": [
               {
@@ -350,6 +606,71 @@
           }
         },
         "title": "BlogPostUpdate",
+        "type": "object"
+      },
+      "BlogTranslation": {
+        "description": "Blog translation response schema",
+        "properties": {
+          "blog_post_id": {
+            "format": "uuid",
+            "title": "Blog Post Id",
+            "type": "string"
+          },
+          "content": {
+            "minLength": 1,
+            "title": "Content",
+            "type": "string"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "excerpt": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Excerpt"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "language": {
+            "maxLength": 5,
+            "minLength": 2,
+            "pattern": "^(tr|en|de|fr)$",
+            "title": "Language",
+            "type": "string"
+          },
+          "title": {
+            "maxLength": 255,
+            "minLength": 1,
+            "title": "Title",
+            "type": "string"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "title": "Updated At",
+            "type": "string"
+          }
+        },
+        "required": [
+          "language",
+          "title",
+          "content",
+          "id",
+          "blog_post_id",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "BlogTranslation",
         "type": "object"
       },
       "BlogTranslationCreate": {
@@ -464,6 +785,28 @@
           "file"
         ],
         "title": "Body_upload_project_image_api_v1_projects__project_id__upload_image_post",
+        "type": "object"
+      },
+      "C4DiagramData": {
+        "properties": {
+          "kind": {
+            "const": "c4",
+            "title": "Kind",
+            "type": "string"
+          },
+          "levels": {
+            "items": {
+              "$ref": "#/components/schemas/DossierC4LevelCreate"
+            },
+            "maxItems": 8,
+            "title": "Levels",
+            "type": "array"
+          }
+        },
+        "required": [
+          "kind"
+        ],
+        "title": "C4DiagramData",
         "type": "object"
       },
       "ConfigUpdate": {
@@ -677,6 +1020,893 @@
           "message_id"
         ],
         "title": "ContactMessageResponse",
+        "type": "object"
+      },
+      "DossierAdrCreate": {
+        "properties": {
+          "context": {
+            "maxLength": 10000,
+            "minLength": 1,
+            "title": "Context",
+            "type": "string"
+          },
+          "date": {
+            "anyOf": [
+              {
+                "maxLength": 32,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Date"
+          },
+          "decision": {
+            "maxLength": 10000,
+            "minLength": 1,
+            "title": "Decision",
+            "type": "string"
+          },
+          "display_order": {
+            "default": 0,
+            "minimum": 0.0,
+            "title": "Display Order",
+            "type": "integer"
+          },
+          "id": {
+            "maxLength": 64,
+            "minLength": 1,
+            "title": "Id",
+            "type": "string"
+          },
+          "status": {
+            "maxLength": 64,
+            "minLength": 1,
+            "title": "Status",
+            "type": "string"
+          },
+          "title": {
+            "maxLength": 255,
+            "minLength": 1,
+            "title": "Title",
+            "type": "string"
+          },
+          "tradeoff": {
+            "anyOf": [
+              {
+                "maxLength": 10000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tradeoff"
+          }
+        },
+        "required": [
+          "id",
+          "title",
+          "status",
+          "context",
+          "decision"
+        ],
+        "title": "DossierAdrCreate",
+        "type": "object"
+      },
+      "DossierAdrResponse": {
+        "properties": {
+          "context": {
+            "maxLength": 10000,
+            "minLength": 1,
+            "title": "Context",
+            "type": "string"
+          },
+          "date": {
+            "anyOf": [
+              {
+                "maxLength": 32,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Date"
+          },
+          "decision": {
+            "maxLength": 10000,
+            "minLength": 1,
+            "title": "Decision",
+            "type": "string"
+          },
+          "display_order": {
+            "default": 0,
+            "minimum": 0.0,
+            "title": "Display Order",
+            "type": "integer"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "status": {
+            "maxLength": 64,
+            "minLength": 1,
+            "title": "Status",
+            "type": "string"
+          },
+          "title": {
+            "maxLength": 255,
+            "minLength": 1,
+            "title": "Title",
+            "type": "string"
+          },
+          "tradeoff": {
+            "anyOf": [
+              {
+                "maxLength": 10000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tradeoff"
+          }
+        },
+        "required": [
+          "id",
+          "title",
+          "status",
+          "context",
+          "decision"
+        ],
+        "title": "DossierAdrResponse",
+        "type": "object"
+      },
+      "DossierC4LevelCreate": {
+        "properties": {
+          "display_order": {
+            "default": 0,
+            "minimum": 0.0,
+            "title": "Display Order",
+            "type": "integer"
+          },
+          "label": {
+            "maxLength": 255,
+            "minLength": 1,
+            "title": "Label",
+            "type": "string"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "maxLength": 2000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          },
+          "tiers": {
+            "items": {
+              "items": {
+                "$ref": "#/components/schemas/DossierC4NodeCreate"
+              },
+              "type": "array"
+            },
+            "maxItems": 20,
+            "minItems": 1,
+            "title": "Tiers",
+            "type": "array"
+          }
+        },
+        "required": [
+          "label",
+          "tiers"
+        ],
+        "title": "DossierC4LevelCreate",
+        "type": "object"
+      },
+      "DossierC4LevelResponse": {
+        "properties": {
+          "display_order": {
+            "title": "Display Order",
+            "type": "integer"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "label": {
+            "title": "Label",
+            "type": "string"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          },
+          "tiers": {
+            "items": {
+              "items": {
+                "$ref": "#/components/schemas/DossierC4NodeResponse"
+              },
+              "type": "array"
+            },
+            "title": "Tiers",
+            "type": "array"
+          }
+        },
+        "required": [
+          "id",
+          "label",
+          "tiers",
+          "display_order"
+        ],
+        "title": "DossierC4LevelResponse",
+        "type": "object"
+      },
+      "DossierC4NodeCreate": {
+        "properties": {
+          "display_order": {
+            "default": 0,
+            "minimum": 0.0,
+            "title": "Display Order",
+            "type": "integer"
+          },
+          "kind": {
+            "enum": [
+              "person",
+              "system",
+              "client",
+              "container",
+              "component",
+              "store",
+              "queue",
+              "external"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "leaf": {
+            "default": false,
+            "title": "Leaf",
+            "type": "boolean"
+          },
+          "sub": {
+            "anyOf": [
+              {
+                "maxLength": 2000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sub"
+          },
+          "tier_order": {
+            "default": 0,
+            "minimum": 0.0,
+            "title": "Tier Order",
+            "type": "integer"
+          },
+          "title": {
+            "maxLength": 255,
+            "minLength": 1,
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "kind",
+          "title"
+        ],
+        "title": "DossierC4NodeCreate",
+        "type": "object"
+      },
+      "DossierC4NodeResponse": {
+        "properties": {
+          "display_order": {
+            "default": 0,
+            "minimum": 0.0,
+            "title": "Display Order",
+            "type": "integer"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "kind": {
+            "enum": [
+              "person",
+              "system",
+              "client",
+              "container",
+              "component",
+              "store",
+              "queue",
+              "external"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "leaf": {
+            "default": false,
+            "title": "Leaf",
+            "type": "boolean"
+          },
+          "sub": {
+            "anyOf": [
+              {
+                "maxLength": 2000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sub"
+          },
+          "tier_order": {
+            "default": 0,
+            "minimum": 0.0,
+            "title": "Tier Order",
+            "type": "integer"
+          },
+          "title": {
+            "maxLength": 255,
+            "minLength": 1,
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "kind",
+          "title",
+          "id"
+        ],
+        "title": "DossierC4NodeResponse",
+        "type": "object"
+      },
+      "DossierDiagramCreate": {
+        "properties": {
+          "data": {
+            "discriminator": {
+              "mapping": {
+                "c4": "#/components/schemas/C4DiagramData",
+                "matrix": "#/components/schemas/MatrixDiagramData",
+                "schema": "#/components/schemas/SchemaDiagramData",
+                "sequence": "#/components/schemas/SequenceDiagramData",
+                "tiers": "#/components/schemas/TiersDiagramData"
+              },
+              "propertyName": "kind"
+            },
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/C4DiagramData"
+              },
+              {
+                "$ref": "#/components/schemas/SequenceDiagramData"
+              },
+              {
+                "$ref": "#/components/schemas/SchemaDiagramData"
+              },
+              {
+                "$ref": "#/components/schemas/TiersDiagramData"
+              },
+              {
+                "$ref": "#/components/schemas/MatrixDiagramData"
+              }
+            ],
+            "title": "Data"
+          },
+          "display_order": {
+            "default": 0,
+            "minimum": 0.0,
+            "title": "Display Order",
+            "type": "integer"
+          },
+          "id": {
+            "maxLength": 128,
+            "minLength": 1,
+            "title": "Id",
+            "type": "string"
+          },
+          "kind": {
+            "enum": [
+              "c4",
+              "sequence",
+              "schema",
+              "tiers",
+              "matrix"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "maxLength": 2000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          },
+          "title": {
+            "maxLength": 255,
+            "minLength": 1,
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "kind",
+          "title",
+          "data"
+        ],
+        "title": "DossierDiagramCreate",
+        "type": "object"
+      },
+      "DossierDiagramResponse": {
+        "properties": {
+          "data": {
+            "discriminator": {
+              "mapping": {
+                "c4": "#/components/schemas/C4DiagramData",
+                "matrix": "#/components/schemas/MatrixDiagramData",
+                "schema": "#/components/schemas/SchemaDiagramData",
+                "sequence": "#/components/schemas/SequenceDiagramData",
+                "tiers": "#/components/schemas/TiersDiagramData"
+              },
+              "propertyName": "kind"
+            },
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/C4DiagramData"
+              },
+              {
+                "$ref": "#/components/schemas/SequenceDiagramData"
+              },
+              {
+                "$ref": "#/components/schemas/SchemaDiagramData"
+              },
+              {
+                "$ref": "#/components/schemas/TiersDiagramData"
+              },
+              {
+                "$ref": "#/components/schemas/MatrixDiagramData"
+              }
+            ],
+            "title": "Data"
+          },
+          "display_order": {
+            "default": 0,
+            "minimum": 0.0,
+            "title": "Display Order",
+            "type": "integer"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "kind": {
+            "enum": [
+              "c4",
+              "sequence",
+              "schema",
+              "tiers",
+              "matrix"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "maxLength": 2000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          },
+          "title": {
+            "maxLength": 255,
+            "minLength": 1,
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "kind",
+          "title",
+          "data"
+        ],
+        "title": "DossierDiagramResponse",
+        "type": "object"
+      },
+      "DossierGalleryItemCreate": {
+        "properties": {
+          "caption": {
+            "maxLength": 2000,
+            "minLength": 1,
+            "title": "Caption",
+            "type": "string"
+          },
+          "display_order": {
+            "default": 0,
+            "minimum": 0.0,
+            "title": "Display Order",
+            "type": "integer"
+          },
+          "hint": {
+            "anyOf": [
+              {
+                "maxLength": 2000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Hint"
+          },
+          "id": {
+            "maxLength": 128,
+            "minLength": 1,
+            "title": "Id",
+            "type": "string"
+          },
+          "src": {
+            "maxLength": 500,
+            "minLength": 2,
+            "title": "Src",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "src",
+          "caption"
+        ],
+        "title": "DossierGalleryItemCreate",
+        "type": "object"
+      },
+      "DossierGalleryItemResponse": {
+        "properties": {
+          "caption": {
+            "maxLength": 2000,
+            "minLength": 1,
+            "title": "Caption",
+            "type": "string"
+          },
+          "display_order": {
+            "default": 0,
+            "minimum": 0.0,
+            "title": "Display Order",
+            "type": "integer"
+          },
+          "hint": {
+            "anyOf": [
+              {
+                "maxLength": 2000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Hint"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "src": {
+            "maxLength": 500,
+            "minLength": 2,
+            "title": "Src",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "src",
+          "caption"
+        ],
+        "title": "DossierGalleryItemResponse",
+        "type": "object"
+      },
+      "DossierLogEntryCreate": {
+        "properties": {
+          "date": {
+            "maxLength": 32,
+            "minLength": 1,
+            "title": "Date",
+            "type": "string"
+          },
+          "display_order": {
+            "default": 0,
+            "minimum": 0.0,
+            "title": "Display Order",
+            "type": "integer"
+          },
+          "hash": {
+            "maxLength": 64,
+            "minLength": 1,
+            "title": "Hash",
+            "type": "string"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "maxLength": 10000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          },
+          "tag": {
+            "anyOf": [
+              {
+                "maxLength": 64,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tag"
+          },
+          "title": {
+            "maxLength": 255,
+            "minLength": 1,
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "hash",
+          "date",
+          "title"
+        ],
+        "title": "DossierLogEntryCreate",
+        "type": "object"
+      },
+      "DossierLogEntryResponse": {
+        "properties": {
+          "date": {
+            "maxLength": 32,
+            "minLength": 1,
+            "title": "Date",
+            "type": "string"
+          },
+          "display_order": {
+            "default": 0,
+            "minimum": 0.0,
+            "title": "Display Order",
+            "type": "integer"
+          },
+          "hash": {
+            "title": "Hash",
+            "type": "string"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "maxLength": 10000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          },
+          "tag": {
+            "anyOf": [
+              {
+                "maxLength": 64,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tag"
+          },
+          "title": {
+            "maxLength": 255,
+            "minLength": 1,
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "hash",
+          "date",
+          "title"
+        ],
+        "title": "DossierLogEntryResponse",
+        "type": "object"
+      },
+      "DossierMetricCreate": {
+        "properties": {
+          "display_order": {
+            "default": 0,
+            "minimum": 0.0,
+            "title": "Display Order",
+            "type": "integer"
+          },
+          "label": {
+            "maxLength": 255,
+            "minLength": 1,
+            "title": "Label",
+            "type": "string"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "maxLength": 2000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          },
+          "numeric_value": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Numeric Value"
+          },
+          "value": {
+            "maxLength": 255,
+            "minLength": 1,
+            "title": "Value",
+            "type": "string"
+          }
+        },
+        "required": [
+          "value",
+          "label"
+        ],
+        "title": "DossierMetricCreate",
+        "type": "object"
+      },
+      "DossierMetricResponse": {
+        "properties": {
+          "display_order": {
+            "default": 0,
+            "minimum": 0.0,
+            "title": "Display Order",
+            "type": "integer"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "label": {
+            "maxLength": 255,
+            "minLength": 1,
+            "title": "Label",
+            "type": "string"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "maxLength": 2000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          },
+          "numeric_value": {
+            "anyOf": [
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Numeric Value"
+          },
+          "value": {
+            "maxLength": 255,
+            "minLength": 1,
+            "title": "Value",
+            "type": "string"
+          }
+        },
+        "required": [
+          "value",
+          "label",
+          "id"
+        ],
+        "title": "DossierMetricResponse",
+        "type": "object"
+      },
+      "Entity": {
+        "properties": {
+          "kind": {
+            "anyOf": [
+              {
+                "enum": [
+                  "table",
+                  "class",
+                  "abstract",
+                  "interface",
+                  "enum"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Kind"
+          },
+          "name": {
+            "maxLength": 255,
+            "minLength": 1,
+            "title": "Name",
+            "type": "string"
+          },
+          "rows": {
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 100,
+            "title": "Rows",
+            "type": "array"
+          }
+        },
+        "required": [
+          "name"
+        ],
+        "title": "Entity",
         "type": "object"
       },
       "ErrorDetail": {
@@ -1242,6 +2472,60 @@
         "title": "ExperienceUpdate",
         "type": "object"
       },
+      "FlowNode": {
+        "properties": {
+          "kind": {
+            "enum": [
+              "start",
+              "end",
+              "state",
+              "final",
+              "step",
+              "decision",
+              "error",
+              "store"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "sub": {
+            "anyOf": [
+              {
+                "maxLength": 2000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sub"
+          },
+          "title": {
+            "maxLength": 255,
+            "minLength": 1,
+            "title": "Title",
+            "type": "string"
+          },
+          "via": {
+            "anyOf": [
+              {
+                "maxLength": 255,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Via"
+          }
+        },
+        "required": [
+          "kind",
+          "title"
+        ],
+        "title": "FlowNode",
+        "type": "object"
+      },
       "GitHubContributions": {
         "description": "Contribution calendar flattened to week-major 0..4 heatmap levels.",
         "properties": {
@@ -1440,6 +2724,65 @@
           "commits_range"
         ],
         "title": "GitHubStats",
+        "type": "object"
+      },
+      "MatrixDiagramData": {
+        "properties": {
+          "cols": {
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 100,
+            "minItems": 1,
+            "title": "Cols",
+            "type": "array"
+          },
+          "kind": {
+            "const": "matrix",
+            "title": "Kind",
+            "type": "string"
+          },
+          "rows": {
+            "items": {
+              "$ref": "#/components/schemas/MatrixRow"
+            },
+            "maxItems": 100,
+            "minItems": 1,
+            "title": "Rows",
+            "type": "array"
+          }
+        },
+        "required": [
+          "kind",
+          "cols",
+          "rows"
+        ],
+        "title": "MatrixDiagramData",
+        "type": "object"
+      },
+      "MatrixRow": {
+        "properties": {
+          "cells": {
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 100,
+            "minItems": 1,
+            "title": "Cells",
+            "type": "array"
+          },
+          "label": {
+            "maxLength": 255,
+            "minLength": 1,
+            "title": "Label",
+            "type": "string"
+          }
+        },
+        "required": [
+          "label",
+          "cells"
+        ],
+        "title": "MatrixRow",
         "type": "object"
       },
       "ProjectCreate": {
@@ -1712,6 +3055,154 @@
           "updated_at"
         ],
         "title": "ProjectDetail",
+        "type": "object"
+      },
+      "ProjectDossierResponse": {
+        "properties": {
+          "adrs": {
+            "items": {
+              "$ref": "#/components/schemas/DossierAdrResponse"
+            },
+            "title": "Adrs",
+            "type": "array"
+          },
+          "c4": {
+            "items": {
+              "$ref": "#/components/schemas/DossierC4LevelResponse"
+            },
+            "title": "C4",
+            "type": "array"
+          },
+          "diagrams": {
+            "items": {
+              "$ref": "#/components/schemas/DossierDiagramResponse"
+            },
+            "title": "Diagrams",
+            "type": "array"
+          },
+          "gallery": {
+            "items": {
+              "$ref": "#/components/schemas/DossierGalleryItemResponse"
+            },
+            "title": "Gallery",
+            "type": "array"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "impact": {
+            "title": "Impact",
+            "type": "string"
+          },
+          "log": {
+            "items": {
+              "$ref": "#/components/schemas/DossierLogEntryResponse"
+            },
+            "title": "Log",
+            "type": "array"
+          },
+          "metrics": {
+            "items": {
+              "$ref": "#/components/schemas/DossierMetricResponse"
+            },
+            "title": "Metrics",
+            "type": "array"
+          },
+          "project_id": {
+            "format": "uuid",
+            "title": "Project Id",
+            "type": "string"
+          },
+          "project_slug": {
+            "title": "Project Slug",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "project_id",
+          "project_slug",
+          "impact",
+          "metrics",
+          "c4",
+          "adrs",
+          "log",
+          "diagrams",
+          "gallery"
+        ],
+        "title": "ProjectDossierResponse",
+        "type": "object"
+      },
+      "ProjectDossierUpsert": {
+        "properties": {
+          "adrs": {
+            "items": {
+              "$ref": "#/components/schemas/DossierAdrCreate"
+            },
+            "maxItems": 50,
+            "title": "Adrs",
+            "type": "array"
+          },
+          "c4": {
+            "items": {
+              "$ref": "#/components/schemas/DossierC4LevelCreate"
+            },
+            "maxItems": 8,
+            "title": "C4",
+            "type": "array"
+          },
+          "diagrams": {
+            "items": {
+              "$ref": "#/components/schemas/DossierDiagramCreate"
+            },
+            "maxItems": 30,
+            "title": "Diagrams",
+            "type": "array"
+          },
+          "gallery": {
+            "items": {
+              "$ref": "#/components/schemas/DossierGalleryItemCreate"
+            },
+            "maxItems": 50,
+            "title": "Gallery",
+            "type": "array"
+          },
+          "impact_en": {
+            "maxLength": 10000,
+            "minLength": 1,
+            "title": "Impact En",
+            "type": "string"
+          },
+          "impact_tr": {
+            "maxLength": 10000,
+            "minLength": 1,
+            "title": "Impact Tr",
+            "type": "string"
+          },
+          "log": {
+            "items": {
+              "$ref": "#/components/schemas/DossierLogEntryCreate"
+            },
+            "maxItems": 100,
+            "title": "Log",
+            "type": "array"
+          },
+          "metrics": {
+            "items": {
+              "$ref": "#/components/schemas/DossierMetricCreate"
+            },
+            "maxItems": 20,
+            "title": "Metrics",
+            "type": "array"
+          }
+        },
+        "required": [
+          "impact_en",
+          "impact_tr"
+        ],
+        "title": "ProjectDossierUpsert",
         "type": "object"
       },
       "ProjectImage": {
@@ -2040,6 +3531,143 @@
         "title": "RefreshTokenRequest",
         "type": "object"
       },
+      "SchemaDiagramData": {
+        "properties": {
+          "kind": {
+            "const": "schema",
+            "title": "Kind",
+            "type": "string"
+          },
+          "relations": {
+            "items": {
+              "$ref": "#/components/schemas/SchemaRelation"
+            },
+            "maxItems": 100,
+            "title": "Relations",
+            "type": "array"
+          },
+          "tiers": {
+            "items": {
+              "items": {
+                "$ref": "#/components/schemas/Entity"
+              },
+              "type": "array"
+            },
+            "maxItems": 20,
+            "minItems": 1,
+            "title": "Tiers",
+            "type": "array"
+          }
+        },
+        "required": [
+          "kind",
+          "tiers"
+        ],
+        "title": "SchemaDiagramData",
+        "type": "object"
+      },
+      "SchemaRelation": {
+        "properties": {
+          "from": {
+            "maxLength": 255,
+            "minLength": 1,
+            "title": "From",
+            "type": "string"
+          },
+          "label": {
+            "maxLength": 64,
+            "minLength": 1,
+            "title": "Label",
+            "type": "string"
+          },
+          "to": {
+            "maxLength": 255,
+            "minLength": 1,
+            "title": "To",
+            "type": "string"
+          }
+        },
+        "required": [
+          "from",
+          "label",
+          "to"
+        ],
+        "title": "SchemaRelation",
+        "type": "object"
+      },
+      "SequenceDiagramData": {
+        "properties": {
+          "actors": {
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 50,
+            "minItems": 1,
+            "title": "Actors",
+            "type": "array"
+          },
+          "kind": {
+            "const": "sequence",
+            "title": "Kind",
+            "type": "string"
+          },
+          "messages": {
+            "items": {
+              "$ref": "#/components/schemas/SequenceMessage"
+            },
+            "maxItems": 200,
+            "title": "Messages",
+            "type": "array"
+          }
+        },
+        "required": [
+          "kind",
+          "actors"
+        ],
+        "title": "SequenceDiagramData",
+        "type": "object"
+      },
+      "SequenceMessage": {
+        "properties": {
+          "from": {
+            "maxLength": 255,
+            "minLength": 1,
+            "title": "From",
+            "type": "string"
+          },
+          "kind": {
+            "anyOf": [
+              {
+                "const": "return",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Kind"
+          },
+          "label": {
+            "maxLength": 2000,
+            "minLength": 1,
+            "title": "Label",
+            "type": "string"
+          },
+          "to": {
+            "maxLength": 255,
+            "minLength": 1,
+            "title": "To",
+            "type": "string"
+          }
+        },
+        "required": [
+          "from",
+          "to",
+          "label"
+        ],
+        "title": "SequenceMessage",
+        "type": "object"
+      },
       "Skill": {
         "description": "Skill response schema",
         "properties": {
@@ -2058,6 +3686,19 @@
             "default": 0,
             "title": "Display Order",
             "type": "integer"
+          },
+          "domain": {
+            "default": "backend",
+            "description": "CapabilityMatrix group",
+            "enum": [
+              "backend",
+              "cloud",
+              "product",
+              "testing",
+              "research"
+            ],
+            "title": "Domain",
+            "type": "string"
           },
           "icon": {
             "anyOf": [
@@ -2082,12 +3723,17 @@
             "title": "Name",
             "type": "string"
           },
-          "proficiency": {
-            "description": "Proficiency level 0-100",
-            "maximum": 100.0,
-            "minimum": 0.0,
-            "title": "Proficiency",
-            "type": "integer"
+          "ring": {
+            "default": "assess",
+            "description": "TechRadar ring",
+            "enum": [
+              "adopt",
+              "trial",
+              "assess",
+              "hold"
+            ],
+            "title": "Ring",
+            "type": "string"
           },
           "translations": {
             "default": [],
@@ -2101,7 +3747,6 @@
         "required": [
           "name",
           "category",
-          "proficiency",
           "id",
           "created_at"
         ],
@@ -2122,6 +3767,19 @@
             "title": "Display Order",
             "type": "integer"
           },
+          "domain": {
+            "default": "backend",
+            "description": "CapabilityMatrix group",
+            "enum": [
+              "backend",
+              "cloud",
+              "product",
+              "testing",
+              "research"
+            ],
+            "title": "Domain",
+            "type": "string"
+          },
           "icon": {
             "anyOf": [
               {
@@ -2140,12 +3798,17 @@
             "title": "Name",
             "type": "string"
           },
-          "proficiency": {
-            "description": "Proficiency level 0-100",
-            "maximum": 100.0,
-            "minimum": 0.0,
-            "title": "Proficiency",
-            "type": "integer"
+          "ring": {
+            "default": "assess",
+            "description": "TechRadar ring",
+            "enum": [
+              "adopt",
+              "trial",
+              "assess",
+              "hold"
+            ],
+            "title": "Ring",
+            "type": "string"
           },
           "translations": {
             "anyOf": [
@@ -2164,8 +3827,7 @@
         },
         "required": [
           "name",
-          "category",
-          "proficiency"
+          "category"
         ],
         "title": "SkillCreate",
         "type": "object"
@@ -2309,6 +3971,24 @@
             ],
             "title": "Display Order"
           },
+          "domain": {
+            "anyOf": [
+              {
+                "enum": [
+                  "backend",
+                  "cloud",
+                  "product",
+                  "testing",
+                  "research"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Domain"
+          },
           "icon": {
             "anyOf": [
               {
@@ -2334,18 +4014,22 @@
             ],
             "title": "Name"
           },
-          "proficiency": {
+          "ring": {
             "anyOf": [
               {
-                "maximum": 100.0,
-                "minimum": 0.0,
-                "type": "integer"
+                "enum": [
+                  "adopt",
+                  "trial",
+                  "assess",
+                  "hold"
+                ],
+                "type": "string"
               },
               {
                 "type": "null"
               }
             ],
-            "title": "Proficiency"
+            "title": "Ring"
           }
         },
         "title": "SkillUpdate",
@@ -2606,6 +4290,41 @@
           }
         },
         "title": "TechnologyUpdate",
+        "type": "object"
+      },
+      "TiersDiagramData": {
+        "properties": {
+          "kind": {
+            "const": "tiers",
+            "title": "Kind",
+            "type": "string"
+          },
+          "notes": {
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 100,
+            "title": "Notes",
+            "type": "array"
+          },
+          "tiers": {
+            "items": {
+              "items": {
+                "$ref": "#/components/schemas/FlowNode"
+              },
+              "type": "array"
+            },
+            "maxItems": 30,
+            "minItems": 1,
+            "title": "Tiers",
+            "type": "array"
+          }
+        },
+        "required": [
+          "kind",
+          "tiers"
+        ],
+        "title": "TiersDiagramData",
         "type": "object"
       },
       "Token": {
@@ -3792,6 +5511,11 @@
             "description": "Internal server error"
           }
         },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "summary": "Get Blog Posts",
         "tags": [
           "Blog"
@@ -3898,6 +5622,248 @@
           }
         ],
         "summary": "Create Blog Post",
+        "tags": [
+          "Blog"
+        ]
+      }
+    },
+    "/api/v1/blog/admin": {
+      "get": {
+        "description": "Get published and draft blog posts for administrators.",
+        "operationId": "get_admin_blog_posts_api_v1_blog_admin_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "skip",
+            "required": false,
+            "schema": {
+              "default": 0,
+              "minimum": 0,
+              "title": "Skip",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 20,
+              "maximum": 100,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "language",
+            "required": false,
+            "schema": {
+              "default": "en",
+              "pattern": "^(tr|en)$",
+              "title": "Language",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BlogPostList"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Bad request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not found"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Validation error"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Rate limited"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Internal server error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Get Admin Blog Posts",
+        "tags": [
+          "Blog"
+        ]
+      }
+    },
+    "/api/v1/blog/admin/{post_id}": {
+      "get": {
+        "description": "Get a blog post and all translations for administrators.",
+        "operationId": "get_admin_blog_post_api_v1_blog_admin__post_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "post_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Post Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BlogPostDetail"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Bad request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not found"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Validation error"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Rate limited"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Internal server error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Get Admin Blog Post",
         "tags": [
           "Blog"
         ]
@@ -4284,7 +6250,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/BlogPost"
+                  "$ref": "#/components/schemas/BlogPostDetail"
                 }
               }
             },
@@ -4395,6 +6361,16 @@
               "pattern": "^(tr|en)$",
               "title": "Language",
               "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "count_view",
+            "required": false,
+            "schema": {
+              "default": true,
+              "title": "Count View",
+              "type": "boolean"
             }
           }
         ],
@@ -5237,6 +7213,442 @@
         "summary": "Mark Message As Replied",
         "tags": [
           "Contact"
+        ]
+      }
+    },
+    "/api/v1/dossiers/projects/{project_id}": {
+      "delete": {
+        "operationId": "remove_admin_dossier_api_v1_dossiers_projects__project_id__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Project Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Bad request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not found"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Validation error"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Rate limited"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Internal server error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Remove Admin Dossier",
+        "tags": [
+          "Dossiers"
+        ]
+      },
+      "get": {
+        "operationId": "get_admin_dossier_api_v1_dossiers_projects__project_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Project Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminProjectDossierResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Bad request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not found"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Validation error"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Rate limited"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Internal server error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Get Admin Dossier",
+        "tags": [
+          "Dossiers"
+        ]
+      },
+      "put": {
+        "operationId": "save_admin_dossier_api_v1_dossiers_projects__project_id__put",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Project Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProjectDossierUpsert"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminProjectDossierResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Bad request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not found"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Validation error"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Rate limited"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Internal server error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Save Admin Dossier",
+        "tags": [
+          "Dossiers"
+        ]
+      }
+    },
+    "/api/v1/dossiers/{project_slug}": {
+      "get": {
+        "operationId": "get_public_dossier_api_v1_dossiers__project_slug__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_slug",
+            "required": true,
+            "schema": {
+              "title": "Project Slug",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "language",
+            "required": false,
+            "schema": {
+              "default": "en",
+              "pattern": "^(tr|en)$",
+              "title": "Language",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProjectDossierResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Bad request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not found"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Validation error"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Rate limited"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Internal server error"
+          }
+        },
+        "summary": "Get Public Dossier",
+        "tags": [
+          "Dossiers"
         ]
       }
     },

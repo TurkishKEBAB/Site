@@ -77,12 +77,18 @@ def get_blog_post_by_id(db: Session, post_id: uuid.UUID) -> Optional[BlogPost]:
 def get_blog_post_by_slug(
     db: Session,
     slug: str,
-    language: Optional[str] = None
+    language: Optional[str] = None,
+    published_only: bool = True,
 ) -> Optional[BlogPost]:
     """Get blog post by slug with translations"""
-    post = db.query(BlogPost).options(
+    query = db.query(BlogPost).options(
         joinedload(BlogPost.translations)
-    ).filter(BlogPost.slug == slug).first()
+    ).filter(BlogPost.slug == slug)
+
+    if published_only:
+        query = query.filter(BlogPost.published.is_(True))
+
+    post = query.first()
 
     if not post:
         return None
@@ -127,7 +133,8 @@ def create_blog_post(db: Session, post: BlogPostCreate, author_id: uuid.UUID) ->
         author_id=author_id,
         published=post.published,
         published_at=datetime.now(timezone.utc) if post.published else None,
-        reading_time=reading_time
+        reading_time=reading_time,
+        tags=list(post.tags),
     )
     
     db.add(db_post)
@@ -184,6 +191,9 @@ def update_blog_post(
     # Convert HttpUrl to string if present
     if "cover_image" in update_data and update_data["cover_image"]:
         update_data["cover_image"] = str(update_data["cover_image"])
+
+    if "tags" in update_data and update_data["tags"] is None:
+        update_data["tags"] = []
     
     for field, value in update_data.items():
         setattr(db_post, field, value)

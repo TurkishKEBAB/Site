@@ -1,5 +1,11 @@
 // API Response Types
 
+import type { components } from './apiTypes.generated';
+
+export type ProjectDossier = components['schemas']['ProjectDossierResponse'];
+export type AdminProjectDossier = components['schemas']['AdminProjectDossierResponse'];
+export type ProjectDossierUpsert = components['schemas']['ProjectDossierUpsert'];
+
 export interface ApiResponse<T> {
   data: T;
   message?: string;
@@ -119,45 +125,77 @@ export interface BlogPost {
   created_at: string;
   updated_at: string;
   published_at?: string;
+  translations?: BlogTranslation[];
+}
+
+export interface BlogTranslation {
+  id: string;
+  blog_post_id: string;
+  language: 'en' | 'tr' | 'de' | 'fr';
+  title: string;
+  content: string;
+  excerpt?: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface BlogPostDetail extends BlogPost {
+  translations: BlogTranslation[];
+}
+
+export interface BlogTranslationCreate {
+  language: 'en' | 'tr' | 'de' | 'fr';
+  title: string;
+  content: string;
+  excerpt?: string;
 }
 
 export interface BlogPostCreate {
   title: string;
   content: string;
+  slug?: string;
   excerpt?: string;
   cover_image?: string;
   tags?: string[];
   published?: boolean;
+  reading_time?: number;
+  translations?: BlogTranslationCreate[];
 }
 
 // Skill Types
+export type SkillDomain = "backend" | "cloud" | "product" | "testing" | "research";
+export type SkillRing = "adopt" | "trial" | "assess" | "hold";
+
 export interface Skill {
   id: string;
   name: string;
   category: string;
-  proficiency: number;  // Backend uses proficiency (0-100)
+  domain: SkillDomain;
+  ring: SkillRing;
   icon?: string;
   icon_url?: string;
   color?: string;
-  order_index: number;
+  display_order: number;
 }
 
 export interface SkillCreate {
   name: string;
   category: string;
-  proficiency: number;
+  domain: SkillDomain;
+  ring: SkillRing;
   icon_url?: string | null;
   color?: string;
-  order_index?: number;
+  display_order?: number;
 }
 
 export interface SkillUpdate {
   name?: string;
   category?: string;
-  proficiency?: number;
+  domain?: SkillDomain;
+  ring?: SkillRing;
   icon_url?: string | null;
   color?: string;
-  order_index?: number;
+  display_order?: number;
 }
 
 // Experience Types

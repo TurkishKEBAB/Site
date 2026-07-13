@@ -19,6 +19,11 @@ export const queryKeys = {
     list: (params?: QueryParams) =>
       [...queryKeys.projects.all(), "list", compactParams(params)] as const,
   },
+  dossiers: {
+    all: () => [...queryKeys.all, "dossiers"] as const,
+    detail: (slug: string, language?: string) =>
+      [...queryKeys.dossiers.all(), "detail", slug, language ?? "en"] as const,
+  },
   blog: {
     all: () => [...queryKeys.all, "blog"] as const,
     list: (params?: QueryParams) =>

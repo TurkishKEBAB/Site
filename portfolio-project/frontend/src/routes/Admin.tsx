@@ -5,23 +5,28 @@ import { motion } from 'motion/react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { AxiosError } from 'axios';
+import { FiLogOut } from 'react-icons/fi';
 import api from '../services/api';
+import { CornerFrame } from '../components/ui';
 
 import { useAuth } from '../contexts/AuthContext';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useToast } from '../components/Toast';
 import { skillService } from '../services/skillService';
 import { experienceService } from '../services/experienceService';
+import { blogService } from '../services/blogService';
 import { contactService, ContactMessageResponse } from '../services/contactService';
 import { technologyService, Technology } from '../services/technologyService';
-import type { Skill, Experience } from '../services/types';
+import type { BlogPost, BlogTranslationCreate, Experience, Skill } from '../services/types';
 import type { AdminCopy, AdminProject, AdminTabId, Stats } from '../components/admin/types';
 import {
   DashboardTab,
+  BlogTab,
   ExperiencesTab,
   MessagesTab,
   ProjectsTab,
   SkillsTab,
+  TechnologiesTab,
 } from '../components/admin/tabs';
 import {
   defaultExperienceFormValues,
@@ -38,7 +43,28 @@ import {
   TranslationEditor,
   AdminLanguage,
 } from '../components/admin/AdminForms';
+import {
+  BlogForm,
+  BlogFormValues,
+  BlogTranslationEditor,
+  BlogTranslationMap,
+  defaultBlogFormValues,
+} from '../components/admin/BlogForms';
+import {
+  defaultTechnologyFormValues,
+  TechnologyForm,
+  TechnologyFormValues,
+} from '../components/admin/TechnologyForms';
 import { useAdminModalFocusTrap } from '../lib/admin/useAdminModalFocusTrap';
+import { buildProjectPayload } from '../lib/admin/projectPayload';
+import { dossierService } from '../services/dossierService';
+import {
+  DossierEditor,
+  emptyDossierFormValues,
+  formValuesFromDossier,
+  toDossierPayload,
+  DossierFormValues,
+} from '../components/admin/DossierEditor';
 
 export default function Admin() {
   const { user, logout } = useAuth();
@@ -54,6 +80,7 @@ export default function Admin() {
     logout: adminLanguage === 'tr' ? 'Cikis Yap' : 'Log Out',
     dashboard: adminLanguage === 'tr' ? 'Dashboard' : 'Dashboard',
     projects: adminLanguage === 'tr' ? 'Projeler' : 'Projects',
+    technologies: adminLanguage === 'tr' ? 'Teknolojiler' : 'Technologies',
     skills: adminLanguage === 'tr' ? 'Beceriler' : 'Skills',
     experiences: adminLanguage === 'tr' ? 'Deneyimler' : 'Experiences',
     messages: adminLanguage === 'tr' ? 'Mesajlar' : 'Messages',
@@ -63,10 +90,12 @@ export default function Admin() {
     allViewed: adminLanguage === 'tr' ? 'Tumu goruntulendi' : 'All viewed',
     welcomeUser: adminLanguage === 'tr' ? 'Hos geldin' : 'Welcome',
     projectManagement: adminLanguage === 'tr' ? 'Projeler Yonetimi' : 'Projects Management',
+    technologyManagement: adminLanguage === 'tr' ? 'Teknoloji Katalogu' : 'Technology Catalog',
     skillManagement: adminLanguage === 'tr' ? 'Beceriler Yonetimi' : 'Skills Management',
     experienceManagement: adminLanguage === 'tr' ? 'Deneyimler Yonetimi' : 'Experiences Management',
     incomingMessages: adminLanguage === 'tr' ? 'Gelen Mesajlar' : 'Incoming Messages',
     addProject: adminLanguage === 'tr' ? '+ Yeni Proje Ekle' : '+ Add New Project',
+    addTechnology: adminLanguage === 'tr' ? '+ Yeni Teknoloji Ekle' : '+ Add Technology',
     addSkill: adminLanguage === 'tr' ? '+ Yeni Beceri Ekle' : '+ Add New Skill',
     addExperience: adminLanguage === 'tr' ? '+ Yeni Deneyim Ekle' : '+ Add New Experience',
     edit: adminLanguage === 'tr' ? 'Duzenle' : 'Edit',
@@ -74,6 +103,14 @@ export default function Admin() {
     deleting: adminLanguage === 'tr' ? 'Siliniyor...' : 'Deleting...',
     translate: adminLanguage === 'tr' ? 'Ceviriler' : 'Translations',
     images: adminLanguage === 'tr' ? 'Resimler' : 'Images',
+    dossier: adminLanguage === 'tr' ? 'Dosya' : 'Dossier',
+    blogManagement: adminLanguage === 'tr' ? 'Blog Yonetimi' : 'Blog Management',
+    addBlogPost: adminLanguage === 'tr' ? '+ Yeni Yazi Ekle' : '+ Add Blog Post',
+    blogTranslations: adminLanguage === 'tr' ? 'Ceviriler' : 'Translations',
+    published: adminLanguage === 'tr' ? 'Yayinda' : 'Published',
+    draft: adminLanguage === 'tr' ? 'Taslak' : 'Draft',
+    technologyLoading: adminLanguage === 'tr' ? 'Teknolojiler yukleniyor...' : 'Loading technologies...',
+    noTechnologies: adminLanguage === 'tr' ? 'Henuz teknoloji bulunmuyor.' : 'No technologies found.',
     sessionExpired:
       adminLanguage === 'tr'
         ? 'Oturum sureniz doldu. Lutfen tekrar giris yapin.'
@@ -102,8 +139,37 @@ export default function Admin() {
   const [projectFormSubmitting, setProjectFormSubmitting] = useState(false);
   const [activeProject, setActiveProject] = useState<AdminProject | null>(null);
   const [projectActionId, setProjectActionId] = useState<string | null>(null);
+  const [dossierEditorOpen, setDossierEditorOpen] = useState(false);
+  const [currentProjectForDossier, setCurrentProjectForDossier] = useState<AdminProject | null>(null);
+  const [dossierFormValues, setDossierFormValues] = useState<DossierFormValues>(emptyDossierFormValues);
+  const [dossierLoading, setDossierLoading] = useState(false);
+  const [dossierSaving, setDossierSaving] = useState(false);
   const [technologies, setTechnologies] = useState<Technology[]>([]);
   const [loadingTechnologies, setLoadingTechnologies] = useState(false);
+  const [technologyModalOpen, setTechnologyModalOpen] = useState(false);
+  const [technologyFormMode, setTechnologyFormMode] = useState<'create' | 'edit'>('create');
+  const [technologyFormValues, setTechnologyFormValues] = useState<TechnologyFormValues>({
+    ...defaultTechnologyFormValues,
+  });
+  const [technologyFormSubmitting, setTechnologyFormSubmitting] = useState(false);
+  const [activeTechnology, setActiveTechnology] = useState<Technology | null>(null);
+  const [technologyActionId, setTechnologyActionId] = useState<string | null>(null);
+
+  // Blog state
+  const [blogPosts, setBlogPosts] = useState<BlogPost[]>([]);
+  const [blogPostsLoading, setBlogPostsLoading] = useState(false);
+  const [blogModalOpen, setBlogModalOpen] = useState(false);
+  const [blogFormMode, setBlogFormMode] = useState<'create' | 'edit'>('create');
+  const [blogFormValues, setBlogFormValues] = useState<BlogFormValues>({
+    ...defaultBlogFormValues,
+  });
+  const [blogFormSubmitting, setBlogFormSubmitting] = useState(false);
+  const [activeBlogPost, setActiveBlogPost] = useState<BlogPost | null>(null);
+  const [blogActionId, setBlogActionId] = useState<string | null>(null);
+  const [blogTranslationModalOpen, setBlogTranslationModalOpen] = useState(false);
+  const [currentBlogPostForTranslations, setCurrentBlogPostForTranslations] = useState<BlogPost | null>(null);
+  const [blogTranslationsLoading, setBlogTranslationsLoading] = useState(false);
+  const [blogTranslations, setBlogTranslations] = useState<BlogTranslationMap>({});
 
   // Image Manager state
   const [imageManagerOpen, setImageManagerOpen] = useState(false);
@@ -150,6 +216,10 @@ export default function Admin() {
   const experienceModalRef = useRef<HTMLDivElement>(null);
   const imageManagerModalRef = useRef<HTMLDivElement>(null);
   const translationModalRef = useRef<HTMLDivElement>(null);
+  const blogModalRef = useRef<HTMLDivElement>(null);
+  const blogTranslationModalRef = useRef<HTMLDivElement>(null);
+  const technologyModalRef = useRef<HTMLDivElement>(null);
+  const dossierEditorModalRef = useRef<HTMLDivElement>(null);
 
   const handleLogout = useCallback(() => {
     logout();
@@ -262,6 +332,24 @@ export default function Admin() {
     }
   }, [handleApiError]);
 
+  const loadBlogPosts = useCallback(async () => {
+    setBlogPostsLoading(true);
+    try {
+      const response = await blogService.getAdminPosts({
+        limit: 100,
+        language: adminLanguage,
+      });
+      setBlogPosts(Array.isArray(response.items) ? response.items : []);
+    } catch (error) {
+      handleApiError(
+        error,
+        adminLanguage === 'tr' ? 'Blog yazilari yuklenemedi.' : 'Failed to load blog posts.',
+      );
+    } finally {
+      setBlogPostsLoading(false);
+    }
+  }, [adminLanguage, handleApiError]);
+
   const loadTechnologies = useCallback(async () => {
     setLoadingTechnologies(true);
     try {
@@ -321,6 +409,10 @@ export default function Admin() {
   useEffect(() => {
     if (activeTab === 'projects') {
       loadProjects();
+    } else if (activeTab === 'technologies') {
+      loadTechnologies();
+    } else if (activeTab === 'blog') {
+      loadBlogPosts();
     } else if (activeTab === 'skills') {
       loadSkills();
     } else if (activeTab === 'experiences') {
@@ -328,7 +420,7 @@ export default function Admin() {
     } else if (activeTab === 'messages') {
       loadMessages();
     }
-  }, [activeTab, loadProjects, loadSkills, loadExperiences, loadMessages]);
+  }, [activeTab, loadProjects, loadTechnologies, loadBlogPosts, loadSkills, loadExperiences, loadMessages]);
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
@@ -340,6 +432,22 @@ export default function Admin() {
         setTranslationModalOpen(false);
         setCurrentProjectForTranslations(null);
         setCurrentTranslations({});
+        return;
+      }
+
+      if (blogTranslationModalOpen) {
+        setBlogTranslationModalOpen(false);
+        setCurrentBlogPostForTranslations(null);
+        setBlogTranslations({});
+        return;
+      }
+
+      if (technologyModalOpen) {
+        if (!technologyFormSubmitting) {
+          setTechnologyModalOpen(false);
+          setTechnologyFormValues({ ...defaultTechnologyFormValues });
+          setActiveTechnology(null);
+        }
         return;
       }
 
@@ -375,6 +483,24 @@ export default function Admin() {
           setProjectFormValues({ ...defaultProjectFormValues });
           setActiveProject(null);
         }
+        return;
+      }
+
+      if (dossierEditorOpen) {
+        if (!dossierSaving) {
+          setDossierEditorOpen(false);
+          setCurrentProjectForDossier(null);
+          setDossierFormValues(emptyDossierFormValues);
+        }
+        return;
+      }
+
+      if (blogModalOpen) {
+        if (!blogFormSubmitting) {
+          setBlogModalOpen(false);
+          setBlogFormValues({ ...defaultBlogFormValues });
+          setActiveBlogPost(null);
+        }
       }
     };
 
@@ -383,21 +509,32 @@ export default function Admin() {
   }, [
     experienceFormSubmitting,
     experienceModalOpen,
+    blogFormSubmitting,
+    blogModalOpen,
+    blogTranslationModalOpen,
+    dossierEditorOpen,
+    dossierSaving,
     imageManagerOpen,
     projectFormSubmitting,
     projectModalOpen,
     skillFormSubmitting,
     skillModalOpen,
+    technologyFormSubmitting,
+    technologyModalOpen,
     translationModalOpen,
   ]);
 
   const activeModalRef = (
     [
       [translationModalOpen, translationModalRef],
+      [blogTranslationModalOpen, blogTranslationModalRef],
+      [technologyModalOpen, technologyModalRef],
       [imageManagerOpen, imageManagerModalRef],
+      [dossierEditorOpen, dossierEditorModalRef],
       [experienceModalOpen, experienceModalRef],
       [skillModalOpen, skillModalRef],
       [projectModalOpen, projectModalRef],
+      [blogModalOpen, blogModalRef],
     ] as const
   ).find(([isOpen]) => isOpen)?.[1] ?? null;
 
@@ -406,6 +543,170 @@ export default function Admin() {
   const normalizeOptional = (value: string) => {
     const trimmed = value.trim();
     return trimmed.length > 0 ? trimmed : null;
+  };
+
+  const blogPostToFormValues = (post: BlogPost): BlogFormValues => ({
+    title: post.title || '',
+    slug: post.slug || '',
+    excerpt: post.excerpt || '',
+    content: post.content || '',
+    coverImage: post.cover_image || '',
+    tags: (post.tags || []).join(', '),
+    readingTime: post.reading_time ?? post.read_time ?? 0,
+    published: post.published ?? Boolean(post.is_published),
+  });
+
+  const openCreateBlogModal = () => {
+    setBlogFormMode('create');
+    setBlogFormValues({ ...defaultBlogFormValues });
+    setActiveBlogPost(null);
+    setBlogModalOpen(true);
+  };
+
+  const openEditBlogModal = (post: BlogPost) => {
+    setBlogFormMode('edit');
+    setBlogFormValues(blogPostToFormValues(post));
+    setActiveBlogPost(post);
+    setBlogModalOpen(true);
+  };
+
+  const closeBlogModal = (force = false) => {
+    if (blogFormSubmitting && !force) {
+      return;
+    }
+    setBlogModalOpen(false);
+    setBlogFormValues({ ...defaultBlogFormValues });
+    setActiveBlogPost(null);
+  };
+
+  const handleBlogSubmit = async (values: BlogFormValues) => {
+    setBlogFormSubmitting(true);
+
+    const tags = values.tags
+      .split(',')
+      .map((tag) => tag.trim())
+      .filter(Boolean)
+      .filter((tag, index, all) => all.indexOf(tag) === index);
+
+    const payload = {
+      title: values.title.trim(),
+      content: values.content,
+      excerpt: normalizeOptional(values.excerpt) || undefined,
+      cover_image: normalizeOptional(values.coverImage) || undefined,
+      tags,
+      reading_time: values.readingTime || undefined,
+      published: values.published,
+    };
+
+    try {
+      if (blogFormMode === 'create') {
+        await blogService.createPost({
+          ...payload,
+          slug: normalizeOptional(values.slug) || undefined,
+        });
+        showToast('success', adminLanguage === 'tr' ? 'Yazi olusturuldu.' : 'Blog post created.');
+      } else if (activeBlogPost) {
+        await blogService.updatePost(activeBlogPost.id, payload);
+        showToast('success', adminLanguage === 'tr' ? 'Yazi guncellendi.' : 'Blog post updated.');
+      }
+
+      closeBlogModal(true);
+      await loadBlogPosts();
+    } catch (error) {
+      handleApiError(
+        error,
+        adminLanguage === 'tr' ? 'Yazi kaydedilemedi.' : 'Blog post could not be saved.',
+      );
+    } finally {
+      setBlogFormSubmitting(false);
+    }
+  };
+
+  const handleDeleteBlogPost = async (postId: string) => {
+    const post = blogPosts.find((item) => item.id === postId);
+    const confirmed = window.confirm(
+      adminLanguage === 'tr'
+        ? 'Bu blog yazisini silmek istediginizden emin misiniz?'
+        : `Are you sure you want to delete "${post?.title || 'this post'}"?`,
+    );
+    if (!confirmed) {
+      return;
+    }
+
+    setBlogActionId(postId);
+    try {
+      await blogService.deletePost(postId);
+      showToast('success', adminLanguage === 'tr' ? 'Yazi silindi.' : 'Blog post deleted.');
+      await loadBlogPosts();
+    } catch (error) {
+      handleApiError(
+        error,
+        adminLanguage === 'tr' ? 'Yazi silinemedi.' : 'Blog post could not be deleted.',
+      );
+    } finally {
+      setBlogActionId(null);
+    }
+  };
+
+  const loadBlogTranslations = async (post: BlogPost) => {
+    setBlogTranslationsLoading(true);
+    try {
+      const detail = await blogService.getAdminPost(post.id);
+      const translationMap: BlogTranslationMap = {};
+      (detail.translations || []).forEach((translation) => {
+        if (translation.language === 'en' || translation.language === 'tr') {
+          translationMap[translation.language] = translation;
+        }
+      });
+      setBlogTranslations(translationMap);
+    } catch (error) {
+      handleApiError(
+        error,
+        adminLanguage === 'tr' ? 'Ceviriler yuklenemedi.' : 'Translations could not be loaded.',
+      );
+    } finally {
+      setBlogTranslationsLoading(false);
+    }
+  };
+
+  const openBlogTranslationModal = async (post: BlogPost) => {
+    setCurrentBlogPostForTranslations(post);
+    setBlogTranslationModalOpen(true);
+    await loadBlogTranslations(post);
+  };
+
+  const closeBlogTranslationModal = () => {
+    setBlogTranslationModalOpen(false);
+    setCurrentBlogPostForTranslations(null);
+    setBlogTranslations({});
+  };
+
+  const handleSaveBlogTranslation = async (
+    languageCode: 'en' | 'tr',
+    data: BlogTranslationCreate,
+  ) => {
+    if (!currentBlogPostForTranslations) {
+      return;
+    }
+
+    try {
+      await blogService.addTranslation(currentBlogPostForTranslations.id, {
+        ...data,
+        language: languageCode,
+      });
+      showToast(
+        'success',
+        adminLanguage === 'tr'
+          ? `${languageCode.toUpperCase()} cevirisi kaydedildi.`
+          : `${languageCode.toUpperCase()} translation saved.`,
+      );
+      await loadBlogTranslations(currentBlogPostForTranslations);
+    } catch (error) {
+      handleApiError(
+        error,
+        adminLanguage === 'tr' ? 'Ceviri kaydedilemedi.' : 'Translation could not be saved.',
+      );
+    }
   };
 
   const openCreateProjectModal = () => {
@@ -447,30 +748,11 @@ export default function Admin() {
 
     try {
       if (projectFormMode === 'create') {
-        await api.post('/projects/', {
-          title: values.title.trim(),
-          slug: normalizeOptional(values.slug),
-          short_description: normalizeOptional(values.shortDescription),
-          description: values.description.trim(),
-          cover_image: normalizeOptional(values.coverImage),
-          github_url: normalizeOptional(values.githubUrl),
-          demo_url: normalizeOptional(values.demoUrl),
-          featured: values.featured,
-          display_order: values.displayOrder,
-        });
+        await api.post('/projects/', buildProjectPayload(values, true));
 
         showToast('success', 'Proje başarıyla oluşturuldu.');
       } else if (activeProject) {
-        await api.put(`/projects/${activeProject.id}`, {
-          title: values.title.trim(),
-          short_description: normalizeOptional(values.shortDescription),
-          description: values.description.trim(),
-          cover_image: normalizeOptional(values.coverImage),
-          github_url: normalizeOptional(values.githubUrl),
-          demo_url: normalizeOptional(values.demoUrl),
-          featured: values.featured,
-          display_order: values.displayOrder,
-        });
+        await api.put(`/projects/${activeProject.id}`, buildProjectPayload(values, false));
 
         showToast('success', 'Proje güncellendi.');
       }
@@ -482,6 +764,64 @@ export default function Admin() {
       handleApiError(error, 'Proje kaydedilirken bir hata oluştu.');
     } finally {
       setProjectFormSubmitting(false);
+    }
+  };
+
+  const closeDossierEditor = (force = false) => {
+    if (dossierSaving && !force) {
+      return;
+    }
+    setDossierEditorOpen(false);
+    setCurrentProjectForDossier(null);
+    setDossierFormValues(emptyDossierFormValues);
+  };
+
+  const openDossierEditor = async (project: AdminProject) => {
+    setCurrentProjectForDossier(project);
+    setDossierFormValues(emptyDossierFormValues);
+    setDossierEditorOpen(true);
+    setDossierLoading(true);
+
+    try {
+      const dossier = await dossierService.getAdminDossier(project.id);
+      setDossierFormValues(formValuesFromDossier(dossier));
+    } catch (error) {
+      const status = error instanceof AxiosError ? error.response?.status : undefined;
+      if (status !== 404) {
+        handleApiError(
+          error,
+          adminLanguage === 'tr' ? 'Proje dosyasi yuklenemedi.' : 'Project dossier could not be loaded.',
+        );
+      }
+    } finally {
+      setDossierLoading(false);
+    }
+  };
+
+  const handleDossierSubmit = async (values: DossierFormValues) => {
+    if (!currentProjectForDossier) {
+      return;
+    }
+
+    setDossierSaving(true);
+    try {
+      const dossier = await dossierService.upsertDossier(
+        currentProjectForDossier.id,
+        toDossierPayload(values),
+      );
+      setDossierFormValues(formValuesFromDossier(dossier));
+      showToast(
+        'success',
+        adminLanguage === 'tr' ? 'Proje dosyasi kaydedildi.' : 'Project dossier saved.',
+      );
+      closeDossierEditor(true);
+    } catch (error) {
+      handleApiError(
+        error,
+        adminLanguage === 'tr' ? 'Proje dosyasi kaydedilemedi.' : 'Project dossier could not be saved.',
+      );
+    } finally {
+      setDossierSaving(false);
     }
   };
 
@@ -666,6 +1006,83 @@ export default function Admin() {
     }
   };
 
+  const openCreateTechnologyModal = () => {
+    setTechnologyFormMode('create');
+    setTechnologyFormValues({ ...defaultTechnologyFormValues });
+    setActiveTechnology(null);
+    setTechnologyModalOpen(true);
+  };
+
+  const openEditTechnologyModal = (technology: Technology) => {
+    setTechnologyFormMode('edit');
+    setTechnologyFormValues({
+      name: technology.name || '',
+      slug: technology.slug || '',
+      icon: technology.icon || '',
+      category: technology.category || '',
+      color: technology.color || '',
+    });
+    setActiveTechnology(technology);
+    setTechnologyModalOpen(true);
+  };
+
+  const closeTechnologyModal = () => {
+    setTechnologyModalOpen(false);
+    setTechnologyFormValues({ ...defaultTechnologyFormValues });
+    setActiveTechnology(null);
+  };
+
+  const handleTechnologyFormSubmit = async (values: TechnologyFormValues) => {
+    setTechnologyFormSubmitting(true);
+
+    try {
+      const payload = {
+        name: values.name.trim(),
+        slug: values.slug.trim(),
+        icon: values.icon.trim() || undefined,
+        category: values.category.trim() || undefined,
+        color: values.color.trim() || undefined,
+      };
+
+      if (technologyFormMode === 'create') {
+        await technologyService.create(payload);
+        showToast('success', adminLanguage === 'tr' ? 'Teknoloji olusturuldu.' : 'Technology created.');
+      } else if (activeTechnology) {
+        await technologyService.update(activeTechnology.id, payload);
+        showToast('success', adminLanguage === 'tr' ? 'Teknoloji guncellendi.' : 'Technology updated.');
+      }
+
+      closeTechnologyModal();
+      await loadTechnologies();
+    } catch (error) {
+      handleApiError(error, adminLanguage === 'tr' ? 'Teknoloji kaydedilemedi.' : 'Technology could not be saved.');
+    } finally {
+      setTechnologyFormSubmitting(false);
+    }
+  };
+
+  const handleDeleteTechnology = async (technologyId: string) => {
+    const confirmed = window.confirm(
+      adminLanguage === 'tr'
+        ? 'Bu teknolojiyi silmek istediginizden emin misiniz?'
+        : 'Are you sure you want to delete this technology?',
+    );
+    if (!confirmed) {
+      return;
+    }
+
+    setTechnologyActionId(technologyId);
+    try {
+      await technologyService.delete(technologyId);
+      showToast('success', adminLanguage === 'tr' ? 'Teknoloji silindi.' : 'Technology deleted.');
+      await loadTechnologies();
+    } catch (error) {
+      handleApiError(error, adminLanguage === 'tr' ? 'Teknoloji silinemedi.' : 'Technology could not be deleted.');
+    } finally {
+      setTechnologyActionId(null);
+    }
+  };
+
   const handleDeleteSkill = async (skillId: string) => {
     const confirmed = window.confirm('Bu beceriyi silmek istediğinizden emin misiniz?');
     if (!confirmed) {
@@ -694,7 +1111,8 @@ export default function Admin() {
     setSkillFormValues({
       name: skill.name || '',
       category: skill.category || '',
-      proficiency: skill.proficiency || 50,
+      domain: skill.domain || 'backend',
+      ring: skill.ring || 'assess',
       iconUrl: skill.icon_url || '',
     });
     setActiveSkill(skill);
@@ -719,7 +1137,8 @@ export default function Admin() {
         await skillService.createSkill({
           name: values.name.trim(),
           category: values.category.trim(),
-          proficiency: values.proficiency,
+          domain: values.domain,
+          ring: values.ring,
           icon_url: values.iconUrl.trim() || null,
         });
 
@@ -728,7 +1147,8 @@ export default function Admin() {
         await skillService.updateSkill(activeSkill.id, {
           name: values.name.trim(),
           category: values.category.trim(),
-          proficiency: values.proficiency,
+          domain: values.domain,
+          ring: values.ring,
           icon_url: values.iconUrl.trim() || null,
         });
 
@@ -912,82 +1332,91 @@ export default function Admin() {
     },
   ];
 
+  const technologyAdminTab = { id: 'technologies' as const, label: text.technologies, icon: 'TECH' };
   const adminTabs: Array<{ id: AdminTabId; label: string; icon: string }> = [
+    { id: 'blog', label: 'Blog', icon: 'blog' },
     { id: 'dashboard', label: text.dashboard, icon: '📊' },
     { id: 'projects', label: text.projects, icon: '📁' },
     { id: 'skills', label: text.skills, icon: '⚡' },
     { id: 'experiences', label: text.experiences, icon: '💼' },
     { id: 'messages', label: text.messages, icon: '✉️' },
   ];
+  adminTabs.splice(3, 0, technologyAdminTab);
 
   return (
-    <div className="min-h-screen bg-gray-100 pt-20 pb-12 dark:bg-gray-900">
+    <div className="min-h-screen pt-20 pb-12">
       <div className="container-custom">
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="mb-8 flex items-start justify-between"
+          className="mb-8 flex flex-wrap items-end justify-between gap-4"
         >
           <div>
-            <h1 className="mb-2 text-4xl font-bold text-gray-900 dark:text-white">{text.adminPanel}</h1>
-            <p className="text-gray-600 dark:text-gray-400">
-              {text.welcome}, {user?.username || 'Admin'} 👋
+            <span className="sys-label flex items-center gap-2">
+              <span className="text-primary-600 dark:text-primary-400">//</span> ADMIN.CONTROL
+            </span>
+            <h1 className="mt-2 font-display text-4xl font-bold tracking-tight text-gray-900 dark:text-dark-50">
+              {text.adminPanel}
+            </h1>
+            <p className="mt-1.5 font-mono text-xs text-gray-500 dark:text-dark-400">
+              {text.welcome}, {user?.username || 'Admin'} ·{' '}
+              <span className="text-emerald-500 dark:text-emerald-400">[ session active ]</span>
             </p>
           </div>
           <button
             onClick={handleLogout}
-            className="flex items-center gap-2 rounded-lg bg-red-600 px-4 py-2 text-white transition hover:bg-red-700"
+            className="inline-flex items-center gap-2 rounded border border-gray-200 px-4 py-2 font-mono text-xs uppercase tracking-wide text-gray-600 transition-colors hover:border-red-400/50 hover:text-red-500 dark:border-dark-600 dark:text-dark-300 dark:hover:text-red-400"
           >
-            <span>🚪</span>
+            <FiLogOut size={14} aria-hidden="true" />
             {text.logout}
           </button>
         </motion.div>
 
-        <div className="mb-8 grid gap-6 md:grid-cols-4">
+        <div className="mb-8 grid gap-5 md:grid-cols-4">
           {statsCards.map((stat) => (
             <motion.div
               key={stat.label}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: stat.delay }}
-              className={`rounded-xl border-l-4 ${stat.color} bg-white p-6 shadow-lg dark:bg-gray-800`}
             >
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-gray-500 dark:text-gray-400">{stat.label}</p>
-                  <p className="mt-1 text-3xl font-bold text-gray-900 dark:text-white">
-                    {statsLoading ? '—' : stat.value}
-                  </p>
-                  {!statsLoading && stat.subtitle && (
-                    <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">{stat.subtitle}</p>
-                  )}
-                </div>
-                <div className="text-4xl">{stat.icon}</div>
-              </div>
+              <CornerFrame accent className="panel h-full p-5">
+                <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-gray-500 dark:text-dark-400">
+                  {stat.label}
+                </p>
+                <p className="mt-2 font-display text-[2.2rem] font-bold leading-none tracking-tight">
+                  <span className="text-primary-600 dark:text-primary-400">{statsLoading ? '—' : stat.value}</span>
+                </p>
+                {!statsLoading && stat.subtitle && (
+                  <p className="mt-2 font-mono text-[11px] text-gray-400 dark:text-dark-400">{stat.subtitle}</p>
+                )}
+              </CornerFrame>
             </motion.div>
           ))}
         </div>
 
-        <div className="mb-6 rounded-xl bg-white shadow-lg dark:bg-gray-800">
-          <div className="flex border-b border-gray-200 dark:border-gray-700">
-            {adminTabs.map((tab) => (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={`flex items-center gap-2 px-6 py-4 font-medium transition-colors ${
-                  activeTab === tab.id
-                    ? 'border-b-2 border-primary-600 text-primary-600'
-                    : 'text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white'
-                }`}
-              >
-                <span>{tab.icon}</span>
-                <span>{tab.label}</span>
-              </button>
-            ))}
-          </div>
+        <div className="mb-6 flex flex-wrap gap-1 border-b border-gray-200 dark:border-dark-600">
+          {adminTabs.map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={`relative px-4 py-3 font-mono text-xs uppercase tracking-wide transition-colors ${
+                activeTab === tab.id
+                  ? 'text-primary-600 dark:text-primary-400'
+                  : 'text-gray-500 hover:text-gray-900 dark:text-dark-400 dark:hover:text-dark-50'
+              }`}
+            >
+              {activeTab === tab.id && <span className="text-primary-400" aria-hidden="true">[ </span>}
+              {tab.label}
+              {activeTab === tab.id && <span className="text-primary-400" aria-hidden="true"> ]</span>}
+              {activeTab === tab.id && (
+                <span className="absolute inset-x-3 -bottom-px h-px bg-primary-400" aria-hidden="true" />
+              )}
+            </button>
+          ))}
         </div>
 
-        <div className="rounded-xl bg-white p-8 shadow-lg dark:bg-gray-800">
+        <div className="panel p-6 md:p-8">
           {activeTab === 'dashboard' && (
             <DashboardTab text={text} username={user?.username} />
           )}
@@ -1003,7 +1432,34 @@ export default function Admin() {
               onEditProject={openEditProjectModal}
               onDeleteProject={handleDeleteProject}
               onOpenImageManager={openImageManager}
+              onOpenDossierManager={openDossierEditor}
               onOpenTranslationManager={openTranslationModal}
+            />
+          )}
+
+          {activeTab === 'technologies' && (
+            <TechnologiesTab
+              text={text}
+              technologies={technologies}
+              technologiesLoading={loadingTechnologies}
+              technologyActionId={technologyActionId}
+              onCreateTechnology={openCreateTechnologyModal}
+              onEditTechnology={openEditTechnologyModal}
+              onDeleteTechnology={handleDeleteTechnology}
+            />
+          )}
+
+          {activeTab === 'blog' && (
+            <BlogTab
+              text={text}
+              posts={blogPosts}
+              postsLoading={blogPostsLoading}
+              postActionId={blogActionId}
+              dateLocale={dateLocale}
+              onCreatePost={openCreateBlogModal}
+              onEditPost={openEditBlogModal}
+              onDeletePost={handleDeleteBlogPost}
+              onOpenTranslationManager={openBlogTranslationModal}
             />
           )}
 
@@ -1075,6 +1531,162 @@ export default function Admin() {
               loadingTechnologies={loadingTechnologies}
               language={adminLanguage}
             />
+          </div>
+        </div>
+      )}
+
+      {dossierEditorOpen && currentProjectForDossier && (
+        <div role="dialog" aria-modal="true" className="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/70 px-4 py-8">
+          <div
+            ref={dossierEditorModalRef}
+            tabIndex={-1}
+            data-admin-modal="dossier"
+            className="max-h-[92vh] w-full max-w-6xl overflow-y-auto rounded-2xl bg-white p-6 shadow-2xl dark:bg-gray-900"
+          >
+            <div className="mb-6 flex items-center justify-between gap-4">
+              <div>
+                <span className="sys-label">// CONTENT.PROJECT.DOSSIER</span>
+                <h3 className="mt-2 text-2xl font-semibold text-gray-900 dark:text-white">
+                  {currentProjectForDossier.title}
+                </h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => closeDossierEditor()}
+                disabled={dossierSaving}
+                className="rounded border border-dark-600 px-3 py-2 font-mono text-xs text-gray-500 transition hover:border-primary-400 hover:text-primary-400 disabled:cursor-not-allowed disabled:opacity-50"
+                aria-label="Close dossier editor"
+              >
+                ×
+              </button>
+            </div>
+            {dossierLoading ? (
+              <p className="py-12 text-center font-mono text-xs uppercase tracking-wide text-gray-500 dark:text-dark-400">
+                {adminLanguage === 'tr' ? 'Proje dosyasi yukleniyor...' : 'Loading project dossier...'}
+              </p>
+            ) : (
+              <DossierEditor
+                initialValues={dossierFormValues}
+                onSubmit={handleDossierSubmit}
+                onCancel={() => closeDossierEditor()}
+                loading={dossierSaving}
+                language={adminLanguage}
+              />
+            )}
+          </div>
+        </div>
+      )}
+
+      {technologyModalOpen && (
+        <div role="dialog" aria-modal="true" className="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/70 px-4 py-8">
+          <div
+            ref={technologyModalRef}
+            tabIndex={-1}
+            data-admin-modal="technology"
+            className="w-full max-w-2xl rounded-2xl bg-white p-6 shadow-2xl dark:bg-gray-900"
+          >
+            <div className="mb-4 flex items-center justify-between">
+              <span className="sys-label">// CONTENT.TECHNOLOGIES</span>
+              <button
+                type="button"
+                onClick={closeTechnologyModal}
+                disabled={technologyFormSubmitting}
+                className="rounded-full p-2 text-gray-500 transition hover:bg-gray-100 hover:text-gray-700 disabled:opacity-50 dark:hover:bg-gray-800"
+                aria-label="Close Technology editor"
+              >
+                ×
+              </button>
+            </div>
+            <TechnologyForm
+              initialValues={technologyFormValues}
+              onSubmit={handleTechnologyFormSubmit}
+              onCancel={closeTechnologyModal}
+              loading={technologyFormSubmitting}
+              mode={technologyFormMode}
+              language={adminLanguage}
+            />
+          </div>
+        </div>
+      )}
+
+      {blogModalOpen && (
+        <div role="dialog" aria-modal="true" className="fixed inset-0 z-50 flex items-center justify-center bg-dark-950/80 px-4 py-8">
+          <div
+            ref={blogModalRef}
+            tabIndex={-1}
+            data-admin-modal="blog"
+            className="panel max-h-[90vh] w-full max-w-4xl overflow-y-auto p-6 md:p-8"
+          >
+            <div className="mb-6 flex items-center justify-between gap-4">
+              <div>
+                <span className="sys-label">// CONTENT.BLOG</span>
+                <h3 className="mt-2 font-display text-2xl font-bold text-gray-900 dark:text-dark-50">
+                  {blogFormMode === 'create'
+                    ? adminLanguage === 'tr'
+                      ? 'Yeni yazi'
+                      : 'New blog post'
+                    : adminLanguage === 'tr'
+                      ? 'Yaziyi duzenle'
+                      : 'Edit blog post'}
+                </h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => closeBlogModal()}
+                className="rounded border border-dark-600 px-3 py-2 font-mono text-xs text-gray-500 transition hover:border-primary-400 hover:text-primary-400"
+                aria-label="Close Blog editor"
+              >
+                ×
+              </button>
+            </div>
+            <BlogForm
+              initialValues={blogFormValues}
+              onSubmit={handleBlogSubmit}
+              onCancel={() => closeBlogModal()}
+              loading={blogFormSubmitting}
+              mode={blogFormMode}
+              language={adminLanguage}
+            />
+          </div>
+        </div>
+      )}
+
+      {blogTranslationModalOpen && currentBlogPostForTranslations && (
+        <div role="dialog" aria-modal="true" className="fixed inset-0 z-50 flex items-center justify-center bg-dark-950/80 p-4">
+          <div
+            ref={blogTranslationModalRef}
+            tabIndex={-1}
+            data-admin-modal="blog-translation"
+            className="panel max-h-[90vh] w-full max-w-4xl overflow-y-auto p-6 md:p-8"
+          >
+            <div className="mb-6 flex items-center justify-between gap-4">
+              <div>
+                <span className="sys-label">// CONTENT.BLOG.TRANSLATIONS</span>
+                <h3 className="mt-2 font-display text-2xl font-bold text-gray-900 dark:text-dark-50">
+                  {currentBlogPostForTranslations.title}
+                </h3>
+              </div>
+              <button
+                type="button"
+                onClick={closeBlogTranslationModal}
+                className="rounded border border-dark-600 px-3 py-2 font-mono text-xs text-gray-500 transition hover:border-primary-400 hover:text-primary-400"
+                aria-label="Close Blog translations"
+              >
+                ×
+              </button>
+            </div>
+            {blogTranslationsLoading ? (
+              <p className="py-8 text-center font-mono text-xs uppercase tracking-wide text-gray-500 dark:text-dark-400">
+                {adminLanguage === 'tr' ? 'Ceviriler yukleniyor...' : 'Loading translations...'}
+              </p>
+            ) : (
+              <BlogTranslationEditor
+                translations={blogTranslations}
+                onSave={handleSaveBlogTranslation}
+                loading={blogTranslationsLoading}
+                language={adminLanguage}
+              />
+            )}
           </div>
         </div>
       )}

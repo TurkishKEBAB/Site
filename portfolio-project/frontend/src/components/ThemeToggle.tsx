@@ -7,7 +7,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 
 export default function ThemeToggle() {
   const [isReady, setIsReady] = useState(false);
-  const [isDark, setIsDark] = useState(false);
+  const [isDark, setIsDark] = useState(true);
   const { t } = useLanguage();
 
   useEffect(() => {
