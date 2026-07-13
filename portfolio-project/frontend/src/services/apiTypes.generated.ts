@@ -423,6 +423,42 @@ export interface paths {
         patch: operations["mark_message_as_replied_api_v1_contact__message_id__replied_patch"];
         trace?: never;
     };
+    "/api/v1/dossiers/projects/{project_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Admin Dossier */
+        get: operations["get_admin_dossier_api_v1_dossiers_projects__project_id__get"];
+        /** Save Admin Dossier */
+        put: operations["save_admin_dossier_api_v1_dossiers_projects__project_id__put"];
+        post?: never;
+        /** Remove Admin Dossier */
+        delete: operations["remove_admin_dossier_api_v1_dossiers_projects__project_id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/dossiers/{project_slug}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Public Dossier */
+        get: operations["get_public_dossier_api_v1_dossiers__project_slug__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/experiences/": {
         parameters: {
             query?: never;
@@ -1116,6 +1152,39 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        /** AdminProjectDossierResponse */
+        AdminProjectDossierResponse: {
+            /** Adrs */
+            adrs: components["schemas"]["DossierAdrResponse"][];
+            /** C4 */
+            c4: components["schemas"]["DossierC4LevelResponse"][];
+            /** Diagrams */
+            diagrams: components["schemas"]["DossierDiagramResponse"][];
+            /** Gallery */
+            gallery: components["schemas"]["DossierGalleryItemResponse"][];
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Impact */
+            impact: string;
+            /** Impact En */
+            impact_en: string;
+            /** Impact Tr */
+            impact_tr: string;
+            /** Log */
+            log: components["schemas"]["DossierLogEntryResponse"][];
+            /** Metrics */
+            metrics: components["schemas"]["DossierMetricResponse"][];
+            /**
+             * Project Id
+             * Format: uuid
+             */
+            project_id: string;
+            /** Project Slug */
+            project_slug: string;
+        };
         /**
          * AdminStatsResponse
          * @description Dashboard statistics for the admin panel.
@@ -1398,6 +1467,26 @@ export interface components {
             /** File */
             file: string;
         };
+        /** C4DiagramData */
+        "C4DiagramData-Input": {
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            kind: "c4";
+            /** Levels */
+            levels?: components["schemas"]["DossierC4LevelCreate"][];
+        };
+        /** C4DiagramData */
+        "C4DiagramData-Output": {
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            kind: "c4";
+            /** Levels */
+            levels?: components["schemas"]["DossierC4LevelCreate"][];
+        };
         /** ConfigUpdate */
         ConfigUpdate: {
             /** Description */
@@ -1497,6 +1586,295 @@ export interface components {
             message_id: string;
             /** Success */
             success: boolean;
+        };
+        /** DossierAdrCreate */
+        DossierAdrCreate: {
+            /** Context */
+            context: string;
+            /** Date */
+            date?: string | null;
+            /** Decision */
+            decision: string;
+            /**
+             * Display Order
+             * @default 0
+             */
+            display_order: number;
+            /** Id */
+            id: string;
+            /** Status */
+            status: string;
+            /** Title */
+            title: string;
+            /** Tradeoff */
+            tradeoff?: string | null;
+        };
+        /** DossierAdrResponse */
+        DossierAdrResponse: {
+            /** Context */
+            context: string;
+            /** Date */
+            date?: string | null;
+            /** Decision */
+            decision: string;
+            /**
+             * Display Order
+             * @default 0
+             */
+            display_order: number;
+            /** Id */
+            id: string;
+            /** Status */
+            status: string;
+            /** Title */
+            title: string;
+            /** Tradeoff */
+            tradeoff?: string | null;
+        };
+        /** DossierC4LevelCreate */
+        DossierC4LevelCreate: {
+            /**
+             * Display Order
+             * @default 0
+             */
+            display_order: number;
+            /** Label */
+            label: string;
+            /** Note */
+            note?: string | null;
+            /** Tiers */
+            tiers: components["schemas"]["DossierC4NodeCreate"][][];
+        };
+        /** DossierC4LevelResponse */
+        DossierC4LevelResponse: {
+            /** Display Order */
+            display_order: number;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Label */
+            label: string;
+            /** Note */
+            note?: string | null;
+            /** Tiers */
+            tiers: components["schemas"]["DossierC4NodeResponse"][][];
+        };
+        /** DossierC4NodeCreate */
+        DossierC4NodeCreate: {
+            /**
+             * Display Order
+             * @default 0
+             */
+            display_order: number;
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "person" | "system" | "client" | "container" | "component" | "store" | "queue" | "external";
+            /**
+             * Leaf
+             * @default false
+             */
+            leaf: boolean;
+            /** Sub */
+            sub?: string | null;
+            /**
+             * Tier Order
+             * @default 0
+             */
+            tier_order: number;
+            /** Title */
+            title: string;
+        };
+        /** DossierC4NodeResponse */
+        DossierC4NodeResponse: {
+            /**
+             * Display Order
+             * @default 0
+             */
+            display_order: number;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "person" | "system" | "client" | "container" | "component" | "store" | "queue" | "external";
+            /**
+             * Leaf
+             * @default false
+             */
+            leaf: boolean;
+            /** Sub */
+            sub?: string | null;
+            /**
+             * Tier Order
+             * @default 0
+             */
+            tier_order: number;
+            /** Title */
+            title: string;
+        };
+        /** DossierDiagramCreate */
+        DossierDiagramCreate: {
+            /** Data */
+            data: components["schemas"]["C4DiagramData-Input"] | components["schemas"]["SequenceDiagramData"] | components["schemas"]["SchemaDiagramData"] | components["schemas"]["TiersDiagramData"] | components["schemas"]["MatrixDiagramData"];
+            /**
+             * Display Order
+             * @default 0
+             */
+            display_order: number;
+            /** Id */
+            id: string;
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "c4" | "sequence" | "schema" | "tiers" | "matrix";
+            /** Note */
+            note?: string | null;
+            /** Title */
+            title: string;
+        };
+        /** DossierDiagramResponse */
+        DossierDiagramResponse: {
+            /** Data */
+            data: components["schemas"]["C4DiagramData-Output"] | components["schemas"]["SequenceDiagramData"] | components["schemas"]["SchemaDiagramData"] | components["schemas"]["TiersDiagramData"] | components["schemas"]["MatrixDiagramData"];
+            /**
+             * Display Order
+             * @default 0
+             */
+            display_order: number;
+            /** Id */
+            id: string;
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "c4" | "sequence" | "schema" | "tiers" | "matrix";
+            /** Note */
+            note?: string | null;
+            /** Title */
+            title: string;
+        };
+        /** DossierGalleryItemCreate */
+        DossierGalleryItemCreate: {
+            /** Caption */
+            caption: string;
+            /**
+             * Display Order
+             * @default 0
+             */
+            display_order: number;
+            /** Hint */
+            hint?: string | null;
+            /** Id */
+            id: string;
+            /** Src */
+            src: string;
+        };
+        /** DossierGalleryItemResponse */
+        DossierGalleryItemResponse: {
+            /** Caption */
+            caption: string;
+            /**
+             * Display Order
+             * @default 0
+             */
+            display_order: number;
+            /** Hint */
+            hint?: string | null;
+            /** Id */
+            id: string;
+            /** Src */
+            src: string;
+        };
+        /** DossierLogEntryCreate */
+        DossierLogEntryCreate: {
+            /** Date */
+            date: string;
+            /**
+             * Display Order
+             * @default 0
+             */
+            display_order: number;
+            /** Hash */
+            hash: string;
+            /** Note */
+            note?: string | null;
+            /** Tag */
+            tag?: string | null;
+            /** Title */
+            title: string;
+        };
+        /** DossierLogEntryResponse */
+        DossierLogEntryResponse: {
+            /** Date */
+            date: string;
+            /**
+             * Display Order
+             * @default 0
+             */
+            display_order: number;
+            /** Hash */
+            hash: string;
+            /** Note */
+            note?: string | null;
+            /** Tag */
+            tag?: string | null;
+            /** Title */
+            title: string;
+        };
+        /** DossierMetricCreate */
+        DossierMetricCreate: {
+            /**
+             * Display Order
+             * @default 0
+             */
+            display_order: number;
+            /** Label */
+            label: string;
+            /** Note */
+            note?: string | null;
+            /** Numeric Value */
+            numeric_value?: number | string | null;
+            /** Value */
+            value: string;
+        };
+        /** DossierMetricResponse */
+        DossierMetricResponse: {
+            /**
+             * Display Order
+             * @default 0
+             */
+            display_order: number;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Label */
+            label: string;
+            /** Note */
+            note?: string | null;
+            /** Numeric Value */
+            numeric_value?: string | null;
+            /** Value */
+            value: string;
+        };
+        /** Entity */
+        Entity: {
+            /** Kind */
+            kind?: ("table" | "class" | "abstract" | "interface" | "enum") | null;
+            /** Name */
+            name: string;
+            /** Rows */
+            rows?: string[];
         };
         /**
          * ErrorDetail
@@ -1722,6 +2100,20 @@ export interface components {
             /** Title */
             title?: string | null;
         };
+        /** FlowNode */
+        FlowNode: {
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "start" | "end" | "state" | "final" | "step" | "decision" | "error" | "store";
+            /** Sub */
+            sub?: string | null;
+            /** Title */
+            title: string;
+            /** Via */
+            via?: string | null;
+        };
         /**
          * GitHubContributions
          * @description Contribution calendar flattened to week-major 0..4 heatmap levels.
@@ -1820,6 +2212,25 @@ export interface components {
             /** Total Stars */
             total_stars: number;
         };
+        /** MatrixDiagramData */
+        MatrixDiagramData: {
+            /** Cols */
+            cols: string[];
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            kind: "matrix";
+            /** Rows */
+            rows: components["schemas"]["MatrixRow"][];
+        };
+        /** MatrixRow */
+        MatrixRow: {
+            /** Cells */
+            cells: string[];
+            /** Label */
+            label: string;
+        };
         /**
          * ProjectCreate
          * @description Project creation schema
@@ -1915,6 +2326,54 @@ export interface components {
              * Format: date-time
              */
             updated_at: string;
+        };
+        /** ProjectDossierResponse */
+        ProjectDossierResponse: {
+            /** Adrs */
+            adrs: components["schemas"]["DossierAdrResponse"][];
+            /** C4 */
+            c4: components["schemas"]["DossierC4LevelResponse"][];
+            /** Diagrams */
+            diagrams: components["schemas"]["DossierDiagramResponse"][];
+            /** Gallery */
+            gallery: components["schemas"]["DossierGalleryItemResponse"][];
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Impact */
+            impact: string;
+            /** Log */
+            log: components["schemas"]["DossierLogEntryResponse"][];
+            /** Metrics */
+            metrics: components["schemas"]["DossierMetricResponse"][];
+            /**
+             * Project Id
+             * Format: uuid
+             */
+            project_id: string;
+            /** Project Slug */
+            project_slug: string;
+        };
+        /** ProjectDossierUpsert */
+        ProjectDossierUpsert: {
+            /** Adrs */
+            adrs?: components["schemas"]["DossierAdrCreate"][];
+            /** C4 */
+            c4?: components["schemas"]["DossierC4LevelCreate"][];
+            /** Diagrams */
+            diagrams?: components["schemas"]["DossierDiagramCreate"][];
+            /** Gallery */
+            gallery?: components["schemas"]["DossierGalleryItemCreate"][];
+            /** Impact En */
+            impact_en: string;
+            /** Impact Tr */
+            impact_tr: string;
+            /** Log */
+            log?: components["schemas"]["DossierLogEntryCreate"][];
+            /** Metrics */
+            metrics?: components["schemas"]["DossierMetricCreate"][];
         };
         /**
          * ProjectImage
@@ -2046,6 +2505,50 @@ export interface components {
         RefreshTokenRequest: {
             /** Refresh Token */
             refresh_token: string;
+        };
+        /** SchemaDiagramData */
+        SchemaDiagramData: {
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            kind: "schema";
+            /** Relations */
+            relations?: components["schemas"]["SchemaRelation"][];
+            /** Tiers */
+            tiers: components["schemas"]["Entity"][][];
+        };
+        /** SchemaRelation */
+        SchemaRelation: {
+            /** From */
+            from: string;
+            /** Label */
+            label: string;
+            /** To */
+            to: string;
+        };
+        /** SequenceDiagramData */
+        SequenceDiagramData: {
+            /** Actors */
+            actors: string[];
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            kind: "sequence";
+            /** Messages */
+            messages?: components["schemas"]["SequenceMessage"][];
+        };
+        /** SequenceMessage */
+        SequenceMessage: {
+            /** From */
+            from: string;
+            /** Kind */
+            kind?: "return" | null;
+            /** Label */
+            label: string;
+            /** To */
+            to: string;
         };
         /**
          * Skill
@@ -2275,6 +2778,18 @@ export interface components {
             name?: string | null;
             /** Slug */
             slug?: string | null;
+        };
+        /** TiersDiagramData */
+        TiersDiagramData: {
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            kind: "tiers";
+            /** Notes */
+            notes?: string[];
+            /** Tiers */
+            tiers: components["schemas"]["FlowNode"][][];
         };
         /**
          * Token
@@ -4397,6 +4912,350 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ContactMessage"];
+                };
+            };
+            /** @description Bad request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Rate limited */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Internal server error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    get_admin_dossier_api_v1_dossiers_projects__project_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminProjectDossierResponse"];
+                };
+            };
+            /** @description Bad request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Rate limited */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Internal server error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    save_admin_dossier_api_v1_dossiers_projects__project_id__put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ProjectDossierUpsert"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminProjectDossierResponse"];
+                };
+            };
+            /** @description Bad request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Rate limited */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Internal server error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    remove_admin_dossier_api_v1_dossiers_projects__project_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Bad request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Rate limited */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Internal server error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    get_public_dossier_api_v1_dossiers__project_slug__get: {
+        parameters: {
+            query?: {
+                language?: string;
+            };
+            header?: never;
+            path: {
+                project_slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProjectDossierResponse"];
                 };
             };
             /** @description Bad request */

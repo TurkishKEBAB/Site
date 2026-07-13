@@ -122,6 +122,11 @@ export const apiEndpoints = {
       `/projects/${projectId}/images/${imageId}`,
   },
 
+  dossiers: {
+    public: (slug: string) => `/dossiers/${slug}`,
+    admin: (projectId: string) => `/dossiers/projects/${projectId}`,
+  },
+
   technologies: {
     list: '/technologies/',
     detail: (id: string) => `/technologies/${id}`,

@@ -1,5 +1,11 @@
 // API Response Types
 
+import type { components } from './apiTypes.generated';
+
+export type ProjectDossier = components['schemas']['ProjectDossierResponse'];
+export type AdminProjectDossier = components['schemas']['AdminProjectDossierResponse'];
+export type ProjectDossierUpsert = components['schemas']['ProjectDossierUpsert'];
+
 export interface ApiResponse<T> {
   data: T;
   message?: string;
