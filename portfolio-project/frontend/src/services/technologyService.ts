@@ -1,4 +1,4 @@
-import api from './api';
+import api, { apiEndpoints } from './api';
 
 export interface Technology {
   id: string;
@@ -29,26 +29,26 @@ export interface TechnologyUpdate {
 export const technologyService = {
   getAll: async (category?: string): Promise<Technology[]> => {
     const params = category ? { category } : {};
-    const response = await api.get('/technologies/', { params });
+    const response = await api.get(apiEndpoints.technologies.list, { params });
     return response.data;
   },
 
   getById: async (id: string): Promise<Technology> => {
-    const response = await api.get(`/technologies/${id}`);
+    const response = await api.get(apiEndpoints.technologies.detail(id));
     return response.data;
   },
 
   create: async (data: TechnologyCreate): Promise<Technology> => {
-    const response = await api.post('/technologies/', data);
+    const response = await api.post(apiEndpoints.technologies.create, data);
     return response.data;
   },
 
   update: async (id: string, data: TechnologyUpdate): Promise<Technology> => {
-    const response = await api.put(`/technologies/${id}`, data);
+    const response = await api.put(apiEndpoints.technologies.update(id), data);
     return response.data;
   },
 
   delete: async (id: string): Promise<void> => {
-    await api.delete(`/technologies/${id}`);
+    await api.delete(apiEndpoints.technologies.delete(id));
   },
 };

@@ -3,6 +3,7 @@ import { describe, expect, it, vi } from "vitest";
 
 import type { AdminProject } from "@/components/admin/types";
 import type { BlogPost } from "@/services/types";
+import type { Technology } from "@/services/technologyService";
 import {
   BlogTab,
   DashboardTab,
@@ -10,6 +11,7 @@ import {
   MessagesTab,
   ProjectsTab,
   SkillsTab,
+  TechnologiesTab,
 } from "./index";
 
 const projectText = {
@@ -57,6 +59,16 @@ const blogText = {
   no: "No",
 };
 
+const technologyText = {
+  technologyManagement: "Technology Management",
+  addTechnology: "Add Technology",
+  edit: "Edit",
+  delete: "Delete",
+  deleting: "Deleting...",
+  technologyLoading: "Loading technologies...",
+  noTechnologies: "No technologies found.",
+};
+
 const baseProject: AdminProject = {
   id: "project-1",
   title: "Portfolio Site",
@@ -86,7 +98,76 @@ const baseBlogPost: BlogPost = {
   updated_at: "2026-07-13T12:00:00Z",
 };
 
+const baseTechnology: Technology = {
+  id: "technology-1",
+  name: "FastAPI",
+  slug: "fastapi",
+  icon: "fastapi",
+  category: "Backend",
+  color: "#009688",
+  created_at: "2026-07-13T12:00:00Z",
+};
+
 describe("admin tab components", () => {
+  it("renders technologies and forwards create, edit, and delete actions", () => {
+    const onCreate = vi.fn();
+    const onEdit = vi.fn();
+    const onDelete = vi.fn();
+
+    render(
+      <TechnologiesTab
+        text={technologyText}
+        technologies={[baseTechnology]}
+        technologiesLoading={false}
+        technologyActionId={null}
+        onCreateTechnology={onCreate}
+        onEditTechnology={onEdit}
+        onDeleteTechnology={onDelete}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "Add Technology" }));
+    fireEvent.click(screen.getByRole("button", { name: "Edit" }));
+    fireEvent.click(screen.getByRole("button", { name: "Delete" }));
+
+    expect(screen.getByText("FastAPI")).toBeInTheDocument();
+    expect(screen.getAllByText("fastapi").length).toBeGreaterThanOrEqual(1);
+    expect(onCreate).toHaveBeenCalledTimes(1);
+    expect(onEdit).toHaveBeenCalledWith(baseTechnology);
+    expect(onDelete).toHaveBeenCalledWith("technology-1");
+  });
+
+  it("renders technology loading and empty states", () => {
+    const noop = vi.fn();
+    const { rerender } = render(
+      <TechnologiesTab
+        text={technologyText}
+        technologies={[]}
+        technologiesLoading
+        technologyActionId={null}
+        onCreateTechnology={noop}
+        onEditTechnology={noop}
+        onDeleteTechnology={noop}
+      />,
+    );
+
+    expect(screen.getByText(/loading/i)).toBeInTheDocument();
+
+    rerender(
+      <TechnologiesTab
+        text={technologyText}
+        technologies={[]}
+        technologiesLoading={false}
+        technologyActionId={null}
+        onCreateTechnology={noop}
+        onEditTechnology={noop}
+        onDeleteTechnology={noop}
+      />,
+    );
+
+    expect(screen.getByText(/no technologies/i)).toBeInTheDocument();
+  });
+
   it("renders Blog rows and forwards create, edit, delete, and translation actions", () => {
     const onCreate = vi.fn();
     const onEdit = vi.fn();

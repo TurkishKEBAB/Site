@@ -10,8 +10,9 @@ import {
   type DossierProject,
 } from "@/components/nexus/ProjectDossierModal";
 import { ProjectIndex } from "@/components/nexus/ProjectIndex";
-import { projectDetails } from "@/content/projectDetails";
-import { getLocaleValue, projectRecords, type Locale } from "@/content/site";
+import type { Locale } from "@/content/site";
+import { useProjectsQuery } from "@/hooks/usePublicData";
+import { mapProjectsToDossierProjects } from "@/lib/projects";
 
 interface ProjectsPageProps {
   locale: Locale;
@@ -36,17 +37,8 @@ export default function Projects({ locale }: ProjectsPageProps) {
   const tr = locale === "tr";
   const labels = dossierLabels(tr);
   const [selected, setSelected] = useState<DossierProject | null>(null);
-
-  const dossierProjects: DossierProject[] = projectRecords.map((project) => ({
-    slug: project.slug,
-    title: getLocaleValue(project.title, locale),
-    summary: getLocaleValue(project.summary, locale),
-    description: getLocaleValue(project.description, locale),
-    impact: getLocaleValue(project.impact, locale),
-    technologies: project.technologies,
-    featured: project.featured,
-    details: projectDetails[project.slug],
-  }));
+  const { data, isError, isLoading, refetch } = useProjectsQuery({ limit: 100, language: locale });
+  const dossierProjects = mapProjectsToDossierProjects(data?.items ?? [], locale);
 
   return (
     <div className="container-custom pb-16 pt-28 md:pt-32">
@@ -79,7 +71,30 @@ export default function Projects({ locale }: ProjectsPageProps) {
               : "Numbered project entries. Click any row for the full dossier — architecture, decisions, log, gallery."
           }
         />
-        <ProjectIndex projects={dossierProjects} onSelect={setSelected} featuredLabel={labels.featured} />
+        {isLoading ? (
+          <p role="status" className="border-t border-gray-200 py-8 text-center font-mono text-xs uppercase tracking-[0.16em] text-gray-500 dark:border-dark-600 dark:text-dark-400">
+            {tr ? "Proje indeksi yukleniyor..." : "Loading project index..."}
+          </p>
+        ) : isError ? (
+          <div role="alert" className="border-t border-gray-200 py-8 text-center dark:border-dark-600">
+            <p className="font-mono text-xs uppercase tracking-[0.16em] text-red-500">
+              {tr ? "Proje indeksi yuklenemedi." : "Project index is unavailable."}
+            </p>
+            <button
+              type="button"
+              onClick={() => void refetch()}
+              className="mt-4 rounded border border-primary-400/50 px-4 py-2 font-mono text-xs uppercase tracking-wide text-primary-600 transition hover:bg-primary-400/10 dark:text-primary-400"
+            >
+              {tr ? "Tekrar dene" : "Try again"}
+            </button>
+          </div>
+        ) : dossierProjects.length ? (
+          <ProjectIndex projects={dossierProjects} onSelect={setSelected} featuredLabel={labels.featured} />
+        ) : (
+          <p className="border-t border-gray-200 py-8 text-center font-mono text-xs uppercase tracking-[0.16em] text-gray-500 dark:border-dark-600 dark:text-dark-400">
+            {tr ? "Henuz proje bulunmuyor." : "No projects found yet."}
+          </p>
+        )}
       </section>
 
       <ProjectDossierModal project={selected} onClose={() => setSelected(null)} labels={labels} />

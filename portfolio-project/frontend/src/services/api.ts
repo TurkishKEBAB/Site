@@ -122,6 +122,14 @@ export const apiEndpoints = {
       `/projects/${projectId}/images/${imageId}`,
   },
 
+  technologies: {
+    list: '/technologies/',
+    detail: (id: string) => `/technologies/${id}`,
+    create: '/technologies/',
+    update: (id: string) => `/technologies/${id}`,
+    delete: (id: string) => `/technologies/${id}`,
+  },
+
   blog: {
     list: '/blog/',
     detail: (slug: string) => `/blog/${slug}`,

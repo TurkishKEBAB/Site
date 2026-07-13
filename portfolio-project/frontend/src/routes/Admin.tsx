@@ -26,6 +26,7 @@ import {
   MessagesTab,
   ProjectsTab,
   SkillsTab,
+  TechnologiesTab,
 } from '../components/admin/tabs';
 import {
   defaultExperienceFormValues,
@@ -49,7 +50,13 @@ import {
   BlogTranslationMap,
   defaultBlogFormValues,
 } from '../components/admin/BlogForms';
+import {
+  defaultTechnologyFormValues,
+  TechnologyForm,
+  TechnologyFormValues,
+} from '../components/admin/TechnologyForms';
 import { useAdminModalFocusTrap } from '../lib/admin/useAdminModalFocusTrap';
+import { buildProjectPayload } from '../lib/admin/projectPayload';
 
 export default function Admin() {
   const { user, logout } = useAuth();
@@ -65,6 +72,7 @@ export default function Admin() {
     logout: adminLanguage === 'tr' ? 'Cikis Yap' : 'Log Out',
     dashboard: adminLanguage === 'tr' ? 'Dashboard' : 'Dashboard',
     projects: adminLanguage === 'tr' ? 'Projeler' : 'Projects',
+    technologies: adminLanguage === 'tr' ? 'Teknolojiler' : 'Technologies',
     skills: adminLanguage === 'tr' ? 'Beceriler' : 'Skills',
     experiences: adminLanguage === 'tr' ? 'Deneyimler' : 'Experiences',
     messages: adminLanguage === 'tr' ? 'Mesajlar' : 'Messages',
@@ -74,10 +82,12 @@ export default function Admin() {
     allViewed: adminLanguage === 'tr' ? 'Tumu goruntulendi' : 'All viewed',
     welcomeUser: adminLanguage === 'tr' ? 'Hos geldin' : 'Welcome',
     projectManagement: adminLanguage === 'tr' ? 'Projeler Yonetimi' : 'Projects Management',
+    technologyManagement: adminLanguage === 'tr' ? 'Teknoloji Katalogu' : 'Technology Catalog',
     skillManagement: adminLanguage === 'tr' ? 'Beceriler Yonetimi' : 'Skills Management',
     experienceManagement: adminLanguage === 'tr' ? 'Deneyimler Yonetimi' : 'Experiences Management',
     incomingMessages: adminLanguage === 'tr' ? 'Gelen Mesajlar' : 'Incoming Messages',
     addProject: adminLanguage === 'tr' ? '+ Yeni Proje Ekle' : '+ Add New Project',
+    addTechnology: adminLanguage === 'tr' ? '+ Yeni Teknoloji Ekle' : '+ Add Technology',
     addSkill: adminLanguage === 'tr' ? '+ Yeni Beceri Ekle' : '+ Add New Skill',
     addExperience: adminLanguage === 'tr' ? '+ Yeni Deneyim Ekle' : '+ Add New Experience',
     edit: adminLanguage === 'tr' ? 'Duzenle' : 'Edit',
@@ -90,6 +100,8 @@ export default function Admin() {
     blogTranslations: adminLanguage === 'tr' ? 'Ceviriler' : 'Translations',
     published: adminLanguage === 'tr' ? 'Yayinda' : 'Published',
     draft: adminLanguage === 'tr' ? 'Taslak' : 'Draft',
+    technologyLoading: adminLanguage === 'tr' ? 'Teknolojiler yukleniyor...' : 'Loading technologies...',
+    noTechnologies: adminLanguage === 'tr' ? 'Henuz teknoloji bulunmuyor.' : 'No technologies found.',
     sessionExpired:
       adminLanguage === 'tr'
         ? 'Oturum sureniz doldu. Lutfen tekrar giris yapin.'
@@ -120,6 +132,14 @@ export default function Admin() {
   const [projectActionId, setProjectActionId] = useState<string | null>(null);
   const [technologies, setTechnologies] = useState<Technology[]>([]);
   const [loadingTechnologies, setLoadingTechnologies] = useState(false);
+  const [technologyModalOpen, setTechnologyModalOpen] = useState(false);
+  const [technologyFormMode, setTechnologyFormMode] = useState<'create' | 'edit'>('create');
+  const [technologyFormValues, setTechnologyFormValues] = useState<TechnologyFormValues>({
+    ...defaultTechnologyFormValues,
+  });
+  const [technologyFormSubmitting, setTechnologyFormSubmitting] = useState(false);
+  const [activeTechnology, setActiveTechnology] = useState<Technology | null>(null);
+  const [technologyActionId, setTechnologyActionId] = useState<string | null>(null);
 
   // Blog state
   const [blogPosts, setBlogPosts] = useState<BlogPost[]>([]);
@@ -184,6 +204,7 @@ export default function Admin() {
   const translationModalRef = useRef<HTMLDivElement>(null);
   const blogModalRef = useRef<HTMLDivElement>(null);
   const blogTranslationModalRef = useRef<HTMLDivElement>(null);
+  const technologyModalRef = useRef<HTMLDivElement>(null);
 
   const handleLogout = useCallback(() => {
     logout();
@@ -373,6 +394,8 @@ export default function Admin() {
   useEffect(() => {
     if (activeTab === 'projects') {
       loadProjects();
+    } else if (activeTab === 'technologies') {
+      loadTechnologies();
     } else if (activeTab === 'blog') {
       loadBlogPosts();
     } else if (activeTab === 'skills') {
@@ -382,7 +405,7 @@ export default function Admin() {
     } else if (activeTab === 'messages') {
       loadMessages();
     }
-  }, [activeTab, loadProjects, loadBlogPosts, loadSkills, loadExperiences, loadMessages]);
+  }, [activeTab, loadProjects, loadTechnologies, loadBlogPosts, loadSkills, loadExperiences, loadMessages]);
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
@@ -401,6 +424,15 @@ export default function Admin() {
         setBlogTranslationModalOpen(false);
         setCurrentBlogPostForTranslations(null);
         setBlogTranslations({});
+        return;
+      }
+
+      if (technologyModalOpen) {
+        if (!technologyFormSubmitting) {
+          setTechnologyModalOpen(false);
+          setTechnologyFormValues({ ...defaultTechnologyFormValues });
+          setActiveTechnology(null);
+        }
         return;
       }
 
@@ -461,6 +493,8 @@ export default function Admin() {
     projectModalOpen,
     skillFormSubmitting,
     skillModalOpen,
+    technologyFormSubmitting,
+    technologyModalOpen,
     translationModalOpen,
   ]);
 
@@ -468,6 +502,7 @@ export default function Admin() {
     [
       [translationModalOpen, translationModalRef],
       [blogTranslationModalOpen, blogTranslationModalRef],
+      [technologyModalOpen, technologyModalRef],
       [imageManagerOpen, imageManagerModalRef],
       [experienceModalOpen, experienceModalRef],
       [skillModalOpen, skillModalRef],
@@ -686,30 +721,11 @@ export default function Admin() {
 
     try {
       if (projectFormMode === 'create') {
-        await api.post('/projects/', {
-          title: values.title.trim(),
-          slug: normalizeOptional(values.slug),
-          short_description: normalizeOptional(values.shortDescription),
-          description: values.description.trim(),
-          cover_image: normalizeOptional(values.coverImage),
-          github_url: normalizeOptional(values.githubUrl),
-          demo_url: normalizeOptional(values.demoUrl),
-          featured: values.featured,
-          display_order: values.displayOrder,
-        });
+        await api.post('/projects/', buildProjectPayload(values, true));
 
         showToast('success', 'Proje başarıyla oluşturuldu.');
       } else if (activeProject) {
-        await api.put(`/projects/${activeProject.id}`, {
-          title: values.title.trim(),
-          short_description: normalizeOptional(values.shortDescription),
-          description: values.description.trim(),
-          cover_image: normalizeOptional(values.coverImage),
-          github_url: normalizeOptional(values.githubUrl),
-          demo_url: normalizeOptional(values.demoUrl),
-          featured: values.featured,
-          display_order: values.displayOrder,
-        });
+        await api.put(`/projects/${activeProject.id}`, buildProjectPayload(values, false));
 
         showToast('success', 'Proje güncellendi.');
       }
@@ -902,6 +918,83 @@ export default function Admin() {
   await loadProjectTranslations(currentProjectForTranslations);
     } catch (error) {
       handleApiError(error, 'Çeviri kaydedilirken hata oluştu.');
+    }
+  };
+
+  const openCreateTechnologyModal = () => {
+    setTechnologyFormMode('create');
+    setTechnologyFormValues({ ...defaultTechnologyFormValues });
+    setActiveTechnology(null);
+    setTechnologyModalOpen(true);
+  };
+
+  const openEditTechnologyModal = (technology: Technology) => {
+    setTechnologyFormMode('edit');
+    setTechnologyFormValues({
+      name: technology.name || '',
+      slug: technology.slug || '',
+      icon: technology.icon || '',
+      category: technology.category || '',
+      color: technology.color || '',
+    });
+    setActiveTechnology(technology);
+    setTechnologyModalOpen(true);
+  };
+
+  const closeTechnologyModal = () => {
+    setTechnologyModalOpen(false);
+    setTechnologyFormValues({ ...defaultTechnologyFormValues });
+    setActiveTechnology(null);
+  };
+
+  const handleTechnologyFormSubmit = async (values: TechnologyFormValues) => {
+    setTechnologyFormSubmitting(true);
+
+    try {
+      const payload = {
+        name: values.name.trim(),
+        slug: values.slug.trim(),
+        icon: values.icon.trim() || undefined,
+        category: values.category.trim() || undefined,
+        color: values.color.trim() || undefined,
+      };
+
+      if (technologyFormMode === 'create') {
+        await technologyService.create(payload);
+        showToast('success', adminLanguage === 'tr' ? 'Teknoloji olusturuldu.' : 'Technology created.');
+      } else if (activeTechnology) {
+        await technologyService.update(activeTechnology.id, payload);
+        showToast('success', adminLanguage === 'tr' ? 'Teknoloji guncellendi.' : 'Technology updated.');
+      }
+
+      closeTechnologyModal();
+      await loadTechnologies();
+    } catch (error) {
+      handleApiError(error, adminLanguage === 'tr' ? 'Teknoloji kaydedilemedi.' : 'Technology could not be saved.');
+    } finally {
+      setTechnologyFormSubmitting(false);
+    }
+  };
+
+  const handleDeleteTechnology = async (technologyId: string) => {
+    const confirmed = window.confirm(
+      adminLanguage === 'tr'
+        ? 'Bu teknolojiyi silmek istediginizden emin misiniz?'
+        : 'Are you sure you want to delete this technology?',
+    );
+    if (!confirmed) {
+      return;
+    }
+
+    setTechnologyActionId(technologyId);
+    try {
+      await technologyService.delete(technologyId);
+      showToast('success', adminLanguage === 'tr' ? 'Teknoloji silindi.' : 'Technology deleted.');
+      await loadTechnologies();
+    } catch (error) {
+      handleApiError(error, adminLanguage === 'tr' ? 'Teknoloji silinemedi.' : 'Technology could not be deleted.');
+    } finally {
+      setTechnologyActionId(null);
     }
   };
 
@@ -1154,6 +1247,7 @@ export default function Admin() {
     },
   ];
 
+  const technologyAdminTab = { id: 'technologies' as const, label: text.technologies, icon: 'TECH' };
   const adminTabs: Array<{ id: AdminTabId; label: string; icon: string }> = [
     { id: 'blog', label: 'Blog', icon: 'blog' },
     { id: 'dashboard', label: text.dashboard, icon: '📊' },
@@ -1162,6 +1256,7 @@ export default function Admin() {
     { id: 'experiences', label: text.experiences, icon: '💼' },
     { id: 'messages', label: text.messages, icon: '✉️' },
   ];
+  adminTabs.splice(3, 0, technologyAdminTab);
 
   return (
     <div className="min-h-screen pt-20 pb-12">
@@ -1256,6 +1351,18 @@ export default function Admin() {
             />
           )}
 
+          {activeTab === 'technologies' && (
+            <TechnologiesTab
+              text={text}
+              technologies={technologies}
+              technologiesLoading={loadingTechnologies}
+              technologyActionId={technologyActionId}
+              onCreateTechnology={openCreateTechnologyModal}
+              onEditTechnology={openEditTechnologyModal}
+              onDeleteTechnology={handleDeleteTechnology}
+            />
+          )}
+
           {activeTab === 'blog' && (
             <BlogTab
               text={text}
@@ -1336,6 +1443,38 @@ export default function Admin() {
               mode={projectFormMode}
               technologies={technologies}
               loadingTechnologies={loadingTechnologies}
+              language={adminLanguage}
+            />
+          </div>
+        </div>
+      )}
+
+      {technologyModalOpen && (
+        <div role="dialog" aria-modal="true" className="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/70 px-4 py-8">
+          <div
+            ref={technologyModalRef}
+            tabIndex={-1}
+            data-admin-modal="technology"
+            className="w-full max-w-2xl rounded-2xl bg-white p-6 shadow-2xl dark:bg-gray-900"
+          >
+            <div className="mb-4 flex items-center justify-between">
+              <span className="sys-label">// CONTENT.TECHNOLOGIES</span>
+              <button
+                type="button"
+                onClick={closeTechnologyModal}
+                disabled={technologyFormSubmitting}
+                className="rounded-full p-2 text-gray-500 transition hover:bg-gray-100 hover:text-gray-700 disabled:opacity-50 dark:hover:bg-gray-800"
+                aria-label="Close Technology editor"
+              >
+                ×
+              </button>
+            </div>
+            <TechnologyForm
+              initialValues={technologyFormValues}
+              onSubmit={handleTechnologyFormSubmit}
+              onCancel={closeTechnologyModal}
+              loading={technologyFormSubmitting}
+              mode={technologyFormMode}
               language={adminLanguage}
             />
           </div>

@@ -6,7 +6,7 @@ import About from "@/routes/About";
 import Contact from "@/routes/Contact";
 import Home from "@/routes/Home";
 import Projects from "@/routes/Projects";
-import { aboutContent, contactContent, homeContent, projectRecords } from "@/content/site";
+import { aboutContent, contactContent, homeContent } from "@/content/site";
 
 vi.mock("next/link", () => ({
   default: ({
@@ -29,6 +29,30 @@ vi.mock("@/components/AnimatedSection", () => ({
 
 vi.mock("@/components/ContactForm", () => ({
   default: () => <div data-testid="contact-form">contact-form</div>,
+}));
+
+vi.mock("@/hooks/usePublicData", () => ({
+  useProjectsQuery: () => ({
+    data: {
+      items: [
+        {
+          id: "managed-project",
+          slug: "managed-project",
+          title: "Managed project title",
+          short_description: "Managed project summary",
+          description: "Managed project description",
+          technologies: [{ id: "technology-1", name: "FastAPI", slug: "fastapi" }],
+          featured: true,
+          display_order: 1,
+          created_at: "2026-07-13T12:00:00Z",
+          updated_at: "2026-07-13T12:00:00Z",
+        },
+      ],
+    },
+    isError: false,
+    isLoading: false,
+    refetch: vi.fn(),
+  }),
 }));
 
 describe("public route SSR", () => {
@@ -57,13 +81,14 @@ describe("public route SSR", () => {
     expect(html).not.toContain("No experience found");
   });
 
-  it("renders the projects route with curated project records", () => {
+  it("renders the projects route with managed API records", () => {
     const locale = "en";
     const html = renderToStaticMarkup(<Projects locale={locale} />);
 
     expect(html).toContain("Archive");
     expect(html).toContain("All systems");
-    expect(html).toContain(projectRecords[0].title[locale]);
+    expect(html).toContain("Managed project title");
+    expect(html).toContain("Managed project summary");
     expect(html).not.toContain("No featured project");
   });
 
