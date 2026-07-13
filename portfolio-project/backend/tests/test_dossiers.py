@@ -3,9 +3,8 @@
 from decimal import Decimal
 
 import pytest
-from pydantic import ValidationError
-
 from app.schemas.dossier import ProjectDossierUpsert
+from pydantic import ValidationError
 
 
 def valid_dossier_payload() -> dict:
@@ -44,7 +43,7 @@ def valid_dossier_payload() -> dict:
                 "title": "Delivery flow",
                 "data": {
                     "kind": "tiers",
-                    "tiers": [[{"kind": "start", "title": "start"}]]
+                    "tiers": [[{"kind": "start", "title": "start"}]],
                 },
                 "display_order": 0,
             }
@@ -129,6 +128,28 @@ def test_dossier_migration_revision():
     assert 'down_revision: Union[str, None] = "20260713_0004"' in source
 
 
+def test_migration_chain_runs_on_fresh_sqlite(tmp_path):
+    import os
+    import subprocess
+    import sys
+    from pathlib import Path
+
+    database_url = f"sqlite:///{(tmp_path / 'migration.db').as_posix()}"
+    environment = os.environ.copy()
+    environment["DATABASE_URL"] = database_url
+    backend_dir = Path(__file__).resolve().parents[1]
+
+    result = subprocess.run(
+        [sys.executable, "-m", "alembic", "upgrade", "head"],
+        cwd=backend_dir,
+        env=environment,
+        capture_output=True,
+        text=True,
+    )
+
+    assert result.returncode == 0, f"stdout:\n{result.stdout}\nstderr:\n{result.stderr}"
+
+
 def test_dossier_public_read_is_ordered(client, create_project, admin_headers):
     project = create_project(slug="dossier-project")
     response = client.put(
@@ -155,13 +176,18 @@ def test_dossier_mutations_are_admin_only(client, create_project, user_headers):
     assert response.status_code == 403
 
 
-def test_invalid_replace_keeps_previous_aggregate(client, create_project, admin_headers):
+def test_invalid_replace_keeps_previous_aggregate(
+    client, create_project, admin_headers
+):
     project = create_project(slug="atomic-dossier")
-    assert client.put(
-        f"/api/v1/dossiers/projects/{project.id}",
-        headers=admin_headers,
-        json=valid_dossier_payload(),
-    ).status_code == 200
+    assert (
+        client.put(
+            f"/api/v1/dossiers/projects/{project.id}",
+            headers=admin_headers,
+            json=valid_dossier_payload(),
+        ).status_code
+        == 200
+    )
 
     invalid = valid_dossier_payload()
     invalid["gallery"] = [{"id": "x", "src": "javascript:bad", "caption": "x"}]
@@ -178,12 +204,18 @@ def test_invalid_replace_keeps_previous_aggregate(client, create_project, admin_
 
 def test_project_delete_cascades_dossier(client, create_project, admin_headers):
     project = create_project(slug="cascade-dossier")
-    assert client.put(
-        f"/api/v1/dossiers/projects/{project.id}",
-        headers=admin_headers,
-        json=valid_dossier_payload(),
-    ).status_code == 200
-    assert client.delete(
-        f"/api/v1/projects/{project.id}", headers=admin_headers
-    ).status_code == 204
+    assert (
+        client.put(
+            f"/api/v1/dossiers/projects/{project.id}",
+            headers=admin_headers,
+            json=valid_dossier_payload(),
+        ).status_code
+        == 200
+    )
+    assert (
+        client.delete(
+            f"/api/v1/projects/{project.id}", headers=admin_headers
+        ).status_code
+        == 204
+    )
     assert client.get("/api/v1/dossiers/cascade-dossier").status_code == 404
