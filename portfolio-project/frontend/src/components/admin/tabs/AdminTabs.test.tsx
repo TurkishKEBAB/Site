@@ -19,6 +19,7 @@ const projectText = {
   addProject: "Add Project",
   translate: "Translations",
   images: "Images",
+  dossier: "Dossier",
   edit: "Edit",
   delete: "Delete",
   deleting: "Deleting...",
@@ -212,6 +213,7 @@ describe("admin tab components", () => {
     const onEditProject = vi.fn();
     const onDeleteProject = vi.fn();
     const onOpenImageManager = vi.fn();
+    const onOpenDossierManager = vi.fn();
     const onOpenTranslationManager = vi.fn();
 
     render(
@@ -235,6 +237,7 @@ describe("admin tab components", () => {
         onEditProject={onEditProject}
         onDeleteProject={onDeleteProject}
         onOpenImageManager={onOpenImageManager}
+        onOpenDossierManager={onOpenDossierManager}
         onOpenTranslationManager={onOpenTranslationManager}
       />,
     );
@@ -248,11 +251,13 @@ describe("admin tab components", () => {
 
     fireEvent.click(firstRowActions.getByRole("button", { name: /Translations/ }));
     fireEvent.click(firstRowActions.getByRole("button", { name: /Images/ }));
+    fireEvent.click(firstRowActions.getByRole("button", { name: "Dossier" }));
     fireEvent.click(firstRowActions.getByRole("button", { name: "Edit" }));
     fireEvent.click(firstRowActions.getByRole("button", { name: "Delete" }));
 
     expect(onOpenTranslationManager).toHaveBeenCalledWith(baseProject);
     expect(onOpenImageManager).toHaveBeenCalledWith(baseProject);
+    expect(onOpenDossierManager).toHaveBeenCalledWith(baseProject);
     expect(onEditProject).toHaveBeenCalledWith(baseProject);
     expect(onDeleteProject).toHaveBeenCalledWith(baseProject);
     expect(screen.getByText("Yes")).toBeInTheDocument();
@@ -273,6 +278,7 @@ describe("admin tab components", () => {
         onEditProject={noop}
         onDeleteProject={noop}
         onOpenImageManager={noop}
+        onOpenDossierManager={noop}
         onOpenTranslationManager={noop}
       />,
     );
@@ -290,6 +296,7 @@ describe("admin tab components", () => {
         onEditProject={noop}
         onDeleteProject={noop}
         onOpenImageManager={noop}
+        onOpenDossierManager={noop}
         onOpenTranslationManager={noop}
       />,
     );

@@ -57,6 +57,7 @@ export interface AdminCopy {
   deleting: string;
   translate: string;
   images: string;
+  dossier: string;
   sessionExpired: string;
   blogManagement: string;
   addBlogPost: string;

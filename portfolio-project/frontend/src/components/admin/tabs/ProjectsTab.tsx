@@ -4,7 +4,7 @@ import { formatAdminDate } from "@/lib/admin/format";
 interface ProjectsTabProps {
   text: Pick<
     AdminCopy,
-    "projectManagement" | "addProject" | "translate" | "images" | "edit" | "delete" | "deleting" | "yes" | "no"
+    "projectManagement" | "addProject" | "translate" | "images" | "dossier" | "edit" | "delete" | "deleting" | "yes" | "no"
   >;
   projects: AdminProject[];
   projectsLoading: boolean;
@@ -14,6 +14,7 @@ interface ProjectsTabProps {
   onEditProject: (project: AdminProject) => void;
   onDeleteProject: (project: AdminProject) => void;
   onOpenImageManager: (project: AdminProject) => void;
+  onOpenDossierManager: (project: AdminProject) => void;
   onOpenTranslationManager: (project: AdminProject) => void;
 }
 
@@ -27,6 +28,7 @@ export function ProjectsTab({
   onEditProject,
   onDeleteProject,
   onOpenImageManager,
+  onOpenDossierManager,
   onOpenTranslationManager,
 }: ProjectsTabProps) {
   return (
@@ -130,6 +132,14 @@ export function ProjectsTab({
                       title="Proje resimlerini yönet"
                     >
                       🖼️ {text.images}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => onOpenDossierManager(project)}
+                      className="rounded-lg border border-emerald-500 px-3 py-1.5 text-xs font-semibold text-emerald-600 transition hover:bg-emerald-50 dark:border-emerald-400 dark:text-emerald-300 dark:hover:bg-emerald-900/40"
+                      title="Manage project dossier"
+                    >
+                      {text.dossier}
                     </button>
                     <button
                       type="button"

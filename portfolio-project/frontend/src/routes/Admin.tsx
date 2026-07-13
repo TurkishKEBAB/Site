@@ -57,6 +57,14 @@ import {
 } from '../components/admin/TechnologyForms';
 import { useAdminModalFocusTrap } from '../lib/admin/useAdminModalFocusTrap';
 import { buildProjectPayload } from '../lib/admin/projectPayload';
+import { dossierService } from '../services/dossierService';
+import {
+  DossierEditor,
+  emptyDossierFormValues,
+  formValuesFromDossier,
+  toDossierPayload,
+  DossierFormValues,
+} from '../components/admin/DossierEditor';
 
 export default function Admin() {
   const { user, logout } = useAuth();
@@ -95,6 +103,7 @@ export default function Admin() {
     deleting: adminLanguage === 'tr' ? 'Siliniyor...' : 'Deleting...',
     translate: adminLanguage === 'tr' ? 'Ceviriler' : 'Translations',
     images: adminLanguage === 'tr' ? 'Resimler' : 'Images',
+    dossier: adminLanguage === 'tr' ? 'Dosya' : 'Dossier',
     blogManagement: adminLanguage === 'tr' ? 'Blog Yonetimi' : 'Blog Management',
     addBlogPost: adminLanguage === 'tr' ? '+ Yeni Yazi Ekle' : '+ Add Blog Post',
     blogTranslations: adminLanguage === 'tr' ? 'Ceviriler' : 'Translations',
@@ -130,6 +139,11 @@ export default function Admin() {
   const [projectFormSubmitting, setProjectFormSubmitting] = useState(false);
   const [activeProject, setActiveProject] = useState<AdminProject | null>(null);
   const [projectActionId, setProjectActionId] = useState<string | null>(null);
+  const [dossierEditorOpen, setDossierEditorOpen] = useState(false);
+  const [currentProjectForDossier, setCurrentProjectForDossier] = useState<AdminProject | null>(null);
+  const [dossierFormValues, setDossierFormValues] = useState<DossierFormValues>(emptyDossierFormValues);
+  const [dossierLoading, setDossierLoading] = useState(false);
+  const [dossierSaving, setDossierSaving] = useState(false);
   const [technologies, setTechnologies] = useState<Technology[]>([]);
   const [loadingTechnologies, setLoadingTechnologies] = useState(false);
   const [technologyModalOpen, setTechnologyModalOpen] = useState(false);
@@ -205,6 +219,7 @@ export default function Admin() {
   const blogModalRef = useRef<HTMLDivElement>(null);
   const blogTranslationModalRef = useRef<HTMLDivElement>(null);
   const technologyModalRef = useRef<HTMLDivElement>(null);
+  const dossierEditorModalRef = useRef<HTMLDivElement>(null);
 
   const handleLogout = useCallback(() => {
     logout();
@@ -471,6 +486,15 @@ export default function Admin() {
         return;
       }
 
+      if (dossierEditorOpen) {
+        if (!dossierSaving) {
+          setDossierEditorOpen(false);
+          setCurrentProjectForDossier(null);
+          setDossierFormValues(emptyDossierFormValues);
+        }
+        return;
+      }
+
       if (blogModalOpen) {
         if (!blogFormSubmitting) {
           setBlogModalOpen(false);
@@ -488,6 +512,8 @@ export default function Admin() {
     blogFormSubmitting,
     blogModalOpen,
     blogTranslationModalOpen,
+    dossierEditorOpen,
+    dossierSaving,
     imageManagerOpen,
     projectFormSubmitting,
     projectModalOpen,
@@ -504,6 +530,7 @@ export default function Admin() {
       [blogTranslationModalOpen, blogTranslationModalRef],
       [technologyModalOpen, technologyModalRef],
       [imageManagerOpen, imageManagerModalRef],
+      [dossierEditorOpen, dossierEditorModalRef],
       [experienceModalOpen, experienceModalRef],
       [skillModalOpen, skillModalRef],
       [projectModalOpen, projectModalRef],
@@ -737,6 +764,64 @@ export default function Admin() {
       handleApiError(error, 'Proje kaydedilirken bir hata oluştu.');
     } finally {
       setProjectFormSubmitting(false);
+    }
+  };
+
+  const closeDossierEditor = (force = false) => {
+    if (dossierSaving && !force) {
+      return;
+    }
+    setDossierEditorOpen(false);
+    setCurrentProjectForDossier(null);
+    setDossierFormValues(emptyDossierFormValues);
+  };
+
+  const openDossierEditor = async (project: AdminProject) => {
+    setCurrentProjectForDossier(project);
+    setDossierFormValues(emptyDossierFormValues);
+    setDossierEditorOpen(true);
+    setDossierLoading(true);
+
+    try {
+      const dossier = await dossierService.getAdminDossier(project.id);
+      setDossierFormValues(formValuesFromDossier(dossier));
+    } catch (error) {
+      const status = error instanceof AxiosError ? error.response?.status : undefined;
+      if (status !== 404) {
+        handleApiError(
+          error,
+          adminLanguage === 'tr' ? 'Proje dosyasi yuklenemedi.' : 'Project dossier could not be loaded.',
+        );
+      }
+    } finally {
+      setDossierLoading(false);
+    }
+  };
+
+  const handleDossierSubmit = async (values: DossierFormValues) => {
+    if (!currentProjectForDossier) {
+      return;
+    }
+
+    setDossierSaving(true);
+    try {
+      const dossier = await dossierService.upsertDossier(
+        currentProjectForDossier.id,
+        toDossierPayload(values),
+      );
+      setDossierFormValues(formValuesFromDossier(dossier));
+      showToast(
+        'success',
+        adminLanguage === 'tr' ? 'Proje dosyasi kaydedildi.' : 'Project dossier saved.',
+      );
+      closeDossierEditor(true);
+    } catch (error) {
+      handleApiError(
+        error,
+        adminLanguage === 'tr' ? 'Proje dosyasi kaydedilemedi.' : 'Project dossier could not be saved.',
+      );
+    } finally {
+      setDossierSaving(false);
     }
   };
 
@@ -1347,6 +1432,7 @@ export default function Admin() {
               onEditProject={openEditProjectModal}
               onDeleteProject={handleDeleteProject}
               onOpenImageManager={openImageManager}
+              onOpenDossierManager={openDossierEditor}
               onOpenTranslationManager={openTranslationModal}
             />
           )}
@@ -1445,6 +1531,48 @@ export default function Admin() {
               loadingTechnologies={loadingTechnologies}
               language={adminLanguage}
             />
+          </div>
+        </div>
+      )}
+
+      {dossierEditorOpen && currentProjectForDossier && (
+        <div role="dialog" aria-modal="true" className="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/70 px-4 py-8">
+          <div
+            ref={dossierEditorModalRef}
+            tabIndex={-1}
+            data-admin-modal="dossier"
+            className="max-h-[92vh] w-full max-w-6xl overflow-y-auto rounded-2xl bg-white p-6 shadow-2xl dark:bg-gray-900"
+          >
+            <div className="mb-6 flex items-center justify-between gap-4">
+              <div>
+                <span className="sys-label">// CONTENT.PROJECT.DOSSIER</span>
+                <h3 className="mt-2 text-2xl font-semibold text-gray-900 dark:text-white">
+                  {currentProjectForDossier.title}
+                </h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => closeDossierEditor()}
+                disabled={dossierSaving}
+                className="rounded border border-dark-600 px-3 py-2 font-mono text-xs text-gray-500 transition hover:border-primary-400 hover:text-primary-400 disabled:cursor-not-allowed disabled:opacity-50"
+                aria-label="Close dossier editor"
+              >
+                ×
+              </button>
+            </div>
+            {dossierLoading ? (
+              <p className="py-12 text-center font-mono text-xs uppercase tracking-wide text-gray-500 dark:text-dark-400">
+                {adminLanguage === 'tr' ? 'Proje dosyasi yukleniyor...' : 'Loading project dossier...'}
+              </p>
+            ) : (
+              <DossierEditor
+                initialValues={dossierFormValues}
+                onSubmit={handleDossierSubmit}
+                onCancel={() => closeDossierEditor()}
+                loading={dossierSaving}
+                language={adminLanguage}
+              />
+            )}
           </div>
         </div>
       )}
