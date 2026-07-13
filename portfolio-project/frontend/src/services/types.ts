@@ -119,15 +119,41 @@ export interface BlogPost {
   created_at: string;
   updated_at: string;
   published_at?: string;
+  translations?: BlogTranslation[];
+}
+
+export interface BlogTranslation {
+  id: string;
+  blog_post_id: string;
+  language: 'en' | 'tr' | 'de' | 'fr';
+  title: string;
+  content: string;
+  excerpt?: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface BlogPostDetail extends BlogPost {
+  translations: BlogTranslation[];
+}
+
+export interface BlogTranslationCreate {
+  language: 'en' | 'tr' | 'de' | 'fr';
+  title: string;
+  content: string;
+  excerpt?: string;
 }
 
 export interface BlogPostCreate {
   title: string;
   content: string;
+  slug?: string;
   excerpt?: string;
   cover_image?: string;
   tags?: string[];
   published?: boolean;
+  reading_time?: number;
+  translations?: BlogTranslationCreate[];
 }
 
 // Skill Types

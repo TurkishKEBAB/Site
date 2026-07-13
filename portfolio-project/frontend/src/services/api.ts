@@ -125,9 +125,12 @@ export const apiEndpoints = {
   blog: {
     list: '/blog/',
     detail: (slug: string) => `/blog/${slug}`,
+    adminList: '/blog/admin',
+    adminDetail: (postId: string) => `/blog/admin/${postId}`,
     create: '/blog/',
     update: (postId: string) => `/blog/${postId}`,
     delete: (postId: string) => `/blog/${postId}`,
+    addTranslation: (postId: string) => `/blog/${postId}/translations`,
   },
 
   skills: {

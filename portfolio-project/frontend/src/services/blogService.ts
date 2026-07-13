@@ -1,5 +1,11 @@
 import api, { apiEndpoints } from './api';
-import { BlogPost, BlogPostCreate, PaginatedResponse } from './types';
+import {
+  BlogPost,
+  BlogPostCreate,
+  BlogPostDetail,
+  BlogTranslationCreate,
+  PaginatedResponse,
+} from './types';
 
 type BlogPostApiRecord = Omit<
   BlogPost,
@@ -70,6 +76,27 @@ export const blogService = {
     };
   },
 
+  async getAdminPosts(params?: {
+    skip?: number;
+    limit?: number;
+    language?: string;
+  }): Promise<PaginatedResponse<BlogPost>> {
+    const response = await api.get(apiEndpoints.blog.adminList, { params });
+    const payload = response.data as PaginatedResponse<BlogPost>;
+
+    return {
+      ...payload,
+      items: Array.isArray(payload.items)
+        ? payload.items.map((item) => normalizeBlogPost(item))
+        : [],
+    };
+  },
+
+  async getAdminPost(postId: string): Promise<BlogPostDetail> {
+    const response = await api.get(apiEndpoints.blog.adminDetail(postId));
+    return normalizeBlogPost(response.data) as BlogPostDetail;
+  },
+
   async getPost(slug: string, language?: string): Promise<BlogPost> {
     const response = await api.get(apiEndpoints.blog.detail(slug), {
       params: language ? { language } : undefined,
@@ -89,5 +116,13 @@ export const blogService = {
 
   async deletePost(postId: string): Promise<void> {
     await api.delete(apiEndpoints.blog.delete(postId));
+  },
+
+  async addTranslation(
+    postId: string,
+    data: BlogTranslationCreate,
+  ): Promise<BlogPostDetail> {
+    const response = await api.post(apiEndpoints.blog.addTranslation(postId), data);
+    return normalizeBlogPost(response.data) as BlogPostDetail;
   },
 };

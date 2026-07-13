@@ -76,4 +76,62 @@ describe("blogService", () => {
 
     await expect(blogService.getPosts()).resolves.toMatchObject({ items: [] });
   });
+
+  it("loads drafts through the protected admin list endpoint", async () => {
+    vi.spyOn(api, "get").mockResolvedValueOnce({
+      data: { items: [], total: 0, page: 1, size: 20, pages: 1 },
+    });
+
+    await blogService.getAdminPosts();
+
+    expect(api.get).toHaveBeenCalledWith("/blog/admin", { params: undefined });
+  });
+
+  it("loads a protected admin detail with translations", async () => {
+    vi.spyOn(api, "get").mockResolvedValueOnce({
+      data: {
+        id: "post-1",
+        title: "Post",
+        slug: "post",
+        content: "Body",
+        published: false,
+        tags: ["fastapi"],
+        translations: [],
+        created_at: "2026-07-13",
+        updated_at: "2026-07-13",
+      },
+    });
+
+    await blogService.getAdminPost("post-1");
+
+    expect(api.get).toHaveBeenCalledWith("/blog/admin/post-1");
+  });
+
+  it("posts an EN/TR translation", async () => {
+    vi.spyOn(api, "post").mockResolvedValueOnce({
+      data: {
+        id: "post-1",
+        title: "Post",
+        slug: "post",
+        content: "Body",
+        published: false,
+        tags: ["fastapi"],
+        translations: [],
+        created_at: "2026-07-13",
+        updated_at: "2026-07-13",
+      },
+    });
+
+    await blogService.addTranslation("post-1", {
+      language: "tr",
+      title: "Yazi",
+      content: "Icerik",
+      excerpt: "Ozet",
+    });
+
+    expect(api.post).toHaveBeenCalledWith(
+      "/blog/post-1/translations",
+      expect.objectContaining({ language: "tr" }),
+    );
+  });
 });
