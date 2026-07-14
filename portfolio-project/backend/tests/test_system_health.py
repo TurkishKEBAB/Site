@@ -8,6 +8,7 @@ from app import main as main_module
 
 class DummyCache:
     redis_client = None
+    backend = "memory"
 
     def __init__(self, calls):
         self._calls = calls
