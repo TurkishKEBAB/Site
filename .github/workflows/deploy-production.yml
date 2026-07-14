@@ -96,65 +96,19 @@ jobs:
   # main, and its start command runs `alembic upgrade head` before uvicorn.
   # This workflow's backend role is quality gate + post-deploy smoke checks.
 
-  deploy-frontend:
-    name: Deploy Frontend Production (Vercel)
-    runs-on: ubuntu-latest
-    needs:
-      - frontend-quality
-    environment:
-      name: production
-    defaults:
-      run:
-        working-directory: portfolio-project/frontend
-    steps:
-      - name: Checkout
-        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
-
-      - name: Setup Node
-        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
-        with:
-          node-version: "20"
-          cache: npm
-          cache-dependency-path: portfolio-project/frontend/package-lock.json
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Build frontend
-        run: npm run build
-
-      - name: Validate Vercel secrets
-        env:
-          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
-          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
-          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
-        run: |
-          if [ -z "$VERCEL_TOKEN" ] || [ -z "$VERCEL_ORG_ID" ] || [ -z "$VERCEL_PROJECT_ID" ]; then
-            echo "Missing Vercel production secrets."
-            exit 1
-          fi
-
-      - name: Deploy production to Vercel
-        # Run from the repo root: the Vercel project's Root Directory is
-        # portfolio-project/frontend, and the CLI joins cwd with that setting
-        # (cwd portfolio-project/frontend => …/frontend/portfolio-project/frontend
-        # does not exist => `vercel build` dies with `spawn sh ENOENT`).
-        working-directory: .
-        env:
-          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
-          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
-          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
-        run: |
-          npm i -g vercel@latest
-          vercel pull --yes --environment=production --token="$VERCEL_TOKEN"
-          vercel build --prod --token="$VERCEL_TOKEN"
-          vercel deploy --prebuilt --prod --token="$VERCEL_TOKEN"
+  # NOTE: there is no deploy-frontend job on purpose either. The frontend
+  # deploys through Vercel's own GitHub integration on every push to main,
+  # which builds on Vercel with the project's production env (including
+  # NEXT_PUBLIC_API_BASE_URL). A CI-side `vercel build` + `--prebuilt` deploy
+  # raced that integration and once shipped a bundle with the localhost
+  # fallback baked in, blanking every backend-driven section on the site.
+  # This workflow's frontend role is quality gate + post-deploy smoke checks.
 
   frontend-smoke:
     name: Frontend Production Smoke
     runs-on: ubuntu-latest
     needs:
-      - deploy-frontend
+      - frontend-quality
     environment:
       name: production
     steps:
