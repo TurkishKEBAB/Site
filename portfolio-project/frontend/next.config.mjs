@@ -11,6 +11,14 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const workspaceRoot = path.resolve(__dirname, "..", "..");
 
+// api.yigitokur.me is served by this Vercel project because Railway's free
+// plan cannot issue custom-domain certificates. Requests arriving on that
+// host are proxied straight through to the Railway backend; the main site
+// host is unaffected.
+const API_PROXY_HOST = process.env.API_PROXY_HOST || "api.yigitokur.me";
+const API_PROXY_ORIGIN =
+  process.env.API_PROXY_ORIGIN || "https://site-production-562f.up.railway.app";
+
 // Baseline security headers applied to every response.
 // Content-Security-Policy is intentionally deferred: the inline theme bootstrap
 // script in app/layout.tsx and Next.js' own runtime require a nonce/hash
@@ -53,6 +61,19 @@ const nextConfig = {
         headers: securityHeaders,
       },
     ];
+  },
+  async rewrites() {
+    return {
+      // beforeFiles so the proxy wins over app routes and static assets
+      // when the request arrives on the API host.
+      beforeFiles: [
+        {
+          source: "/:path*",
+          has: [{ type: "host", value: API_PROXY_HOST }],
+          destination: `${API_PROXY_ORIGIN}/:path*`,
+        },
+      ],
+    };
   },
 };
 
