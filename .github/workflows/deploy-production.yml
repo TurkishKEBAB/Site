@@ -90,37 +90,11 @@ jobs:
         working-directory: portfolio-project/frontend
         run: npm run build
 
-  deploy-backend:
-    name: Deploy Backend Production (Railway)
-    runs-on: ubuntu-latest
-    needs:
-      - backend-quality
-    environment:
-      name: production
-    steps:
-      - name: Validate required secrets
-        env:
-          RAILWAY_PRODUCTION_MIGRATION_HOOK_URL: ${{ secrets.RAILWAY_PRODUCTION_MIGRATION_HOOK_URL }}
-          RAILWAY_PRODUCTION_DEPLOY_HOOK_URL: ${{ secrets.RAILWAY_PRODUCTION_DEPLOY_HOOK_URL }}
-        run: |
-          if [ -z "$RAILWAY_PRODUCTION_MIGRATION_HOOK_URL" ]; then
-            echo "Missing secret: RAILWAY_PRODUCTION_MIGRATION_HOOK_URL"
-            exit 1
-          fi
-          if [ -z "$RAILWAY_PRODUCTION_DEPLOY_HOOK_URL" ]; then
-            echo "Missing secret: RAILWAY_PRODUCTION_DEPLOY_HOOK_URL"
-            exit 1
-          fi
-
-      - name: Run pre-deploy migrations
-        env:
-          RAILWAY_PRODUCTION_MIGRATION_HOOK_URL: ${{ secrets.RAILWAY_PRODUCTION_MIGRATION_HOOK_URL }}
-        run: curl -fsSL -X POST "$RAILWAY_PRODUCTION_MIGRATION_HOOK_URL"
-
-      - name: Trigger Railway production deployment
-        env:
-          RAILWAY_PRODUCTION_DEPLOY_HOOK_URL: ${{ secrets.RAILWAY_PRODUCTION_DEPLOY_HOOK_URL }}
-        run: curl -fsSL -X POST "$RAILWAY_PRODUCTION_DEPLOY_HOOK_URL"
+  # NOTE: there is no deploy-backend job on purpose. Railway has no inbound
+  # deploy-hook URLs (its webhooks are outbound notifications only); the
+  # backend deploys through Railway's own GitHub integration on every push to
+  # main, and its start command runs `alembic upgrade head` before uvicorn.
+  # This workflow's backend role is quality gate + post-deploy smoke checks.
 
   deploy-frontend:
     name: Deploy Frontend Production (Vercel)
@@ -220,7 +194,7 @@ jobs:
     name: Backend Production Smoke
     runs-on: ubuntu-latest
     needs:
-      - deploy-backend
+      - backend-quality
     environment:
       name: production
     steps:
