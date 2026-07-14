@@ -7,19 +7,17 @@ import os
 import re
 import uuid
 
+from fastapi import (APIRouter, Depends, File, HTTPException, Query, Response,
+                     UploadFile, status)
+from sqlalchemy.orm import Session
+
 from app.api.deps import get_db, require_admin
 from app.crud import project as project_crud
 from app.models.user import User
-from app.schemas.project import (
-    ProjectCreate,
-    ProjectResponse,
-    ProjectTranslationCreate,
-    ProjectUpdate,
-)
+from app.schemas.project import (ProjectCreate, ProjectResponse,
+                                 ProjectTranslationCreate, ProjectUpdate)
 from app.services.admin_audit import record_admin_action
 from app.services.storage_service import StorageService
-from fastapi import APIRouter, Depends, File, HTTPException, Query, UploadFile, status
-from sqlalchemy.orm import Session
 
 router = APIRouter()
 
@@ -92,6 +90,7 @@ def _serialize_project(project, language: str) -> dict:
 
 @router.get("/")
 async def get_projects(
+    response: Response,
     skip: int = Query(0, ge=0),
     limit: int = Query(20, ge=1, le=100),
     language: str = Query("en", pattern="^(tr|en)$"),
@@ -117,6 +116,7 @@ async def get_projects(
         technology_slug=technology_slug,
     )
     items = [_serialize_project(project, language) for project in projects]
+    response.headers["Cache-Control"] = "public, max-age=60, stale-while-revalidate=300"
 
     return {
         "items": items,

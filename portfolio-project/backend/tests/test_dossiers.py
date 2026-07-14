@@ -3,8 +3,9 @@
 from decimal import Decimal
 
 import pytest
-from app.schemas.dossier import ProjectDossierUpsert
 from pydantic import ValidationError
+
+from app.schemas.dossier import ProjectDossierUpsert
 
 
 def valid_dossier_payload() -> dict:
@@ -161,6 +162,9 @@ def test_dossier_public_read_is_ordered(client, create_project, admin_headers):
     assert response.status_code == 200
     public = client.get("/api/v1/dossiers/dossier-project?language=en")
     assert public.status_code == 200
+    assert public.headers["cache-control"] == (
+        "public, max-age=60, stale-while-revalidate=300"
+    )
     assert public.json()["impact"] == "Built a reliable scheduling workflow."
     assert public.json()["metrics"][0]["label"] == "coverage"
 

@@ -1,37 +1,28 @@
 """CRUD operations for the project dossier aggregate."""
 
-from collections import defaultdict
 import uuid
+from collections import defaultdict
 from typing import Any, Optional
 
-from app.models.dossier import (
-    DossierAdr,
-    DossierC4Level,
-    DossierC4Node,
-    DossierDiagram,
-    DossierGalleryItem,
-    DossierLogEntry,
-    DossierMetric,
-    ProjectDossier,
-)
+from sqlalchemy.orm import Session, joinedload, selectinload
+
+from app.models.dossier import (DossierAdr, DossierC4Level, DossierC4Node,
+                                DossierDiagram, DossierGalleryItem,
+                                DossierLogEntry, DossierMetric, ProjectDossier)
 from app.models.project import Project
-from app.schemas.dossier import (
-    AdminProjectDossierResponse,
-    ProjectDossierResponse,
-    ProjectDossierUpsert,
-)
-from sqlalchemy.orm import Session, joinedload
+from app.schemas.dossier import (AdminProjectDossierResponse,
+                                 ProjectDossierResponse, ProjectDossierUpsert)
 
 
 def _dossier_query(db: Session):
     return db.query(ProjectDossier).options(
         joinedload(ProjectDossier.project),
-        joinedload(ProjectDossier.metrics),
-        joinedload(ProjectDossier.c4_levels).joinedload(DossierC4Level.nodes),
-        joinedload(ProjectDossier.adrs),
-        joinedload(ProjectDossier.log_entries),
-        joinedload(ProjectDossier.diagrams),
-        joinedload(ProjectDossier.gallery_items),
+        selectinload(ProjectDossier.metrics),
+        selectinload(ProjectDossier.c4_levels).selectinload(DossierC4Level.nodes),
+        selectinload(ProjectDossier.adrs),
+        selectinload(ProjectDossier.log_entries),
+        selectinload(ProjectDossier.diagrams),
+        selectinload(ProjectDossier.gallery_items),
     )
 
 

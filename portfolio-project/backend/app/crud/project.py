@@ -2,15 +2,18 @@
 Project CRUD Operations
 Projects, technologies, and images management
 """
-from sqlalchemy.orm import Session, joinedload
-from sqlalchemy import func
-from typing import List, Optional
 import uuid
-from slugify import slugify
+from typing import List, Optional
 
-from app.models.project import Project, ProjectTranslation, ProjectTechnology, ProjectImage
+from slugify import slugify
+from sqlalchemy import func
+from sqlalchemy.orm import Session, selectinload
+
+from app.models.project import (Project, ProjectImage, ProjectTechnology,
+                                ProjectTranslation)
 from app.models.technology import Technology
-from app.schemas.project import ProjectCreate, ProjectUpdate, ProjectTranslationCreate
+from app.schemas.project import (ProjectCreate, ProjectTranslationCreate,
+                                 ProjectUpdate)
 
 
 def _apply_project_translation(project: Project, language: Optional[str] = "en") -> Project:
@@ -54,9 +57,11 @@ def get_projects(
         List of projects
     """
     query = db.query(Project).options(
-        joinedload(Project.translations),
-        joinedload(Project.project_technologies).joinedload(ProjectTechnology.technology),
-        joinedload(Project.images)
+        selectinload(Project.translations),
+        selectinload(Project.project_technologies).selectinload(
+            ProjectTechnology.technology
+        ),
+        selectinload(Project.images),
     )
     
     if featured_only:
@@ -76,18 +81,22 @@ def get_projects(
 def get_project_by_id(db: Session, project_id: uuid.UUID) -> Optional[Project]:
     """Get project by ID with all relations"""
     return db.query(Project).options(
-        joinedload(Project.translations),
-        joinedload(Project.project_technologies).joinedload(ProjectTechnology.technology),
-        joinedload(Project.images)
+        selectinload(Project.translations),
+        selectinload(Project.project_technologies).selectinload(
+            ProjectTechnology.technology
+        ),
+        selectinload(Project.images),
     ).filter(Project.id == project_id).first()
 
 
 def get_project_by_slug(db: Session, slug: str, language: Optional[str] = "en") -> Optional[Project]:
     """Get project by slug with all relations"""
     project = db.query(Project).options(
-        joinedload(Project.translations),
-        joinedload(Project.project_technologies).joinedload(ProjectTechnology.technology),
-        joinedload(Project.images)
+        selectinload(Project.translations),
+        selectinload(Project.project_technologies).selectinload(
+            ProjectTechnology.technology
+        ),
+        selectinload(Project.images),
     ).filter(Project.slug == slug).first()
 
     if not project:
