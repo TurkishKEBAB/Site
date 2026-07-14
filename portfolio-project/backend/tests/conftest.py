@@ -86,6 +86,7 @@ def client(db_session: Session, monkeypatch):
 
     class DummyCache:
         redis_client = None
+        backend = "memory"
 
         async def connect(self):
             return None

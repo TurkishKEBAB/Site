@@ -148,15 +148,14 @@ async def health_check():
     """
     db_status = check_db_connection()
     cache_service = get_cache_service()
-    cache_status = cache_service.redis_client is not None
-    
+
     return {
         "status": "healthy" if db_status else "degraded",
         "version": settings.VERSION,
         "environment": settings.ENVIRONMENT,
         "services": {
             "database": "connected" if db_status else "disconnected",
-            "cache": "connected" if cache_status else "disconnected"
+            "cache": cache_service.backend
         }
     }
 
@@ -181,7 +180,6 @@ async def readiness_check():
     """
     db_status = check_db_connection()
     cache_service = get_cache_service()
-    cache_status = cache_service.redis_client is not None
 
     payload = {
         "status": "ready" if db_status else "not_ready",
@@ -189,7 +187,7 @@ async def readiness_check():
         "environment": settings.ENVIRONMENT,
         "services": {
             "database": "connected" if db_status else "disconnected",
-            "cache": "connected" if cache_status else "disconnected",
+            "cache": cache_service.backend,
         },
     }
     if db_status:
