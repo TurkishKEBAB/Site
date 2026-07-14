@@ -61,6 +61,9 @@ def test_get_projects_public_and_slug_detail(client, create_project):
     assert list_response.headers["cache-control"] == (
         "public, max-age=60, stale-while-revalidate=300"
     )
+    assert detail_response.headers["cache-control"] == (
+        "public, max-age=60, stale-while-revalidate=300"
+    )
     assert list_response.json()["total"] == 1
     assert detail_response.json()["slug"] == "public-project"
 

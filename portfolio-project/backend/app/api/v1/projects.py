@@ -130,6 +130,7 @@ async def get_projects(
 @router.get("/{slug}", response_model=ProjectResponse)
 async def get_project(
     slug: str,
+    response: Response,
     language: str = Query("en", pattern="^(tr|en)$"),
     db: Session = Depends(get_db),
 ):
@@ -143,6 +144,7 @@ async def get_project(
             status_code=status.HTTP_404_NOT_FOUND, detail="Project not found"
         )
 
+    response.headers["Cache-Control"] = "public, max-age=60, stale-while-revalidate=300"
     return _serialize_project(project, language)
 
 
