@@ -2,8 +2,11 @@
 
 import io
 
-from app.models.project import ProjectImage
 from PIL import Image
+from sqlalchemy import event
+
+from app.crud import project as project_crud
+from app.models.project import ProjectImage
 
 
 def _build_png_bytes(size: tuple[int, int] = (1, 1)) -> bytes:
@@ -55,8 +58,33 @@ def test_get_projects_public_and_slug_detail(client, create_project):
 
     assert list_response.status_code == 200
     assert detail_response.status_code == 200
+    assert list_response.headers["cache-control"] == (
+        "public, max-age=60, stale-while-revalidate=300"
+    )
+    assert detail_response.headers["cache-control"] == (
+        "public, max-age=60, stale-while-revalidate=300"
+    )
     assert list_response.json()["total"] == 1
     assert detail_response.json()["slug"] == "public-project"
+
+
+def test_project_list_loads_collections_without_join_explosion(
+    db_session, create_project
+):
+    create_project(slug="list-performance-project")
+    statements = []
+
+    def record_select(_conn, _cursor, statement, _parameters, _context, _executemany):
+        if statement.lstrip().upper().startswith("SELECT"):
+            statements.append(statement)
+
+    event.listen(db_session.bind, "before_cursor_execute", record_select)
+    try:
+        project_crud.get_projects(db_session, limit=100, language="en")
+    finally:
+        event.remove(db_session.bind, "before_cursor_execute", record_select)
+
+    assert len(statements) >= 4
 
 
 def test_get_project_not_found(client):
