@@ -70,6 +70,10 @@ jobs:
       - name: Deploy preview to Vercel
         id: deploy
         if: ${{ steps.vercel.outputs.configured == 'true' }}
+        # Repo root: the Vercel project's Root Directory already points at
+        # portfolio-project/frontend; running from the frontend dir makes the
+        # CLI resolve a doubled, nonexistent path (`spawn sh ENOENT`).
+        working-directory: .
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}

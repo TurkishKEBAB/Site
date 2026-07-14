@@ -19,7 +19,9 @@ jobs:
     runs-on: ubuntu-latest
     env:
       DATABASE_URL: sqlite:///./ci.db
-      SECRET_KEY: ${{ secrets.CI_SECRET_KEY }}
+      # Fall back to the same dummy test key ci.yml uses when CI_SECRET_KEY
+      # is not configured; an empty key breaks every JWT-signing test.
+      SECRET_KEY: ${{ secrets.CI_SECRET_KEY || 'ci-secret-key' }}
       SMTP_USERNAME: ci@example.com
       SMTP_PASSWORD: ci-password
       REDIS_URL: redis://localhost:6379/0
@@ -159,6 +161,11 @@ jobs:
           fi
 
       - name: Deploy production to Vercel
+        # Run from the repo root: the Vercel project's Root Directory is
+        # portfolio-project/frontend, and the CLI joins cwd with that setting
+        # (cwd portfolio-project/frontend => …/frontend/portfolio-project/frontend
+        # does not exist => `vercel build` dies with `spawn sh ENOENT`).
+        working-directory: .
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
