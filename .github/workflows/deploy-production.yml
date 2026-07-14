@@ -268,14 +268,9 @@ jobs:
           LOGIN_RESPONSE=$(curl -fsSL -X POST "$PRODUCTION_API_ROOT_URL/api/v1/auth/login/json" \
             -H "Content-Type: application/json" \
             -d "{\"email\":\"$PRODUCTION_SMOKE_ADMIN_EMAIL\",\"password\":\"$PRODUCTION_SMOKE_ADMIN_PASSWORD\"}")
-          export LOGIN_RESPONSE
 
-          ACCESS_TOKEN=$(python - <<'PY'
-import json, os
-body = json.loads(os.environ["LOGIN_RESPONSE"])
-print(body["access_token"])
-PY
-          )
+          ACCESS_TOKEN=$(printf '%s' "$LOGIN_RESPONSE" \
+            | python -c "import json, sys; print(json.load(sys.stdin)['access_token'])")
 
           curl -fsSL "$PRODUCTION_API_ROOT_URL/api/v1/admin/stats" \
             -H "Authorization: Bearer $ACCESS_TOKEN" >/dev/null

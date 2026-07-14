@@ -26,16 +26,33 @@ jobs:
   deploy-preview:
     name: Vercel Preview Deploy
     runs-on: ubuntu-latest
-    if: ${{ secrets.VERCEL_TOKEN != '' && secrets.VERCEL_ORG_ID != '' && secrets.VERCEL_PROJECT_ID != '' }}
     defaults:
       run:
         working-directory: portfolio-project/frontend
 
     steps:
+      # secrets context is not available in job-level `if`, so gate via a step output
+      - name: Check Vercel secrets
+        id: vercel
+        working-directory: .
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+        run: |
+          if [ -n "$VERCEL_TOKEN" ] && [ -n "$VERCEL_ORG_ID" ] && [ -n "$VERCEL_PROJECT_ID" ]; then
+            echo "configured=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "configured=false" >> "$GITHUB_OUTPUT"
+            echo "Vercel secrets not configured; skipping preview deploy."
+          fi
+
       - name: Checkout
+        if: ${{ steps.vercel.outputs.configured == 'true' }}
         uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
 
       - name: Setup Node
+        if: ${{ steps.vercel.outputs.configured == 'true' }}
         uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version: "20"
@@ -43,13 +60,16 @@ jobs:
           cache-dependency-path: portfolio-project/frontend/package-lock.json
 
       - name: Install dependencies
+        if: ${{ steps.vercel.outputs.configured == 'true' }}
         run: npm ci
 
       - name: Build frontend
+        if: ${{ steps.vercel.outputs.configured == 'true' }}
         run: npm run build
 
       - name: Deploy preview to Vercel
         id: deploy
+        if: ${{ steps.vercel.outputs.configured == 'true' }}
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
@@ -63,7 +83,7 @@ jobs:
           echo "Preview URL: $DEPLOYMENT_URL"
 
       - name: Comment preview URL on PR
-        if: ${{ github.event_name == 'pull_request' }}
+        if: ${{ steps.vercel.outputs.configured == 'true' && github.event_name == 'pull_request' }}
         uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b # v7
         with:
           script: |
