@@ -21,10 +21,23 @@ jobs:
   deploy-staging:
     name: Railway Staging Deploy
     runs-on: ubuntu-latest
-    if: ${{ secrets.RAILWAY_DEPLOY_HOOK_URL != '' }}
 
     steps:
+      # secrets context is not available in job-level `if`, so gate via a step output
+      - name: Check staging deploy hook
+        id: hook
+        env:
+          RAILWAY_DEPLOY_HOOK_URL: ${{ secrets.RAILWAY_DEPLOY_HOOK_URL }}
+        run: |
+          if [ -n "$RAILWAY_DEPLOY_HOOK_URL" ]; then
+            echo "configured=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "configured=false" >> "$GITHUB_OUTPUT"
+            echo "RAILWAY_DEPLOY_HOOK_URL not configured; skipping staging deploy."
+          fi
+
       - name: Trigger Railway staging deployment
+        if: ${{ steps.hook.outputs.configured == 'true' }}
         env:
           RAILWAY_DEPLOY_HOOK_URL: ${{ secrets.RAILWAY_DEPLOY_HOOK_URL }}
         run: |
@@ -32,7 +45,7 @@ jobs:
           curl -fsSL -X POST "$RAILWAY_DEPLOY_HOOK_URL"
 
       - name: Optional staging health check
-        if: ${{ vars.STAGING_API_HEALTH_URL != '' }}
+        if: ${{ steps.hook.outputs.configured == 'true' && vars.STAGING_API_HEALTH_URL != '' }}
         run: |
           echo "Checking staging health: ${{ vars.STAGING_API_HEALTH_URL }}"
           for attempt in {1..20}; do
