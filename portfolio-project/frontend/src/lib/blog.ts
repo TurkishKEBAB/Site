@@ -11,7 +11,10 @@ export interface BlogPostBundle {
 }
 
 const emptyBlogPosts: BlogPost[] = [];
-const BLOG_FETCH_TIMEOUT_MS = 1500;
+// Must cover the backend's serverless cold start (measured ~14s when the
+// Railway service wakes from sleep); 1.5s aborted nearly every request.
+const BLOG_FETCH_TIMEOUT_MS = 15_000;
+const BLOG_REVALIDATE_SECONDS = 60;
 
 const getApiBaseUrl = () =>
   (process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000/api/v1").replace(/\/$/, "");
@@ -62,8 +65,10 @@ const createTimeoutSignal = () => {
 };
 
 async function fetchJson<T>(url: string): Promise<{ status: number; data: T | null }> {
+  // ISR instead of no-store: a successful response is cached and served
+  // stale-while-revalidate, so a sleeping backend no longer blanks the blog.
   const response = await fetch(url, {
-    cache: "no-store",
+    next: { revalidate: BLOG_REVALIDATE_SECONDS },
     signal: createTimeoutSignal(),
   });
 
