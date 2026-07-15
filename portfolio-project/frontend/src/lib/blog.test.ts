@@ -22,7 +22,7 @@ describe("server blog data fetching", () => {
     vi.restoreAllMocks();
   });
 
-  it("uses no-store and a timeout signal for the editable blog list fetch", async () => {
+  it("uses ISR caching and a timeout signal for the blog list fetch", async () => {
     const fetchSpy = vi.fn().mockResolvedValue({
       ok: true,
       status: 200,
@@ -38,7 +38,7 @@ describe("server blog data fetching", () => {
     expect(fetchSpy).toHaveBeenCalledWith(
       expect.stringContaining("/blog/?published_only=true&language=en&limit=100"),
       expect.objectContaining({
-        cache: "no-store",
+        next: { revalidate: 60 },
         signal: expect.any(AbortSignal),
       }),
     );
@@ -64,11 +64,11 @@ describe("server blog data fetching", () => {
       expect.stringContaining(
         "/blog/building-constraint-aware-schedulers?language=en&count_view=false",
       ),
-      expect.objectContaining({ cache: "no-store" }),
+      expect.objectContaining({ next: { revalidate: 60 } }),
     );
   });
 
-  it("counts one view for the detail bundle and keeps both requests fresh", async () => {
+  it("keeps the view-counting fetch fresh and caches the list via ISR", async () => {
     const fetchSpy = vi
       .fn()
       .mockResolvedValueOnce({
@@ -90,7 +90,9 @@ describe("server blog data fetching", () => {
 
     expect(fetchSpy).toHaveBeenCalledTimes(2);
     expect(fetchSpy.mock.calls[0][0]).toContain("/blog/post?language=en&count_view=true");
+    // count_view=true has a side effect: it must reach the backend every time
     expect(fetchSpy.mock.calls[0][1]).toMatchObject({ cache: "no-store" });
-    expect(fetchSpy.mock.calls[1][1]).toMatchObject({ cache: "no-store" });
+    expect(fetchSpy.mock.calls[0][1]).not.toHaveProperty("next");
+    expect(fetchSpy.mock.calls[1][1]).toMatchObject({ next: { revalidate: 60 } });
   });
 });
