@@ -120,6 +120,37 @@ Set in Vercel production environment:
 
 - `NEXT_PUBLIC_API_BASE_URL=https://<backend-domain>/api/v1`
 
+## Sentry Release and Alert Policy
+
+The repository already initializes Sentry on the frontend and backend. Keep
+release names tied to deployable commits so an alert can be mapped back to the
+exact source revision:
+
+- Browser instrumentation resolves `NEXT_PUBLIC_SENTRY_RELEASE`, then
+  `NEXT_PUBLIC_VERCEL_GIT_COMMIT_SHA`.
+- Next.js server and edge instrumentation resolves `SENTRY_RELEASE`, then
+  `NEXT_PUBLIC_SENTRY_RELEASE`, `VERCEL_GIT_COMMIT_SHA`, and `GITHUB_SHA`.
+- FastAPI resolves an explicit/configured `SENTRY_RELEASE`, then `GITHUB_SHA`,
+  `RAILWAY_GIT_COMMIT_SHA`, `VERCEL_GIT_COMMIT_SHA`, and finally the application
+  version.
+- All three paths disable default PII collection. Backend reporting remains
+  disabled when `SENTRY_DSN` is absent.
+
+Create these Sentry alert rules for the production environment and review the
+thresholds after the first two weeks of real traffic:
+
+1. Error count above 5 events in 5 minutes.
+2. A new issue whose level is `error` or `fatal`.
+3. Release health below 95% healthy sessions.
+4. p95 transaction latency above 1 second for 10 minutes.
+
+`NEXT_PUBLIC_SENTRY_DSN` is intended for client initialization and is not an
+authentication credential. `SENTRY_AUTH_TOKEN` is different: it can upload
+source maps and must remain a GitHub/Vercel/Railway environment secret. The
+Next.js build uploads source maps only when that token is present and removes
+the uploaded maps from the build output afterward; builds without the token
+continue without an upload attempt.
+
 ## Production Verification Scope
 
 Workflow: `.github/workflows/deploy-production.yml` (`Production Verification`)

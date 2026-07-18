@@ -180,23 +180,23 @@
 - Consumes: the existing `withSentryConfig` setup, frontend instrumentation files, backend `init_observability`, and production environment variables.
 - Produces: evidence that frontend/backend releases use deployment SHAs, source maps upload only in trusted builds, and the operator has concrete Sentry alert thresholds without exposing auth tokens.
 
-- [ ] **Step 1: Verify the frontend release resolution chain**
+- [x] **Step 1: Verify the frontend release resolution chain**
 
   Confirm `instrumentation-client.ts`, `sentry.server.config.ts`, and `sentry.edge.config.ts` resolve `NEXT_PUBLIC_SENTRY_RELEASE`/`SENTRY_RELEASE`, then `VERCEL_GIT_COMMIT_SHA`/`GITHUB_SHA`. Confirm `next.config.mjs` sets `deleteSourcemapsAfterUpload: true` and disables upload when `SENTRY_AUTH_TOKEN` is absent.
 
-- [ ] **Step 2: Verify the backend release resolution chain**
+- [x] **Step 2: Verify the backend release resolution chain**
 
   Confirm `portfolio-project/backend/app/services/observability.py` resolves `SENTRY_RELEASE`, `GITHUB_SHA`, `RAILWAY_GIT_COMMIT_SHA`, `VERCEL_GIT_COMMIT_SHA`, then `settings.VERSION`, and initializes Sentry only when `SENTRY_DSN` exists.
 
-- [ ] **Step 3: Document concrete Sentry alerts**
+- [x] **Step 3: Document concrete Sentry alerts**
 
   Add these alert policies to `portfolio-project/CI_CD_SETUP.md`: production error count above 5 events in 5 minutes, a new issue with level error/fatal, release health regression below 95% healthy sessions, and p95 transaction latency above 1 second for 10 minutes. State that DSNs are safe for client use but `SENTRY_AUTH_TOKEN` must remain an environment secret.
 
 - [ ] **Step 4: Verify a trusted production build**
 
-  Run from `portfolio-project/frontend` with `SENTRY_AUTH_TOKEN` absent and confirm `npm run build` succeeds without attempting a source-map upload. In a protected CI/Vercel build with the token configured, confirm the Sentry release contains uploaded artifacts and the deployed response does not expose `.map` files.
+  Run from `portfolio-project/frontend` with `SENTRY_AUTH_TOKEN` absent and confirm `npm run build` succeeds without attempting a source-map upload. The local build and five public production asset probes pass; the protected CI/Vercel upload path still requires the operator to configure the token and inspect the resulting Sentry release.
 
-- [ ] **Step 5: Commit the observability documentation**
+- [x] **Step 5: Commit the observability documentation**
 
   ```powershell
   git add portfolio-project/CI_CD_SETUP.md
