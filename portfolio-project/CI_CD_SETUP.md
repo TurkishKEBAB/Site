@@ -7,7 +7,7 @@ This document describes the current CI/CD, branch governance, and production sec
 - `.github/workflows/ci.yml`
   - `Backend Quality`
   - `Frontend Quality`
-  - `SonarCloud Quality Gate` (pushes to `main`/`develop` and same-repository pull requests)
+  - `SonarCloud Quality Gate` (pushes to `main`/`develop` and trusted same-repository pull requests)
 - `.github/workflows/codeql.yml`
   - `CodeQL (javascript-typescript)`
   - `CodeQL (python)`
@@ -21,9 +21,9 @@ This document describes the current CI/CD, branch governance, and production sec
 SonarCloud is intentionally consolidated into `ci.yml` so the scan consumes the
 coverage artifacts produced by the same quality run. Trusted pushes and
 same-repository pull requests fail when Sonar credentials are missing or the
-quality gate is red. Fork pull requests cannot receive repository secrets, so
-their Sonar job is skipped with an explicit summary while secret-free checks
-continue to run.
+quality gate is red. Fork and Dependabot pull requests cannot receive the
+repository Sonar secret, so their Sonar job is skipped with an explicit summary
+while secret-free checks continue to run.
 
 Dependabot (`.github/dependabot.yml`) opens weekly updates for GitHub Actions,
 frontend npm packages, and backend pip packages. All workflow action references
@@ -34,6 +34,11 @@ baseline-safe flake8 selection. Full black/isort/flake8 style enforcement is a
 follow-up item because the existing backend contains pre-existing formatting and
 style findings; enabling it immediately would turn the new quality workflow into
 a permanently failing gate instead of a trustworthy signal.
+
+Workflow Security runs for every pull request so a required check cannot be left
+pending by workflow path filters. Its required PR run uses zizmor's local audits;
+push and scheduled runs additionally use online GitHub Advisory API audits, which
+keeps transient API availability from blocking ordinary pull requests.
 
 ## Production Secret/Variable Scope
 

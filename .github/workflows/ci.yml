@@ -172,7 +172,13 @@ jobs:
     needs:
       - backend-quality
       - frontend-quality
-    if: ${{ github.event_name == 'push' || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository) }}
+    if: >-
+      ${{
+        github.event_name == 'push' ||
+        (github.event_name == 'pull_request' &&
+         github.event.pull_request.head.repo.full_name == github.repository &&
+         github.event.pull_request.user.login != 'dependabot[bot]')
+      }}
     permissions:
       contents: read
 
@@ -225,12 +231,19 @@ jobs:
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 
-  sonarcloud-fork-note:
-    name: SonarCloud Quality Gate (Fork PR)
+  sonarcloud-secret-restricted-note:
+    name: SonarCloud Quality Gate (Secret-restricted PR)
     runs-on: ubuntu-latest
     timeout-minutes: 5
-    if: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name != github.repository }}
+    if: >-
+      ${{
+        github.event_name == 'pull_request' &&
+        (github.event.pull_request.head.repo.full_name != github.repository ||
+         github.event.pull_request.user.login == 'dependabot[bot]')
+      }}
     permissions: {}
+    env:
+      SONAR_PR_AUTHOR: ${{ github.event.pull_request.user.login }}
 
     steps:
       - name: Explain secret-safe Sonar skip
@@ -238,6 +251,10 @@ jobs:
           {
             echo "### SonarCloud Quality Gate"
             echo
-            echo "SonarCloud was not run for this fork pull request because repository secrets are unavailable to fork events."
+            if [ "$SONAR_PR_AUTHOR" = "dependabot[bot]" ]; then
+              echo "SonarCloud was not run for this Dependabot pull request because Actions secrets are unavailable to Dependabot events."
+            else
+              echo "SonarCloud was not run for this fork pull request because repository secrets are unavailable to fork events."
+            fi
             echo "The regular CI, CodeQL, dependency, and workflow security checks still validate this change."
           } >> "$GITHUB_STEP_SUMMARY"

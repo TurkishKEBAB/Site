@@ -20,7 +20,9 @@ jobs:
     timeout-minutes: 15
     permissions:
       contents: write
-      pull-requests: read
+      # release-drafter.yml uses autolabeler; this job is restricted to trusted
+      # same-repository PRs before this permission is granted.
+      pull-requests: write
     steps:
       - name: Update release draft
         uses: release-drafter/release-drafter@3832cfb52f98ab0f0e5b62aecf94909e334d4da6 # v7.5.1
