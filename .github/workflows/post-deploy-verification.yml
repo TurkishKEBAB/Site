@@ -1,0 +1,110 @@
+name: Post-deploy Verification
+
+on:
+  deployment_status:
+  workflow_dispatch:
+    inputs:
+      target_url:
+        description: HTTPS deployment URL to verify manually
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: post-deploy-verification-${{ github.event.deployment_status.id || github.run_id }}
+  cancel-in-progress: true
+
+jobs:
+  public-smoke:
+    name: Public deployment smoke
+    if: >-
+      ${{
+        github.event_name == 'workflow_dispatch' ||
+        github.event.deployment_status.state == 'success'
+      }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    outputs:
+      base_url: ${{ steps.validate.outputs.base_url }}
+      service_kind: ${{ steps.validate.outputs.service_kind }}
+    env:
+      DEPLOYMENT_URL: >-
+        ${{
+          github.event_name == 'workflow_dispatch' && inputs.target_url ||
+          github.event.deployment_status.environment_url ||
+          github.event.deployment_status.target_url
+        }}
+
+    steps:
+      - name: Validate deployment URL
+        id: validate
+        run: |
+          python - <<'PY'
+          import os
+          from urllib.parse import urlparse
+
+          raw_url = os.environ.get("DEPLOYMENT_URL", "").strip()
+          parsed = urlparse(raw_url)
+          host = (parsed.hostname or "").lower()
+          allowed_host = (
+              host in {
+                  "yigitokur.me",
+                  "www.yigitokur.me",
+                  "api.yigitokur.me",
+              }
+              or host.endswith(".vercel.app")
+              or host.endswith(".up.railway.app")
+          )
+
+          if parsed.scheme != "https" or parsed.username or parsed.password or not allowed_host:
+              raise SystemExit(f"Refusing to verify non-allowlisted HTTPS host: {raw_url!r}")
+
+          base_url = f"https://{parsed.netloc}"
+          service_kind = "backend" if (
+              host.startswith("api.") or host.endswith(".up.railway.app")
+          ) else "frontend"
+
+          with open(os.environ["GITHUB_OUTPUT"], "a", encoding="utf-8") as output:
+              output.write(f"base_url={base_url}\n")
+              output.write(f"service_kind={service_kind}\n")
+          PY
+
+      - name: Run public smoke checks
+        env:
+          BASE_URL: ${{ steps.validate.outputs.base_url }}
+          SERVICE_KIND: ${{ steps.validate.outputs.service_kind }}
+        run: |
+          python - <<'PY'
+          import os
+          import time
+          from urllib.error import HTTPError, URLError
+          from urllib.request import Request, urlopen
+
+          base_url = os.environ["BASE_URL"]
+          service_kind = os.environ["SERVICE_KIND"]
+          paths = ["/live", "/ready"] if service_kind == "backend" else ["/", "/robots.txt", "/sitemap.xml"]
+
+          for path in paths:
+              url = f"{base_url}{path}"
+              last_error = None
+              for attempt in range(1, 7):
+                  try:
+                      request = Request(
+                          url,
+                          headers={"User-Agent": "Site-PostDeploy-Verification/1.0"},
+                      )
+                      with urlopen(request, timeout=20) as response:
+                          if not 200 <= response.status < 400:
+                              raise RuntimeError(f"HTTP {response.status}")
+                          response.read(1024)
+                      print(f"PASS {url}")
+                      break
+                  except (HTTPError, URLError, RuntimeError) as error:
+                      last_error = error
+                      if attempt < 6:
+                          time.sleep(5)
+              else:
+                  raise SystemExit(f"FAILED {url}: {last_error}")
+          PY

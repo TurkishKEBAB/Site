@@ -70,6 +70,16 @@ cd portfolio-project
 - `PRODUCTION_API_ROOT_URL` (must start with `https://`, no trailing slash)
 - `PRODUCTION_FRONTEND_URL` (must start with `https://`, no trailing slash)
 
+For protected Vercel Preview deployments, create a Vercel **Protection Bypass
+for Automation** secret and store it as the GitHub `preview` Environment secret
+`VERCEL_AUTOMATION_BYPASS_SECRET`. The `Preview Quality` workflow sends it only
+as the `x-vercel-protection-bypass` request header to Playwright and Lighthouse;
+it is never printed or passed to the application build. If Preview deployments
+are public, the secret is still recommended so deployment protection can be
+enabled later without silently disabling browser verification. Keep required
+reviewers disabled for this non-production Environment unless you intentionally
+want every preview verification to pause for approval.
+
 Note: Sonar keys remain repo/org scoped:
 
 - Secret: `SONAR_TOKEN`

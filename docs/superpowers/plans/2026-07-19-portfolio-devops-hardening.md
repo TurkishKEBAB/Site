@@ -113,7 +113,7 @@
 
   Document these repository settings in `portfolio-project/CI_CD_SETUP.md`: required reviewer, prevent self-review, protected `main` deployment branch, and environment-scoped smoke secrets/variables.
 
-- [ ] **Step 3: Add deployment-status verification triggers**
+- [x] **Step 3: Add deployment-status verification triggers**
 
   Build the verification workflow so it runs only for successful Vercel or Railway deployment statuses, validates the URL scheme before use, and executes safe public smoke checks. It must not receive pull-request secrets and must not deploy.
 
@@ -121,11 +121,11 @@
 
   Run actionlint locally, then run the repository's existing workflow-security checks. Confirm all new action references are immutable SHAs and the workflow has no write permissions unless required by a specific upload step.
 
-- [ ] **Step 5: Commit workflow quality and deployment verification**
+- [x] **Step 5: Commit workflow quality and deployment verification**
 
   ```powershell
-  git add .github/workflows/workflow-security.yml .github/workflows/post-deploy-verification.yml portfolio-project/CI_CD_SETUP.md
-  git commit -m "ci(github): validate workflows and verify deployments"
+  git add .github/workflows/post-deploy-verification.yml portfolio-project/CI_CD_SETUP.md docs/superpowers/plans/2026-07-19-portfolio-devops-hardening.md
+  git commit -m "ci(github): add post-deploy verification"
   ```
 
 ---
@@ -137,6 +137,8 @@
 - Create: `portfolio-project/frontend/e2e/public-pages.spec.ts`
 - Modify: `portfolio-project/frontend/package.json`
 - Modify: `portfolio-project/frontend/package-lock.json`
+- Modify: `portfolio-project/frontend/.gitignore`
+- Modify: `portfolio-project/frontend/vite.config.ts`
 - Create: `.github/workflows/preview-quality.yml`
 - Create: `portfolio-project/frontend/lighthouserc.cjs`
 
@@ -144,26 +146,26 @@
 - Consumes: successful preview deployment URL from Vercel and the public page contract.
 - Produces: Playwright smoke tests and Lighthouse CI reports; both start advisory and become required only after stable baselines are established.
 
-- [ ] **Step 1: Add Playwright with deterministic CI settings**
+- [x] **Step 1: Add Playwright with deterministic CI settings**
 
   Configure Chromium only, one worker in CI, trace-on-first-retry, and a base URL supplied by `PLAYWRIGHT_BASE_URL`. Cover `/`, `/about`, `/projects`, `/blog`, `/contact`, `robots.txt`, and `sitemap.xml`.
 
-- [ ] **Step 2: Add preview verification workflow**
+- [x] **Step 2: Add preview verification workflow**
 
   Trigger from successful deployment status, install only Chromium, run Playwright, upload reports on failure, and keep permissions read-only.
 
-- [ ] **Step 3: Configure Lighthouse CI budgets**
+- [x] **Step 3: Configure Lighthouse CI budgets**
 
-  Run against the public pages and set initial assertions for performance, accessibility, best practices, and SEO. Store the report artifact and avoid blocking PRs until a baseline has been reviewed.
+  Run against the public pages and set initial assertions for performance, accessibility, best practices, and SEO. Store the report artifact and avoid blocking PRs until a baseline has been reviewed. Use the pinned `treosh/lighthouse-ci-action` rather than adding `@lhci/cli` to the frontend dependency tree: the latter introduced a high-severity transitive `tmp` audit finding in this repository.
 
-- [ ] **Step 4: Verify browser and performance checks**
+- [x] **Step 4: Verify browser and performance checks**
 
-  Run `npm run test:e2e` against a local production server and `npx lhci autorun --config=lighthouserc.cjs` against the same server. Confirm reports are generated and no credentials are required.
+  Run `npm run test:e2e` against a local production server and validate the Lighthouse configuration with Node. The pinned action runs the remote Lighthouse audit in GitHub Actions with the `preview` Environment bypass secret; no credential is needed for local tests.
 
 - [ ] **Step 5: Commit the regression checks**
 
   ```powershell
-  git add portfolio-project/frontend/playwright.config.ts portfolio-project/frontend/e2e/public-pages.spec.ts portfolio-project/frontend/package.json portfolio-project/frontend/package-lock.json .github/workflows/preview-quality.yml portfolio-project/frontend/lighthouserc.cjs
+  git add portfolio-project/frontend/playwright.config.ts portfolio-project/frontend/e2e/public-pages.spec.ts portfolio-project/frontend/package.json portfolio-project/frontend/package-lock.json portfolio-project/frontend/.gitignore .github/workflows/preview-quality.yml portfolio-project/frontend/lighthouserc.cjs docs/superpowers/plans/2026-07-19-portfolio-devops-hardening.md
   git commit -m "ci(frontend): add preview browser and performance checks"
   ```
 
