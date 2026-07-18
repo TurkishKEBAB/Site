@@ -48,6 +48,14 @@ shell errors, and dependency mistakes before the online audit starts.
 
 All deploy/smoke keys must be stored under GitHub `production` environment.
 
+Non-production workflow credentials should be scoped to their job environments:
+
+- `quality`: SonarCloud token used by trusted CI analysis; no reviewer gate.
+- `staging`: Railway staging deploy hook; no production credentials.
+- `preview`: Vercel preview deploy credentials and the optional
+  `VERCEL_AUTOMATION_BYPASS_SECRET`; keep required reviewers disabled unless
+  preview checks are intentionally being used as a manual approval point.
+
 Helper script (optional):
 
 ```powershell
