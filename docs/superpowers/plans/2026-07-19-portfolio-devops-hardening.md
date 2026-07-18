@@ -162,7 +162,7 @@
 
   Run `npm run test:e2e` against a local production server and validate the Lighthouse configuration with Node. The pinned action runs the remote Lighthouse audit in GitHub Actions with the `preview` Environment bypass secret; no credential is needed for local tests.
 
-- [ ] **Step 5: Commit the regression checks**
+- [x] **Step 5: Commit the regression checks**
 
   ```powershell
   git add portfolio-project/frontend/playwright.config.ts portfolio-project/frontend/e2e/public-pages.spec.ts portfolio-project/frontend/package.json portfolio-project/frontend/package-lock.json portfolio-project/frontend/.gitignore .github/workflows/preview-quality.yml portfolio-project/frontend/lighthouserc.cjs docs/superpowers/plans/2026-07-19-portfolio-devops-hardening.md
