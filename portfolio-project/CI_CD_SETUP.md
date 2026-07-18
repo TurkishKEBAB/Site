@@ -247,6 +247,21 @@ does not authenticate to the application.
   an investigation item. Add a ZAP ignore rule only with a written reason and
   a reproducible verification.
 
+## Release Supply Chain
+
+Workflow: `.github/workflows/release-supply-chain.yml`
+
+When a GitHub release is published, or when an operator manually selects an
+existing release tag, the workflow packages only tracked files into a
+deterministic source archive. Syft generates a CycloneDX SBOM, both files are
+kept together for 90 days, and `actions/attest` creates a provenance
+attestation that includes the SBOM. The final step verifies the local archive
+with `gh attestation verify`.
+
+Routine PR and test artifacts are intentionally not attested. The release job
+is the only workflow granted `id-token: write`, `attestations: write`, and
+`artifact-metadata: write`.
+
 ## Recommended Branch Strategy
 
 - Permanent branches:

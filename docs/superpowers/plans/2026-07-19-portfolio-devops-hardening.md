@@ -209,6 +209,7 @@
 
 **Files:**
 - Create: `.github/workflows/nightly-security.yml`
+- Create: `.github/workflows/release-supply-chain.yml`
 - Create: `trivy.yaml`
 - Create: `.github/zap-baseline.conf`
 - Modify: `portfolio-project/CI_CD_SETUP.md`
@@ -225,11 +226,11 @@
 
   Run `aquasecurity/trivy-action` in `fs` mode against the repository with secret, vulnerability, misconfiguration, and license scanners; write `trivy-results.sarif`, upload it using `github/codeql-action/upload-sarif` with category `trivy-fs`, and keep the scheduled job advisory until the first baseline is reviewed. Pin both actions to immutable release SHAs.
 
-- [ ] **Step 3: Add SBOM generation only when a release artifact exists**
+- [x] **Step 3: Add SBOM generation only when a release artifact exists**
 
-  Generate SPDX or CycloneDX using Syft for the release artifact, upload the SBOM as an artifact, and use the GitHub dependency-submission format only on trusted `main`/release events with the minimum contents permission.
+  Generate a CycloneDX SBOM using Syft only for a published release or an explicitly selected release tag. Upload it beside the deterministic source artifact for 90 days; do not add dependency submission to routine CI.
 
-- [ ] **Step 4: Add artifact attestation to the release job**
+- [x] **Step 4: Add artifact attestation to the release job**
 
   After the release artifact is created, grant only `id-token: write`, `attestations: write`, and `artifact-metadata: write`; run `actions/attest` against the exact artifact path, then verify it with `gh attestation verify` from a trusted environment. Do not attest routine test artifacts.
 
@@ -240,7 +241,7 @@
 - [x] **Step 6: Commit the scheduled security checks**
 
   ```powershell
-  git add .github/workflows/nightly-security.yml trivy.yaml .github/zap-baseline.conf portfolio-project/CI_CD_SETUP.md docs/superpowers/plans/2026-07-19-portfolio-devops-hardening.md
+  git add .github/workflows/nightly-security.yml .github/workflows/release-supply-chain.yml trivy.yaml .github/zap-baseline.conf portfolio-project/CI_CD_SETUP.md docs/superpowers/plans/2026-07-19-portfolio-devops-hardening.md
   git commit -m "ci(security): add scheduled web and dependency scans"
   ```
 
