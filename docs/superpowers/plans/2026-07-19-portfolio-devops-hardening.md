@@ -217,11 +217,11 @@
 - Consumes: stable staging URLs and the repository's dependency graph.
 - Produces: non-blocking ZAP baseline reports, Trivy SARIF/filesystem findings, and a documented escalation path.
 
-- [ ] **Step 1: Add nightly ZAP baseline against staging**
+- [x] **Step 1: Add nightly ZAP baseline against staging**
 
   Trigger at `02:13 UTC` and manually, read `vars.STAGING_FRONTEND_URL`, reject values that are not HTTPS, and run `zaproxy/action-baseline` with `fail_action: false`, `allow_issue_writing: false`, and a 30-day report artifact. Do not pass production credentials to the scan.
 
-- [ ] **Step 2: Add Trivy filesystem and IaC scanning with SARIF artifacts**
+- [x] **Step 2: Add Trivy filesystem and IaC scanning with SARIF artifacts**
 
   Run `aquasecurity/trivy-action` in `fs` mode against the repository with secret, vulnerability, misconfiguration, and license scanners; write `trivy-results.sarif`, upload it using `github/codeql-action/upload-sarif` with category `trivy-fs`, and keep the scheduled job advisory until the first baseline is reviewed. Pin both actions to immutable release SHAs.
 
@@ -233,14 +233,14 @@
 
   After the release artifact is created, grant only `id-token: write`, `attestations: write`, and `artifact-metadata: write`; run `actions/attest` against the exact artifact path, then verify it with `gh attestation verify` from a trusted environment. Do not attest routine test artifacts.
 
-- [ ] **Step 5: Verify reports, permissions, and retention settings**
+- [x] **Step 5: Verify reports, permissions, and retention settings**
 
   Run actionlint and zizmor against the new workflow, confirm scheduled jobs do not receive production secrets, confirm SARIF categories are unique, and verify every artifact has an explicit retention period.
 
-- [ ] **Step 6: Commit the scheduled security checks**
+- [x] **Step 6: Commit the scheduled security checks**
 
   ```powershell
-  git add .github/workflows/nightly-security.yml trivy.yaml .github/zap-baseline.conf portfolio-project/CI_CD_SETUP.md
+  git add .github/workflows/nightly-security.yml trivy.yaml .github/zap-baseline.conf portfolio-project/CI_CD_SETUP.md docs/superpowers/plans/2026-07-19-portfolio-devops-hardening.md
   git commit -m "ci(security): add scheduled web and dependency scans"
   ```
 

@@ -1,0 +1,16 @@
+format: sarif
+output: trivy-results.sarif
+exit-code: 0
+severity: UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL
+scanners: vuln,misconfig,secret,license
+ignore-unfixed: true
+timeout: 10m
+skip-dirs:
+  - .git
+  - portfolio-project/frontend/node_modules
+  - portfolio-project/frontend/.next
+  - portfolio-project/frontend/coverage
+  - portfolio-project/frontend/playwright-report
+  - portfolio-project/frontend/test-results
+  - portfolio-project/backend/.venv
+  - portfolio-project/backend/venv

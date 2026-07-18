@@ -229,6 +229,24 @@ baseline findings. CodeQL, Scorecard, and zizmor SARIF uploads require the
 repository's Code Security/Advanced Security settings to permit code-scanning
 results.
 
+## Scheduled Security Scans
+
+Workflow: `.github/workflows/nightly-security.yml`
+
+Configure the repository variable `STAGING_FRONTEND_URL` with the HTTPS-only
+staging frontend origin. The manual workflow dispatch accepts a one-time
+`target_url` override. The scheduled scan receives no production secrets and
+does not authenticate to the application.
+
+- OWASP ZAP baseline runs against staging at 02:13 UTC, does not create GitHub
+  issues, and keeps its scan advisory while the first baseline is reviewed.
+- Trivy scans the checked-out repository for vulnerabilities,
+  misconfigurations, secrets, and licenses. Its SARIF category is `trivy-fs`;
+  the SARIF report is retained for 30 days.
+- Treat a new high/critical finding or an unexpected secret/license finding as
+  an investigation item. Add a ZAP ignore rule only with a written reason and
+  a reproducible verification.
+
 ## Recommended Branch Strategy
 
 - Permanent branches:
