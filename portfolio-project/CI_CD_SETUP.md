@@ -14,7 +14,7 @@ This document describes the current CI/CD, branch governance, and production sec
 - `.github/workflows/dependency-review.yml`
   - `Dependency Review` (high-severity dependency changes fail)
 - `.github/workflows/workflow-security.yml`
-  - `Workflow Security` (zizmor audit)
+  - `Workflow Security` (actionlint syntax/semantic checks + zizmor audit)
 - `.github/workflows/scorecard.yml`
   - `OpenSSF Scorecard` (scheduled supply-chain assessment)
 
@@ -40,7 +40,9 @@ pending by workflow path filters. Its required PR run uses zizmor's local audits
 push and scheduled runs additionally publish a separate `Workflow Security Online
 Audit` check with GitHub Advisory API coverage. This keeps transient API
 availability from blocking ordinary pull requests while retaining broader
-scheduled analysis.
+scheduled analysis. The same required job runs actionlint against every workflow
+to catch invalid keys, expression type errors, unknown action inputs/outputs,
+shell errors, and dependency mistakes before the online audit starts.
 
 ## Production Secret/Variable Scope
 
@@ -168,6 +170,18 @@ After each check has completed its first successful run, add these names to the
 - `CodeQL (python)`
 - `Dependency Review`
 - `Workflow Security`
+
+Configure the `production` Environment under **Settings → Environments** with:
+
+- `main` as the only deployment branch/tag pattern (or protected branches only)
+- at least one required reviewer for production verification jobs
+- `Prevent self-review` enabled
+- environment-scoped smoke credentials and URLs only
+- administrator bypass disabled unless an incident procedure explicitly requires it
+
+The repository workflow already references `environment: production`; these
+settings are GitHub UI/ruleset state and must be verified after repository
+creation or transfer.
 
 Keep `OpenSSF Scorecard` advisory until the repository has reviewed its first
 baseline findings. CodeQL, Scorecard, and zizmor SARIF uploads require the

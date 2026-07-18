@@ -105,11 +105,11 @@
 - Consumes: existing commit-pinned workflow security job and `deployment_status` events from Vercel/Railway.
 - Produces: actionlint validation, documented `production` Environment controls, and post-deployment verification entry points without duplicating deployments.
 
-- [ ] **Step 1: Add actionlint to the workflow security job**
+- [x] **Step 1: Add actionlint to the workflow security job**
 
   Install a pinned actionlint release using a pinned `actions/setup-go` step and run `actionlint -color` against `.github/workflows/*.yml`. Keep the existing zizmor jobs unchanged and preserve read-only permissions.
 
-- [ ] **Step 2: Add the production Environment checklist**
+- [x] **Step 2: Add the production Environment checklist**
 
   Document these repository settings in `portfolio-project/CI_CD_SETUP.md`: required reviewer, prevent self-review, protected `main` deployment branch, and environment-scoped smoke secrets/variables.
 
@@ -117,7 +117,7 @@
 
   Build the verification workflow so it runs only for successful Vercel or Railway deployment statuses, validates the URL scheme before use, and executes safe public smoke checks. It must not receive pull-request secrets and must not deploy.
 
-- [ ] **Step 4: Verify workflow syntax and security**
+- [x] **Step 4: Verify workflow syntax and security**
 
   Run actionlint locally, then run the repository's existing workflow-security checks. Confirm all new action references are immutable SHAs and the workflow has no write permissions unless required by a specific upload step.
 
