@@ -29,6 +29,12 @@ Dependabot (`.github/dependabot.yml`) opens weekly updates for GitHub Actions,
 frontend npm packages, and backend pip packages. All workflow action references
 are pinned to full commit SHAs.
 
+The backend CI gate currently enforces syntax and undefined-name safety with a
+baseline-safe flake8 selection. Full black/isort/flake8 style enforcement is a
+follow-up item because the existing backend contains pre-existing formatting and
+style findings; enabling it immediately would turn the new quality workflow into
+a permanently failing gate instead of a trustworthy signal.
+
 ## Production Secret/Variable Scope
 
 All deploy/smoke keys must be stored under GitHub `production` environment.

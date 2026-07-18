@@ -27,7 +27,7 @@ The application runtime, Railway deployment model, Vercel production integration
 
 `.github/workflows/ci.yml` remains the single source of truth for build and test quality. It runs on pushes to `main`/`develop` and on pull requests targeting those branches.
 
-The backend quality job produces the existing XML coverage report and additionally runs deterministic formatting/lint checks. The frontend quality job keeps lint, server-component boundaries, API contract drift, coverage, npm audit, and build checks, and adds the existing TypeScript `type-check` script.
+The backend quality job produces the existing XML coverage report and additionally runs a baseline-safe syntax/undefined-name lint check. Full black/isort/flake8 style enforcement is intentionally deferred because the current repository baseline contains pre-existing formatting and style findings that would make the new gate fail before it can provide useful signal. The frontend quality job keeps lint, server-component boundaries, API contract drift, coverage, npm audit, and build checks, and adds the existing TypeScript `type-check` script.
 
 Both coverage reports are uploaded as short-lived artifacts. A single SonarCloud job depends on both quality jobs, downloads those exact artifacts, and scans `portfolio-project` with full git history. The scan waits for the SonarCloud quality gate and fails the job when the gate is red.
 
@@ -103,4 +103,3 @@ The implementation is complete only when all of the following are true:
 6. No workflow grants more repository or pull-request write permission than its job requires.
 7. CodeQL, Dependency Review, Scorecard, workflow linting, and Dependabot configuration are present, pinned, and documented.
 8. Local static validation and the repository's relevant test/quality commands are run; failures caused by pre-existing dependency or application issues are reported separately rather than hidden.
-
