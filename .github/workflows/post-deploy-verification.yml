@@ -22,7 +22,11 @@ jobs:
     if: >-
       ${{
         github.event_name == 'workflow_dispatch' ||
-        github.event.deployment_status.state == 'success'
+        (
+          github.event.deployment_status.state == 'success' &&
+          github.event.deployment_status.environment != 'Preview' &&
+          github.event.deployment_status.environment != 'preview'
+        )
       }}
     runs-on: ubuntu-latest
     timeout-minutes: 10
