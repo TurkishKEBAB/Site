@@ -16,9 +16,10 @@ jobs:
   drill:
     name: PostgreSQL Backup + Restore Drill
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     services:
       postgres:
-        image: postgres:15-alpine
+        image: postgres:15-alpine@sha256:3d0f7584ed7d04e27fa050d6683a74746608faf21f202be78460d679cc56461f
         env:
           POSTGRES_DB: portfolio_drill
           POSTGRES_USER: postgres
@@ -33,7 +34,9 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          persist-credentials: false
 
       - name: Install PostgreSQL client
         run: sudo apt-get update && sudo apt-get install -y postgresql-client
@@ -63,20 +66,30 @@ jobs:
 
           ORIGINAL_USERS=$(psql -d portfolio_drill -t -A -c "SELECT COUNT(*) FROM users;")
           RESTORED_USERS=$(psql -d portfolio_drill_restore -t -A -c "SELECT COUNT(*) FROM users;")
+          ORIGINAL_TABLES=$(psql -d portfolio_drill -t -A -c "SELECT string_agg(table_name, ',' ORDER BY table_name) FROM information_schema.tables WHERE table_schema = 'public';")
+          RESTORED_TABLES=$(psql -d portfolio_drill_restore -t -A -c "SELECT string_agg(table_name, ',' ORDER BY table_name) FROM information_schema.tables WHERE table_schema = 'public';")
 
           echo "original_users=$ORIGINAL_USERS" | tee artifacts/drill-summary.txt
           echo "restored_users=$RESTORED_USERS" | tee -a artifacts/drill-summary.txt
+          echo "original_tables=$ORIGINAL_TABLES" | tee -a artifacts/drill-summary.txt
+          echo "restored_tables=$RESTORED_TABLES" | tee -a artifacts/drill-summary.txt
 
           if [ "$ORIGINAL_USERS" != "$RESTORED_USERS" ]; then
             echo "Restore validation failed: user counts mismatch" | tee -a artifacts/drill-summary.txt
             exit 1
           fi
 
+          if [ "$ORIGINAL_TABLES" != "$RESTORED_TABLES" ]; then
+            echo "Restore validation failed: table lists mismatch" | tee -a artifacts/drill-summary.txt
+            exit 1
+          fi
+
           echo "Backup/restore drill passed." | tee -a artifacts/drill-summary.txt
 
       - name: Upload drill artifacts
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: backup-restore-drill
           path: artifacts
           if-no-files-found: error
+          retention-days: 30

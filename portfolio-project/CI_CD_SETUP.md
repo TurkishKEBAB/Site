@@ -7,9 +7,40 @@ This document describes the current CI/CD, branch governance, and production sec
 - `.github/workflows/ci.yml`
   - `Backend Quality`
   - `Frontend Quality`
-  - `SonarCloud Scan (Push)` (push-only, not required for PR merge)
-- `.github/workflows/sonar-pr-gate.yml`
-  - Required PR gate check: `Sonar PR Gate` (fork-safe `pull_request_target`)
+  - `SonarCloud Quality Gate` (pushes to `main`/`develop` and trusted same-repository pull requests)
+- `.github/workflows/codeql.yml`
+  - `CodeQL (javascript-typescript)`
+  - `CodeQL (python)`
+- `.github/workflows/dependency-review.yml`
+  - `Dependency Review` (high-severity dependency changes fail)
+- `.github/workflows/workflow-security.yml`
+  - `Workflow Security` (zizmor audit)
+- `.github/workflows/scorecard.yml`
+  - `OpenSSF Scorecard` (scheduled supply-chain assessment)
+
+SonarCloud is intentionally consolidated into `ci.yml` so the scan consumes the
+coverage artifacts produced by the same quality run. Trusted pushes and
+same-repository pull requests fail when Sonar credentials are missing or the
+quality gate is red. Fork and Dependabot pull requests cannot receive the
+repository Sonar secret, so their Sonar job is skipped with an explicit summary
+while secret-free checks continue to run.
+
+Dependabot (`.github/dependabot.yml`) opens weekly updates for GitHub Actions,
+frontend npm packages, and backend pip packages. All workflow action references
+are pinned to full commit SHAs.
+
+The backend CI gate currently enforces syntax and undefined-name safety with a
+baseline-safe flake8 selection. Full black/isort/flake8 style enforcement is a
+follow-up item because the existing backend contains pre-existing formatting and
+style findings; enabling it immediately would turn the new quality workflow into
+a permanently failing gate instead of a trustworthy signal.
+
+Workflow Security runs for every pull request so a required check cannot be left
+pending by workflow path filters. Its required PR run uses zizmor's local audits;
+push and scheduled runs additionally publish a separate `Workflow Security Online
+Audit` check with GitHub Advisory API coverage. This keeps transient API
+availability from blocking ordinary pull requests while retaining broader
+scheduled analysis.
 
 ## Production Secret/Variable Scope
 
@@ -75,15 +106,20 @@ Set these values in Railway production service environment:
 
 Set in Vercel production environment:
 
-- `VITE_API_BASE_URL=https://<backend-domain>/api/v1`
+- `NEXT_PUBLIC_API_BASE_URL=https://<backend-domain>/api/v1`
 
-## Production Deploy & Smoke Scope
+## Production Verification Scope
 
-Workflow: `.github/workflows/deploy-production.yml`
+Workflow: `.github/workflows/deploy-production.yml` (`Production Verification`)
 
-- Deploy gates:
-  - `Backend Quality (Prod Gate)`
-  - `Frontend Quality (Prod Gate)`
+Vercel and Railway perform the actual production deployment through their
+provider integrations. This workflow is a post-deploy quality and smoke
+verification workflow; it is not a pre-deploy blocker for those external
+integrations.
+
+- Verification gates:
+  - `Backend Quality (Production Verification)`
+  - `Frontend Quality (Production Verification)`
 - Smoke checks include:
   - `/live`
   - `/health`
@@ -97,15 +133,17 @@ Workflow: `.github/workflows/deploy-production.yml`
 
 - Rotate deploy/smoke secrets every 90 days at most.
 - After each rotation:
-  - trigger `Deploy Production` manually (`workflow_dispatch`)
-  - confirm `Production Smoke Checks` passes
+  - trigger `Production Verification` manually (`workflow_dispatch`)
+  - confirm frontend and backend smoke checks pass
   - record rotation date and owner in internal ops notes
 
 ## Validation Checklist
 
 - Missing any required `production` secret/variable must fail deploy pipeline validation step.
 - Invalid URL format (`http://` or trailing slash) for `PRODUCTION_*_URL` must fail smoke config validation.
-- Invalid smoke admin credentials must fail login step and make deploy red.
+- Invalid smoke admin credentials must fail the backend verification step.
+- Missing Railway staging hooks fail `main`, `develop`, and manual dispatch runs; feature branches may skip with a summary.
+- Custom Vercel preview deployment runs only on trusted branch pushes/manual dispatch. Pull-request source code is never given Vercel deployment secrets.
 
 ## CAPTCHA Functional Check (Manual / E2E)
 
@@ -117,6 +155,24 @@ Workflow: `.github/workflows/deploy-production.yml`
 ## Manual GitHub Governance Settings
 
 These are UI/ruleset settings and are not versioned in git.
+
+### Security Automation Settings
+
+After each check has completed its first successful run, add these names to the
+`main` ruleset as required checks:
+
+- `Backend Quality`
+- `Frontend Quality`
+- `SonarCloud Quality Gate`
+- `CodeQL (javascript-typescript)`
+- `CodeQL (python)`
+- `Dependency Review`
+- `Workflow Security`
+
+Keep `OpenSSF Scorecard` advisory until the repository has reviewed its first
+baseline findings. CodeQL, Scorecard, and zizmor SARIF uploads require the
+repository's Code Security/Advanced Security settings to permit code-scanning
+results.
 
 ## Recommended Branch Strategy
 
@@ -148,8 +204,11 @@ These are UI/ruleset settings and are not versioned in git.
 - Required checks:
   - `Backend Quality`
   - `Frontend Quality`
-  - `Sonar PR Gate`
-  - `PR Governance`
+  - `SonarCloud Quality Gate`
+  - `CodeQL (javascript-typescript)`
+  - `CodeQL (python)`
+  - `Dependency Review`
+  - `Workflow Security`
 
 ### Repository Settings
 
@@ -164,3 +223,19 @@ These are UI/ruleset settings and are not versioned in git.
 
 - Required reviewers: none (automatic deploy)
 - Deployment branches: only `main`
+
+## DevOps Roadmap
+
+The current workflows intentionally keep provider integrations and job
+boundaries explicit. The next maturity stages are:
+
+1. Extract reusable workflows after the current job inputs, artifacts, and
+   check names have stabilized.
+2. Add required GitHub Environment approvals for production when deployment
+   ownership changes from automatic provider integrations.
+3. Migrate provider authentication to OIDC and short-lived credentials after
+   Railway and Vercel support is confirmed for this repository.
+4. Publish SBOMs and artifact attestations after an artifact destination and
+   retention policy are selected.
+5. Add SLSA-style provenance enforcement once deployment consumes those
+   attestations rather than only storing them.

@@ -21,6 +21,7 @@ jobs:
   deploy-staging:
     name: Railway Staging Deploy
     runs-on: ubuntu-latest
+    timeout-minutes: 20
 
     steps:
       # secrets context is not available in job-level `if`, so gate via a step output
@@ -31,9 +32,16 @@ jobs:
         run: |
           if [ -n "$RAILWAY_DEPLOY_HOOK_URL" ]; then
             echo "configured=true" >> "$GITHUB_OUTPUT"
+          elif [ "$GITHUB_EVENT_NAME" = "workflow_dispatch" ] || [ "$GITHUB_REF_NAME" = "main" ] || [ "$GITHUB_REF_NAME" = "develop" ]; then
+            echo "RAILWAY_DEPLOY_HOOK_URL is required for $GITHUB_EVENT_NAME on $GITHUB_REF_NAME." >&2
+            exit 1
           else
             echo "configured=false" >> "$GITHUB_OUTPUT"
-            echo "RAILWAY_DEPLOY_HOOK_URL not configured; skipping staging deploy."
+            {
+              echo "### Staging deployment skipped"
+              echo
+              echo "RAILWAY_DEPLOY_HOOK_URL is not configured for this feature branch."
+            } >> "$GITHUB_STEP_SUMMARY"
           fi
 
       - name: Trigger Railway staging deployment
@@ -59,3 +67,12 @@ jobs:
           done
           echo "Staging health check failed"
           exit 1
+
+      - name: Record optional health-check skip
+        if: ${{ steps.hook.outputs.configured == 'true' && vars.STAGING_API_HEALTH_URL == '' }}
+        run: |
+          {
+            echo "### Staging health check skipped"
+            echo
+            echo "STAGING_API_HEALTH_URL is not configured; the deploy hook was triggered without a post-deploy health check."
+          } >> "$GITHUB_STEP_SUMMARY"
