@@ -22,6 +22,7 @@ jobs:
     name: Railway Staging Deploy
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    environment: staging
 
     steps:
       # secrets context is not available in job-level `if`, so gate via a step output
@@ -54,10 +55,12 @@ jobs:
 
       - name: Optional staging health check
         if: ${{ steps.hook.outputs.configured == 'true' && vars.STAGING_API_HEALTH_URL != '' }}
+        env:
+          STAGING_API_HEALTH_URL: ${{ vars.STAGING_API_HEALTH_URL }}
         run: |
-          echo "Checking staging health: ${{ vars.STAGING_API_HEALTH_URL }}"
+          echo "Checking staging health: $STAGING_API_HEALTH_URL"
           for attempt in {1..20}; do
-            code=$(curl -s -o /dev/null -w "%{http_code}" "${{ vars.STAGING_API_HEALTH_URL }}")
+            code=$(curl -s -o /dev/null -w "%{http_code}" "$STAGING_API_HEALTH_URL")
             if [ "$code" = "200" ]; then
               echo "Staging health check passed"
               exit 0
