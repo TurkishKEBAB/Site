@@ -33,6 +33,7 @@ jobs:
     environment: preview
     outputs:
       base_url: ${{ steps.validate.outputs.base_url }}
+      ready: ${{ steps.validate.outputs.ready }}
     env:
       VERCEL_AUTOMATION_BYPASS_SECRET: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}
       DEPLOYMENT_URL: >-
@@ -56,18 +57,25 @@ jobs:
               host.endswith(".vercel.app") or host in {"yigitokur.me", "www.yigitokur.me"}
           ):
               raise SystemExit(f"Refusing to test non-Vercel HTTPS host: {raw_url!r}")
-          if not os.environ.get("VERCEL_AUTOMATION_BYPASS_SECRET"):
-              raise SystemExit(
-                  "VERCEL_AUTOMATION_BYPASS_SECRET is required for protected Vercel previews."
-              )
-
           with open(os.environ["GITHUB_OUTPUT"], "a", encoding="utf-8") as output:
               output.write(f"base_url=https://{parsed.netloc}\n")
+              if os.environ.get("VERCEL_AUTOMATION_BYPASS_SECRET"):
+                  output.write("ready=true\n")
+              else:
+                  output.write("ready=false\n")
+                  with open(os.environ["GITHUB_STEP_SUMMARY"], "a", encoding="utf-8") as summary:
+                      summary.write(
+                          "### Preview Quality skipped\n\n"
+                          "`VERCEL_AUTOMATION_BYPASS_SECRET` is not configured in the "
+                          "`preview` Environment. Configure it to run Playwright and "
+                          "Lighthouse against protected Vercel previews.\n"
+                      )
           PY
 
   playwright:
     name: Playwright public smoke
     needs: validate-preview
+    if: ${{ needs.validate-preview.outputs.ready == 'true' }}
     runs-on: ubuntu-latest
     timeout-minutes: 20
     environment: preview
@@ -113,6 +121,7 @@ jobs:
   lighthouse:
     name: Lighthouse preview audit
     needs: validate-preview
+    if: ${{ needs.validate-preview.outputs.ready == 'true' }}
     runs-on: ubuntu-latest
     timeout-minutes: 20
     environment: preview
