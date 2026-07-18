@@ -33,6 +33,7 @@ jobs:
     outputs:
       base_url: ${{ steps.validate.outputs.base_url }}
       service_kind: ${{ steps.validate.outputs.service_kind }}
+      ready: ${{ steps.validate.outputs.ready }}
     env:
       DEPLOYMENT_URL: >-
         ${{
@@ -62,8 +63,19 @@ jobs:
               or host.endswith(".up.railway.app")
           )
 
-          if parsed.scheme != "https" or parsed.username or parsed.password or not allowed_host:
-              raise SystemExit(f"Refusing to verify non-allowlisted HTTPS host: {raw_url!r}")
+          valid_url = parsed.scheme == "https" and not parsed.username and not parsed.password and allowed_host
+          if not valid_url:
+              if os.environ.get("GITHUB_EVENT_NAME") == "workflow_dispatch":
+                  raise SystemExit(f"Refusing to verify non-allowlisted HTTPS host: {raw_url!r}")
+              with open(os.environ["GITHUB_OUTPUT"], "a", encoding="utf-8") as output:
+                  output.write("ready=false\n")
+              with open(os.environ["GITHUB_STEP_SUMMARY"], "a", encoding="utf-8") as summary:
+                  summary.write(
+                      "### Post-deploy verification skipped\n\n"
+                      f"Ignored deployment status URL `{raw_url}` because it is not a "
+                      "known Vercel, Railway, or production host.\n"
+                  )
+              raise SystemExit(0)
 
           base_url = f"https://{parsed.netloc}"
           service_kind = "backend" if (
@@ -73,9 +85,11 @@ jobs:
           with open(os.environ["GITHUB_OUTPUT"], "a", encoding="utf-8") as output:
               output.write(f"base_url={base_url}\n")
               output.write(f"service_kind={service_kind}\n")
+              output.write("ready=true\n")
           PY
 
       - name: Run public smoke checks
+        if: ${{ steps.validate.outputs.ready == 'true' }}
         env:
           BASE_URL: ${{ steps.validate.outputs.base_url }}
           SERVICE_KIND: ${{ steps.validate.outputs.service_kind }}
