@@ -26,7 +26,6 @@ jobs:
     permissions:
       actions: read
       contents: read
-      security-events: write
 
     steps:
       - name: Checkout
@@ -37,10 +36,34 @@ jobs:
       - name: Audit workflows with zizmor
         uses: zizmorcore/zizmor-action@6599ee8b7a49aef6a770f63d261d214911a7ce02 # v0.6.0
         with:
+          # Required PR checks must not depend on SARIF upload/API availability.
+          advanced-security: false
+          persona: auditor
+          min-severity: medium
+          online-audits: false
+          version: v1.21.0
+
+  zizmor-online:
+    name: Workflow Security Online Audit
+    if: ${{ github.event_name != 'pull_request' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      actions: read
+      contents: read
+      security-events: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          persist-credentials: false
+
+      - name: Audit workflows with online zizmor checks
+        uses: zizmorcore/zizmor-action@6599ee8b7a49aef6a770f63d261d214911a7ce02 # v0.6.0
+        with:
           advanced-security: true
           persona: auditor
           min-severity: medium
-          # Keep the required PR check independent from GitHub Advisory API availability.
-          # Pushes and scheduled runs still perform the broader online audit.
-          online-audits: ${{ github.event_name != 'pull_request' }}
+          online-audits: true
           version: v1.21.0

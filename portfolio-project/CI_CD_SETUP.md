@@ -37,8 +37,10 @@ a permanently failing gate instead of a trustworthy signal.
 
 Workflow Security runs for every pull request so a required check cannot be left
 pending by workflow path filters. Its required PR run uses zizmor's local audits;
-push and scheduled runs additionally use online GitHub Advisory API audits, which
-keeps transient API availability from blocking ordinary pull requests.
+push and scheduled runs additionally publish a separate `Workflow Security Online
+Audit` check with GitHub Advisory API coverage. This keeps transient API
+availability from blocking ordinary pull requests while retaining broader
+scheduled analysis.
 
 ## Production Secret/Variable Scope
 
