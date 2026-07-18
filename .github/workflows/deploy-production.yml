@@ -1,4 +1,4 @@
-name: Deploy Production
+name: Production Verification
 
 on:
   push:
@@ -15,14 +15,12 @@ permissions:
 
 jobs:
   backend-quality:
-    name: Backend Quality (Prod Gate)
+    name: Backend Quality (Production Verification)
     runs-on: ubuntu-latest
     timeout-minutes: 30
     env:
       DATABASE_URL: sqlite:///./ci.db
-      # Fall back to the same dummy test key ci.yml uses when CI_SECRET_KEY
-      # is not configured; an empty key breaks every JWT-signing test.
-      SECRET_KEY: ${{ secrets.CI_SECRET_KEY || 'ci-secret-key' }}
+      SECRET_KEY: ci-secret-key
       SMTP_USERNAME: ci@example.com
       SMTP_PASSWORD: ci-password
       REDIS_URL: redis://localhost:6379/0
@@ -57,7 +55,7 @@ jobs:
         run: python -m alembic upgrade head
 
   frontend-quality:
-    name: Frontend Quality (Prod Gate)
+    name: Frontend Quality (Production Verification)
     runs-on: ubuntu-latest
     timeout-minutes: 30
 
@@ -110,6 +108,7 @@ jobs:
     name: Frontend Production Smoke
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    permissions: {}
     needs:
       - frontend-quality
     environment:
@@ -136,21 +135,23 @@ jobs:
         env:
           PRODUCTION_FRONTEND_URL: ${{ vars.PRODUCTION_FRONTEND_URL }}
         run: |
-          HOME_HTML=$(curl -fsSL "$PRODUCTION_FRONTEND_URL")
+          CURL_RETRY=(--retry 5 --retry-all-errors --retry-delay 5)
+          HOME_HTML=$(curl -fsSL "${CURL_RETRY[@]}" "$PRODUCTION_FRONTEND_URL")
           echo "$HOME_HTML" | grep -q "https://yigitokur.me"
           echo "$HOME_HTML" | grep -q "Software Engineer - Cloud & DevOps"
           echo "$HOME_HTML" | grep -q "/opengraph-image"
-          curl -fsSL "$PRODUCTION_FRONTEND_URL/about" >/dev/null
-          curl -fsSL "$PRODUCTION_FRONTEND_URL/projects" >/dev/null
-          curl -fsSL "$PRODUCTION_FRONTEND_URL/contact" >/dev/null
-          curl -fsSL "$PRODUCTION_FRONTEND_URL/robots.txt" | grep -q "Sitemap: https://yigitokur.me/sitemap.xml"
-          curl -fsSL "$PRODUCTION_FRONTEND_URL/sitemap.xml" | grep -q "https://yigitokur.me/projects"
+          curl -fsSL "${CURL_RETRY[@]}" "$PRODUCTION_FRONTEND_URL/about" >/dev/null
+          curl -fsSL "${CURL_RETRY[@]}" "$PRODUCTION_FRONTEND_URL/projects" >/dev/null
+          curl -fsSL "${CURL_RETRY[@]}" "$PRODUCTION_FRONTEND_URL/contact" >/dev/null
+          curl -fsSL "${CURL_RETRY[@]}" "$PRODUCTION_FRONTEND_URL/robots.txt" | grep -q "Sitemap: https://yigitokur.me/sitemap.xml"
+          curl -fsSL "${CURL_RETRY[@]}" "$PRODUCTION_FRONTEND_URL/sitemap.xml" | grep -q "https://yigitokur.me/projects"
           echo "Frontend smoke checks passed"
 
   backend-smoke:
     name: Backend Production Smoke
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    permissions: {}
     needs:
       - backend-quality
     environment:
@@ -184,7 +185,7 @@ jobs:
           PRODUCTION_API_ROOT_URL: ${{ vars.PRODUCTION_API_ROOT_URL }}
         run: |
           for attempt in {1..30}; do
-            code=$(curl -s -o /dev/null -w "%{http_code}" "$PRODUCTION_API_ROOT_URL/ready")
+            code=$(curl -sS --retry 2 --retry-all-errors --retry-delay 2 -o /dev/null -w "%{http_code}" "$PRODUCTION_API_ROOT_URL/ready")
             if [ "$code" = "200" ]; then
               echo "API is ready"
               exit 0
@@ -201,8 +202,9 @@ jobs:
           PRODUCTION_SMOKE_ADMIN_EMAIL: ${{ secrets.PRODUCTION_SMOKE_ADMIN_EMAIL }}
           PRODUCTION_SMOKE_ADMIN_PASSWORD: ${{ secrets.PRODUCTION_SMOKE_ADMIN_PASSWORD }}
         run: |
-          curl -fsSL "$PRODUCTION_API_ROOT_URL/live" >/dev/null
-          curl -fsSL "$PRODUCTION_API_ROOT_URL/health" >/dev/null
+          CURL_RETRY=(--retry 5 --retry-all-errors --retry-delay 5)
+          curl -fsSL "${CURL_RETRY[@]}" "$PRODUCTION_API_ROOT_URL/live" >/dev/null
+          curl -fsSL "${CURL_RETRY[@]}" "$PRODUCTION_API_ROOT_URL/health" >/dev/null
 
           LOGIN_RESPONSE=$(curl -fsSL -X POST "$PRODUCTION_API_ROOT_URL/api/v1/auth/login/json" \
             -H "Content-Type: application/json" \
