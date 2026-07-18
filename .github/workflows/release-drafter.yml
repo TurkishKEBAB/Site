@@ -14,8 +14,9 @@ permissions:
 jobs:
   update_release_draft:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - name: Update release draft
-        uses: release-drafter/release-drafter@67e173cadb2fbd3de94f4a861e0c48c913b462ae # v6
+        uses: release-drafter/release-drafter@3832cfb52f98ab0f0e5b62aecf94909e334d4da6 # v7.5.1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -21,6 +21,7 @@ jobs:
   backend-quality:
     name: Backend Quality
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     env:
       DATABASE_URL: sqlite:///./ci.db
       SECRET_KEY: ci-secret-key
@@ -32,10 +33,10 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
 
       - name: Setup Python
-        uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
+        uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
         with:
           python-version: "3.13"
           cache: pip
@@ -72,7 +73,7 @@ jobs:
         run: python -m pytest -q
 
       - name: Upload backend coverage artifact
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: backend-coverage
           path: portfolio-project/backend/coverage.xml
@@ -81,13 +82,14 @@ jobs:
   frontend-quality:
     name: Frontend Quality
     runs-on: ubuntu-latest
+    timeout-minutes: 30
 
     steps:
       - name: Checkout
-        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
 
       - name: Setup Node
-        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
           node-version: "20"
           cache: npm
@@ -137,7 +139,7 @@ jobs:
         run: npm run analyze
 
       - name: Upload frontend coverage artifact
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: frontend-coverage
           path: portfolio-project/frontend/coverage/lcov.info
@@ -145,7 +147,7 @@ jobs:
 
       - name: Upload bundle analysis artifact
         if: ${{ github.event_name == 'push' && (github.ref == 'refs/heads/main' || startsWith(github.ref_name, 'feature/frontend-') || startsWith(github.ref_name, 'fix/frontend-') || startsWith(github.ref_name, 'refactor/frontend-')) }}
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: frontend-bundle-analysis
           path: portfolio-project/frontend/.next/analyze
@@ -154,6 +156,7 @@ jobs:
   sonarcloud:
     name: SonarCloud Scan (Push)
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     needs:
       - backend-quality
       - frontend-quality
@@ -175,27 +178,27 @@ jobs:
 
       - name: Checkout
         if: ${{ steps.sonar_config.outputs.enabled == 'true' }}
-        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           fetch-depth: 0
 
       - name: Download backend coverage artifact
         if: ${{ steps.sonar_config.outputs.enabled == 'true' }}
-        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
           name: backend-coverage
           path: portfolio-project/backend
 
       - name: Download frontend coverage artifact
         if: ${{ steps.sonar_config.outputs.enabled == 'true' }}
-        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
           name: frontend-coverage
           path: portfolio-project/frontend/coverage
 
       - name: SonarCloud scan
         if: ${{ steps.sonar_config.outputs.enabled == 'true' }}
-        uses: SonarSource/sonarqube-scan-action@fd88b7d7ccbaefd23d8f36f73b59db7a3d246602 # v6
+        uses: SonarSource/sonarqube-scan-action@22918119ff8e1ca75a623e15c8296b6ea4fbe28f # v8.2.1
         with:
           projectBaseDir: portfolio-project
           args: >
