@@ -35,6 +35,11 @@ describe("metadata helpers", () => {
     expect(urls).toContain("https://yigitokur.me/contact");
     expect(urls).not.toContain("https://yigitokur.me/login");
     expect(urls).not.toContain("https://yigitokur.me/admin");
-    expect(urls.every((url) => url.startsWith("https://yigitokur.me"))).toBe(true);
+    expect(
+      urls.every((url) => {
+        const parsed = new URL(url);
+        return parsed.protocol === "https:" && parsed.hostname === "yigitokur.me";
+      }),
+    ).toBe(true);
   });
 });

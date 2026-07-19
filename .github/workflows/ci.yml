@@ -169,6 +169,7 @@ jobs:
     name: SonarCloud Quality Gate
     runs-on: ubuntu-latest
     timeout-minutes: 30
+    environment: quality
     needs:
       - backend-quality
       - frontend-quality

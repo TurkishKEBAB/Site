@@ -14,7 +14,7 @@ This document describes the current CI/CD, branch governance, and production sec
 - `.github/workflows/dependency-review.yml`
   - `Dependency Review` (high-severity dependency changes fail)
 - `.github/workflows/workflow-security.yml`
-  - `Workflow Security` (zizmor audit)
+  - `Workflow Security` (actionlint syntax/semantic checks + zizmor audit)
 - `.github/workflows/scorecard.yml`
   - `OpenSSF Scorecard` (scheduled supply-chain assessment)
 
@@ -40,11 +40,21 @@ pending by workflow path filters. Its required PR run uses zizmor's local audits
 push and scheduled runs additionally publish a separate `Workflow Security Online
 Audit` check with GitHub Advisory API coverage. This keeps transient API
 availability from blocking ordinary pull requests while retaining broader
-scheduled analysis.
+scheduled analysis. The same required job runs actionlint against every workflow
+to catch invalid keys, expression type errors, unknown action inputs/outputs,
+shell errors, and dependency mistakes before the online audit starts.
 
 ## Production Secret/Variable Scope
 
 All deploy/smoke keys must be stored under GitHub `production` environment.
+
+Non-production workflow credentials should be scoped to their job environments:
+
+- `quality`: SonarCloud token used by trusted CI analysis; no reviewer gate.
+- `staging`: Railway staging deploy hook; no production credentials.
+- `preview`: Vercel preview deploy credentials and the optional
+  `VERCEL_AUTOMATION_BYPASS_SECRET`; keep required reviewers disabled unless
+  preview checks are intentionally being used as a manual approval point.
 
 Helper script (optional):
 
@@ -67,6 +77,16 @@ cd portfolio-project
 
 - `PRODUCTION_API_ROOT_URL` (must start with `https://`, no trailing slash)
 - `PRODUCTION_FRONTEND_URL` (must start with `https://`, no trailing slash)
+
+For protected Vercel Preview deployments, create a Vercel **Protection Bypass
+for Automation** secret and store it as the GitHub `preview` Environment secret
+`VERCEL_AUTOMATION_BYPASS_SECRET`. The `Preview Quality` workflow sends it only
+as the `x-vercel-protection-bypass` request header to Playwright and Lighthouse;
+it is never printed or passed to the application build. If Preview deployments
+are public, the secret is still recommended so deployment protection can be
+enabled later without silently disabling browser verification. Keep required
+reviewers disabled for this non-production Environment unless you intentionally
+want every preview verification to pause for approval.
 
 Note: Sonar keys remain repo/org scoped:
 
@@ -107,6 +127,37 @@ Set these values in Railway production service environment:
 Set in Vercel production environment:
 
 - `NEXT_PUBLIC_API_BASE_URL=https://<backend-domain>/api/v1`
+
+## Sentry Release and Alert Policy
+
+The repository already initializes Sentry on the frontend and backend. Keep
+release names tied to deployable commits so an alert can be mapped back to the
+exact source revision:
+
+- Browser instrumentation resolves `NEXT_PUBLIC_SENTRY_RELEASE`, then
+  `NEXT_PUBLIC_VERCEL_GIT_COMMIT_SHA`.
+- Next.js server and edge instrumentation resolves `SENTRY_RELEASE`, then
+  `NEXT_PUBLIC_SENTRY_RELEASE`, `VERCEL_GIT_COMMIT_SHA`, and `GITHUB_SHA`.
+- FastAPI resolves an explicit/configured `SENTRY_RELEASE`, then `GITHUB_SHA`,
+  `RAILWAY_GIT_COMMIT_SHA`, `VERCEL_GIT_COMMIT_SHA`, and finally the application
+  version.
+- All three paths disable default PII collection. Backend reporting remains
+  disabled when `SENTRY_DSN` is absent.
+
+Create these Sentry alert rules for the production environment and review the
+thresholds after the first two weeks of real traffic:
+
+1. Error count above 5 events in 5 minutes.
+2. A new issue whose level is `error` or `fatal`.
+3. Release health below 95% healthy sessions.
+4. p95 transaction latency above 1 second for 10 minutes.
+
+`NEXT_PUBLIC_SENTRY_DSN` is intended for client initialization and is not an
+authentication credential. `SENTRY_AUTH_TOKEN` is different: it can upload
+source maps and must remain a GitHub/Vercel/Railway environment secret. The
+Next.js build uploads source maps only when that token is present and removes
+the uploaded maps from the build output afterward; builds without the token
+continue without an upload attempt.
 
 ## Production Verification Scope
 
@@ -169,10 +220,55 @@ After each check has completed its first successful run, add these names to the
 - `Dependency Review`
 - `Workflow Security`
 
+Configure the `production` Environment under **Settings → Environments** with:
+
+- `main` as the only deployment branch/tag pattern (or protected branches only)
+- at least one required reviewer for production verification jobs
+- `Prevent self-review` enabled
+- environment-scoped smoke credentials and URLs only
+- administrator bypass disabled unless an incident procedure explicitly requires it
+
+The repository workflow already references `environment: production`; these
+settings are GitHub UI/ruleset state and must be verified after repository
+creation or transfer.
+
 Keep `OpenSSF Scorecard` advisory until the repository has reviewed its first
 baseline findings. CodeQL, Scorecard, and zizmor SARIF uploads require the
 repository's Code Security/Advanced Security settings to permit code-scanning
 results.
+
+## Scheduled Security Scans
+
+Workflow: `.github/workflows/nightly-security.yml`
+
+Configure the repository variable `STAGING_FRONTEND_URL` with the HTTPS-only
+staging frontend origin. The manual workflow dispatch accepts a one-time
+`target_url` override. The scheduled scan receives no production secrets and
+does not authenticate to the application.
+
+- OWASP ZAP baseline runs against staging at 02:13 UTC, does not create GitHub
+  issues, and keeps its scan advisory while the first baseline is reviewed.
+- Trivy scans the checked-out repository for vulnerabilities,
+  misconfigurations, secrets, and licenses. Its SARIF category is `trivy-fs`;
+  the SARIF report is retained for 30 days.
+- Treat a new high/critical finding or an unexpected secret/license finding as
+  an investigation item. Add a ZAP ignore rule only with a written reason and
+  a reproducible verification.
+
+## Release Supply Chain
+
+Workflow: `.github/workflows/release-supply-chain.yml`
+
+When a GitHub release is published, or when an operator manually selects an
+existing release tag, the workflow packages only tracked files into a
+deterministic source archive. Syft generates a CycloneDX SBOM, both files are
+kept together for 90 days, and `actions/attest` creates a provenance
+attestation that includes the SBOM. The final step verifies the local archive
+with `gh attestation verify`.
+
+Routine PR and test artifacts are intentionally not attested. The release job
+is the only workflow granted `id-token: write`, `attestations: write`, and
+`artifact-metadata: write`.
 
 ## Recommended Branch Strategy
 

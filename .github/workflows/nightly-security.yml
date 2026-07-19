@@ -1,0 +1,110 @@
+name: Nightly Security
+
+on:
+  schedule:
+    - cron: "13 2 * * *"
+  workflow_dispatch:
+    inputs:
+      target_url:
+        description: HTTPS staging frontend URL (overrides STAGING_FRONTEND_URL)
+        required: false
+        type: string
+
+permissions: {}
+
+concurrency:
+  group: nightly-security-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate-target:
+    name: Validate staging target
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions: {}
+    outputs:
+      base_url: ${{ steps.validate.outputs.base_url }}
+    env:
+      STAGING_FRONTEND_URL: >-
+        ${{ inputs.target_url || vars.STAGING_FRONTEND_URL }}
+    steps:
+      - name: Validate HTTPS staging URL
+        id: validate
+        run: |
+          python - <<'PY'
+          import os
+          from urllib.parse import urlparse
+
+          raw_url = os.environ.get("STAGING_FRONTEND_URL", "").strip()
+          parsed = urlparse(raw_url)
+          if (
+              parsed.scheme != "https"
+              or parsed.username
+              or parsed.password
+              or not parsed.hostname
+          ):
+              raise SystemExit(
+                  "STAGING_FRONTEND_URL must be an HTTPS URL without embedded credentials."
+              )
+
+          base_url = parsed._replace(query="", fragment="").geturl().rstrip("/")
+          with open(os.environ["GITHUB_OUTPUT"], "a", encoding="utf-8") as output:
+              output.write(f"base_url={base_url}\n")
+          PY
+
+  zap-baseline:
+    name: OWASP ZAP baseline (staging)
+    needs: validate-target
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          persist-credentials: false
+
+      - name: Run ZAP baseline scan
+        uses: zaproxy/action-baseline@de8ad967d3548d44ef623df22cf95c3b0baf8b25 # v0.15.0
+        with:
+          target: ${{ needs.validate-target.outputs.base_url }}
+          rules_file_name: .github/zap-baseline.conf
+          fail_action: false
+          allow_issue_writing: false
+          artifact_name: zap-baseline-staging
+
+  trivy-filesystem:
+    name: Trivy filesystem security scan
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      security-events: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          persist-credentials: false
+
+      - name: Run Trivy filesystem scan
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          scan-type: fs
+          scan-ref: .
+          trivy-config: trivy.yaml
+
+      - name: Upload Trivy SARIF
+        uses: github/codeql-action/upload-sarif@bb16b9baa2ec4010b29f5c606d57d01190139edd # v4.37.1
+        with:
+          sarif_file: trivy-results.sarif
+          category: trivy-fs
+
+      - name: Upload Trivy report artifact
+        if: ${{ always() }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: trivy-filesystem-report
+          path: trivy-results.sarif
+          if-no-files-found: warn
+          retention-days: 30
