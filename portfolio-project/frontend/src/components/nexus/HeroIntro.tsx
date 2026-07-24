@@ -3,6 +3,9 @@
 import { useEffect, useRef, useState } from "react";
 
 const ROLES = ["ENTERPRISE BACKEND", "CLOUD & DEVOPS", "QUALITY AUTOMATION"];
+const ROLE_HOLD_MS = 700;
+const ROLE_GAP_MS = 120;
+const EXIT_MS = 360;
 
 /**
  * Cinematic intro overlay (design's hero intro). On the first home visit of a
@@ -21,6 +24,13 @@ export default function HeroIntro() {
     if (sessionStorage.getItem("nx-intro-done")) return undefined;
 
     setActive(true);
+    const previousOverflow = document.body.style.overflow;
+    let overflowRestored = false;
+    const restoreOverflow = () => {
+      if (overflowRestored) return;
+      overflowRestored = true;
+      document.body.style.overflow = previousOverflow;
+    };
     document.body.style.overflow = "hidden";
 
     let cursor = 0;
@@ -33,9 +43,9 @@ export default function HeroIntro() {
       cancelled = true;
       sessionStorage.setItem("nx-intro-done", "1");
       setOut(true);
-      wait(520, () => {
+      wait(EXIT_MS, () => {
         setActive(false);
-        document.body.style.overflow = "";
+        restoreOverflow();
       });
     };
     finishRef.current = finish;
@@ -49,10 +59,10 @@ export default function HeroIntro() {
       setIndex(cursor);
       setWordShown(false);
       wait(40, () => setWordShown(true));
-      wait(1200, () => {
+      wait(ROLE_HOLD_MS, () => {
         setWordShown(false);
         cursor += 1;
-        wait(320, step);
+        wait(ROLE_GAP_MS, step);
       });
     };
     step();
@@ -60,7 +70,7 @@ export default function HeroIntro() {
     return () => {
       cancelled = true;
       timers.forEach(clearTimeout);
-      document.body.style.overflow = "";
+      restoreOverflow();
     };
   }, []);
 

@@ -14,7 +14,8 @@ from app.schemas.technology import (
     TechnologyUpdate,
 )
 from app.services.admin_audit import record_admin_action
-from fastapi import APIRouter, Depends, HTTPException, status
+from app.services.project_cache import invalidate_project_list_cache
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
 router = APIRouter()
@@ -57,6 +58,7 @@ def get_technology(technology_id: uuid.UUID, db: Session = Depends(get_db)):
 )
 def create_technology(
     technology: TechnologyCreate,
+    background_tasks: BackgroundTasks,
     db: Session = Depends(get_db),
     current_user: User = Depends(require_admin),
 ):
@@ -90,6 +92,7 @@ def create_technology(
         target_id=db_technology.id,
         details={"slug": db_technology.slug},
     )
+    background_tasks.add_task(invalidate_project_list_cache)
     return db_technology
 
 
@@ -97,6 +100,7 @@ def create_technology(
 def update_technology(
     technology_id: uuid.UUID,
     technology: TechnologyUpdate,
+    background_tasks: BackgroundTasks,
     db: Session = Depends(get_db),
     current_user: User = Depends(require_admin),
 ):
@@ -142,12 +146,14 @@ def update_technology(
         target_id=technology_id,
         details={"slug": db_technology.slug},
     )
+    background_tasks.add_task(invalidate_project_list_cache)
     return db_technology
 
 
 @router.delete("/{technology_id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_technology(
     technology_id: uuid.UUID,
+    background_tasks: BackgroundTasks,
     db: Session = Depends(get_db),
     current_user: User = Depends(require_admin),
 ):
@@ -169,4 +175,5 @@ def delete_technology(
         target_type="technology",
         target_id=technology_id,
     )
+    background_tasks.add_task(invalidate_project_list_cache)
     return None

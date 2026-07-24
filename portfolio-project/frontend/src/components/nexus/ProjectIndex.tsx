@@ -26,7 +26,7 @@ export function ProjectIndex({
           type="button"
           onClick={() => onSelect(p)}
           className="nx-row nx-index-row"
-          style={{ display: "grid", width: "100%", gridTemplateColumns: "64px 1fr auto", alignItems: "center", gap: 24, borderBottom: "1px solid var(--border-1)", borderTop: "none", borderLeft: "none", borderRight: "none", background: "transparent", padding: "24px 8px", textAlign: "left", cursor: "pointer", transition: `all 250ms ${EASE}` }}
+          style={{ position: "relative", display: "grid", width: "100%", gridTemplateColumns: "64px 1fr auto", alignItems: "center", gap: 24, borderBottom: "1px solid var(--border-1)", borderTop: "none", borderLeft: "none", borderRight: "none", background: "transparent", padding: "24px 8px", textAlign: "left", cursor: "pointer", transition: `all 250ms ${EASE}` }}
         >
           <span className="nx-index-num" style={{ fontFamily: "var(--font-mono)", fontSize: 13, color: "var(--text-faint)", transition: "color 200ms" }}>{String(i + 1).padStart(2, "0")}</span>
           <span>

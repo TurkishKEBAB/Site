@@ -1,5 +1,9 @@
 """Technologies endpoint tests."""
 
+import inspect
+
+from app.api.v1 import technologies as technologies_api
+
 
 def test_get_technologies_public(client, create_technology):
     create_technology(name="Python", slug="python", category="language")
@@ -43,6 +47,54 @@ def test_create_update_delete_technology(client, admin_headers):
 
     deleted = client.delete(f"/api/v1/technologies/{technology_id}", headers=admin_headers)
     assert deleted.status_code == 204
+
+
+def test_technology_mutations_invalidate_project_list_cache(
+    client, admin_headers, monkeypatch
+):
+    invalidations = []
+
+    async def record_invalidation():
+        invalidations.append("invalidate")
+
+    monkeypatch.setattr(
+        technologies_api,
+        "invalidate_project_list_cache",
+        record_invalidation,
+        raising=False,
+    )
+
+    created = client.post(
+        "/api/v1/technologies/",
+        headers=admin_headers,
+        json={
+            "name": "Terraform",
+            "slug": "terraform",
+            "category": "tool",
+            "color": "#3B82F6",
+        },
+    )
+    technology_id = created.json()["id"]
+
+    updated = client.put(
+        f"/api/v1/technologies/{technology_id}",
+        headers=admin_headers,
+        json={"slug": "terraform-cloud"},
+    )
+    deleted = client.delete(
+        f"/api/v1/technologies/{technology_id}", headers=admin_headers
+    )
+
+    assert created.status_code == 201
+    assert updated.status_code == 200
+    assert deleted.status_code == 204
+    assert invalidations == ["invalidate", "invalidate", "invalidate"]
+
+
+def test_technology_mutations_keep_database_handlers_synchronous():
+    assert not inspect.iscoroutinefunction(technologies_api.create_technology)
+    assert not inspect.iscoroutinefunction(technologies_api.update_technology)
+    assert not inspect.iscoroutinefunction(technologies_api.delete_technology)
 
 
 def test_technology_duplicate_conflicts(client, admin_headers):

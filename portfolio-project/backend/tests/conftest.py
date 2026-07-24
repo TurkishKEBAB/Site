@@ -7,6 +7,7 @@ import app.models as app_models  # noqa: F401
 import pytest
 from app import main as main_module
 from app.api.deps import get_db
+from app.api.v1 import projects as projects_module
 from app.config import settings
 from app.core.rate_limit import limiter
 from app.crud import user as user_crud
@@ -88,13 +89,30 @@ def client(db_session: Session, monkeypatch):
         redis_client = None
         backend = "memory"
 
+        def __init__(self):
+            self.values = {}
+
         async def connect(self):
             return None
 
         async def disconnect(self):
             return None
 
+        async def get(self, key):
+            return self.values.get(key)
+
+        async def set(self, key, value, ttl=3600):
+            self.values[key] = value
+
+        async def increment(self, key, amount=1):
+            self.values[key] = int(self.values.get(key, 0)) + amount
+            return self.values[key]
+
+        async def delete(self, key):
+            self.values.pop(key, None)
+
     monkeypatch.setattr(main_module, "get_cache_service", lambda: DummyCache())
+    monkeypatch.setattr(projects_module, "get_cache_service", lambda: DummyCache())
     monkeypatch.setattr(main_module, "check_db_connection", lambda: True)
     app.dependency_overrides[get_db] = override_get_db
 

@@ -125,7 +125,6 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     environment: preview
-    continue-on-error: true
     env:
       VERCEL_AUTOMATION_BYPASS_SECRET: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}
     steps:

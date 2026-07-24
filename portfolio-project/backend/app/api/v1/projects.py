@@ -17,12 +17,38 @@ from app.models.user import User
 from app.schemas.project import (ProjectCreate, ProjectResponse,
                                  ProjectTranslationCreate, ProjectUpdate)
 from app.services.admin_audit import record_admin_action
+from app.services.cache_service import get_cache_service
+from app.services.project_cache import (
+    PROJECT_LIST_CACHE_TTL_SECONDS,
+    PROJECT_LIST_CACHE_VERSION_KEY,
+    invalidate_project_list_cache,
+)
 from app.services.storage_service import StorageService
 
 router = APIRouter()
 
 # Maximum allowed upload size for project images (10 MB)
 MAX_PROJECT_IMAGE_UPLOAD_SIZE = 10 * 1024 * 1024
+
+
+def _project_list_cache_key(
+    version: int,
+    *,
+    skip: int,
+    limit: int,
+    language: str,
+    featured_only: bool,
+    technology_slug: str | None,
+) -> str:
+    technology = technology_slug or "-"
+    return (
+        f"projects:list:{version}:{skip}:{limit}:{language}:"
+        f"{int(featured_only)}:{technology}"
+    )
+
+
+async def _invalidate_project_list_cache() -> None:
+    await invalidate_project_list_cache(get_cache_service())
 
 
 def _serialize_project(project, language: str) -> dict:
@@ -88,6 +114,7 @@ def _serialize_project(project, language: str) -> dict:
     }
 
 
+@router.get("", include_in_schema=False)
 @router.get("/")
 async def get_projects(
     response: Response,
@@ -101,6 +128,21 @@ async def get_projects(
     """
     Get list of projects with optional filtering
     """
+    cache = get_cache_service()
+    version = int(await cache.get(PROJECT_LIST_CACHE_VERSION_KEY) or 0)
+    cache_key = _project_list_cache_key(
+        version,
+        skip=skip,
+        limit=limit,
+        language=language,
+        featured_only=featured_only,
+        technology_slug=technology_slug,
+    )
+    cached_response = await cache.get(cache_key)
+    response.headers["Cache-Control"] = "public, max-age=60, stale-while-revalidate=300"
+    if cached_response is not None:
+        return cached_response
+
     total = project_crud.get_projects_count(
         db,
         featured_only=featured_only,
@@ -116,15 +158,16 @@ async def get_projects(
         technology_slug=technology_slug,
     )
     items = [_serialize_project(project, language) for project in projects]
-    response.headers["Cache-Control"] = "public, max-age=60, stale-while-revalidate=300"
 
-    return {
+    payload = {
         "items": items,
         "total": total,
         "page": skip // limit + 1 if limit > 0 else 1,
         "size": limit,
         "pages": (total + limit - 1) // limit if limit > 0 else 1,
     }
+    await cache.set(cache_key, payload, ttl=PROJECT_LIST_CACHE_TTL_SECONDS)
+    return payload
 
 
 @router.get("/{slug}", response_model=ProjectResponse)
@@ -166,6 +209,7 @@ async def create_project(
         target_id=project.id,
         details={"slug": project.slug},
     )
+    await _invalidate_project_list_cache()
     return project
 
 
@@ -196,6 +240,7 @@ async def update_project(
         target_id=project_id,
         details={"slug": updated_project.slug},
     )
+    await _invalidate_project_list_cache()
     return updated_project
 
 
@@ -314,6 +359,7 @@ async def upload_project_image(
         target_id=project_image.id,
         details={"project_id": str(project_id), "filename": safe_filename},
     )
+    await _invalidate_project_list_cache()
 
     return {
         "id": str(project_image.id),
@@ -368,6 +414,7 @@ async def delete_project_image(
         target_id=image_id,
         details={"project_id": str(project_id)},
     )
+    await _invalidate_project_list_cache()
 
     return None
 
@@ -421,6 +468,7 @@ async def update_project_image(
         target_id=image_id,
         details={"project_id": str(project_id)},
     )
+    await _invalidate_project_list_cache()
 
     return {
         "id": str(image.id),
@@ -453,6 +501,7 @@ async def delete_project(
         target_type="project",
         target_id=project_id,
     )
+    await _invalidate_project_list_cache()
     return None
 
 
@@ -490,4 +539,5 @@ async def add_project_translation(
         target_id=project_id,
         details={"language": translation_data.language},
     )
+    await _invalidate_project_list_cache()
     return project

@@ -76,7 +76,7 @@ type Tab = "fetch" | "java" | "shell";
  * uptime, status, palette blocks. shell = a working toy shell in the house
  * palette (help / dir / ls / uptime / yofetch / javac / java / cls).
  */
-export default function SystemTerminal({ profileSrc = "/profile.jpg", className = "" }: { profileSrc?: string; className?: string }) {
+export default function SystemTerminal({ profileSrc = "/profile.webp", className = "" }: { profileSrc?: string; className?: string }) {
   const [tab, setTab] = useState<Tab>("fetch");
   const [rawPhoto, setRawPhoto] = useState(false);
   const [now, setNow] = useState(() => Date.now());

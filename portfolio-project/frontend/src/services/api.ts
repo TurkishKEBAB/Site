@@ -109,7 +109,7 @@ export const apiEndpoints = {
   },
 
   projects: {
-    list: '/projects/',
+    list: '/projects',
     detail: (slug: string) => `/projects/${slug}`,
     create: '/projects/',
     update: (id: string) => `/projects/${id}`,
