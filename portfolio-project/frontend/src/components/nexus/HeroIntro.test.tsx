@@ -18,16 +18,30 @@ describe("HeroIntro", () => {
     document.body.style.overflow = "";
   });
 
-  it("keeps the page scrollable and finishes the first-visit animation quickly", () => {
+  it("locks page scroll during the first-visit animation and restores it afterward", () => {
     render(<HeroIntro />);
 
-    expect(document.body.style.overflow).toBe("");
+    expect(document.body.style.overflow).toBe("hidden");
     expect(screen.getByRole("button", { name: "Skip intro" })).toBeInTheDocument();
 
     act(() => {
-      vi.advanceTimersByTime(2200);
+      vi.advanceTimersByTime(3200);
     });
 
     expect(screen.queryByRole("button", { name: "Skip intro" })).not.toBeInTheDocument();
+    expect(document.body.style.overflow).toBe("");
+  });
+
+  it("renders the cinematic full-screen overlay and restores the prior scroll style", () => {
+    document.body.style.overflow = "auto";
+    const { unmount } = render(<HeroIntro />);
+    const intro = screen.getByRole("button", { name: "Skip intro" });
+
+    expect(intro).toHaveClass("fixed", "inset-0", "w-full", "place-items-center");
+    expect(document.body.style.overflow).toBe("hidden");
+
+    unmount();
+
+    expect(document.body.style.overflow).toBe("auto");
   });
 });
