@@ -16,8 +16,11 @@ const workspaceRoot = path.resolve(__dirname, "..", "..");
 // host are proxied straight through to the Railway backend; the main site
 // host is unaffected.
 const API_PROXY_HOST = process.env.API_PROXY_HOST || "api.yigitokur.me";
-const API_PROXY_ORIGIN =
-  process.env.API_PROXY_ORIGIN || "https://site-production-562f.up.railway.app";
+const API_PROXY_ORIGIN = (
+  process.env.API_PROXY_ORIGIN || "https://site-production-562f.up.railway.app"
+)
+  .replace(/^http:\/\//i, "https://")
+  .replace(/\/$/, "");
 
 // Baseline security headers applied to every response.
 // Content-Security-Policy is intentionally deferred: the inline theme bootstrap

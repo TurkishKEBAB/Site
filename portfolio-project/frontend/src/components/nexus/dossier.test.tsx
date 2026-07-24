@@ -68,7 +68,9 @@ describe("ProjectIndex", () => {
 
     expect(screen.getByText("01")).toBeInTheDocument();
     expect(screen.getByText("02")).toBeInTheDocument();
-    fireEvent.click(screen.getByRole("button", { name: /IsikSchedule Platform/ }));
+    const firstRow = screen.getByRole("button", { name: /IsikSchedule Platform/ });
+    expect(firstRow).toHaveStyle({ position: "relative" });
+    fireEvent.click(firstRow);
     expect(onSelect).toHaveBeenCalledWith(isik);
   });
 });

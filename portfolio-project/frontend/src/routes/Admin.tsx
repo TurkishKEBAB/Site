@@ -299,7 +299,7 @@ export default function Admin() {
     setProjectsLoading(true);
 
     try {
-      const response = await api.get('/projects/', {
+      const response = await api.get('/projects', {
         params: {
           limit: 100,
           skip: 0,

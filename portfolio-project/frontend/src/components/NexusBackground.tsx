@@ -4,6 +4,18 @@ import { useEffect, useRef } from "react";
 
 export type NexusBackgroundMode = "nodes" | "grid" | "flow";
 
+export function shouldAnimateNexusBackground({
+  reducedMotion,
+  saveData,
+  hardwareConcurrency,
+}: {
+  reducedMotion: boolean;
+  saveData: boolean;
+  hardwareConcurrency?: number;
+}): boolean {
+  return !reducedMotion && !saveData && (hardwareConcurrency ?? 8) > 4;
+}
+
 interface NodePoint {
   x: number;
   y: number;
@@ -49,6 +61,7 @@ const LABELS = [
 const NODE_COUNT = 34;
 const GRID_GAP = 40;
 const FLOW_COUNT = 90;
+const FRAME_INTERVAL_MS = 1000 / 30;
 
 const isNexusMode = (value: string | null): value is NexusBackgroundMode =>
   value === "nodes" || value === "grid" || value === "flow";
@@ -104,6 +117,15 @@ export default function NexusBackground() {
       reducedRef.current = event.matches;
     };
     motionQuery.addEventListener("change", onMotionChange);
+
+    const connection = (
+      navigator as Navigator & { connection?: { saveData?: boolean } }
+    ).connection;
+    const animateBackground = shouldAnimateNexusBackground({
+      reducedMotion: motionQuery.matches,
+      saveData: Boolean(connection?.saveData),
+      hardwareConcurrency: navigator.hardwareConcurrency,
+    });
 
     const updateTheme = () => {
       isDarkRef.current = document.documentElement.classList.contains("dark");
@@ -294,26 +316,68 @@ export default function NexusBackground() {
       }
     };
 
-    const render = () => {
+    const draw = () => {
       ctx.clearRect(0, 0, width, height);
       const col = isDarkRef.current ? "0,212,255" : "0,140,180";
       if (modeRef.current === "grid") renderGrid(col);
       else if (modeRef.current === "flow") renderFlow(col);
       else renderNodes(col);
+    };
+
+    let lastFrameAt = 0;
+    const render = (timestamp: number) => {
+      if (document.hidden) {
+        rafRef.current = 0;
+        return;
+      }
+
+      if (timestamp - lastFrameAt >= FRAME_INTERVAL_MS) {
+        draw();
+        lastFrameAt = timestamp;
+      }
       rafRef.current = requestAnimationFrame(render);
     };
 
+    const startAnimation = () => {
+      if (!animateBackground || document.hidden || rafRef.current) return;
+      lastFrameAt = 0;
+      rafRef.current = requestAnimationFrame(render);
+    };
+
+    const stopAnimation = () => {
+      if (!rafRef.current) return;
+      cancelAnimationFrame(rafRef.current);
+      rafRef.current = 0;
+    };
+
+    const onResize = () => {
+      resize();
+      draw();
+    };
+
+    const onVisibilityChange = () => {
+      if (document.hidden) {
+        stopAnimation();
+        return;
+      }
+      draw();
+      startAnimation();
+    };
+
     resize();
-    window.addEventListener("resize", resize);
+    draw();
+    window.addEventListener("resize", onResize);
     window.addEventListener("mousemove", onMouseMove);
     window.addEventListener("mouseleave", onMouseLeave);
-    rafRef.current = requestAnimationFrame(render);
+    document.addEventListener("visibilitychange", onVisibilityChange);
+    startAnimation();
 
     return () => {
-      cancelAnimationFrame(rafRef.current);
-      window.removeEventListener("resize", resize);
+      stopAnimation();
+      window.removeEventListener("resize", onResize);
       window.removeEventListener("mousemove", onMouseMove);
       window.removeEventListener("mouseleave", onMouseLeave);
+      document.removeEventListener("visibilitychange", onVisibilityChange);
       motionQuery.removeEventListener("change", onMotionChange);
       themeObserver.disconnect();
     };

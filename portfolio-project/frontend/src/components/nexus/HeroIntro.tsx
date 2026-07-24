@@ -3,11 +3,13 @@
 import { useEffect, useRef, useState } from "react";
 
 const ROLES = ["ENTERPRISE BACKEND", "CLOUD & DEVOPS", "QUALITY AUTOMATION"];
+const ROLE_HOLD_MS = 420;
+const ROLE_GAP_MS = 100;
+const EXIT_MS = 260;
 
 /**
- * Cinematic intro overlay (design's hero intro). On the first home visit of a
- * session it covers the page and reveals each role title in turn, then lifts.
- * Skipped under prefers-reduced-motion or once seen (sessionStorage). Click to skip.
+ * Non-blocking first-visit status chip. It keeps the page visible and scrollable
+ * while briefly cycling through the profile signals.
  */
 export default function HeroIntro() {
   const [active, setActive] = useState(false);
@@ -21,7 +23,6 @@ export default function HeroIntro() {
     if (sessionStorage.getItem("nx-intro-done")) return undefined;
 
     setActive(true);
-    document.body.style.overflow = "hidden";
 
     let cursor = 0;
     let cancelled = false;
@@ -33,10 +34,7 @@ export default function HeroIntro() {
       cancelled = true;
       sessionStorage.setItem("nx-intro-done", "1");
       setOut(true);
-      wait(520, () => {
-        setActive(false);
-        document.body.style.overflow = "";
-      });
+      wait(EXIT_MS, () => setActive(false));
     };
     finishRef.current = finish;
 
@@ -49,10 +47,10 @@ export default function HeroIntro() {
       setIndex(cursor);
       setWordShown(false);
       wait(40, () => setWordShown(true));
-      wait(1200, () => {
+      wait(ROLE_HOLD_MS, () => {
         setWordShown(false);
         cursor += 1;
-        wait(320, step);
+        wait(ROLE_GAP_MS, step);
       });
     };
     step();
@@ -60,7 +58,6 @@ export default function HeroIntro() {
     return () => {
       cancelled = true;
       timers.forEach(clearTimeout);
-      document.body.style.overflow = "";
     };
   }, []);
 
@@ -71,7 +68,7 @@ export default function HeroIntro() {
       type="button"
       aria-label="Skip intro"
       onClick={() => finishRef.current()}
-      className={`fixed inset-0 z-[90] grid w-full cursor-pointer place-items-center bg-[#f4f4f8] transition-opacity duration-500 dark:bg-dark-950 ${
+      className={`fixed bottom-5 left-1/2 z-[90] grid w-[min(90vw,28rem)] -translate-x-1/2 cursor-pointer place-items-center overflow-hidden rounded border border-gray-200 bg-white/95 px-5 py-4 shadow-lg transition-opacity duration-300 dark:border-dark-600 dark:bg-dark-950/95 ${
         out ? "pointer-events-none opacity-0" : "opacity-100"
       }`}
     >
@@ -102,7 +99,7 @@ export default function HeroIntro() {
           />
         </span>
       </span>
-      <span className="absolute bottom-10 left-1/2 -translate-x-1/2 font-mono text-[10px] uppercase tracking-[0.2em] text-gray-400 dark:text-dark-400">
+      <span className="absolute bottom-1.5 left-1/2 -translate-x-1/2 font-mono text-[9px] uppercase tracking-[0.2em] text-gray-400 dark:text-dark-400">
         click to skip
       </span>
     </button>
