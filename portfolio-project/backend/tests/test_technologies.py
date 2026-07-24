@@ -1,5 +1,7 @@
 """Technologies endpoint tests."""
 
+import inspect
+
 from app.api.v1 import technologies as technologies_api
 
 
@@ -87,6 +89,12 @@ def test_technology_mutations_invalidate_project_list_cache(
     assert updated.status_code == 200
     assert deleted.status_code == 204
     assert invalidations == ["invalidate", "invalidate", "invalidate"]
+
+
+def test_technology_mutations_keep_database_handlers_synchronous():
+    assert not inspect.iscoroutinefunction(technologies_api.create_technology)
+    assert not inspect.iscoroutinefunction(technologies_api.update_technology)
+    assert not inspect.iscoroutinefunction(technologies_api.delete_technology)
 
 
 def test_technology_duplicate_conflicts(client, admin_headers):
