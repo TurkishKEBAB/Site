@@ -61,6 +61,7 @@ def get_projects(
         selectinload(Project.project_technologies).selectinload(
             ProjectTechnology.technology
         ),
+        selectinload(Project.technologies),
         selectinload(Project.images),
     )
     

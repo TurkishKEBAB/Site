@@ -5,6 +5,7 @@ import io
 from PIL import Image
 from sqlalchemy import event
 
+from app.api.v1 import projects as projects_api
 from app.crud import project as project_crud
 from app.models.project import ProjectImage
 
@@ -68,6 +69,18 @@ def test_get_projects_public_and_slug_detail(client, create_project):
     assert detail_response.json()["slug"] == "public-project"
 
 
+def test_get_projects_accepts_canonical_no_slash_path(client, create_project):
+    create_project(slug="canonical-project")
+
+    response = client.get(
+        "/api/v1/projects?language=en",
+        follow_redirects=False,
+    )
+
+    assert response.status_code == 200
+    assert "location" not in response.headers
+
+
 def test_project_list_loads_collections_without_join_explosion(
     db_session, create_project
 ):
@@ -85,6 +98,97 @@ def test_project_list_loads_collections_without_join_explosion(
         event.remove(db_session.bind, "before_cursor_execute", record_select)
 
     assert len(statements) >= 4
+
+
+def test_project_list_does_not_lazy_load_technologies_per_project(
+    client, db_session, create_project
+):
+    create_project(slug="technology-query-one")
+    create_project(slug="technology-query-two")
+    create_project(slug="technology-query-three")
+    statements = []
+
+    def record_select(_conn, _cursor, statement, _parameters, _context, _executemany):
+        if statement.lstrip().upper().startswith("SELECT"):
+            statements.append(statement)
+
+    event.listen(db_session.bind, "before_cursor_execute", record_select)
+    try:
+        response = client.get("/api/v1/projects?language=en&limit=100")
+    finally:
+        event.remove(db_session.bind, "before_cursor_execute", record_select)
+
+    assert response.status_code == 200
+    assert len(statements) <= 7
+
+
+def test_project_list_uses_server_cache_for_repeated_requests(
+    client, create_project, monkeypatch
+):
+    create_project(slug="cached-project")
+    cache = {}
+
+    class DummyCache:
+        async def get(self, key):
+            return cache.get(key)
+
+        async def set(self, key, value, ttl=3600):
+            cache[key] = value
+
+        async def increment(self, key, amount=1):
+            cache[key] = int(cache.get(key, 0)) + amount
+            return cache[key]
+
+    monkeypatch.setattr(
+        projects_api,
+        "get_cache_service",
+        lambda: DummyCache(),
+        raising=False,
+    )
+    original_get_projects = project_crud.get_projects
+    calls = 0
+
+    def counted_get_projects(*args, **kwargs):
+        nonlocal calls
+        calls += 1
+        return original_get_projects(*args, **kwargs)
+
+    monkeypatch.setattr(project_crud, "get_projects", counted_get_projects)
+
+    first = client.get("/api/v1/projects?language=en&limit=100")
+    second = client.get("/api/v1/projects?language=en&limit=100")
+
+    assert first.status_code == 200
+    assert second.status_code == 200
+    assert second.json() == first.json()
+    assert calls == 1
+
+
+def test_project_writes_invalidate_list_cache(client, admin_headers, create_project, monkeypatch):
+    project = create_project(slug="invalidate-project")
+    invalidations = []
+
+    class DummyCache:
+        async def get(self, _key):
+            return None
+
+        async def set(self, _key, _value, ttl=3600):
+            return None
+
+        async def increment(self, key, amount=1):
+            invalidations.append((key, amount))
+            return amount
+
+    monkeypatch.setattr(projects_api, "get_cache_service", lambda: DummyCache())
+
+    response = client.put(
+        f"/api/v1/projects/{project.id}",
+        json={"title": "Invalidated project"},
+        headers=admin_headers,
+    )
+
+    assert response.status_code == 200
+    assert invalidations == [(projects_api.PROJECT_LIST_CACHE_VERSION_KEY, 1)]
 
 
 def test_get_project_not_found(client):
