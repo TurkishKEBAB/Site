@@ -29,6 +29,10 @@ const createMediaQuery = (matches: boolean) =>
   }) as unknown as MediaQueryList;
 
 beforeEach(() => {
+  Object.defineProperty(navigator, "hardwareConcurrency", {
+    configurable: true,
+    value: 8,
+  });
   Object.defineProperty(window, "matchMedia", {
     configurable: true,
     value: vi.fn(() => createMediaQuery(false)),
