@@ -18,14 +18,17 @@ from app.schemas.project import (ProjectCreate, ProjectResponse,
                                  ProjectTranslationCreate, ProjectUpdate)
 from app.services.admin_audit import record_admin_action
 from app.services.cache_service import get_cache_service
+from app.services.project_cache import (
+    PROJECT_LIST_CACHE_TTL_SECONDS,
+    PROJECT_LIST_CACHE_VERSION_KEY,
+    invalidate_project_list_cache,
+)
 from app.services.storage_service import StorageService
 
 router = APIRouter()
 
 # Maximum allowed upload size for project images (10 MB)
 MAX_PROJECT_IMAGE_UPLOAD_SIZE = 10 * 1024 * 1024
-PROJECT_LIST_CACHE_VERSION_KEY = "projects:list:version"
-PROJECT_LIST_CACHE_TTL_SECONDS = 300
 
 
 def _project_list_cache_key(
@@ -45,7 +48,7 @@ def _project_list_cache_key(
 
 
 async def _invalidate_project_list_cache() -> None:
-    await get_cache_service().increment(PROJECT_LIST_CACHE_VERSION_KEY)
+    await invalidate_project_list_cache(get_cache_service())
 
 
 def _serialize_project(project, language: str) -> dict:
