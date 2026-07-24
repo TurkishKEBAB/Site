@@ -47,6 +47,31 @@ const project = {
 };
 
 describe("Projects", () => {
+  it("renders server-provided projects without the loading placeholder", () => {
+    const initialProjects = { items: [project], total: 1, page: 1, size: 100, pages: 1 };
+    useProjectsQuery.mockImplementation((_params, serverData) => ({
+      data: serverData,
+      isLoading: !serverData,
+      isError: false,
+      refetch: vi.fn(),
+    }));
+    useProjectDossierQuery.mockReturnValue({
+      data: undefined,
+      isLoading: false,
+      isError: false,
+      refetch: vi.fn(),
+    });
+
+    render(<Projects locale="en" initialProjects={initialProjects} initialProjectsLanguage="en" />);
+
+    expect(screen.getByRole("button", { name: "Managed project" })).toBeInTheDocument();
+    expect(screen.queryByText("Loading project index...")).not.toBeInTheDocument();
+    expect(useProjectsQuery).toHaveBeenCalledWith(
+      { limit: 100, language: "en" },
+      initialProjects,
+    );
+  });
+
   it("loads the selected project's API dossier into the modal", () => {
     useProjectsQuery.mockReturnValue({
       data: { items: [project], total: 1, page: 1, size: 100, pages: 1 },

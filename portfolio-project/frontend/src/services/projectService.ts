@@ -1,5 +1,5 @@
 import api, { apiEndpoints } from './api';
-import { PaginatedResponse, Project, ProjectCreate } from './types';
+import { PaginatedResponse, Project, ProjectCreate, ProjectListItem } from './types';
 
 export const projectService = {
   async getProjects(params?: {
@@ -8,7 +8,7 @@ export const projectService = {
     featured_only?: boolean;
     technology_slug?: string;
     language?: string;
-  }): Promise<PaginatedResponse<Project>> {
+  }): Promise<PaginatedResponse<ProjectListItem>> {
     const response = await api.get(apiEndpoints.projects.list, {
       params
     });
