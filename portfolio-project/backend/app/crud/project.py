@@ -58,9 +58,6 @@ def get_projects(
     """
     query = db.query(Project).options(
         selectinload(Project.translations),
-        selectinload(Project.project_technologies).selectinload(
-            ProjectTechnology.technology
-        ),
         selectinload(Project.technologies),
         selectinload(Project.images),
     )

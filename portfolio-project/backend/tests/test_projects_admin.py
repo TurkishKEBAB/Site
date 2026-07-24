@@ -119,7 +119,7 @@ def test_project_list_does_not_lazy_load_technologies_per_project(
         event.remove(db_session.bind, "before_cursor_execute", record_select)
 
     assert response.status_code == 200
-    assert len(statements) <= 7
+    assert len(statements) <= 5
 
 
 def test_project_list_uses_server_cache_for_repeated_requests(
