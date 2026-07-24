@@ -1,6 +1,56 @@
-import { describe, expect, it } from "vitest";
+import { act, render } from "@testing-library/react";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { shouldAnimateNexusBackground } from "./NexusBackground";
+import NexusBackground, { shouldAnimateNexusBackground } from "./NexusBackground";
+
+const createContext = () =>
+  ({
+    clearRect: vi.fn(),
+    setTransform: vi.fn(),
+    beginPath: vi.fn(),
+    moveTo: vi.fn(),
+    lineTo: vi.fn(),
+    stroke: vi.fn(),
+    arc: vi.fn(),
+    fill: vi.fn(),
+    fillText: vi.fn(),
+  }) as unknown as CanvasRenderingContext2D;
+
+const createMediaQuery = (matches: boolean) =>
+  ({
+    matches,
+    media: "(prefers-reduced-motion: reduce)",
+    onchange: null,
+    addEventListener: vi.fn(),
+    removeEventListener: vi.fn(),
+    addListener: vi.fn(),
+    removeListener: vi.fn(),
+    dispatchEvent: vi.fn(),
+  }) as unknown as MediaQueryList;
+
+beforeEach(() => {
+  Object.defineProperty(window, "matchMedia", {
+    configurable: true,
+    value: vi.fn(() => createMediaQuery(false)),
+  });
+  vi.spyOn(HTMLCanvasElement.prototype, "getContext").mockReturnValue(createContext());
+  vi.spyOn(HTMLCanvasElement.prototype, "getBoundingClientRect").mockReturnValue({
+    x: 0,
+    y: 0,
+    width: 320,
+    height: 180,
+    top: 0,
+    right: 320,
+    bottom: 180,
+    left: 0,
+    toJSON: () => ({}),
+  });
+});
+
+afterEach(() => {
+  vi.restoreAllMocks();
+  vi.unstubAllGlobals();
+});
 
 describe("shouldAnimateNexusBackground", () => {
   it("disables continuous animation for reduced-motion and constrained devices", () => {
@@ -35,5 +85,39 @@ describe("shouldAnimateNexusBackground", () => {
         hardwareConcurrency: 8,
       }),
     ).toBe(true);
+  });
+
+  it("draws a frame, schedules animation, and cancels it during cleanup", () => {
+    let nextFrame = 0;
+    let callback: FrameRequestCallback | undefined;
+    const requestAnimationFrame = vi.fn((next: FrameRequestCallback) => {
+      callback = next;
+      nextFrame += 1;
+      return nextFrame;
+    });
+    const cancelAnimationFrame = vi.fn();
+    vi.stubGlobal("requestAnimationFrame", requestAnimationFrame);
+    vi.stubGlobal("cancelAnimationFrame", cancelAnimationFrame);
+
+    const { unmount } = render(<NexusBackground />);
+    expect(requestAnimationFrame).toHaveBeenCalledTimes(1);
+
+    act(() => {
+      callback?.(1000);
+    });
+
+    expect(requestAnimationFrame).toHaveBeenCalledTimes(2);
+    unmount();
+    expect(cancelAnimationFrame).toHaveBeenCalled();
+  });
+
+  it("draws a static frame without scheduling animation for reduced motion", () => {
+    vi.mocked(window.matchMedia).mockReturnValue(createMediaQuery(true));
+    const requestAnimationFrame = vi.fn();
+    vi.stubGlobal("requestAnimationFrame", requestAnimationFrame);
+
+    render(<NexusBackground />);
+
+    expect(requestAnimationFrame).not.toHaveBeenCalled();
   });
 });
