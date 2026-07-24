@@ -16,12 +16,18 @@ const createContext = () =>
     fillText: vi.fn(),
   }) as unknown as CanvasRenderingContext2D;
 
-const createMediaQuery = (matches: boolean) =>
+const createMediaQuery = (
+  matches: boolean,
+  onChange?: (listener: (event: MediaQueryListEvent) => void) => void,
+) =>
   ({
     matches,
     media: "(prefers-reduced-motion: reduce)",
     onchange: null,
-    addEventListener: vi.fn(),
+    addEventListener: vi.fn(
+      (_type: string, listener: (event: MediaQueryListEvent) => void) =>
+        onChange?.(listener),
+    ),
     removeEventListener: vi.fn(),
     addListener: vi.fn(),
     removeListener: vi.fn(),
@@ -123,5 +129,39 @@ describe("shouldAnimateNexusBackground", () => {
     render(<NexusBackground />);
 
     expect(requestAnimationFrame).not.toHaveBeenCalled();
+  });
+
+  it("stops and restarts animation when motion preference changes", () => {
+    let onMotionChange: ((event: MediaQueryListEvent) => void) | undefined;
+    const motionQuery = createMediaQuery(false, (listener) => {
+      onMotionChange = listener;
+    });
+    vi.mocked(window.matchMedia).mockReturnValue(motionQuery);
+
+    let nextFrame = 0;
+    const requestAnimationFrame = vi.fn(() => {
+      nextFrame += 1;
+      return nextFrame;
+    });
+    const cancelAnimationFrame = vi.fn();
+    vi.stubGlobal("requestAnimationFrame", requestAnimationFrame);
+    vi.stubGlobal("cancelAnimationFrame", cancelAnimationFrame);
+
+    const { unmount } = render(<NexusBackground />);
+    expect(requestAnimationFrame).toHaveBeenCalledTimes(1);
+
+    act(() => {
+      onMotionChange?.({ matches: true } as MediaQueryListEvent);
+    });
+
+    expect(cancelAnimationFrame).toHaveBeenCalledTimes(1);
+    expect(requestAnimationFrame).toHaveBeenCalledTimes(1);
+
+    act(() => {
+      onMotionChange?.({ matches: false } as MediaQueryListEvent);
+    });
+
+    expect(requestAnimationFrame).toHaveBeenCalledTimes(2);
+    unmount();
   });
 });

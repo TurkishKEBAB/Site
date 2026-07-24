@@ -113,15 +113,10 @@ export default function NexusBackground() {
 
     const motionQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
     reducedRef.current = motionQuery.matches;
-    const onMotionChange = (event: MediaQueryListEvent) => {
-      reducedRef.current = event.matches;
-    };
-    motionQuery.addEventListener("change", onMotionChange);
-
     const connection = (
       navigator as Navigator & { connection?: { saveData?: boolean } }
     ).connection;
-    const animateBackground = shouldAnimateNexusBackground({
+    let animateBackground = shouldAnimateNexusBackground({
       reducedMotion: motionQuery.matches,
       saveData: Boolean(connection?.saveData),
       hardwareConcurrency: navigator.hardwareConcurrency,
@@ -349,6 +344,25 @@ export default function NexusBackground() {
       cancelAnimationFrame(rafRef.current);
       rafRef.current = 0;
     };
+
+    const onMotionChange = (event: MediaQueryListEvent) => {
+      reducedRef.current = event.matches;
+      animateBackground = shouldAnimateNexusBackground({
+        reducedMotion: event.matches,
+        saveData: Boolean(connection?.saveData),
+        hardwareConcurrency: navigator.hardwareConcurrency,
+      });
+
+      if (!animateBackground) {
+        stopAnimation();
+        draw();
+        return;
+      }
+
+      draw();
+      startAnimation();
+    };
+    motionQuery.addEventListener("change", onMotionChange);
 
     const onResize = () => {
       resize();
