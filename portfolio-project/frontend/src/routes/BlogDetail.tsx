@@ -5,6 +5,7 @@ import remarkGfm from "remark-gfm";
 import { FiArrowLeft, FiArrowRight, FiShare2 } from "react-icons/fi";
 
 import AnimatedSection from "@/components/AnimatedSection";
+import BlogViewTracker from "@/components/BlogViewTracker";
 import { PanelCard } from "@/components/ui";
 import { siteConfig, uiDictionary, type Locale } from "@/content/site";
 import type { BlogPostBundle } from "@/lib/blog";
@@ -53,8 +54,10 @@ export default function BlogDetail({ locale, bundle }: BlogDetailPageProps) {
   const shareUrl = `${siteConfig.siteUrl}/blog/${post.slug}`;
 
   return (
-    <div className="pt-24 md:pt-32 pb-16">
-      <div className="container-custom">
+    <>
+      <BlogViewTracker slug={post.slug} />
+      <div className="pt-24 md:pt-32 pb-16">
+        <div className="container-custom">
         <div className="mb-8">
           <Link
             href="/blog"
@@ -169,7 +172,8 @@ export default function BlogDetail({ locale, bundle }: BlogDetailPageProps) {
             ) : null}
           </aside>
         </div>
+        </div>
       </div>
-    </div>
+    </>
   );
 }

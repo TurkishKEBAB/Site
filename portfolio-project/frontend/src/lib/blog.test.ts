@@ -68,7 +68,7 @@ describe("server blog data fetching", () => {
     );
   });
 
-  it("keeps the view-counting fetch fresh and caches the list via ISR", async () => {
+  it("keeps content rendering cacheable without counting views", async () => {
     const fetchSpy = vi
       .fn()
       .mockResolvedValueOnce({
@@ -89,10 +89,9 @@ describe("server blog data fetching", () => {
     });
 
     expect(fetchSpy).toHaveBeenCalledTimes(2);
-    expect(fetchSpy.mock.calls[0][0]).toContain("/blog/post?language=en&count_view=true");
-    // count_view=true has a side effect: it must reach the backend every time
-    expect(fetchSpy.mock.calls[0][1]).toMatchObject({ cache: "no-store" });
-    expect(fetchSpy.mock.calls[0][1]).not.toHaveProperty("next");
+    expect(fetchSpy.mock.calls[0][0]).toContain("/blog/post?language=en&count_view=false");
+    expect(fetchSpy.mock.calls[0][1]).toMatchObject({ next: { revalidate: 60 } });
+    expect(fetchSpy.mock.calls[0][1]).not.toHaveProperty("cache", "no-store");
     expect(fetchSpy.mock.calls[1][1]).toMatchObject({ next: { revalidate: 60 } });
   });
 });

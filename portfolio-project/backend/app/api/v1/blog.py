@@ -20,6 +20,7 @@ from app.schemas.blog import (
 )
 from app.services.admin_audit import record_admin_action
 from fastapi import APIRouter, Depends, HTTPException, Query, status
+from loguru import logger
 from sqlalchemy.orm import Session
 
 router = APIRouter()
@@ -161,6 +162,32 @@ async def get_blog_post(
         )
 
     return refreshed
+
+
+@router.post("/{slug}/view", status_code=status.HTTP_204_NO_CONTENT)
+def record_blog_view(
+    slug: str,
+    db: Session = Depends(get_db),
+):
+    """Record a public view without making the content render depend on it."""
+    post = blog_crud.get_blog_post_by_slug(
+        db,
+        slug=slug,
+        published_only=True,
+    )
+
+    if not post:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Blog post not found"
+        )
+
+    try:
+        blog_crud.increment_blog_view_count(db, post.id)
+    except Exception as exc:
+        db.rollback()
+        logger.warning("Could not record view for blog post {}: {}", slug, exc)
+
+    return None
 
 
 @router.post("/", response_model=BlogPostResponse, status_code=status.HTTP_201_CREATED)

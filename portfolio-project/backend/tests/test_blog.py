@@ -1,5 +1,7 @@
 """Blog endpoint tests."""
 
+from app.api.v1 import blog as blog_api
+
 
 def test_get_blog_posts_and_search(client, create_blog_post):
     create_blog_post(slug="published-post", title="Published Post", content="python fastapi", published=True)
@@ -185,3 +187,27 @@ def test_blog_detail_view_count_is_explicit(client, create_blog_post):
     assert metadata.json()["views"] == 0
     assert viewed.status_code == 200
     assert viewed.json()["views"] == 1
+
+
+def test_blog_view_endpoint_counts_without_loading_content(client, create_blog_post):
+    create_blog_post(slug="tracked-post", views=0)
+
+    tracked = client.post("/api/v1/blog/tracked-post/view")
+    detail = client.get("/api/v1/blog/tracked-post?count_view=false")
+
+    assert tracked.status_code == 204
+    assert detail.status_code == 200
+    assert detail.json()["views"] == 1
+
+
+def test_blog_view_endpoint_is_best_effort(client, create_blog_post, monkeypatch):
+    create_blog_post(slug="unavailable-counter")
+
+    def fail_to_increment(*args, **kwargs):
+        raise RuntimeError("counter unavailable")
+
+    monkeypatch.setattr(blog_api.blog_crud, "increment_blog_view_count", fail_to_increment)
+
+    response = client.post("/api/v1/blog/unavailable-counter/view")
+
+    assert response.status_code == 204
