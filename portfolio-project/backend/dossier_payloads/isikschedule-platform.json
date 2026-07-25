@@ -1,0 +1,800 @@
+{
+  "impact_en": "I\u015f\u0131k University publishes each term as one 1,301-row Excel workbook, leaving students to hand-check lecture/lab/PS clashes across hundreds of sections. IsikSchedule turns that workbook into ranked, conflict-free timetables: an admin uploads the term catalog once, and the web client returns up to 20 distinct schedules per request. The web backend does not run a metaheuristic \u2014 it runs one exact search (depth-first with minimum-remaining-values ordering, degree tie-breaking, forward checking and bitmask clash detection), then re-ranks the results with a quality-diversity (MMR) selector so the options shown differ meaningfully instead of being near-duplicates. Measured on 2026-07-25 against the live 2026-2027-Fall catalog, 3,367 solve runs returned in a median of 1.47 ms (p95 4.16 ms), and the backend suite passes 58 tests at 74% coverage with the solver module itself at 91%.",
+  "impact_tr": "I\u015f\u0131k \u00dcniversitesi her d\u00f6nemi 1.301 sat\u0131rl\u0131k tek bir Excel dosyas\u0131 olarak yay\u0131ml\u0131yor; \u00f6\u011frenciler y\u00fczlerce \u015fube aras\u0131nda ders/lab/PS \u00e7ak\u0131\u015fmalar\u0131n\u0131 elle kontrol etmek zorunda kal\u0131yor. IsikSchedule bu dosyay\u0131 s\u0131ralanm\u0131\u015f ve \u00e7ak\u0131\u015fmas\u0131z programlara d\u00f6n\u00fc\u015ft\u00fcr\u00fcyor: y\u00f6netici d\u00f6nem katalo\u011funu bir kez y\u00fckl\u00fcyor, web istemcisi her istekte en fazla 20 farkl\u0131 program d\u00f6nd\u00fcr\u00fcyor. Web arka ucu metasezgisel bir y\u00f6ntem \u00e7al\u0131\u015ft\u0131rm\u0131yor \u2014 tek bir kesin arama y\u00fcr\u00fct\u00fcyor (minimum-remaining-values s\u0131ralamal\u0131 derinlik \u00f6ncelikli arama, derece e\u015fitlik bozucu, forward checking ve bitmask \u00e7ak\u0131\u015fma tespiti) ve sonu\u00e7lar\u0131 kalite-\u00e7e\u015fitlilik (MMR) se\u00e7icisiyle yeniden s\u0131ral\u0131yor; b\u00f6ylece g\u00f6sterilen se\u00e7enekler birbirinin kopyas\u0131 olmak yerine anlaml\u0131 bi\u00e7imde farkl\u0131la\u015f\u0131yor. 25.07.2026'da canl\u0131 2026-2027-Fall katalo\u011fu \u00fczerinde \u00f6l\u00e7\u00fclen 3.367 \u00e7\u00f6z\u00fcm ko\u015fusu medyan 1,47 ms (p95 4,16 ms) s\u00fcrd\u00fc; arka u\u00e7 test paketi %74 kapsama ile 58 testi ge\u00e7iyor, \u00e7\u00f6z\u00fcc\u00fc mod\u00fcl\u00fcn\u00fcn kendisi %91 kapsamda.",
+  "metrics": [
+    {
+      "value": "1.47 ms",
+      "numeric_value": 1.47,
+      "label": "median solve",
+      "note": "Median of 3,367 solve runs over the live 1,301-course 2026-2027-Fall catalog; p95 4.16 ms, max 119.51 ms. Measured 2026-07-25 from the solver's own elapsed_ms metadata.",
+      "display_order": 0
+    },
+    {
+      "value": "1,301",
+      "numeric_value": 1301,
+      "label": "courses parsed",
+      "note": "Sections in the active 2026-2027-Fall catalog, parsed from one .xlsx by app/core/excel_loader.py and served via GET /api/courses/global. Measured 2026-07-25.",
+      "display_order": 1
+    },
+    {
+      "value": "74%",
+      "numeric_value": 74,
+      "label": "backend coverage",
+      "note": "pytest-cov over backend/app: 58 tests passing, 1,586 statements. The solver module itself is at 91%. Measured 2026-07-25.",
+      "display_order": 2
+    },
+    {
+      "value": "13",
+      "numeric_value": 13,
+      "label": "desktop solvers",
+      "note": "Classes carrying @register_scheduler in the PyQt6 desktop client (isikschedule-desktop): A*, BFS, ConstraintProgramming, DFS, Dijkstra, Genetic, Greedy, HillClimbing, HybridGA+SA, IDDFS, PSO, SimulatedAnnealing, TabuSearch. Desktop only \u2014 the web backend does not consume this registry.",
+      "display_order": 3
+    },
+    {
+      "value": "20 / 100",
+      "label": "schedules returned",
+      "note": "The search explores up to 100 distinct layouts and returns the best 20 after quality-diversity selection (MAX_DISCOVERED_LAYOUTS / MAX_RETURNED_SCHEDULES in app/scheduling/solver.py).",
+      "display_order": 4
+    },
+    {
+      "value": "28",
+      "numeric_value": 28,
+      "label": "REST endpoints",
+      "note": "Route handlers across 8 routers (health, auth, admin, courses, upload, generate, schedules, friends), counted from the @router decorators on 2026-07-25.",
+      "display_order": 5
+    }
+  ],
+  "c4": [
+    {
+      "label": "Context",
+      "note": "Verified actors and the single external data source. There is no SIS integration and no SMTP in either repository.",
+      "display_order": 0,
+      "tiers": [
+        [
+          {
+            "kind": "person",
+            "title": "Student",
+            "sub": "picks courses, sets ECTS / clash / days-off preferences, exports the result",
+            "tier_order": 0,
+            "display_order": 0
+          },
+          {
+            "kind": "person",
+            "title": "Admin",
+            "sub": "uploads and activates the term catalog",
+            "tier_order": 0,
+            "display_order": 1
+          }
+        ],
+        [
+          {
+            "kind": "system",
+            "title": "IsikSchedule",
+            "sub": "timetable generation \u00b7 independent web and desktop clients",
+            "tier_order": 1,
+            "display_order": 0
+          }
+        ],
+        [
+          {
+            "kind": "external",
+            "title": "Term catalog (.xlsx)",
+            "sub": "the only ingest path \u2014 an Excel workbook uploaded by an admin",
+            "leaf": true,
+            "tier_order": 2,
+            "display_order": 0
+          }
+        ]
+      ]
+    },
+    {
+      "label": "Containers",
+      "note": "Two independent products, not a shared core: the web stack and the PyQt6 desktop client each carry their own scheduling code and their own SQLite file.",
+      "display_order": 1,
+      "tiers": [
+        [
+          {
+            "kind": "client",
+            "title": "Web client",
+            "sub": "Next.js 16 \u00b7 React 19 \u00b7 Tailwind \u00b7 zustand + react-query",
+            "tier_order": 0,
+            "display_order": 0
+          },
+          {
+            "kind": "client",
+            "title": "Desktop client",
+            "sub": "PyQt6 \u00b7 separate repository \u00b7 13-solver registry",
+            "tier_order": 0,
+            "display_order": 1
+          }
+        ],
+        [
+          {
+            "kind": "container",
+            "title": "FastAPI backend",
+            "sub": "REST \u00b7 JWT bearer + admin role \u00b7 slowapi rate limits",
+            "tier_order": 1,
+            "display_order": 0
+          }
+        ],
+        [
+          {
+            "kind": "component",
+            "title": "Exact solver",
+            "sub": "in-process \u00b7 DFS + MRV + forward checking + bitmask clashes",
+            "tier_order": 2,
+            "display_order": 0
+          },
+          {
+            "kind": "store",
+            "title": "In-memory job map",
+            "sub": "JOBS dict \u00b7 swept after 1 h \u00b7 lost on restart",
+            "leaf": true,
+            "tier_order": 2,
+            "display_order": 1
+          }
+        ],
+        [
+          {
+            "kind": "store",
+            "title": "SQLite (web)",
+            "sub": "users \u00b7 saved_schedules \u00b7 friendships \u00b7 global_courses",
+            "leaf": true,
+            "tier_order": 3,
+            "display_order": 0
+          },
+          {
+            "kind": "store",
+            "title": "SQLite (desktop)",
+            "sub": "local file \u00b7 courses \u00b7 schedules \u00b7 transcripts \u00b7 grades",
+            "leaf": true,
+            "tier_order": 3,
+            "display_order": 1
+          }
+        ]
+      ]
+    },
+    {
+      "label": "Components",
+      "note": "Inside app/scheduling/solver.py \u2014 the subsystem that defines the product.",
+      "display_order": 2,
+      "tiers": [
+        [
+          {
+            "kind": "component",
+            "title": "Domain builder",
+            "sub": "groups sections by main_code into lecture/lab/PS layout choices",
+            "tier_order": 0,
+            "display_order": 0
+          }
+        ],
+        [
+          {
+            "kind": "component",
+            "title": "MRV selector",
+            "sub": "fewest candidates first, highest degree breaks ties",
+            "tier_order": 1,
+            "display_order": 0
+          },
+          {
+            "kind": "component",
+            "title": "Bitmask clash engine",
+            "sub": "one bit per time slot; overlap = popcount of AND",
+            "tier_order": 1,
+            "display_order": 1
+          }
+        ],
+        [
+          {
+            "kind": "component",
+            "title": "Forward check",
+            "sub": "prunes when any unassigned course loses every candidate",
+            "tier_order": 2,
+            "display_order": 0
+          },
+          {
+            "kind": "component",
+            "title": "Diversity selector",
+            "sub": "MMR \u00b7 0.65 quality / 0.35 distance",
+            "tier_order": 2,
+            "display_order": 1
+          }
+        ]
+      ]
+    }
+  ],
+  "adrs": [
+    {
+      "id": "ADR-001",
+      "title": "Two independent clients instead of a shared solver package",
+      "status": "Accepted",
+      "date": "2026-01",
+      "context": "The PyQt6 desktop client (first commit 2025-11-10) already carried 13 registered solvers behind a BaseScheduler abstract class. When the web product started as a separate repository on 2026-01-02, the choice was either to extract the desktop engine into a shared Python package or to let the web stack stand alone.",
+      "decision": "Ship the web as an independent FastAPI + Next.js application with its own scheduling code. app/algorithms/ exists as a 'ported from PyQt6' placeholder but was never filled; the web solver lives in app/scheduling/solver.py.",
+      "tradeoff": "Scheduling logic is now implemented twice and can drift apart \u2014 the desktop's constraint model and the web's scoring model are already different, and no shared regression suite covers both. Accepted because the web needed a different execution profile (one HTTP round trip) than the desktop's interactive metaheuristics.",
+      "display_order": 0
+    },
+    {
+      "id": "ADR-002",
+      "title": "One exact bounded search instead of porting the 13 metaheuristics",
+      "status": "Accepted",
+      "date": "2026-06",
+      "context": "A web request must return a deterministic, explainable answer inside a single round trip over a 1,301-section catalog. Metaheuristics such as the desktop's genetic and particle-swarm solvers give different answers on identical input and are hard to justify to a student asking why a course was dropped.",
+      "decision": "Implement a single exact solver \u2014 depth-first search with minimum-remaining-values ordering, degree tie-breaking, forward checking and bitmask clash detection \u2014 bounded to 100 discovered layouts and 20 returned, then rank with a quality-diversity (MMR) selector at 0.65 quality / 0.35 distance.",
+      "tradeoff": "The API still accepts an `algorithm` field on POST /api/generate and silently ignores it (the parameter is bound to `_algorithm` and never read), so the contract advertises a choice the backend does not honour. The search is also bounded, so 'search_complete: false' is a real outcome on wide selections rather than an error.",
+      "display_order": 1
+    },
+    {
+      "id": "ADR-003",
+      "title": "Synchronous generation with an in-memory job map",
+      "status": "Accepted",
+      "date": "2026-06",
+      "context": "docker-compose.yml describes a Celery worker plus Redis broker and a PostgreSQL database. None of it is installed: backend/requirements.txt contains no celery, redis or PostgreSQL driver, and app/tasks/__init__.py is a bare docstring with no Celery application, so `celery -A app.tasks worker` cannot start.",
+      "decision": "Keep generation synchronous. POST /api/generate calls run_job() inline and the result is already complete when the response is written; GET /api/jobs/{id} then serves it from a module-level JOBS dict that is swept of entries older than one hour.",
+      "tradeoff": "Job state is lost on restart and does not survive more than one process, so the deployment cannot scale horizontally without changing this first. Accepted because measured solve latency is a 1.47 ms median \u2014 a queue would cost more in moving parts than it saves in request time. The compose file remains aspirational and is documented as such.",
+      "display_order": 2
+    },
+    {
+      "id": "ADR-004",
+      "title": "Bearer JWT with a two-role check, and anonymous generation",
+      "status": "Accepted",
+      "date": "2026-04",
+      "context": "The web release adds multi-user semantics the single-user desktop never had, but the core value \u2014 turning a catalog into a timetable \u2014 should not sit behind a signup wall.",
+      "decision": "Authenticate with HS256 bearer tokens (python-jose) resolved by a get_current_user dependency, and gate admin routes with a second get_current_admin dependency that requires role == 'admin'. Generation, the public catalog and share-link retrieval stay anonymous; upload, friends, saved schedules and every /api/admin route require a token.",
+      "tradeoff": "Tokens are valid for seven days and there is no refresh or revocation endpoint, so a leaked token stays usable until it expires. Anonymous generation also means POST /api/generate is only protected by slowapi rate limiting.",
+      "display_order": 3
+    }
+  ],
+  "log": [
+    {
+      "hash": "adf58ec",
+      "date": "2026-07-02",
+      "title": "Account data export and deletion",
+      "note": "GET /api/auth/me/export and DELETE /api/auth/me \u2014 the KVKK data-rights surface, backed by tests/test_data_rights.py.",
+      "display_order": 0
+    },
+    {
+      "hash": "c5a9e19",
+      "date": "2026-07-01",
+      "title": "Alembic migration baseline",
+      "note": "Replaced create_all()-only schema management with a versioned baseline (20260701_0001) covering all four tables, followed by an SQLite foreign-key cascade migration.",
+      "display_order": 1
+    },
+    {
+      "hash": "aeda87e",
+      "date": "2026-06-29",
+      "title": "CI quality gates",
+      "note": "Backend job runs pytest and ruff; frontend job runs npm audit --audit-level=high, lint, production build and a design-contract check. CodeQL runs alongside.",
+      "display_order": 2
+    },
+    {
+      "hash": "edbff94",
+      "date": "2026-06-28",
+      "title": "KVKK consent flow",
+      "note": "Added kvkk_consent_at and consent_version to the user model plus the privacy/terms surfaces.",
+      "display_order": 3
+    },
+    {
+      "hash": "c5830c7",
+      "date": "2026-06-14",
+      "title": "Exact solver lands",
+      "note": "app/scheduling/solver.py introduced the DFS/MRV/forward-checking search, the bitmask clash engine and the 0-100 score breakdown that the results UI renders.",
+      "display_order": 4
+    },
+    {
+      "hash": "de99109",
+      "date": "2026-01-02",
+      "title": "Web application starts",
+      "note": "First commit of isikschedule-web: auth, admin panel and semester management. The PyQt6 desktop client had reached its Phase 1-7 milestone in the separate isikschedule-desktop repository on 2025-11-10 (29b3cdb).",
+      "display_order": 5
+    }
+  ],
+  "diagrams": [
+    {
+      "id": "solve-sequence",
+      "kind": "sequence",
+      "title": "Sequence \u2014 generate a timetable",
+      "note": "Real call path. The POST returns an already-finished job: there is no queue and no worker.",
+      "display_order": 0,
+      "data": {
+        "kind": "sequence",
+        "actors": [
+          "Web client",
+          "FastAPI",
+          "SQLite",
+          "Solver",
+          "JOBS map"
+        ],
+        "messages": [
+          {
+            "from": "Web client",
+            "to": "FastAPI",
+            "label": "POST /api/generate \u00b7 file_id, selected_main_codes, params"
+          },
+          {
+            "from": "FastAPI",
+            "to": "FastAPI",
+            "label": "reject if 0 or >15 main codes \u2192 400"
+          },
+          {
+            "from": "FastAPI",
+            "to": "SQLite",
+            "label": "load active global_courses row"
+          },
+          {
+            "from": "SQLite",
+            "to": "FastAPI",
+            "label": "courses_json \u00b7 1,301 sections",
+            "kind": "return"
+          },
+          {
+            "from": "FastAPI",
+            "to": "Solver",
+            "label": "generate_schedule_result(...) \u2014 inline, blocking"
+          },
+          {
+            "from": "Solver",
+            "to": "Solver",
+            "label": "build domains \u00b7 MRV + forward check \u00b7 bitmask clashes"
+          },
+          {
+            "from": "Solver",
+            "to": "Solver",
+            "label": "MMR select 20 of up to 100 layouts"
+          },
+          {
+            "from": "Solver",
+            "to": "FastAPI",
+            "label": "schedules + diagnosis + metadata",
+            "kind": "return"
+          },
+          {
+            "from": "FastAPI",
+            "to": "JOBS map",
+            "label": "store under job_id (status already 'completed')"
+          },
+          {
+            "from": "FastAPI",
+            "to": "Web client",
+            "label": "200 \u00b7 job_id + status",
+            "kind": "return"
+          },
+          {
+            "from": "Web client",
+            "to": "FastAPI",
+            "label": "GET /api/jobs/{job_id}"
+          },
+          {
+            "from": "FastAPI",
+            "to": "Web client",
+            "label": "200 \u00b7 result envelope (404 once swept after 1 h)",
+            "kind": "return"
+          }
+        ]
+      }
+    },
+    {
+      "id": "web-erd",
+      "kind": "schema",
+      "title": "ERD \u2014 web persistence",
+      "note": "The four tables that actually exist, per app/models/database.py and the Alembic baseline.",
+      "display_order": 1,
+      "data": {
+        "kind": "schema",
+        "tiers": [
+          [
+            {
+              "name": "users",
+              "kind": "table",
+              "rows": [
+                "id \u00b7 pk",
+                "email \u00b7 unique",
+                "password_hash",
+                "role \u00b7 'user' | 'admin'",
+                "is_active",
+                "kvkk_consent_at",
+                "consent_version"
+              ]
+            }
+          ],
+          [
+            {
+              "name": "saved_schedules",
+              "kind": "table",
+              "rows": [
+                "id \u00b7 pk",
+                "user_id \u00b7 fk \u2192 users \u00b7 NULLABLE",
+                "name",
+                "courses_json",
+                "share_id \u00b7 unique \u00b7 nullable"
+              ]
+            },
+            {
+              "name": "friendships",
+              "kind": "table",
+              "rows": [
+                "id \u00b7 pk",
+                "user_id \u00b7 fk \u2192 users",
+                "friend_id \u00b7 fk \u2192 users",
+                "status \u00b7 pending | accepted | rejected"
+              ]
+            }
+          ],
+          [
+            {
+              "name": "global_courses",
+              "kind": "table",
+              "rows": [
+                "id \u00b7 pk",
+                "semester",
+                "courses_json \u00b7 whole catalog",
+                "uploaded_by \u00b7 fk \u2192 users",
+                "is_active"
+              ]
+            }
+          ]
+        ],
+        "relations": [
+          {
+            "from": "users",
+            "label": "1:N (nullable)",
+            "to": "saved_schedules"
+          },
+          {
+            "from": "users",
+            "label": "sends 1:N",
+            "to": "friendships"
+          },
+          {
+            "from": "users",
+            "label": "uploads 1:N",
+            "to": "global_courses"
+          }
+        ]
+      }
+    },
+    {
+      "id": "desktop-solver-uml",
+      "kind": "schema",
+      "title": "Class \u2014 desktop solver registry",
+      "note": "isikschedule-desktop: 13 concrete schedulers self-register behind one abstract base. This registry is not reachable from the web backend.",
+      "display_order": 2,
+      "data": {
+        "kind": "schema",
+        "tiers": [
+          [
+            {
+              "name": "BaseScheduler",
+              "kind": "abstract",
+              "rows": [
+                "metadata: AlgorithmMetadata",
+                "+ schedule(...)",
+                "uses score_schedule()"
+              ]
+            },
+            {
+              "name": "AlgorithmMetadata",
+              "kind": "class",
+              "rows": [
+                "name: str",
+                "category",
+                "description"
+              ]
+            }
+          ],
+          [
+            {
+              "name": "_ALGORITHM_REGISTRY",
+              "kind": "class",
+              "rows": [
+                "dict[str, type[BaseScheduler]]",
+                "+ register_scheduler(cls)",
+                "+ get_registered_scheduler(name)",
+                "+ iter_registered_schedulers()"
+              ]
+            }
+          ],
+          [
+            {
+              "name": "Exhaustive / graph",
+              "kind": "class",
+              "rows": [
+                "DFS",
+                "BFS",
+                "IDDFS",
+                "A*",
+                "Dijkstra",
+                "Greedy"
+              ]
+            },
+            {
+              "name": "Metaheuristic",
+              "kind": "class",
+              "rows": [
+                "Genetic",
+                "SimulatedAnnealing",
+                "HillClimbing",
+                "TabuSearch",
+                "PSO",
+                "HybridGA+SA"
+              ]
+            },
+            {
+              "name": "Declarative",
+              "kind": "class",
+              "rows": [
+                "ConstraintProgramming"
+              ]
+            }
+          ]
+        ],
+        "relations": [
+          {
+            "from": "BaseScheduler",
+            "label": "declares",
+            "to": "AlgorithmMetadata"
+          },
+          {
+            "from": "Exhaustive / graph",
+            "label": "extends",
+            "to": "BaseScheduler"
+          },
+          {
+            "from": "Metaheuristic",
+            "label": "extends",
+            "to": "BaseScheduler"
+          },
+          {
+            "from": "Declarative",
+            "label": "extends",
+            "to": "BaseScheduler"
+          },
+          {
+            "from": "_ALGORITHM_REGISTRY",
+            "label": "holds 13",
+            "to": "BaseScheduler"
+          }
+        ]
+      }
+    },
+    {
+      "id": "search-flow",
+      "kind": "tiers",
+      "title": "Flow \u2014 inside one solve",
+      "note": "Branches taken from the solver's own diagnosis codes; an empty result is explained, never silent.",
+      "display_order": 3,
+      "data": {
+        "kind": "tiers",
+        "tiers": [
+          [
+            {
+              "kind": "start",
+              "title": "POST /api/generate"
+            }
+          ],
+          [
+            {
+              "kind": "step",
+              "title": "Build domains",
+              "sub": "group sections by main_code into lecture/lab/PS layouts"
+            }
+          ],
+          [
+            {
+              "kind": "decision",
+              "title": "Structurally possible?"
+            }
+          ],
+          [
+            {
+              "kind": "error",
+              "title": "empty + reason",
+              "sub": "missing_course \u00b7 missing_required_component \u00b7 locked_blocks_course \u00b7 ects_exceeded",
+              "via": "no"
+            },
+            {
+              "kind": "step",
+              "title": "DFS search",
+              "sub": "MRV order \u00b7 forward check \u00b7 bitmask clash prune",
+              "via": "yes"
+            }
+          ],
+          [
+            {
+              "kind": "step",
+              "title": "Score each layout",
+              "sub": "clash 35 + coverage 25 + free days 20 + compactness 20"
+            }
+          ],
+          [
+            {
+              "kind": "step",
+              "title": "MMR selection",
+              "sub": "best 20 of up to 100, penalised by user preferences"
+            }
+          ],
+          [
+            {
+              "kind": "end",
+              "title": "Ranked timetables",
+              "sub": "+ search metadata (elapsed_ms, pruned counters, search_complete)"
+            }
+          ]
+        ],
+        "notes": [
+          "Bound reached \u2192 search_complete: false, results are still returned.",
+          "No layout survives \u2192 the solver re-solves for minimum ECTS to say whether the clash limit or the ECTS limit was the binding constraint."
+        ]
+      }
+    },
+    {
+      "id": "rbac-matrix",
+      "kind": "matrix",
+      "title": "Matrix \u2014 who can call what",
+      "note": "Read off the Depends(get_current_user) / Depends(get_current_admin) declarations on each route.",
+      "display_order": 4,
+      "data": {
+        "kind": "matrix",
+        "cols": [
+          "Anonymous",
+          "User",
+          "Admin"
+        ],
+        "rows": [
+          {
+            "label": "GET /api/courses/global \u00b7 /semesters",
+            "cells": [
+              "yes",
+              "yes",
+              "yes"
+            ]
+          },
+          {
+            "label": "POST /api/generate \u00b7 GET/DELETE /api/jobs/{id}",
+            "cells": [
+              "yes",
+              "yes",
+              "yes"
+            ]
+          },
+          {
+            "label": "POST /api/schedules/share \u00b7 GET /api/shared/{code}",
+            "cells": [
+              "yes",
+              "yes",
+              "yes"
+            ]
+          },
+          {
+            "label": "POST /api/upload \u00b7 GET /api/upload/{id}/courses",
+            "cells": [
+              "\u2014",
+              "yes",
+              "yes"
+            ]
+          },
+          {
+            "label": "GET /api/auth/me \u00b7 /me/export \u00b7 DELETE /me",
+            "cells": [
+              "\u2014",
+              "yes",
+              "yes"
+            ]
+          },
+          {
+            "label": "POST /api/friends/* \u00b7 GET /api/friends",
+            "cells": [
+              "\u2014",
+              "yes",
+              "yes"
+            ]
+          },
+          {
+            "label": "POST /api/admin/upload-semester \u00b7 activate",
+            "cells": [
+              "\u2014",
+              "\u2014",
+              "yes"
+            ]
+          },
+          {
+            "label": "GET /api/admin/users \u00b7 /stats",
+            "cells": [
+              "\u2014",
+              "\u2014",
+              "yes"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "ci-pipeline",
+      "kind": "tiers",
+      "title": "Flow \u2014 CI on push and PR",
+      "note": "The three workflows that actually gate master. There is no coverage threshold and no SonarQube step in CI.",
+      "display_order": 5,
+      "data": {
+        "kind": "tiers",
+        "tiers": [
+          [
+            {
+              "kind": "start",
+              "title": "push / PR \u2192 master"
+            }
+          ],
+          [
+            {
+              "kind": "step",
+              "title": "Backend quality",
+              "sub": "Python 3.12 \u00b7 pytest \u00b7 ruff check"
+            },
+            {
+              "kind": "step",
+              "title": "Frontend quality",
+              "sub": "npm audit --audit-level=high \u00b7 lint \u00b7 build \u00b7 design contract"
+            },
+            {
+              "kind": "step",
+              "title": "CodeQL",
+              "sub": "static security analysis"
+            }
+          ],
+          [
+            {
+              "kind": "decision",
+              "title": "All jobs green?"
+            }
+          ],
+          [
+            {
+              "kind": "error",
+              "title": "blocked",
+              "sub": "PR annotated with the failing job",
+              "via": "no"
+            },
+            {
+              "kind": "final",
+              "title": "mergeable",
+              "via": "yes"
+            }
+          ]
+        ],
+        "notes": [
+          "Deployment is not automated from CI \u2014 no deploy job exists in any workflow.",
+          "SonarQube was run locally against both repositories on 2026-02-21, not from CI."
+        ]
+      }
+    }
+  ],
+  "gallery": [
+    {
+      "id": "isik-results",
+      "src": "/projects/isikschedule-platform-results.webp",
+      "caption": "fig 01 \u2014 Web client results view: 20 ranked conflict-free timetables generated from the live 1,301-course 2026-2027 Fall catalog. Program #1 scores 72/100 at 16 ECTS with zero clashes, and the weekly grid shows real sections (COMP1103-L.1, MATH2201.1, MATH1111-PS.2) colour-coded by lecture, lab and PS.",
+      "hint": "/projects/isikschedule-platform-results.webp",
+      "display_order": 0
+    },
+    {
+      "id": "isik-scheduler",
+      "src": "/projects/isikschedule-platform-scheduler.webp",
+      "caption": "fig 02 \u2014 Scheduler workspace: the searchable course catalog on the left, the empty weekly grid in the centre, and the preference controls on the right (maximum ECTS, clash tolerance, teaching-hour window, days to keep free) that are passed to the solver as search parameters.",
+      "hint": "/projects/isikschedule-platform-scheduler.webp",
+      "display_order": 1
+    },
+    {
+      "id": "isik-admin",
+      "src": "/projects/isikschedule-platform-admin.webp",
+      "caption": "fig 03 \u2014 Admin panel, reachable only with a bearer token whose role is 'admin': term upload plus the active 2026-2027-Fall catalog showing all 1,301 parsed sections. The address shown is the non-functional development placeholder from config.py, not a real account.",
+      "hint": "/projects/isikschedule-platform-admin.webp",
+      "display_order": 2
+    },
+    {
+      "id": "isik-landing",
+      "src": "/projects/isikschedule-platform-landing.webp",
+      "caption": "fig 04 \u2014 Public landing page of the Next.js client. The timetable inside the product shot is an illustrative marketing preview with placeholder course codes, not solver output; fig 01 shows a real generated result.",
+      "hint": "/projects/isikschedule-platform-landing.webp",
+      "display_order": 3
+    }
+  ]
+}

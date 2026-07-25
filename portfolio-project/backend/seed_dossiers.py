@@ -10,11 +10,16 @@ Usage (inside the backend container or with DATABASE_URL exported):
     python seed_dossiers.py           # seed projects that have no dossier yet
     python seed_dossiers.py --force   # overwrite existing dossiers too
 
-Gallery images are referenced as /projects/*.png and must exist in
+Gallery images are referenced as /projects/* and must exist in
 frontend/public/projects/ to render; missing files only affect the gallery.
+
+Research-backed payloads that must be available to the seed image live in
+backend/dossier_payloads/ and are loaded by project slug below.
 """
 
+import json
 import sys
+from pathlib import Path
 
 from sqlalchemy.orm import Session
 
@@ -24,257 +29,6 @@ from app.models.project import Project
 from app.schemas.dossier import ProjectDossierUpsert
 
 DOSSIER_CONTENT: dict[str, dict] = {
-    "isikschedule-platform": {
-        "impact_en": (
-            "Dual-platform scheduling system with a shared solver core: 13 "
-            "optimization algorithms serve ~1,000 desktop users and a JWT/RBAC "
-            "web release, running as six Dockerized services."
-        ),
-        "impact_tr": (
-            "Ortak çözücü çekirdekli çift platformlu ders programı sistemi: 13 "
-            "optimizasyon algoritması ~1.000 masaüstü kullanıcısına ve JWT/RBAC "
-            "korumalı web sürümüne hizmet ediyor; altı Docker servisi olarak çalışıyor."
-        ),
-        "metrics": [
-            {"value": "86.97%", "label": "coverage", "note": "SonarQube gate", "display_order": 0},
-            {"value": "13", "label": "algorithms", "note": "registered solvers", "display_order": 1},
-            {"value": "~1,000", "label": "active users", "note": "desktop release", "display_order": 2},
-            {"value": "6", "label": "services", "note": "Dockerized runtime", "display_order": 3},
-        ],
-        "c4": [
-            {
-                "label": "Context",
-                "note": "who touches the system, and what it talks to",
-                "display_order": 0,
-                "tiers": [
-                    [
-                        {"kind": "person", "title": "Student", "sub": "builds a conflict-free timetable"},
-                        {"kind": "person", "title": "Dept. Coordinator", "sub": "curates course data"},
-                    ],
-                    [{"kind": "system", "title": "IsikSchedule", "sub": "scheduling platform · desktop + web"}],
-                    [
-                        {"kind": "external", "title": "University SIS", "sub": "course & section source", "leaf": True},
-                        {"kind": "external", "title": "SMTP", "sub": "notifications", "leaf": True},
-                    ],
-                ],
-            },
-            {
-                "label": "Containers",
-                "note": "deployable units inside the platform",
-                "display_order": 1,
-                "tiers": [
-                    [
-                        {"kind": "client", "title": "Desktop", "sub": "PyQt6 · ~1,000 users"},
-                        {"kind": "client", "title": "Web", "sub": "Next.js · JWT"},
-                    ],
-                    [{"kind": "container", "title": "FastAPI Gateway", "sub": "REST · JWT / RBAC"}],
-                    [
-                        {"kind": "container", "title": "Scheduling Engine", "sub": "13 algorithms"},
-                        {"kind": "container", "title": "Celery Workers", "sub": "async solves", "leaf": True},
-                    ],
-                    [
-                        {"kind": "store", "title": "PostgreSQL", "sub": "primary store", "leaf": True},
-                        {"kind": "store", "title": "Redis", "sub": "cache · broker", "leaf": True},
-                    ],
-                ],
-            },
-            {
-                "label": "Components",
-                "note": "inside the scheduling engine",
-                "display_order": 2,
-                "tiers": [
-                    [{"kind": "component", "title": "Algorithm Registry", "sub": "one interface · 13 solvers"}],
-                    [
-                        {"kind": "component", "title": "Constraint Solver", "sub": "hard/soft constraint passes"},
-                        {"kind": "component", "title": "Conflict Validator", "sub": "overlap & capacity checks"},
-                    ],
-                    [
-                        {"kind": "component", "title": "Timetable Builder", "sub": "assembles the final schedule"},
-                        {"kind": "component", "title": "Persistence Adapter", "sub": "results → PostgreSQL"},
-                    ],
-                ],
-            },
-        ],
-        "adrs": [
-            {
-                "id": "ADR-001",
-                "title": "One scheduling core, two clients",
-                "status": "Accepted",
-                "date": "2024-11",
-                "context": "Desktop (PyQt6) shipped first; a web product was planned without doubling maintenance.",
-                "decision": "Extract the engine into a shared package both clients consume — the same 13 algorithms everywhere.",
-                "tradeoff": "Stricter interface discipline; engine changes now version against two release trains.",
-                "display_order": 0,
-            },
-            {
-                "id": "ADR-002",
-                "title": "Celery + Redis for long-running solves",
-                "status": "Accepted",
-                "date": "2025-03",
-                "context": "Large solves can take minutes; running them inside FastAPI request workers starved the API.",
-                "decision": "Queue solves through Celery with Redis as broker; the API returns a job handle and clients poll.",
-                "tradeoff": "More moving parts in Docker Compose; retries had to be made idempotent.",
-                "display_order": 1,
-            },
-            {
-                "id": "ADR-003",
-                "title": "JWT/RBAC from day one on web",
-                "status": "Accepted",
-                "date": "2025-06",
-                "context": "The web release adds multi-user semantics the single-user desktop never had.",
-                "decision": "Role-based access enforced at the gateway; stateless tokens instead of server sessions.",
-                "tradeoff": "Token invalidation handled via short expiry + refresh flow.",
-                "display_order": 2,
-            },
-        ],
-        "log": [
-            {"hash": "e41c7a2", "tag": "v1.0", "date": "2026-05", "title": "Dockerized multi-service release", "note": "PostgreSQL, Redis, Celery, API, web — one compose up.", "display_order": 0},
-            {"hash": "b93f0d8", "tag": "v0.9", "date": "2026-01", "title": "Web beta behind JWT/RBAC", "display_order": 1},
-            {"hash": "7d20c4e", "tag": "v0.6", "date": "2025-08", "title": "Algorithm registry lands", "note": "13 solvers behind one interface; coverage pushed to 86.97%.", "display_order": 2},
-            {"hash": "31a9be5", "tag": "v0.1", "date": "2024-10", "title": "PyQt6 desktop prototype", "note": "First conflict-free timetable generated end-to-end.", "display_order": 3},
-        ],
-        "diagrams": [
-            {
-                "id": "class",
-                "kind": "schema",
-                "title": "Class — solver core",
-                "note": "UML class view · 13 algorithms share one base",
-                "display_order": 0,
-                "data": {
-                    "tiers": [
-                        [{"name": "SolverBase", "kind": "abstract", "rows": ["+ solve(sections): Timetable", "+ score(t): float", "# constraints: Constraint[]"]}],
-                        [
-                            {"name": "GeneticSolver", "kind": "class", "rows": ["population: 200", "mutate(rate = 0.02)"]},
-                            {"name": "BacktrackingSolver", "kind": "class", "rows": ["prune(branch): bool"]},
-                            {"name": "…11 more", "kind": "class", "rows": ["via AlgorithmRegistry"]},
-                        ],
-                        [
-                            {"name": "Constraint", "kind": "interface", "rows": ["+ check(assign): bool", "hard: bool"]},
-                            {"name": "Timetable", "kind": "class", "rows": ["slots: Slot[]", "+ conflicts(): Conflict[]"]},
-                        ],
-                    ],
-                    "relations": [
-                        {"from": "GeneticSolver", "label": "extends", "to": "SolverBase"},
-                        {"from": "SolverBase", "label": "uses 1..*", "to": "Constraint"},
-                        {"from": "SolverBase", "label": "produces", "to": "Timetable"},
-                    ],
-                },
-            },
-            {
-                "id": "erd",
-                "kind": "schema",
-                "title": "ERD — scheduling data",
-                "note": "core relational model (PostgreSQL)",
-                "display_order": 1,
-                "data": {
-                    "tiers": [
-                        [
-                            {"name": "course", "kind": "table", "rows": ["code · pk", "title", "credits"]},
-                            {"name": "room", "kind": "table", "rows": ["id · pk", "capacity", "building"]},
-                        ],
-                        [
-                            {"name": "section", "kind": "table", "rows": ["id · pk", "course_code · fk", "instructor", "capacity"]},
-                            {"name": "time_slot", "kind": "table", "rows": ["id · pk", "day", "start · end"]},
-                        ],
-                        [
-                            {"name": "schedule", "kind": "table", "rows": ["id · pk", "user_id · fk", "algorithm", "score"]},
-                            {"name": "schedule_item", "kind": "table", "rows": ["schedule_id · fk", "section_id · fk", "room_id · fk", "slot_id · fk"]},
-                        ],
-                    ],
-                    "relations": [
-                        {"from": "course", "label": "1:N", "to": "section"},
-                        {"from": "schedule", "label": "1:N", "to": "schedule_item"},
-                        {"from": "section", "label": "N:M via items", "to": "time_slot"},
-                    ],
-                },
-            },
-            {
-                "id": "seq-solve",
-                "kind": "sequence",
-                "title": "Sequence — solve request",
-                "note": "async job flow · the API never blocks on a solve",
-                "display_order": 2,
-                "data": {
-                    "actors": ["Web", "API", "Redis", "Worker", "Engine", "PostgreSQL"],
-                    "messages": [
-                        {"from": "Web", "to": "API", "label": "POST /solve"},
-                        {"from": "API", "to": "Redis", "label": "enqueue(job)"},
-                        {"from": "API", "to": "Web", "label": "202 · job_id", "kind": "return"},
-                        {"from": "Worker", "to": "Redis", "label": "dequeue"},
-                        {"from": "Worker", "to": "Engine", "label": "run(algorithm)"},
-                        {"from": "Engine", "to": "Engine", "label": "constraint passes ×N"},
-                        {"from": "Engine", "to": "PostgreSQL", "label": "persist(timetable)"},
-                        {"from": "Web", "to": "API", "label": "GET /jobs/:id · poll"},
-                        {"from": "API", "to": "Web", "label": "200 · timetable", "kind": "return"},
-                    ],
-                },
-            },
-            {
-                "id": "auth",
-                "kind": "tiers",
-                "title": "Flow — JWT auth",
-                "note": "login → token → role-gated resources",
-                "display_order": 3,
-                "data": {
-                    "tiers": [
-                        [{"kind": "start", "title": "login"}],
-                        [{"kind": "step", "title": "Credential Check", "sub": "hash verify"}],
-                        [{"kind": "decision", "title": "valid?"}],
-                        [
-                            {"kind": "step", "title": "Issue JWT", "sub": "role claims · short expiry", "via": "yes"},
-                            {"kind": "error", "title": "401 Unauthorized", "sub": "rate-limited retry", "via": "no"},
-                        ],
-                        [{"kind": "step", "title": "Gateway RBAC", "sub": "role ⊇ route scope"}],
-                        [{"kind": "end", "title": "resource"}],
-                    ],
-                    "notes": ["expired token → POST /refresh → new JWT", "role mismatch → 403 · logged"],
-                },
-            },
-            {
-                "id": "job-state",
-                "kind": "tiers",
-                "title": "State — solve job",
-                "note": "lifecycle of one scheduling job",
-                "display_order": 4,
-                "data": {
-                    "tiers": [
-                        [{"kind": "state", "title": "queued"}],
-                        [{"kind": "state", "title": "running", "sub": "worker locked"}],
-                        [{"kind": "state", "title": "validating", "sub": "conflict checks"}],
-                        [
-                            {"kind": "final", "title": "done", "via": "ok"},
-                            {"kind": "error", "title": "failed", "via": "error"},
-                        ],
-                    ],
-                    "notes": ["failed → retry ×3 (backoff) → queued", "cancel → aborted, from any state"],
-                },
-            },
-            {
-                "id": "cicd",
-                "kind": "tiers",
-                "title": "CI/CD Pipeline",
-                "note": "every push walks the full gate",
-                "display_order": 5,
-                "data": {
-                    "tiers": [
-                        [{"kind": "start", "title": "git push"}],
-                        [{"kind": "step", "title": "pytest", "sub": "86.97% coverage floor"}],
-                        [{"kind": "decision", "title": "quality gate?", "sub": "SonarQube"}],
-                        [
-                            {"kind": "step", "title": "docker build", "sub": "6 images", "via": "pass"},
-                            {"kind": "error", "title": "blocked", "sub": "PR annotated", "via": "fail"},
-                        ],
-                        [{"kind": "end", "title": "compose deploy"}],
-                    ],
-                },
-            },
-        ],
-        "gallery": [
-            {"id": "isik-desktop", "src": "/projects/isik-desktop.png", "caption": "fig 01 — desktop client · timetable view", "display_order": 0},
-            {"id": "isik-web", "src": "/projects/isik-web.png", "caption": "fig 02 — web client · solver run", "display_order": 1},
-            {"id": "isik-gate", "src": "/projects/isik-gate.png", "caption": "fig 03 — SonarQube quality gate", "display_order": 2},
-        ],
-    },
     "teknofest-sarkan-uav-defense-platform": {
         "impact_en": (
             "3rd place among 700+ Teknofest projects: anti-jam telemetry and a "
@@ -761,6 +515,15 @@ DOSSIER_CONTENT: dict[str, dict] = {
     },
 }
 
+
+def _load_external_dossier_payloads() -> None:
+    payload_path = Path(__file__).resolve().parent / "dossier_payloads" / "isikschedule-platform.json"
+    DOSSIER_CONTENT["isikschedule-platform"] = json.loads(
+        payload_path.read_text(encoding="utf-8")
+    )
+
+
+_load_external_dossier_payloads()
 
 # The diagram data union discriminates on `kind`, which must match the outer
 # diagram kind; inject it once here instead of repeating it in every literal.
