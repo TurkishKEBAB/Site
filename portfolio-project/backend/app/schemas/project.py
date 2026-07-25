@@ -116,6 +116,13 @@ class ProjectDetail(Project):
     model_config = ConfigDict(from_attributes=True)
 
 
+class ProjectListItem(Project):
+    """Compact project response used by the public index."""
+    technologies: List[TechnologyRef] = Field(default_factory=list)
+
+    model_config = ConfigDict(from_attributes=True)
+
+
 # Aliases for backward compatibility
 ProjectResponse = ProjectDetail  # Changed from Project to ProjectDetail
 ProjectDetailResponse = ProjectDetail
@@ -123,7 +130,7 @@ ProjectDetailResponse = ProjectDetail
 
 class ProjectList(BaseModel):
     """Paginated project list response"""
-    items: List[ProjectDetail]  # Changed from Project to ProjectDetail
+    items: List[ProjectListItem]
     total: int
     page: int
     size: int

@@ -11,6 +11,9 @@ def test_get_blog_posts_and_search(client, create_blog_post):
     search = client.get("/api/v1/blog/search?q=python")
 
     assert listed.status_code == 200
+    assert listed.headers["cache-control"] == (
+        "public, max-age=60, stale-while-revalidate=300"
+    )
     assert listed.json()["total"] == 1
     assert listed.json()["items"][0]["slug"] == "published-post"
     assert search.status_code == 200

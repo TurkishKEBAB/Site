@@ -14,7 +14,7 @@ from sqlalchemy.orm import Session
 from app.api.deps import get_db, require_admin
 from app.crud import project as project_crud
 from app.models.user import User
-from app.schemas.project import (ProjectCreate, ProjectResponse,
+from app.schemas.project import (ProjectCreate, ProjectList, ProjectResponse,
                                  ProjectTranslationCreate, ProjectUpdate)
 from app.services.admin_audit import record_admin_action
 from app.services.cache_service import get_cache_service
@@ -52,6 +52,30 @@ async def _invalidate_project_list_cache() -> None:
 
 
 def _serialize_project(project, language: str) -> dict:
+    payload = _serialize_project_list_item(project, language)
+    payload["translations"] = [
+        {
+            "id": str(trans.id),
+            "language": trans.language,
+            "title": trans.title,
+            "short_description": trans.short_description,
+            "description": trans.description,
+        }
+        for trans in project.translations
+    ]
+    payload["images"] = [
+        {
+            "id": str(img.id),
+            "image_url": img.image_url,
+            "caption": img.caption,
+            "display_order": img.display_order,
+        }
+        for img in project.images
+    ]
+    return payload
+
+
+def _serialize_project_list_item(project, language: str) -> dict:
     translated = next(
         (item for item in project.translations if item.language == language),
         None,
@@ -92,30 +116,11 @@ def _serialize_project(project, language: str) -> dict:
             }
             for tech in project.technologies
         ],
-        "translations": [
-            {
-                "id": str(trans.id),
-                "language": trans.language,
-                "title": trans.title,
-                "short_description": trans.short_description,
-                "description": trans.description,
-            }
-            for trans in project.translations
-        ],
-        "images": [
-            {
-                "id": str(img.id),
-                "image_url": img.image_url,
-                "caption": img.caption,
-                "display_order": img.display_order,
-            }
-            for img in project.images
-        ],
     }
 
 
 @router.get("", include_in_schema=False)
-@router.get("/")
+@router.get("/", response_model=ProjectList)
 async def get_projects(
     response: Response,
     skip: int = Query(0, ge=0),
@@ -157,7 +162,7 @@ async def get_projects(
         featured_only=featured_only,
         technology_slug=technology_slug,
     )
-    items = [_serialize_project(project, language) for project in projects]
+    items = [_serialize_project_list_item(project, language) for project in projects]
 
     payload = {
         "items": items,

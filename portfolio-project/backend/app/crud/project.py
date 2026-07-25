@@ -59,7 +59,6 @@ def get_projects(
     query = db.query(Project).options(
         selectinload(Project.translations),
         selectinload(Project.technologies),
-        selectinload(Project.images),
     )
     
     if featured_only:

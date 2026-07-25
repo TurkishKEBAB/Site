@@ -69,6 +69,18 @@ def test_get_projects_public_and_slug_detail(client, create_project):
     assert detail_response.json()["slug"] == "public-project"
 
 
+def test_public_project_list_omits_detail_collections(client, create_project):
+    create_project(slug="compact-project")
+
+    response = client.get("/api/v1/projects?language=en")
+
+    assert response.status_code == 200
+    item = response.json()["items"][0]
+    assert "translations" not in item
+    assert "images" not in item
+    assert "technologies" in item
+
+
 def test_get_projects_accepts_canonical_no_slash_path(client, create_project):
     create_project(slug="canonical-project")
 
@@ -97,7 +109,7 @@ def test_project_list_loads_collections_without_join_explosion(
     finally:
         event.remove(db_session.bind, "before_cursor_execute", record_select)
 
-    assert len(statements) >= 4
+    assert len(statements) >= 3
 
 
 def test_project_list_does_not_lazy_load_technologies_per_project(
