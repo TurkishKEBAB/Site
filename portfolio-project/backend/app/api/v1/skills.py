@@ -21,7 +21,7 @@ PUBLIC_CACHE_CONTROL = "public, max-age=60, stale-while-revalidate=300"
 
 
 @router.get("/", response_model=SkillListResponse)
-async def get_skills(
+def get_skills(
     response: Response,
     skip: int = Query(0, ge=0),
     limit: int = Query(100, ge=1, le=200),
@@ -46,7 +46,7 @@ async def get_skills(
 
 
 @router.get("/by-category", response_model=Dict[str, List[SkillResponse]])
-async def get_skills_by_category(
+def get_skills_by_category(
     response: Response,
     language: str = Query("en", pattern="^(tr|en)$"), db: Session = Depends(get_db)
 ):
@@ -59,7 +59,7 @@ async def get_skills_by_category(
 
 
 @router.get("/{skill_id}", response_model=SkillResponse)
-async def get_skill(
+def get_skill(
     skill_id: uuid.UUID,
     response: Response,
     language: str = Query("en", pattern="^(tr|en)$"),
@@ -80,7 +80,7 @@ async def get_skill(
 
 
 @router.post("/", response_model=SkillResponse, status_code=status.HTTP_201_CREATED)
-async def create_skill(
+def create_skill(
     skill_data: SkillCreate,
     db: Session = Depends(get_db),
     current_user: User = Depends(require_admin),
@@ -101,7 +101,7 @@ async def create_skill(
 
 
 @router.put("/{skill_id}", response_model=SkillResponse)
-async def update_skill(
+def update_skill(
     skill_id: uuid.UUID,
     skill_data: SkillUpdate,
     db: Session = Depends(get_db),
@@ -131,7 +131,7 @@ async def update_skill(
 
 
 @router.delete("/{skill_id}", status_code=status.HTTP_204_NO_CONTENT)
-async def delete_skill(
+def delete_skill(
     skill_id: uuid.UUID,
     db: Session = Depends(get_db),
     current_user: User = Depends(require_admin),

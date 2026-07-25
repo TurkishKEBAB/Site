@@ -25,7 +25,7 @@ router = APIRouter()
 
 
 @router.get("/", response_model=ExperienceListResponse)
-async def get_experiences(
+def get_experiences(
     skip: int = Query(0, ge=0),
     limit: int = Query(50, ge=1, le=100),
     experience_type: str = Query(None),
@@ -53,7 +53,7 @@ async def get_experiences(
 
 
 @router.get("/by-type", response_model=Dict[str, List[ExperienceResponse]])
-async def get_experiences_grouped_by_type(
+def get_experiences_grouped_by_type(
     language: str = Query("en", pattern="^(tr|en)$"), db: Session = Depends(get_db)
 ):
     """
@@ -73,7 +73,7 @@ async def get_experiences_grouped_by_type(
 
 
 @router.get("/{experience_id}", response_model=ExperienceResponse)
-async def get_experience(
+def get_experience(
     experience_id: uuid.UUID,
     language: str = Query("en", pattern="^(tr|en)$"),
     db: Session = Depends(get_db),
@@ -96,7 +96,7 @@ async def get_experience(
 @router.post(
     "/", response_model=ExperienceResponse, status_code=status.HTTP_201_CREATED
 )
-async def create_experience(
+def create_experience(
     experience_data: ExperienceCreate,
     db: Session = Depends(get_db),
     current_user: User = Depends(require_admin),
@@ -117,7 +117,7 @@ async def create_experience(
 
 
 @router.put("/{experience_id}", response_model=ExperienceResponse)
-async def update_experience(
+def update_experience(
     experience_id: uuid.UUID,
     experience_data: ExperienceUpdate,
     db: Session = Depends(get_db),
@@ -147,7 +147,7 @@ async def update_experience(
 
 
 @router.delete("/{experience_id}", status_code=status.HTTP_204_NO_CONTENT)
-async def delete_experience(
+def delete_experience(
     experience_id: uuid.UUID,
     db: Session = Depends(get_db),
     current_user: User = Depends(require_admin),

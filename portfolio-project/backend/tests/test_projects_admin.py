@@ -176,6 +176,24 @@ def test_project_list_uses_server_cache_for_repeated_requests(
     assert calls == 1
 
 
+def test_project_list_runs_sync_database_work_in_threadpool(
+    client, create_project, monkeypatch
+):
+    create_project(slug="threadpool-project")
+    calls = []
+
+    async def record_threadpool(func, *args, **kwargs):
+        calls.append(func)
+        return func(*args, **kwargs)
+
+    monkeypatch.setattr(projects_api, "run_in_threadpool", record_threadpool, raising=False)
+
+    response = client.get("/api/v1/projects?language=en&limit=100")
+
+    assert response.status_code == 200
+    assert calls
+
+
 def test_project_writes_invalidate_list_cache(client, admin_headers, create_project, monkeypatch):
     project = create_project(slug="invalidate-project")
     invalidations = []

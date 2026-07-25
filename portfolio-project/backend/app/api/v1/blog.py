@@ -28,7 +28,7 @@ PUBLIC_CACHE_CONTROL = "public, max-age=60, stale-while-revalidate=300"
 
 
 @router.get("/", response_model=BlogPostListResponse)
-async def get_blog_posts(
+def get_blog_posts(
     response: Response,
     skip: int = Query(0, ge=0),
     limit: int = Query(20, ge=1, le=100),
@@ -66,7 +66,7 @@ async def get_blog_posts(
 
 
 @router.get("/search", response_model=List[BlogPostResponse])
-async def search_blog_posts(
+def search_blog_posts(
     response: Response,
     q: str = Query(..., min_length=2),
     language: str = Query("en", pattern="^(tr|en)$"),
@@ -83,7 +83,7 @@ async def search_blog_posts(
 
 
 @router.get("/admin", response_model=BlogPostListResponse)
-async def get_admin_blog_posts(
+def get_admin_blog_posts(
     skip: int = Query(0, ge=0),
     limit: int = Query(20, ge=1, le=100),
     language: str = Query("en", pattern="^(tr|en)$"),
@@ -112,7 +112,7 @@ async def get_admin_blog_posts(
 
 
 @router.get("/admin/{post_id}", response_model=BlogPostDetail)
-async def get_admin_blog_post(
+def get_admin_blog_post(
     post_id: uuid.UUID,
     db: Session = Depends(get_db),
     current_user: User = Depends(require_admin),
@@ -128,7 +128,7 @@ async def get_admin_blog_post(
 
 
 @router.get("/{slug}", response_model=BlogPostResponse)
-async def get_blog_post(
+def get_blog_post(
     slug: str,
     response: Response,
     language: str = Query("en", pattern="^(tr|en)$"),

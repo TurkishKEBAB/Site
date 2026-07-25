@@ -9,6 +9,7 @@ import uuid
 
 from fastapi import (APIRouter, Depends, File, HTTPException, Query, Response,
                      UploadFile, status)
+from fastapi.concurrency import run_in_threadpool
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_db, require_admin
@@ -119,6 +120,31 @@ def _serialize_project_list_item(project, language: str) -> dict:
     }
 
 
+def _load_project_list(
+    db: Session,
+    *,
+    skip: int,
+    limit: int,
+    language: str,
+    featured_only: bool,
+    technology_slug: str | None,
+) -> tuple[int, list[dict]]:
+    total = project_crud.get_projects_count(
+        db,
+        featured_only=featured_only,
+        technology_slug=technology_slug,
+    )
+    projects = project_crud.get_projects(
+        db,
+        skip=skip,
+        limit=limit,
+        language=language,
+        featured_only=featured_only,
+        technology_slug=technology_slug,
+    )
+    return total, [_serialize_project_list_item(project, language) for project in projects]
+
+
 @router.get("", include_in_schema=False)
 @router.get("/", response_model=ProjectList)
 async def get_projects(
@@ -148,13 +174,8 @@ async def get_projects(
     if cached_response is not None:
         return cached_response
 
-    total = project_crud.get_projects_count(
-        db,
-        featured_only=featured_only,
-        technology_slug=technology_slug,
-    )
-
-    projects = project_crud.get_projects(
+    total, items = await run_in_threadpool(
+        _load_project_list,
         db,
         skip=skip,
         limit=limit,
@@ -162,7 +183,6 @@ async def get_projects(
         featured_only=featured_only,
         technology_slug=technology_slug,
     )
-    items = [_serialize_project_list_item(project, language) for project in projects]
 
     payload = {
         "items": items,
@@ -176,7 +196,7 @@ async def get_projects(
 
 
 @router.get("/{slug}", response_model=ProjectResponse)
-async def get_project(
+def get_project(
     slug: str,
     response: Response,
     language: str = Query("en", pattern="^(tr|en)$"),
