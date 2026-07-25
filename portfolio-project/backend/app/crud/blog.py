@@ -249,6 +249,17 @@ def increment_blog_views(db: Session, post_id: uuid.UUID) -> Optional[BlogPost]:
     return db_post
 
 
+def increment_blog_view_count(db: Session, post_id: uuid.UUID) -> bool:
+    """Atomically increment a post view count without reloading its content."""
+    result = db.execute(
+        update(BlogPost)
+        .where(BlogPost.id == post_id)
+        .values(views=BlogPost.views + 1)
+    )
+    db.commit()
+    return bool(result.rowcount)
+
+
 def search_blog_posts(
     db: Session,
     search_query: str,

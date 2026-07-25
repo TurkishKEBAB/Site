@@ -19,14 +19,17 @@ from app.schemas.blog import (
     BlogTranslationCreate,
 )
 from app.services.admin_audit import record_admin_action
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, HTTPException, Query, Response, status
+from loguru import logger
 from sqlalchemy.orm import Session
 
 router = APIRouter()
+PUBLIC_CACHE_CONTROL = "public, max-age=60, stale-while-revalidate=300"
 
 
 @router.get("/", response_model=BlogPostListResponse)
-async def get_blog_posts(
+def get_blog_posts(
+    response: Response,
     skip: int = Query(0, ge=0),
     limit: int = Query(20, ge=1, le=100),
     language: str = Query("en", pattern="^(tr|en)$"),
@@ -42,6 +45,8 @@ async def get_blog_posts(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Admin access required to list draft blog posts",
         )
+    if published_only:
+        response.headers["Cache-Control"] = PUBLIC_CACHE_CONTROL
 
     total = blog_crud.get_blog_count(db, published_only=published_only)
     pages = math.ceil(total / limit) if limit else 1
@@ -61,7 +66,8 @@ async def get_blog_posts(
 
 
 @router.get("/search", response_model=List[BlogPostResponse])
-async def search_blog_posts(
+def search_blog_posts(
+    response: Response,
     q: str = Query(..., min_length=2),
     language: str = Query("en", pattern="^(tr|en)$"),
     limit: int = Query(10, ge=1, le=50),
@@ -70,13 +76,14 @@ async def search_blog_posts(
     """
     Search blog posts by title and content
     """
+    response.headers["Cache-Control"] = PUBLIC_CACHE_CONTROL
     return blog_crud.search_blog_posts(
         db, search_query=q, language=language, limit=limit
     )
 
 
 @router.get("/admin", response_model=BlogPostListResponse)
-async def get_admin_blog_posts(
+def get_admin_blog_posts(
     skip: int = Query(0, ge=0),
     limit: int = Query(20, ge=1, le=100),
     language: str = Query("en", pattern="^(tr|en)$"),
@@ -105,7 +112,7 @@ async def get_admin_blog_posts(
 
 
 @router.get("/admin/{post_id}", response_model=BlogPostDetail)
-async def get_admin_blog_post(
+def get_admin_blog_post(
     post_id: uuid.UUID,
     db: Session = Depends(get_db),
     current_user: User = Depends(require_admin),
@@ -121,8 +128,9 @@ async def get_admin_blog_post(
 
 
 @router.get("/{slug}", response_model=BlogPostResponse)
-async def get_blog_post(
+def get_blog_post(
     slug: str,
+    response: Response,
     language: str = Query("en", pattern="^(tr|en)$"),
     count_view: bool = Query(True),
     db: Session = Depends(get_db),
@@ -144,6 +152,7 @@ async def get_blog_post(
         )
 
     if not count_view:
+        response.headers["Cache-Control"] = PUBLIC_CACHE_CONTROL
         return post
 
     blog_crud.increment_blog_views(db, post.id)
@@ -161,6 +170,32 @@ async def get_blog_post(
         )
 
     return refreshed
+
+
+@router.post("/{slug}/view", status_code=status.HTTP_204_NO_CONTENT)
+def record_blog_view(
+    slug: str,
+    db: Session = Depends(get_db),
+):
+    """Record a public view without making the content render depend on it."""
+    post = blog_crud.get_blog_post_by_slug(
+        db,
+        slug=slug,
+        published_only=True,
+    )
+
+    if not post:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Blog post not found"
+        )
+
+    try:
+        blog_crud.increment_blog_view_count(db, post.id)
+    except Exception as exc:
+        db.rollback()
+        logger.warning("Could not record view for blog post {}: {}", slug, exc)
+
+    return None
 
 
 @router.post("/", response_model=BlogPostResponse, status_code=status.HTTP_201_CREATED)

@@ -15,9 +15,12 @@ import type { Locale } from "@/content/site";
 import { useProjectDossierQuery, useProjectsQuery } from "@/hooks/usePublicData";
 import { mergeDossierProject } from "@/lib/dossier";
 import { mapProjectsToDossierProjects } from "@/lib/projects";
+import type { PaginatedResponse, ProjectListItem } from "@/services/types";
 
 interface ProjectsPageProps {
   locale: Locale;
+  initialProjects?: PaginatedResponse<ProjectListItem> | null;
+  initialProjectsLanguage?: Locale;
 }
 
 const dossierLabels = (tr: boolean): DossierLabels =>
@@ -37,11 +40,17 @@ const dossierLabels = (tr: boolean): DossierLabels =>
         dossierLoading: "Loading dossier...", dossierUnavailable: "Dossier unavailable.", retryDossier: "Retry dossier",
       };
 
-export default function Projects({ locale }: ProjectsPageProps) {
+export default function Projects({
+  locale,
+  initialProjects,
+  initialProjectsLanguage,
+}: ProjectsPageProps) {
   const tr = locale === "tr";
   const labels = dossierLabels(tr);
   const [selected, setSelected] = useState<DossierProject | null>(null);
-  const { data, isError, isLoading, refetch } = useProjectsQuery({ limit: 100, language: locale });
+  const params = { limit: 100, language: locale };
+  const queryInitialData = locale === initialProjectsLanguage ? initialProjects ?? undefined : undefined;
+  const { data, isError, isLoading, refetch } = useProjectsQuery(params, queryInitialData);
   const dossierProjects = mapProjectsToDossierProjects(data?.items ?? [], locale);
   const dossierQuery = useProjectDossierQuery(selected?.slug ?? null, locale);
   const dossierMissing = isAxiosError(dossierQuery.error) && dossierQuery.error.response?.status === 404;

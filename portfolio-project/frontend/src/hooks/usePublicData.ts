@@ -6,6 +6,7 @@ import { experienceService } from "@/services/experienceService";
 import { projectService } from "@/services/projectService";
 import { skillService } from "@/services/skillService";
 import { queryKeys } from "@/lib/query/queryKeys";
+import type { PaginatedResponse, ProjectListItem } from "@/services/types";
 
 export type ProjectListParams = Parameters<typeof projectService.getProjects>[0];
 export type BlogListParams = Parameters<typeof blogService.getPosts>[0];
@@ -13,10 +14,14 @@ export type ExperienceListParams = Parameters<
   typeof experienceService.getExperiences
 >[0];
 
-export function useProjectsQuery(params?: ProjectListParams) {
+export function useProjectsQuery(
+  params?: ProjectListParams,
+  initialData?: PaginatedResponse<ProjectListItem>,
+) {
   return useQuery({
     queryKey: queryKeys.projects.list(params),
     queryFn: () => projectService.getProjects(params),
+    initialData,
   });
 }
 

@@ -175,7 +175,7 @@ export default function Home({
         />
         <div className="grid gap-5 sm:grid-cols-3">
           {impactMetrics.map((metric) => (
-            <AnimatedSection key={metric.value}>
+            <AnimatedSection key={metric.value} animateOnEnter>
               <Metric
                 value={metric.value}
                 label={getLocaleValue(metric.label, locale)}
@@ -228,7 +228,7 @@ export default function Home({
         />
         <div className="grid gap-5 md:grid-cols-3">
           {featuredProjects.map((project, index) => (
-            <AnimatedSection key={project.slug} delay={index * 0.05}>
+            <AnimatedSection key={project.slug} animateOnEnter delay={index * 0.05}>
               <Link href="/projects" className="group block h-full">
                 <div className="panel-hover relative h-full p-6">
                   <span className="absolute left-0 top-0 h-5 w-5 border-l border-t border-primary-400/40" aria-hidden="true" />
@@ -258,7 +258,7 @@ export default function Home({
 
       {/* ── contact console ────────────────────────────────────── */}
       <section className="container-custom py-20 md:py-24">
-        <AnimatedSection>
+        <AnimatedSection animateOnEnter>
           <div className="relative mx-auto max-w-3xl px-6 py-14 text-center md:px-12">
             <span className="absolute left-0 top-0 h-6 w-6 border-l border-t border-primary-400/40" aria-hidden="true" />
             <span className="absolute right-0 top-0 h-6 w-6 border-r border-t border-primary-400/40" aria-hidden="true" />

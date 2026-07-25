@@ -8,6 +8,7 @@ interface AnimatedSectionProps {
   className?: string;
   delay?: number;
   y?: number;
+  animateOnEnter?: boolean;
 }
 
 export default function AnimatedSection({
@@ -15,13 +16,14 @@ export default function AnimatedSection({
   className,
   delay = 0,
   y = 16,
+  animateOnEnter = false,
 }: AnimatedSectionProps) {
   return (
     <motion.div
-      initial={{ opacity: 0, y }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, margin: "-60px" }}
-      transition={{ duration: 0.45, delay }}
+      initial={animateOnEnter ? { opacity: 0, y } : false}
+      whileInView={animateOnEnter ? { opacity: 1, y: 0 } : undefined}
+      viewport={animateOnEnter ? { once: true, margin: "-60px" } : undefined}
+      transition={animateOnEnter ? { duration: 0.45, delay } : undefined}
       className={className}
     >
       {children}

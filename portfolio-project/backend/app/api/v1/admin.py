@@ -15,7 +15,7 @@ router = APIRouter()
 
 
 @router.get("/stats", response_model=AdminStatsResponse, tags=["Admin"])
-async def get_admin_stats(
+def get_admin_stats(
     db: Session = Depends(get_db),
     _: None = Depends(require_admin),
 ) -> AdminStatsResponse:

@@ -29,7 +29,7 @@ class ConfigUpdate(BaseModel):
 
 # Translation endpoints
 @router.get("/")
-async def get_all_translations(db: Session = Depends(get_db)):
+def get_all_translations(db: Session = Depends(get_db)):
     """
     Get all translations grouped by language
     Returns: {"tr": {...}, "en": {...}}
@@ -38,7 +38,7 @@ async def get_all_translations(db: Session = Depends(get_db)):
 
 
 @router.get("/{language}")
-async def get_translations(
+def get_translations(
     language: str = Path(..., pattern="^(tr|en)$"), db: Session = Depends(get_db)
 ):
     """
@@ -56,7 +56,7 @@ async def get_translations(
 
 
 @router.get("/languages/available")
-async def get_available_languages(db: Session = Depends(get_db)):
+def get_available_languages(db: Session = Depends(get_db)):
     """
     Get list of available languages
     """
@@ -65,7 +65,7 @@ async def get_available_languages(db: Session = Depends(get_db)):
 
 
 @router.put("/{language}", response_model=dict)
-async def update_translations(
+def update_translations(
     language: str = Path(..., pattern="^(tr|en)$"),
     data: TranslationUpdate = None,
     db: Session = Depends(get_db),
@@ -93,7 +93,7 @@ async def update_translations(
 
 
 @router.post("/{language}/{key}")
-async def set_translation(
+def set_translation(
     language: str = Path(..., pattern="^(tr|en)$"),
     key: str = Path(...),
     value: str = Query(...),
@@ -123,7 +123,7 @@ async def set_translation(
 
 
 @router.delete("/config/{key}", status_code=status.HTTP_204_NO_CONTENT)
-async def delete_config(
+def delete_config(
     key: str, db: Session = Depends(get_db), current_user: User = Depends(require_admin)
 ):
     """
@@ -147,7 +147,7 @@ async def delete_config(
 
 
 @router.delete("/{language}/{key}", status_code=status.HTTP_204_NO_CONTENT)
-async def delete_translation(
+def delete_translation(
     language: str = Path(..., pattern="^(tr|en)$"),
     key: str = Path(...),
     db: Session = Depends(get_db),
@@ -175,7 +175,7 @@ async def delete_translation(
 
 # Site configuration endpoints
 @router.get("/config/all")
-async def get_all_config(db: Session = Depends(get_db)):
+def get_all_config(db: Session = Depends(get_db)):
     """
     Get all site configuration
     """
@@ -183,7 +183,7 @@ async def get_all_config(db: Session = Depends(get_db)):
 
 
 @router.get("/config/{key}")
-async def get_config(key: str, db: Session = Depends(get_db)):
+def get_config(key: str, db: Session = Depends(get_db)):
     """
     Get a specific configuration value
     """
@@ -199,7 +199,7 @@ async def get_config(key: str, db: Session = Depends(get_db)):
 
 
 @router.post("/config")
-async def set_config(
+def set_config(
     data: ConfigUpdate,
     db: Session = Depends(get_db),
     current_user: User = Depends(require_admin),

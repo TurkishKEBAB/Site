@@ -64,18 +64,11 @@ const createTimeoutSignal = () => {
   return controller.signal;
 };
 
-async function fetchJson<T>(
-  url: string,
-  options?: { fresh?: boolean },
-): Promise<{ status: number; data: T | null }> {
+async function fetchJson<T>(url: string): Promise<{ status: number; data: T | null }> {
   // ISR instead of no-store: a successful response is cached and served
   // stale-while-revalidate, so a sleeping backend no longer blanks the blog.
-  // `fresh` opts out for requests with side effects (count_view=true must
-  // reach the backend every time or views are undercounted).
   const response = await fetch(url, {
-    ...(options?.fresh
-      ? { cache: "no-store" as const }
-      : { next: { revalidate: BLOG_REVALIDATE_SECONDS } }),
+    next: { revalidate: BLOG_REVALIDATE_SECONDS },
     signal: createTimeoutSignal(),
   });
 
@@ -169,9 +162,8 @@ export async function fetchBlogPostBundle(
     const postResponse = await fetchJson<BlogPost>(
       buildUrl(`/blog/${slug}`, {
         language: locale,
-        count_view: true,
+        count_view: false,
       }),
-      { fresh: true },
     );
 
     if (postResponse.status === 404) {

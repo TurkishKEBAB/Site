@@ -9,6 +9,9 @@ def test_get_skills_and_categories_public(client, create_skill):
     grouped = client.get("/api/v1/skills/by-category")
 
     assert listed.status_code == 200
+    assert listed.headers["cache-control"] == (
+        "public, max-age=60, stale-while-revalidate=300"
+    )
     assert listed.json()["total"] == 2
     assert grouped.status_code == 200
     assert "Backend" in grouped.json()

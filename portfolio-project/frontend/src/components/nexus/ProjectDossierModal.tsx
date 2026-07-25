@@ -102,7 +102,14 @@ function GalleryFigure({ src, caption, hint }: { src: string; caption: string; h
     <figure style={{ margin: 0 }}>
       <div style={{ position: "relative", aspectRatio: "16/10", overflow: "hidden", borderRadius: 4, border: errored ? "1px dashed var(--border-1)" : "1px solid var(--border-1)", background: "rgba(0,212,255,0.02)" }}>
         {!errored ? (
-          <img src={src} alt={caption} onError={() => setErrored(true)} style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }} />
+          <img
+            src={src}
+            alt={caption}
+            loading="lazy"
+            decoding="async"
+            onError={() => setErrored(true)}
+            style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }}
+          />
         ) : (
           <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 8, color: "var(--text-faint)", padding: 16, textAlign: "center" }}>
             <Icon name="image" size={20} />
@@ -146,12 +153,13 @@ export function ProjectDossierModal({
   useEffect(() => {
     if (!project) return undefined;
     closeRef.current?.focus();
+    const previousOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
     const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
     document.addEventListener("keydown", onKey);
     return () => {
       document.removeEventListener("keydown", onKey);
-      document.body.style.overflow = "";
+      document.body.style.overflow = previousOverflow;
     };
   }, [project, onClose]);
 

@@ -63,6 +63,8 @@ export interface Project {
   project_technologies?: ProjectTechnology[];
 }
 
+export type ProjectListItem = Omit<Project, "translations" | "images" | "project_technologies">;
+
 export interface ProjectTranslation {
   id?: string;
   language: string;

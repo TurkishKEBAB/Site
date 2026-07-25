@@ -16,7 +16,7 @@ router = APIRouter()
 
 
 @router.get("/projects/{project_id}", response_model=AdminProjectDossierResponse)
-async def get_admin_dossier(
+def get_admin_dossier(
     project_id: uuid.UUID,
     db: Session = Depends(get_db),
     current_user: User = Depends(require_admin),
@@ -28,7 +28,7 @@ async def get_admin_dossier(
 
 
 @router.put("/projects/{project_id}", response_model=AdminProjectDossierResponse)
-async def save_admin_dossier(
+def save_admin_dossier(
     project_id: uuid.UUID,
     payload: ProjectDossierUpsert,
     db: Session = Depends(get_db),
@@ -51,7 +51,7 @@ async def save_admin_dossier(
 
 
 @router.delete("/projects/{project_id}", status_code=status.HTTP_204_NO_CONTENT)
-async def remove_admin_dossier(
+def remove_admin_dossier(
     project_id: uuid.UUID,
     db: Session = Depends(get_db),
     current_user: User = Depends(require_admin),
@@ -73,7 +73,7 @@ async def remove_admin_dossier(
 
 
 @router.get("/{project_slug}", response_model=ProjectDossierResponse)
-async def get_public_dossier(
+def get_public_dossier(
     project_slug: str,
     response: Response,
     language: str = Query("en", pattern="^(tr|en)$"),

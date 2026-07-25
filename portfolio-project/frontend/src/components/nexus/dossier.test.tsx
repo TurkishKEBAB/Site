@@ -102,6 +102,42 @@ describe("ProjectDossierModal", () => {
     expect(onClose).toHaveBeenCalledTimes(2);
   });
 
+  it("restores the previous body overflow value when it closes", () => {
+    document.body.style.overflow = "clip";
+    const { rerender } = render(
+      <ProjectDossierModal project={isik} onClose={vi.fn()} labels={labels} />,
+    );
+
+    expect(document.body.style.overflow).toBe("hidden");
+
+    rerender(<ProjectDossierModal project={null} onClose={vi.fn()} labels={labels} />);
+
+    expect(document.body.style.overflow).toBe("clip");
+  });
+
+  it("lazy loads gallery images", () => {
+    const projectWithGallery: DossierProject = {
+      ...isik,
+      details: {
+        ...dossierDetails,
+        gallery: [{ id: "shot-1", src: "/shot.png", caption: "Shot" }],
+      },
+    };
+
+    render(
+      <ProjectDossierModal
+        project={projectWithGallery}
+        onClose={vi.fn()}
+        labels={labels}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole("tab", { name: "gallery" }));
+
+    expect(screen.getByRole("img", { name: "Shot" })).toHaveAttribute("loading", "lazy");
+    expect(screen.getByRole("img", { name: "Shot" })).toHaveAttribute("decoding", "async");
+  });
+
   it("shows a retry action when the dossier request fails", () => {
     const retry = vi.fn();
     render(
