@@ -20,6 +20,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY app/ ./app/
 COPY alembic/ ./alembic/
 COPY alembic.ini init_db.py seed_data.py seed_dossiers.py ./
+COPY dossier_payloads/ ./dossier_payloads/
 
 # Create logs directory
 RUN mkdir -p logs

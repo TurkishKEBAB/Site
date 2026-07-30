@@ -1,20 +1,26 @@
 """
 Seed project dossiers (C4 / ADR / log / diagrams / gallery).
 
-Content recovered from the YO.sys design port that used to live in
-frontend/src/content/projectDetails.ts (removed in ba357e3 when dossiers
-moved behind the API). Loads through crud.dossier.upsert_dossier, so it is
-idempotent per project; existing dossiers are skipped unless --force.
+Seed content is evidence-led and loads through crud.dossier.upsert_dossier, so
+it is idempotent per project; existing dossiers are skipped unless --force.
+The active map is intentionally limited to projects with a verified source
+package or a first-party evidence ledger. Pending project cards remain in the
+project catalog without an invented architecture dossier.
 
 Usage (inside the backend container or with DATABASE_URL exported):
     python seed_dossiers.py           # seed projects that have no dossier yet
     python seed_dossiers.py --force   # overwrite existing dossiers too
 
-Gallery images are referenced as /projects/*.png and must exist in
+Gallery images are referenced as /projects/* and must exist in
 frontend/public/projects/ to render; missing files only affect the gallery.
+
+Research-backed payloads that must be available to the seed image live in
+backend/dossier_payloads/ and are loaded by project slug below.
 """
 
+import json
 import sys
+from pathlib import Path
 
 from sqlalchemy.orm import Session
 
@@ -23,258 +29,10 @@ from app.database import SessionLocal
 from app.models.project import Project
 from app.schemas.dossier import ProjectDossierUpsert
 
-DOSSIER_CONTENT: dict[str, dict] = {
-    "isikschedule-platform": {
-        "impact_en": (
-            "Dual-platform scheduling system with a shared solver core: 13 "
-            "optimization algorithms serve ~1,000 desktop users and a JWT/RBAC "
-            "web release, running as six Dockerized services."
-        ),
-        "impact_tr": (
-            "Ortak çözücü çekirdekli çift platformlu ders programı sistemi: 13 "
-            "optimizasyon algoritması ~1.000 masaüstü kullanıcısına ve JWT/RBAC "
-            "korumalı web sürümüne hizmet ediyor; altı Docker servisi olarak çalışıyor."
-        ),
-        "metrics": [
-            {"value": "86.97%", "label": "coverage", "note": "SonarQube gate", "display_order": 0},
-            {"value": "13", "label": "algorithms", "note": "registered solvers", "display_order": 1},
-            {"value": "~1,000", "label": "active users", "note": "desktop release", "display_order": 2},
-            {"value": "6", "label": "services", "note": "Dockerized runtime", "display_order": 3},
-        ],
-        "c4": [
-            {
-                "label": "Context",
-                "note": "who touches the system, and what it talks to",
-                "display_order": 0,
-                "tiers": [
-                    [
-                        {"kind": "person", "title": "Student", "sub": "builds a conflict-free timetable"},
-                        {"kind": "person", "title": "Dept. Coordinator", "sub": "curates course data"},
-                    ],
-                    [{"kind": "system", "title": "IsikSchedule", "sub": "scheduling platform · desktop + web"}],
-                    [
-                        {"kind": "external", "title": "University SIS", "sub": "course & section source", "leaf": True},
-                        {"kind": "external", "title": "SMTP", "sub": "notifications", "leaf": True},
-                    ],
-                ],
-            },
-            {
-                "label": "Containers",
-                "note": "deployable units inside the platform",
-                "display_order": 1,
-                "tiers": [
-                    [
-                        {"kind": "client", "title": "Desktop", "sub": "PyQt6 · ~1,000 users"},
-                        {"kind": "client", "title": "Web", "sub": "Next.js · JWT"},
-                    ],
-                    [{"kind": "container", "title": "FastAPI Gateway", "sub": "REST · JWT / RBAC"}],
-                    [
-                        {"kind": "container", "title": "Scheduling Engine", "sub": "13 algorithms"},
-                        {"kind": "container", "title": "Celery Workers", "sub": "async solves", "leaf": True},
-                    ],
-                    [
-                        {"kind": "store", "title": "PostgreSQL", "sub": "primary store", "leaf": True},
-                        {"kind": "store", "title": "Redis", "sub": "cache · broker", "leaf": True},
-                    ],
-                ],
-            },
-            {
-                "label": "Components",
-                "note": "inside the scheduling engine",
-                "display_order": 2,
-                "tiers": [
-                    [{"kind": "component", "title": "Algorithm Registry", "sub": "one interface · 13 solvers"}],
-                    [
-                        {"kind": "component", "title": "Constraint Solver", "sub": "hard/soft constraint passes"},
-                        {"kind": "component", "title": "Conflict Validator", "sub": "overlap & capacity checks"},
-                    ],
-                    [
-                        {"kind": "component", "title": "Timetable Builder", "sub": "assembles the final schedule"},
-                        {"kind": "component", "title": "Persistence Adapter", "sub": "results → PostgreSQL"},
-                    ],
-                ],
-            },
-        ],
-        "adrs": [
-            {
-                "id": "ADR-001",
-                "title": "One scheduling core, two clients",
-                "status": "Accepted",
-                "date": "2024-11",
-                "context": "Desktop (PyQt6) shipped first; a web product was planned without doubling maintenance.",
-                "decision": "Extract the engine into a shared package both clients consume — the same 13 algorithms everywhere.",
-                "tradeoff": "Stricter interface discipline; engine changes now version against two release trains.",
-                "display_order": 0,
-            },
-            {
-                "id": "ADR-002",
-                "title": "Celery + Redis for long-running solves",
-                "status": "Accepted",
-                "date": "2025-03",
-                "context": "Large solves can take minutes; running them inside FastAPI request workers starved the API.",
-                "decision": "Queue solves through Celery with Redis as broker; the API returns a job handle and clients poll.",
-                "tradeoff": "More moving parts in Docker Compose; retries had to be made idempotent.",
-                "display_order": 1,
-            },
-            {
-                "id": "ADR-003",
-                "title": "JWT/RBAC from day one on web",
-                "status": "Accepted",
-                "date": "2025-06",
-                "context": "The web release adds multi-user semantics the single-user desktop never had.",
-                "decision": "Role-based access enforced at the gateway; stateless tokens instead of server sessions.",
-                "tradeoff": "Token invalidation handled via short expiry + refresh flow.",
-                "display_order": 2,
-            },
-        ],
-        "log": [
-            {"hash": "e41c7a2", "tag": "v1.0", "date": "2026-05", "title": "Dockerized multi-service release", "note": "PostgreSQL, Redis, Celery, API, web — one compose up.", "display_order": 0},
-            {"hash": "b93f0d8", "tag": "v0.9", "date": "2026-01", "title": "Web beta behind JWT/RBAC", "display_order": 1},
-            {"hash": "7d20c4e", "tag": "v0.6", "date": "2025-08", "title": "Algorithm registry lands", "note": "13 solvers behind one interface; coverage pushed to 86.97%.", "display_order": 2},
-            {"hash": "31a9be5", "tag": "v0.1", "date": "2024-10", "title": "PyQt6 desktop prototype", "note": "First conflict-free timetable generated end-to-end.", "display_order": 3},
-        ],
-        "diagrams": [
-            {
-                "id": "class",
-                "kind": "schema",
-                "title": "Class — solver core",
-                "note": "UML class view · 13 algorithms share one base",
-                "display_order": 0,
-                "data": {
-                    "tiers": [
-                        [{"name": "SolverBase", "kind": "abstract", "rows": ["+ solve(sections): Timetable", "+ score(t): float", "# constraints: Constraint[]"]}],
-                        [
-                            {"name": "GeneticSolver", "kind": "class", "rows": ["population: 200", "mutate(rate = 0.02)"]},
-                            {"name": "BacktrackingSolver", "kind": "class", "rows": ["prune(branch): bool"]},
-                            {"name": "…11 more", "kind": "class", "rows": ["via AlgorithmRegistry"]},
-                        ],
-                        [
-                            {"name": "Constraint", "kind": "interface", "rows": ["+ check(assign): bool", "hard: bool"]},
-                            {"name": "Timetable", "kind": "class", "rows": ["slots: Slot[]", "+ conflicts(): Conflict[]"]},
-                        ],
-                    ],
-                    "relations": [
-                        {"from": "GeneticSolver", "label": "extends", "to": "SolverBase"},
-                        {"from": "SolverBase", "label": "uses 1..*", "to": "Constraint"},
-                        {"from": "SolverBase", "label": "produces", "to": "Timetable"},
-                    ],
-                },
-            },
-            {
-                "id": "erd",
-                "kind": "schema",
-                "title": "ERD — scheduling data",
-                "note": "core relational model (PostgreSQL)",
-                "display_order": 1,
-                "data": {
-                    "tiers": [
-                        [
-                            {"name": "course", "kind": "table", "rows": ["code · pk", "title", "credits"]},
-                            {"name": "room", "kind": "table", "rows": ["id · pk", "capacity", "building"]},
-                        ],
-                        [
-                            {"name": "section", "kind": "table", "rows": ["id · pk", "course_code · fk", "instructor", "capacity"]},
-                            {"name": "time_slot", "kind": "table", "rows": ["id · pk", "day", "start · end"]},
-                        ],
-                        [
-                            {"name": "schedule", "kind": "table", "rows": ["id · pk", "user_id · fk", "algorithm", "score"]},
-                            {"name": "schedule_item", "kind": "table", "rows": ["schedule_id · fk", "section_id · fk", "room_id · fk", "slot_id · fk"]},
-                        ],
-                    ],
-                    "relations": [
-                        {"from": "course", "label": "1:N", "to": "section"},
-                        {"from": "schedule", "label": "1:N", "to": "schedule_item"},
-                        {"from": "section", "label": "N:M via items", "to": "time_slot"},
-                    ],
-                },
-            },
-            {
-                "id": "seq-solve",
-                "kind": "sequence",
-                "title": "Sequence — solve request",
-                "note": "async job flow · the API never blocks on a solve",
-                "display_order": 2,
-                "data": {
-                    "actors": ["Web", "API", "Redis", "Worker", "Engine", "PostgreSQL"],
-                    "messages": [
-                        {"from": "Web", "to": "API", "label": "POST /solve"},
-                        {"from": "API", "to": "Redis", "label": "enqueue(job)"},
-                        {"from": "API", "to": "Web", "label": "202 · job_id", "kind": "return"},
-                        {"from": "Worker", "to": "Redis", "label": "dequeue"},
-                        {"from": "Worker", "to": "Engine", "label": "run(algorithm)"},
-                        {"from": "Engine", "to": "Engine", "label": "constraint passes ×N"},
-                        {"from": "Engine", "to": "PostgreSQL", "label": "persist(timetable)"},
-                        {"from": "Web", "to": "API", "label": "GET /jobs/:id · poll"},
-                        {"from": "API", "to": "Web", "label": "200 · timetable", "kind": "return"},
-                    ],
-                },
-            },
-            {
-                "id": "auth",
-                "kind": "tiers",
-                "title": "Flow — JWT auth",
-                "note": "login → token → role-gated resources",
-                "display_order": 3,
-                "data": {
-                    "tiers": [
-                        [{"kind": "start", "title": "login"}],
-                        [{"kind": "step", "title": "Credential Check", "sub": "hash verify"}],
-                        [{"kind": "decision", "title": "valid?"}],
-                        [
-                            {"kind": "step", "title": "Issue JWT", "sub": "role claims · short expiry", "via": "yes"},
-                            {"kind": "error", "title": "401 Unauthorized", "sub": "rate-limited retry", "via": "no"},
-                        ],
-                        [{"kind": "step", "title": "Gateway RBAC", "sub": "role ⊇ route scope"}],
-                        [{"kind": "end", "title": "resource"}],
-                    ],
-                    "notes": ["expired token → POST /refresh → new JWT", "role mismatch → 403 · logged"],
-                },
-            },
-            {
-                "id": "job-state",
-                "kind": "tiers",
-                "title": "State — solve job",
-                "note": "lifecycle of one scheduling job",
-                "display_order": 4,
-                "data": {
-                    "tiers": [
-                        [{"kind": "state", "title": "queued"}],
-                        [{"kind": "state", "title": "running", "sub": "worker locked"}],
-                        [{"kind": "state", "title": "validating", "sub": "conflict checks"}],
-                        [
-                            {"kind": "final", "title": "done", "via": "ok"},
-                            {"kind": "error", "title": "failed", "via": "error"},
-                        ],
-                    ],
-                    "notes": ["failed → retry ×3 (backoff) → queued", "cancel → aborted, from any state"],
-                },
-            },
-            {
-                "id": "cicd",
-                "kind": "tiers",
-                "title": "CI/CD Pipeline",
-                "note": "every push walks the full gate",
-                "display_order": 5,
-                "data": {
-                    "tiers": [
-                        [{"kind": "start", "title": "git push"}],
-                        [{"kind": "step", "title": "pytest", "sub": "86.97% coverage floor"}],
-                        [{"kind": "decision", "title": "quality gate?", "sub": "SonarQube"}],
-                        [
-                            {"kind": "step", "title": "docker build", "sub": "6 images", "via": "pass"},
-                            {"kind": "error", "title": "blocked", "sub": "PR annotated", "via": "fail"},
-                        ],
-                        [{"kind": "end", "title": "compose deploy"}],
-                    ],
-                },
-            },
-        ],
-        "gallery": [
-            {"id": "isik-desktop", "src": "/projects/isik-desktop.png", "caption": "fig 01 — desktop client · timetable view", "display_order": 0},
-            {"id": "isik-web", "src": "/projects/isik-web.png", "caption": "fig 02 — web client · solver run", "display_order": 1},
-            {"id": "isik-gate", "src": "/projects/isik-gate.png", "caption": "fig 03 — SonarQube quality gate", "display_order": 2},
-        ],
-    },
+# Historical payloads are retained below only as migration context. The active
+# seed map is rebuilt from verified or explicitly pending-source content after
+# this literal; legacy marketing claims never reach the API seed loop.
+_LEGACY_DOSSIER_CONTENT: dict[str, dict] = {
     "teknofest-sarkan-uav-defense-platform": {
         "impact_en": (
             "3rd place among 700+ Teknofest projects: anti-jam telemetry and a "
@@ -621,21 +379,41 @@ DOSSIER_CONTENT: dict[str, dict] = {
         ],
     },
     "portfolio-platform-web-desktop": {
+        # Re-authored from first-party evidence; see
+        # docs/superpowers/specs/2026-07-25-portfolio-platform-evidence-ledger.md.
+        # Gallery paths below point to the real WebP captures in
+        # frontend/public/projects/; no placeholder paths are used.
         "impact_en": (
-            "This site: 60+ FastAPI endpoints behind JWT/RBAC, a Next.js frontend, "
-            "staged Vercel + Railway deploys, a SonarQube quality gate, and a 24h "
-            "GitHub cache shielding rate limits."
+            "This portfolio ships as two independently deployed tiers: a Next.js 16 "
+            "App Router frontend on Vercel and a FastAPI backend (72 route handlers, "
+            "JWT/RBAC) on Railway, each released through the provider's own GitHub "
+            "integration rather than a CI-driven deploy. Public pages render "
+            "server-side with ISR (revalidate) so a cold backend never blanks the "
+            "site, and GitHub stats sit behind a 24h Redis cache that degrades to an "
+            "in-process store when Redis is absent. Every push runs a 16-workflow CI "
+            "wall — tests, OpenAPI-drift, CodeQL, dependency and supply-chain audits, "
+            "and an enforced SonarCloud quality gate — followed by post-deploy smoke "
+            "checks that curl the live site and exercise an admin API round-trip."
         ),
         "impact_tr": (
-            "Bu site: JWT/RBAC arkasında 60+ FastAPI endpoint'i, Next.js frontend, "
-            "kademeli Vercel + Railway dağıtımları, SonarQube kalite kapısı ve hız "
-            "limitlerini koruyan 24 saatlik GitHub önbelleği."
+            "Bu portfolyo, birbirinden bağımsız dağıtılan iki katman olarak yayınlanır: "
+            "Vercel üzerinde Next.js 16 App Router frontend ve Railway üzerinde FastAPI "
+            "backend (72 route handler, JWT/RBAC); her biri CI güdümlü deploy yerine "
+            "sağlayıcının kendi GitHub entegrasyonuyla dağıtılır. Public sayfalar ISR "
+            "(revalidate) ile sunucuda render edilir, böylece soğuk backend siteyi "
+            "boşaltmaz; GitHub istatistikleri, Redis yoksa süreç-içi belleğe düşen 24 "
+            "saatlik Redis önbelleğinin arkasındadır. Her push, 16 workflow'luk bir CI "
+            "duvarını (testler, OpenAPI-drift, CodeQL, bağımlılık ve tedarik zinciri "
+            "denetimleri, zorunlu SonarCloud kalite kapısı) ve ardından canlı siteyi "
+            "curl'leyip admin API round-trip'i yapan post-deploy smoke check'lerini "
+            "çalıştırır."
         ),
         "metrics": [
-            {"value": "60+", "label": "API endpoints", "note": "FastAPI backend", "display_order": 0},
-            {"value": "24h", "label": "GitHub cache", "note": "rate-limit shield", "display_order": 1},
-            {"value": "2", "label": "deploy targets", "note": "Vercel + Railway", "display_order": 2},
-            {"value": "Passed", "label": "quality gate", "note": "SonarQube Cloud", "display_order": 3},
+            {"value": "72", "numeric_value": 72, "label": "API endpoints", "note": "FastAPI v1 route handlers · 12 routers", "display_order": 0},
+            {"value": "24h", "numeric_value": 24, "label": "GitHub cache", "note": "Redis TTL · in-memory fallback", "display_order": 1},
+            {"value": "2", "numeric_value": 2, "label": "deploy targets", "note": "Vercel FE · Railway BE (provider-native)", "display_order": 2},
+            {"value": "16", "numeric_value": 16, "label": "CI/CD workflows", "note": "tests · CodeQL · audits · Sonar gate", "display_order": 3},
+            {"value": "5", "numeric_value": 5, "label": "DB migrations", "note": "Alembic schema versions", "display_order": 4},
         ],
         "c4": [
             {
@@ -644,27 +422,27 @@ DOSSIER_CONTENT: dict[str, dict] = {
                 "display_order": 0,
                 "tiers": [
                     [
-                        {"kind": "person", "title": "Visitor", "sub": "reads the public site"},
-                        {"kind": "person", "title": "Admin (Yiğit)", "sub": "manages content"},
+                        {"kind": "person", "title": "Visitor", "sub": "reads the public site (EN/TR)"},
+                        {"kind": "person", "title": "Admin (Yiğit)", "sub": "manages content via JWT/RBAC"},
                     ],
                     [{"kind": "system", "title": "Portfolio Platform", "sub": "public site + admin surface"}],
                     [
-                        {"kind": "external", "title": "GitHub API", "sub": "repo & activity data", "leaf": True},
-                        {"kind": "external", "title": "Supabase", "sub": "asset storage", "leaf": True},
+                        {"kind": "external", "title": "GitHub API", "sub": "repo & contribution stats", "leaf": True},
+                        {"kind": "external", "title": "Supabase", "sub": "file/asset storage", "leaf": True},
                         {"kind": "external", "title": "SMTP", "sub": "contact notifications", "leaf": True},
                     ],
                 ],
             },
             {
                 "label": "Containers",
-                "note": "staged deploys — frontend and backend ship separately",
+                "note": "two tiers, deployed independently by Vercel and Railway",
                 "display_order": 1,
                 "tiers": [
-                    [{"kind": "client", "title": "Next.js Frontend", "sub": "Vercel · EN/TR"}],
-                    [{"kind": "container", "title": "FastAPI Backend", "sub": "Railway · 60+ endpoints · JWT/RBAC"}],
+                    [{"kind": "client", "title": "Next.js Frontend", "sub": "Vercel · App Router · ISR"}],
+                    [{"kind": "container", "title": "FastAPI Backend", "sub": "Railway · 72 endpoints · JWT/RBAC"}],
                     [
-                        {"kind": "store", "title": "PostgreSQL", "sub": "content & messages", "leaf": True},
-                        {"kind": "store", "title": "Redis", "sub": "24h GitHub cache", "leaf": True},
+                        {"kind": "store", "title": "PostgreSQL", "sub": "content, messages & dossiers", "leaf": True},
+                        {"kind": "store", "title": "Redis", "sub": "24h cache · memory fallback", "leaf": True},
                     ],
                 ],
             },
@@ -672,47 +450,90 @@ DOSSIER_CONTENT: dict[str, dict] = {
         "adrs": [
             {
                 "id": "ADR-001",
-                "title": "Staged deploys: Vercel FE / Railway BE",
+                "title": "Provider-native deploys over CI-driven deploys",
                 "status": "Accepted",
-                "date": "2025-09",
-                "context": "One platform for both tiers forced compromises on build tooling and pricing.",
-                "decision": "Frontend on Vercel, backend + Postgres + Redis on Railway, wired by CI/CD stages.",
-                "tradeoff": "Two dashboards, two failure domains — mitigated with health checks.",
+                "date": "2026-07",
+                "context": "A CI-side `vercel build --prebuilt` once raced Vercel's own integration and shipped a bundle with the localhost API fallback baked in, blanking every backend-driven section. Railway also exposes no inbound deploy hooks.",
+                "decision": "Let Vercel and Railway each deploy from their own GitHub integration on push to main; CI is reduced to a quality gate plus post-deploy smoke checks, not a deployer.",
+                "tradeoff": "Two dashboards and two failure domains; mitigated by independent post-deploy smoke checks (frontend curl + backend admin round-trip).",
                 "display_order": 0,
             },
             {
                 "id": "ADR-002",
-                "title": "24h GitHub cache over live calls",
+                "title": "Redis 24h cache with in-memory fallback",
                 "status": "Accepted",
-                "date": "2025-11",
-                "context": "GitHub rate limits made live stats flaky exactly when traffic spiked.",
-                "decision": "Cache GitHub responses in Redis for 24h; degrade to cached data on API failure.",
-                "tradeoff": "Stats can lag a day — acceptable for portfolio telemetry.",
+                "date": "2026-07",
+                "context": "GitHub rate limits made live stats flaky under traffic, and a single-replica deploy cannot assume Redis is always present.",
+                "decision": "Cache GitHub responses in Redis for 24h and, on any Redis connection failure, degrade to a process-local TTL cache instead of disabling caching; serve stale data if the GitHub fetch itself errors.",
+                "tradeoff": "The memory backend resets on restart/deploy; acceptable for portfolio telemetry with one replica.",
                 "display_order": 1,
+            },
+            {
+                "id": "ADR-003",
+                "title": "ISR (revalidate) over no-store for public reads",
+                "status": "Accepted",
+                "date": "2026-07",
+                "context": "Server components fetching with `no-store` aborted and blanked public pages whenever the Railway backend was cold-starting.",
+                "decision": "Public server-side fetches use `next: { revalidate }` so a successful response is cached and served stale-while-revalidate; a sleeping backend no longer empties the page.",
+                "tradeoff": "Public content can lag by the revalidate window; correctness of live edits is traded for resilience.",
+                "display_order": 2,
+            },
+            {
+                "id": "ADR-004",
+                "title": "SonarCloud quality gate consolidated and enforced in CI",
+                "status": "Accepted",
+                "date": "2026-07",
+                "context": "The Sonar gate previously lived in a separate, skippable workflow and could pass silently without a valid token.",
+                "decision": "One CI job runs the scan with `-Dsonar.qualitygate.wait=true` and hard-fails when the token/organization is missing on trusted runs; fork and Dependabot PRs get a documented safe-skip because secrets are unavailable to them.",
+                "tradeoff": "Fork PRs cannot run Sonar; covered by CodeQL, dependency, and workflow-security checks that still run.",
+                "display_order": 3,
             },
         ],
         "log": [
-            {"hash": "b6d20e4", "date": "2026-06", "title": "Security hotspot remediation", "note": "Last gate before public release.", "display_order": 0},
-            {"hash": "f19c73b", "tag": "gate", "date": "2026-03", "title": "SonarQube Quality Gate passes", "display_order": 1},
-            {"hash": "48a5d0f", "date": "2025-12", "title": "Admin RBAC + 60th endpoint", "display_order": 2},
-            {"hash": "90e14cc", "tag": "v0.1", "date": "2025-09", "title": "Monorepo scaffold · staged CI/CD", "display_order": 3},
+            {"hash": "ce948d7", "date": "2026-07-25", "title": "Evidence-first dossier authoring guide", "note": "Working contract to rebuild every project dossier from first-party evidence.", "display_order": 0},
+            {"hash": "21df8b1", "tag": "PR #79", "date": "2026-07-25", "title": "Public frontend performance pass", "note": "Server-rendered project index and slimmer public payloads.", "display_order": 1},
+            {"hash": "3e8f028", "date": "2026-07-18", "title": "SonarCloud gate consolidated into CI", "note": "Single enforced job with qualitygate.wait=true.", "display_order": 2},
+            {"hash": "707906d", "date": "2026-07-13", "title": "Project dossier API + migration", "note": "ProjectDossier aggregate exposed behind admin PUT / public GET.", "display_order": 3},
+            {"hash": "905d39a", "date": "2026-04-22", "title": "Public site migrated to Next.js App Router", "display_order": 4},
+            {"hash": "3d00c11", "tag": "v0.0", "date": "2025-11-02", "title": "Initial commit", "display_order": 5},
         ],
         "diagrams": [
             {
-                "id": "seq-rest",
+                "id": "seq-public",
                 "kind": "sequence",
-                "title": "Sequence — GitHub stats",
-                "note": "the 24h cache shields the rate limit",
+                "title": "Sequence — public request (ISR)",
+                "note": "server components fetch with revalidate; a cold backend serves stale, not blank",
                 "display_order": 0,
                 "data": {
-                    "actors": ["Visitor", "Next.js", "FastAPI", "Redis", "GitHub API"],
+                    "actors": ["Visitor", "Next (Vercel)", "FastAPI (Railway)", "PostgreSQL"],
                     "messages": [
-                        {"from": "Visitor", "to": "Next.js", "label": "view /home"},
-                        {"from": "Next.js", "to": "FastAPI", "label": "GET /api/github"},
-                        {"from": "FastAPI", "to": "Redis", "label": "cache lookup"},
+                        {"from": "Visitor", "to": "Next (Vercel)", "label": "GET /projects"},
+                        {"from": "Next (Vercel)", "to": "Next (Vercel)", "label": "ISR cache fresh?"},
+                        {"from": "Next (Vercel)", "to": "FastAPI (Railway)", "label": "miss/stale → GET /api/v1/projects"},
+                        {"from": "FastAPI (Railway)", "to": "PostgreSQL", "label": "query projects"},
+                        {"from": "PostgreSQL", "to": "FastAPI (Railway)", "label": "rows", "kind": "return"},
+                        {"from": "FastAPI (Railway)", "to": "Next (Vercel)", "label": "200 · projects", "kind": "return"},
+                        {"from": "Next (Vercel)", "to": "Visitor", "label": "SSR HTML + hydrate", "kind": "return"},
+                    ],
+                },
+            },
+            {
+                "id": "seq-github",
+                "kind": "sequence",
+                "title": "Sequence — GitHub stats cache",
+                "note": "24h Redis cache shields the rate limit; stale served on fetch error",
+                "display_order": 1,
+                "data": {
+                    "actors": ["Visitor", "Next", "FastAPI", "Redis", "GitHub API"],
+                    "messages": [
+                        {"from": "Visitor", "to": "Next", "label": "view Command Center"},
+                        {"from": "Next", "to": "FastAPI", "label": "GET /api/v1/github/stats"},
+                        {"from": "FastAPI", "to": "Redis", "label": "get github_stats"},
                         {"from": "Redis", "to": "FastAPI", "label": "hit (≤24h) → stats", "kind": "return"},
-                        {"from": "FastAPI", "to": "GitHub API", "label": "miss → fetch + store"},
-                        {"from": "FastAPI", "to": "Next.js", "label": "200 · stats", "kind": "return"},
+                        {"from": "FastAPI", "to": "GitHub API", "label": "miss → GraphQL fetch"},
+                        {"from": "GitHub API", "to": "FastAPI", "label": "aggregate stats", "kind": "return"},
+                        {"from": "FastAPI", "to": "Redis", "label": "setex 24h"},
+                        {"from": "FastAPI", "to": "Next", "label": "200 · stats", "kind": "return"},
                     ],
                 },
             },
@@ -720,47 +541,348 @@ DOSSIER_CONTENT: dict[str, dict] = {
                 "id": "authz",
                 "kind": "matrix",
                 "title": "Authorization Matrix",
-                "note": "JWT role claims → route scopes",
-                "display_order": 1,
+                "note": "JWT/RBAC — require_admin on every mutating route",
+                "display_order": 2,
                 "data": {
                     "cols": ["visitor", "admin"],
                     "rows": [
-                        {"label": "view site & projects", "cells": ["✓", "✓"]},
+                        {"label": "view site, projects & dossiers", "cells": ["✓", "✓"]},
                         {"label": "send contact message", "cells": ["✓", "✓"]},
-                        {"label": "CRUD projects / skills", "cells": ["—", "✓"]},
+                        {"label": "CRUD projects / skills / blog", "cells": ["—", "✓"]},
+                        {"label": "PUT / DELETE project dossier", "cells": ["—", "✓"]},
                         {"label": "read messages inbox", "cells": ["—", "✓"]},
                         {"label": "upload assets (Supabase)", "cells": ["—", "✓"]},
-                        {"label": "trigger deploy hooks", "cells": ["—", "✓"]},
+                        {"label": "view admin stats & audit log", "cells": ["—", "✓"]},
                     ],
                 },
             },
             {
                 "id": "cicd-pf",
                 "kind": "tiers",
-                "title": "CI/CD — staged deploys",
-                "display_order": 2,
+                "title": "CI/CD — gate + provider deploys",
+                "note": "CI is the quality gate and smoke checker, not the deployer",
+                "display_order": 3,
                 "data": {
                     "tiers": [
                         [{"kind": "start", "title": "push → main"}],
-                        [{"kind": "step", "title": "Lint + tests"}],
-                        [{"kind": "decision", "title": "SonarQube gate?"}],
+                        [{"kind": "step", "title": "CI quality wall", "sub": "flake8 · pytest · OpenAPI-drift · type-check · builds"}],
+                        [{"kind": "decision", "title": "SonarCloud gate?", "sub": "qualitygate.wait=true"}],
                         [
-                            {"kind": "step", "title": "Vercel build", "sub": "frontend · preview → prod", "via": "pass"},
-                            {"kind": "error", "title": "blocked", "via": "fail"},
+                            {"kind": "step", "title": "Providers deploy", "sub": "Vercel + Railway native integrations", "via": "pass"},
+                            {"kind": "error", "title": "blocked", "sub": "gate fails · PR annotated", "via": "fail"},
                         ],
-                        [{"kind": "step", "title": "Railway deploy", "sub": "API + Postgres + Redis"}],
-                        [{"kind": "end", "title": "health checks"}],
+                        [{"kind": "step", "title": "Railway release", "sub": "alembic upgrade head → uvicorn"}],
+                        [{"kind": "step", "title": "Post-deploy smoke", "sub": "FE curl · BE admin login → /admin/stats"}],
+                        [{"kind": "end", "title": "live"}],
+                    ],
+                    "notes": ["Vercel/Railway deploy on push independently of CI; the gate and smoke checks run alongside, not as a deploy step."],
+                },
+            },
+            {
+                "id": "flow-dossier",
+                "kind": "tiers",
+                "title": "Flow — dossier render",
+                "note": "project selection → dossier API → renderer → gallery",
+                "display_order": 4,
+                "data": {
+                    "tiers": [
+                        [{"kind": "start", "title": "select project", "sub": "ProjectIndex"}],
+                        [{"kind": "step", "title": "GET /dossiers/{slug}", "sub": "on-demand · cache 60s SWR 300s"}],
+                        [{"kind": "decision", "title": "dossier found?"}],
+                        [
+                            {"kind": "step", "title": "map + synthesize C4", "sub": "toProjectDetail prepends c4 chip", "via": "200"},
+                            {"kind": "error", "title": "dossier unavailable", "sub": "retry button", "via": "404 / error"},
+                        ],
+                        [{"kind": "step", "title": "render tabs", "sub": "overview · arch · adr · log · gallery"}],
+                        [{"kind": "end", "title": "DiagramGallery + gallery"}],
+                    ],
+                    "notes": ["arch tab shows the synthesized C4 chip plus every diagram; gallery figures read /public/projects paths"],
+                },
+            },
+            {
+                "id": "erd",
+                "kind": "schema",
+                "title": "ERD — dossier data model",
+                "note": "one dossier per project; children cascade on delete",
+                "display_order": 5,
+                "data": {
+                    "tiers": [
+                        [{"name": "projects", "kind": "table", "rows": ["id · pk", "slug · uniq", "title", "featured"]}],
+                        [{"name": "project_dossiers", "kind": "table", "rows": ["id · pk", "project_id · fk · uniq", "impact_en", "impact_tr"]}],
+                        [
+                            {"name": "dossier_metrics", "kind": "table", "rows": ["value", "numeric_value", "label", "display_order"]},
+                            {"name": "dossier_c4_levels", "kind": "table", "rows": ["label", "note", "display_order"]},
+                            {"name": "dossier_adrs", "kind": "table", "rows": ["identifier", "status", "context", "decision"]},
+                        ],
+                        [
+                            {"name": "dossier_c4_nodes", "kind": "table", "rows": ["level_id · fk", "kind", "title", "tier_order"]},
+                            {"name": "dossier_log_entries", "kind": "table", "rows": ["commit_hash", "tag", "date", "title"]},
+                            {"name": "dossier_diagrams", "kind": "table", "rows": ["identifier", "kind", "data · JSON"]},
+                            {"name": "dossier_gallery_items", "kind": "table", "rows": ["identifier", "source_url", "caption"]},
+                        ],
+                    ],
+                    "relations": [
+                        {"from": "projects", "label": "1:1", "to": "project_dossiers"},
+                        {"from": "project_dossiers", "label": "1:N", "to": "dossier_metrics"},
+                        {"from": "project_dossiers", "label": "1:N", "to": "dossier_c4_levels"},
+                        {"from": "dossier_c4_levels", "label": "1:N", "to": "dossier_c4_nodes"},
+                        {"from": "project_dossiers", "label": "1:N", "to": "dossier_adrs"},
+                        {"from": "project_dossiers", "label": "1:N", "to": "dossier_diagrams"},
+                        {"from": "project_dossiers", "label": "1:N", "to": "dossier_gallery_items"},
                     ],
                 },
             },
         ],
         "gallery": [
-            {"id": "pf-home", "src": "/projects/pf-home.png", "caption": "fig 01 — public site · home", "display_order": 0},
-            {"id": "pf-admin", "src": "/projects/pf-admin.png", "caption": "fig 02 — admin · messages table", "display_order": 1},
+            {"id": "pf-home", "src": "/projects/portfolio-platform-web-desktop-home.webp", "caption": "fig 01 — public home · server-rendered system profile & command center", "display_order": 0},
+            {"id": "pf-projects", "src": "/projects/portfolio-platform-web-desktop-projects.webp", "caption": "fig 02 — project index · each entry opens a full dossier", "display_order": 1},
+            {"id": "pf-dossier-arch", "src": "/projects/portfolio-platform-web-desktop-dossier-arch.webp", "caption": "fig 03 — dossier · interactive C4 (context → containers)", "display_order": 2},
+            {"id": "pf-dossier-cicd", "src": "/projects/portfolio-platform-web-desktop-dossier-cicd.webp", "caption": "fig 04 — dossier · CI/CD gate + provider-native deploys", "display_order": 3},
+            {"id": "pf-admin-dossier", "src": "/projects/portfolio-platform-web-desktop-admin-dossier.webp", "caption": "fig 05 — admin dossier editor · JWT/RBAC PUT round-trip", "display_order": 4},
+            {"id": "pf-home-mobile", "src": "/projects/portfolio-platform-web-desktop-home-mobile.webp", "caption": "fig 06 — responsive mobile layout (390px)", "display_order": 5},
         ],
     },
 }
 
+# Keep only the first-party portfolio payload from the historical literal.
+# Other entries are either loaded from research evidence or intentionally
+# omitted until their source and visual clearance are supplied.
+DOSSIER_CONTENT: dict[str, dict] = {
+    "portfolio-platform-web-desktop": _LEGACY_DOSSIER_CONTENT[
+        "portfolio-platform-web-desktop"
+    ],
+}
+
+
+def _load_external_dossier_payloads() -> None:
+    payload_path = Path(__file__).resolve().parent / "dossier_payloads" / "isikschedule-platform.json"
+    DOSSIER_CONTENT["isikschedule-platform"] = json.loads(
+        payload_path.read_text(encoding="utf-8")
+    )
+
+
+_load_external_dossier_payloads()
+
+# These two records have no source repository, technical archive, or approved
+# visual evidence in the audited workspaces. Keep the project cards visible,
+# but do not publish the old marketing dossier as if it described a verified
+# implementation. A pending-source report lives under docs/dossiers/.
+for _pending_slug in (
+    "teknofest-sarkan-uav-defense-platform",
+    "automated-web-crawler",
+):
+    DOSSIER_CONTENT.pop(_pending_slug, None)
+
+# Agentic-Ide is a real repository, but it is currently a planning/readiness
+# project. Its dossier describes accepted design decisions and repository
+# evidence; it does not present the proposed Electron application as shipped.
+DOSSIER_CONTENT["agentic-ide-thesis-project"] = {
+    "impact_en": (
+        "Agentic IDE is a safety-oriented graduation-thesis repository, not a shipped IDE. "
+        "It turns the problem of unsafe, opaque multi-file AI edits into a measurable plan-first "
+        "workflow: a single agent observes context, proposes a change, passes policy checks, "
+        "waits for human approval, and only then writes within a workspace boundary. The repository "
+        "supports this direction with 9 ADRs, 57 non-epic backlog issues, 5 MVP scenarios, and a "
+        "planned 20-task evaluation target; implementation results are not claimed yet."
+    ),
+    "impact_tr": (
+        "Agentic IDE, dağıtılmış bir IDE değil; güvenlik odaklı bitirme tezi planlama reposudur. "
+        "Güvensiz ve opak çok dosyalı AI değişikliklerini ölçülebilir bir plan-önce akışına dönüştürür: "
+        "tek ajan bağlamı gözlemler, değişiklik önerir, politika kontrollerinden geçer, insan onayı bekler "
+        "ve ancak bundan sonra workspace sınırları içinde yazar. Repo bu yönü 9 ADR, 57 epic dışı backlog "
+        "issue'su, 5 MVP senaryosu ve planlanan 20 görevlik değerlendirme hedefiyle destekliyor; henüz "
+        "uygulama sonucu iddia edilmiyor."
+    ),
+    "metrics": [
+        {"value": "9", "numeric_value": 9, "label": "accepted ADRs", "note": "docs/adr/ADR-001..009; planning evidence, not runtime features", "display_order": 0},
+        {"value": "57", "numeric_value": 57, "label": "non-epic backlog issues", "note": "github-projects/requirements-analysis.json; 69 total items including 12 epics", "display_order": 1},
+        {"value": "5", "numeric_value": 5, "label": "MVP scenarios", "note": "PRODUCT_PLAN.md; planned evaluation surface", "display_order": 2},
+        {"value": "20", "numeric_value": 20, "label": "benchmark target", "note": "planned task set in PRODUCT_PLAN.md and EVALUATION_PLAN.md; not yet executed", "display_order": 3},
+    ],
+    "c4": [
+        {
+            "label": "Context",
+            "note": "Repository-defined thesis scope; no production implementation is present.",
+            "display_order": 0,
+            "tiers": [
+                [{"kind": "person", "title": "Developer", "sub": "requests, reviews, approves or rejects changes"}],
+                [{"kind": "system", "title": "Agentic IDE thesis artifact", "sub": "planned safety-oriented coding workflow"}],
+                [
+                    {"kind": "external", "title": "Local workspace", "sub": "files and project context inside a bounded directory", "leaf": True},
+                    {"kind": "external", "title": "Local model path", "sub": "Ollama-compatible provider boundary", "leaf": True},
+                    {"kind": "external", "title": "Cloud model path", "sub": "Anthropic-compatible provider boundary", "leaf": True},
+                ],
+            ],
+        },
+        {
+            "label": "Planned MVP containers",
+            "note": "Architecture recorded in ADRs and system plans; these are design boundaries, not shipped services.",
+            "display_order": 1,
+            "tiers": [
+                [{"kind": "client", "title": "Electron + Monaco shell", "sub": "editor and diff surface; ADR-001"}],
+                [{"kind": "container", "title": "Single-agent orchestrator", "sub": "observe → plan → approval-gated apply"}],
+                [
+                    {"kind": "component", "title": "Context and retrieval", "sub": "layered retrieval with SQLite + sqlite-vec candidate"},
+                    {"kind": "component", "title": "Model provider boundary", "sub": "manual local/cloud selection; ADR-004/005"},
+                ],
+                [
+                    {"kind": "component", "title": "Safety and write boundary", "sub": "path normalization, protected files, approval, rollback"},
+                    {"kind": "store", "title": "Audit and benchmark artifacts", "sub": "versioned evidence contracts; planned persistence", "leaf": True},
+                ],
+            ],
+        },
+    ],
+    "adrs": [
+        {
+            "id": "ADR-001",
+            "title": "Electron + Monaco editor shell",
+            "status": "Accepted",
+            "date": "2026-05-01",
+            "context": "The thesis needs a desktop coding surface with local file access, diff review, and a TypeScript ecosystem without inheriting the full VS Code maintenance surface.",
+            "decision": "Use Electron with Monaco Editor for the MVP shell; keep the application structure minimal until implementation and evaluation begin.",
+            "tradeoff": "Higher memory and bundle cost than Tauri or a browser app; renderer/main-process security boundaries become a first-class risk.",
+            "display_order": 0,
+        },
+        {
+            "id": "ADR-003",
+            "title": "Local retrieval storage",
+            "status": "Accepted",
+            "date": "2026-05-01",
+            "context": "Codebase Q&A and evidence-backed planning need local-first storage without requiring a hosted vector database.",
+            "decision": "Use SQLite for local metadata and keep sqlite-vec behind a small ContextStore-style adapter candidate.",
+            "tradeoff": "Portable privacy boundary is gained, but sqlite-vec maturity and multilingual retrieval remain implementation risks.",
+            "display_order": 1,
+        },
+        {
+            "id": "ADR-004",
+            "title": "Manual model selection for MVP",
+            "status": "Accepted",
+            "date": "2026-05-01",
+            "context": "Automatic routing would add another evaluation variable and could surprise users by changing privacy, cost, or latency characteristics.",
+            "decision": "Let the user choose local-only, manual hybrid, or cloud-only behavior; do not add an opaque automatic router to the MVP.",
+            "tradeoff": "The user carries provider-selection friction, while benchmark runs remain explainable and comparable.",
+            "display_order": 2,
+        },
+        {
+            "id": "ADR-006",
+            "title": "No shell execution in the MVP",
+            "status": "Accepted",
+            "date": "2026-05-01",
+            "context": "Terminal and arbitrary process execution would expand the safety problem beyond the thesis variable of controlled, approval-gated file changes.",
+            "decision": "Limit the MVP tool surface to controlled reads, retrieval, diff generation, approval-gated writes, rollback, and explanation.",
+            "tradeoff": "The agent cannot run tests or package commands automatically; a future command runner needs its own ADR and threat model.",
+            "display_order": 3,
+        },
+    ],
+    "log": [
+        {"hash": "caa3376", "date": "2026-05-02", "title": "Thesis backlog governance automation", "note": "Added validation and setup automation around the requirements project seed.", "display_order": 0},
+        {"hash": "da4af95", "date": "2026-05-01", "title": "Readiness validation and VDD planning", "note": "Added implementation-readiness gates, ADRs, schemas, and verification-driven planning.", "display_order": 1},
+        {"hash": "cbe238d", "date": "2026-04-27", "title": "Repository governance and project seed", "note": "Introduced the structured GitHub Project requirements seed and repository automation.", "display_order": 2},
+        {"hash": "ac75994", "date": "2026-03-10", "title": "Product and system planning completed", "note": "Established the research question, MVP boundary, agent loop, safety model, and evaluation plan.", "display_order": 3},
+        {"hash": "e6da815", "date": "2026-01-02", "title": "Initial thesis architecture and roadmap", "note": "First repository milestone; no application implementation is claimed.", "display_order": 4},
+    ],
+    "diagrams": [
+        {
+            "id": "agent-loop",
+            "kind": "tiers",
+            "title": "Planned flow — observe to verify",
+            "note": "Design contract from SYSTEM_PLAN.md; not an executed runtime trace.",
+            "display_order": 0,
+            "data": {
+                "tiers": [
+                    [{"kind": "start", "title": "user request"}],
+                    [{"kind": "step", "title": "Observe", "sub": "active file + layered retrieval"}],
+                    [{"kind": "step", "title": "Plan", "sub": "files, edits, order, risks"}],
+                    [{"kind": "decision", "title": "policy check passes?"}],
+                    [{"kind": "step", "title": "Request approval", "sub": "diff and rationale", "via": "yes"}, {"kind": "error", "title": "Block or replan", "via": "no"}],
+                    [{"kind": "decision", "title": "developer approves?"}],
+                    [{"kind": "step", "title": "Atomic apply", "sub": "workspace write boundary", "via": "yes"}, {"kind": "error", "title": "Discard", "via": "no"}],
+                    [{"kind": "end", "title": "verify + audit"}],
+                ],
+                "notes": ["Rollback is an explicit MVP requirement; shell execution is explicitly out of scope."],
+            },
+        },
+        {
+            "id": "approval-sequence",
+            "kind": "sequence",
+            "title": "Planned sequence — approval gate",
+            "note": "Proposed interaction boundary recorded by the repository ADRs.",
+            "display_order": 1,
+            "data": {
+                "actors": ["Developer", "Monaco UI", "Orchestrator", "Model provider", "Safety policy", "Workspace"],
+                "messages": [
+                    {"from": "Developer", "to": "Monaco UI", "label": "prompt + active context"},
+                    {"from": "Monaco UI", "to": "Orchestrator", "label": "start run"},
+                    {"from": "Orchestrator", "to": "Model provider", "label": "request plan"},
+                    {"from": "Model provider", "to": "Orchestrator", "label": "plan + change-set", "kind": "return"},
+                    {"from": "Orchestrator", "to": "Safety policy", "label": "validate paths, secrets, protected files"},
+                    {"from": "Safety policy", "to": "Orchestrator", "label": "allow / warning / block", "kind": "return"},
+                    {"from": "Orchestrator", "to": "Monaco UI", "label": "render diff for approval", "kind": "return"},
+                    {"from": "Developer", "to": "Monaco UI", "label": "approve or reject"},
+                    {"from": "Monaco UI", "to": "Workspace", "label": "atomic write only after approval"},
+                ],
+            },
+        },
+        {
+            "id": "safety-matrix",
+            "kind": "matrix",
+            "title": "MVP safety boundary",
+            "note": "Repository decision surface; no shell/process executor is implemented.",
+            "display_order": 2,
+            "data": {
+                "cols": ["MVP policy", "Evidence state"],
+                "rows": [
+                    {"label": "Read files inside workspace", "cells": ["allowed", "planned requirement"]},
+                    {"label": "Generate retrieval context and diff", "cells": ["allowed", "planned requirement"]},
+                    {"label": "Write files before human approval", "cells": ["blocked", "accepted ADR-006 boundary"]},
+                    {"label": "Shell / exec / package install", "cells": ["out of scope", "accepted ADR-006"]},
+                    {"label": "Rollback applied change-set", "cells": ["required", "planned evaluation evidence"]},
+                ],
+            },
+        },
+        {
+            "id": "design-contracts",
+            "kind": "schema",
+            "title": "Design contracts — evidence chain",
+            "note": "JSON schemas exist in the repository; runtime persistence is not implemented.",
+            "display_order": 3,
+            "data": {
+                "tiers": [
+                    [{"name": "Requirement", "kind": "table", "rows": ["source", "acceptance criteria", "risk"]}],
+                    [{"name": "Plan", "kind": "table", "rows": ["context", "files", "proposed actions"]}, {"name": "ChangeSet", "kind": "table", "rows": ["diff", "affected paths", "policy result"]}],
+                    [{"name": "Approval", "kind": "table", "rows": ["decision", "timestamp", "selected changes"]}, {"name": "AuditEvent", "kind": "table", "rows": ["event", "run id", "policy version"]}],
+                    [{"name": "BenchmarkRun", "kind": "table", "rows": ["condition", "task id", "evidence", "outcome"]}],
+                ],
+                "relations": [
+                    {"from": "Requirement", "label": "1:N", "to": "Plan"},
+                    {"from": "Plan", "label": "1:1", "to": "ChangeSet"},
+                    {"from": "ChangeSet", "label": "1:1", "to": "Approval"},
+                    {"from": "Approval", "label": "1:N", "to": "AuditEvent"},
+                    {"from": "AuditEvent", "label": "N:1", "to": "BenchmarkRun"},
+                ],
+            },
+        },
+        {
+            "id": "readiness-flow",
+            "kind": "tiers",
+            "title": "Readiness flow — planning to implementation",
+            "note": "Current repository state stops before the application scaffold.",
+            "display_order": 4,
+            "data": {
+                "tiers": [
+                    [{"kind": "start", "title": "research scope"}],
+                    [{"kind": "step", "title": "ADR + threat model"}],
+                    [{"kind": "step", "title": "schemas + validation CI"}],
+                    [{"kind": "decision", "title": "advisor/readiness gate?"}],
+                    [{"kind": "step", "title": "Electron scaffold", "via": "pass"}, {"kind": "error", "title": "revise plan", "via": "fail"}],
+                    [{"kind": "end", "title": "MVP implementation queue"}],
+                ],
+                "notes": ["Current HEAD contains the planning and governance phases; no TypeScript application files are present."],
+            },
+        },
+    ],
+    "gallery": [],
+}
 
 # The diagram data union discriminates on `kind`, which must match the outer
 # diagram kind; inject it once here instead of repeating it in every literal.
