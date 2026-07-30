@@ -101,6 +101,12 @@ def seed_technologies(db: Session) -> Dict[str, str]:
             "color": "#336791",
         },
         {
+            "name": "SQLite",
+            "category": "database",
+            "icon": None,
+            "color": "#003B57",
+        },
+        {
             "name": "C#",
             "category": "language",
             "icon": "devicon-csharp-plain",
@@ -926,19 +932,19 @@ def seed_projects(db: Session) -> List[Project]:
             "slug": "isikschedule-platform",
             "title_en": "IsikSchedule Platform",
             "title_tr": "IsikSchedule Platformu",
-            "short_en": "Constraint-aware scheduling engine across desktop and web products",
-            "short_tr": "Masaustu ve web urunlerinde kisit farkinda ders programi motoru",
+            "short_en": "Independent desktop and web scheduling products for Işık University catalogs",
+            "short_tr": "Işık Üniversitesi katalogları için bağımsız masaüstü ve web programlama ürünleri",
             "description_en": (
-                "Dual-platform scheduling system with shared domain logic. "
-                "Desktop version serves around 1,000 active users. "
-                "Core engine includes 13 optimization algorithms such as Genetic, SA, Tabu, PSO, and Hybrid GA+SA. "
-                "Web architecture includes FastAPI, Next.js, PostgreSQL, Redis, Celery, JWT/RBAC, and Dockerized services."
+                "The portfolio tracks multiple independent scheduling codebases rather than a shared solver package: "
+                "the PyQt6 desktop client has a verified 13-solver registry, while the FastAPI + Next.js web product "
+                "uses its own synchronous exact search and SQLite persistence. The public web repository also contains "
+                "JWT/admin controls, Excel catalog ingestion, and shareable schedule flows."
             ),
             "description_tr": (
-                "Paylasilan alan mantigina sahip cift platformlu ders programlama sistemi. "
-                "Masaustu surumu yaklasik 1.000 aktif kullaniciya hizmet veriyor. "
-                "Genetik, SA, Tabu, PSO ve Hybrid GA+SA dahil 13 optimizasyon algoritmasi iceriyor. "
-                "Web mimarisinde FastAPI, Next.js, PostgreSQL, Redis, Celery, JWT/RBAC ve Dockerize servisler kullaniliyor."
+                "Portföyde ortak bir solver paketi olarak değil, bağımsız ders programlama kod tabanları olarak izlenir: "
+                "PyQt6 masaüstü istemcisinde doğrulanmış 13 solver kayıtlıdır; FastAPI + Next.js web ürünü ise "
+                "kendi senkron kesin aramasını ve SQLite kalıcılığını kullanır. Web reposunda ayrıca JWT/admin kontrolleri, "
+                "Excel katalog alımı ve paylaşılabilir program akışları bulunur."
             ),
             "github_url": "https://github.com/TurkishKEBAB/isikschedule-core",
             "demo_url": "https://github.com/TurkishKEBAB/isikschedule-web",
@@ -949,19 +955,19 @@ def seed_projects(db: Session) -> List[Project]:
             "slug": "agentic-ide-thesis-project",
             "title_en": "Agentic IDE (Thesis Project)",
             "title_tr": "Agentic IDE (Tez Projesi)",
-            "short_en": "Agent-first IDE architecture with human-in-the-loop controls",
-            "short_tr": "Insan onayli kontrol akisina sahip agent-first IDE mimarisi",
+            "short_en": "Safety-oriented Agentic IDE thesis planning and requirements repository",
+            "short_tr": "Güvenlik odaklı Agentic IDE tez planlama ve gereksinim reposu",
             "description_en": (
-                "Early architectural phase of a modular AI-native IDE built with TypeScript, Electron, and Monaco. "
-                "The core loop is Observe -> Plan -> Approve -> Apply with prohibited command enforcement. "
-                "Hybrid LLM orchestration is designed for local latency-sensitive tasks and cloud-based complex planning."
+                "A thesis planning repository, not a shipped IDE implementation. Its accepted ADRs and backlog define "
+                "an Electron + Monaco MVP, a single-agent plan-first approval loop, local retrieval, explicit model "
+                "selection, workspace-bound writes, rollback, audit events, and a 20-task evaluation target."
             ),
             "description_tr": (
-                "TypeScript, Electron ve Monaco ile gelistirilen modul yapida AI-native IDE'nin erken mimari asamasi. "
-                "Temel dongu Observe -> Plan -> Approve -> Apply seklinde tasarlandi ve riskli komutlara kisit uygulanacak. "
-                "Hibrit LLM orkestrasyonu, gecikmeye hassas gorevlerde lokal; karmasik planlamada bulut modellerini hedefliyor."
+                "Henüz dağıtılmış bir IDE uygulaması değil, tez planlama reposudur. Kabul edilmiş ADR'leri ve backlog'u; "
+                "Electron + Monaco MVP'sini, tek ajanlı plan-önce/onaylı akışı, lokal retrieval'ı, açık model seçimini, "
+                "workspace sınırlarını, rollback'i, audit event'lerini ve 20 görevlik değerlendirme hedefini tanımlar."
             ),
-            "github_url": None,
+            "github_url": "https://github.com/TurkishKEBAB/Agentic-Ide",
             "demo_url": None,
             "featured": True,
             "display_order": 2,
@@ -970,17 +976,16 @@ def seed_projects(db: Session) -> List[Project]:
             "slug": "teknofest-sarkan-uav-defense-platform",
             "title_en": "Teknofest Sarkan UAV Defense Platform",
             "title_tr": "Teknofest Sarkan IHA Savunma Platformu",
-            "short_en": "Anti-jamming telemetry software for a defense UAV platform",
-            "short_tr": "Savunma odakli IHA platformu icin anti-jamming telemetri yazilimi",
+            "short_en": "Project record pending technical source and publication clearance",
+            "short_tr": "Teknik kaynak ve yayın izni bekleyen proje kaydı",
             "description_en": (
-                "Led software development for telemetry reliability and anti-jamming communication. "
-                "Ranked 3rd among 700+ projects in preliminary evaluation. "
-                "Managed a total 200,000 TL budget including a 165,000 TL TUBITAK R&D grant and Savronik sponsorship."
+                "The portfolio record is retained, but no source repository or publishable technical report was found "
+                "in the audited workspaces. Architecture, performance, ranking, budget, and gallery claims remain pending "
+                "owner-provided evidence and publication clearance."
             ),
             "description_tr": (
-                "Telemetri guvenilirligi ve anti-jamming iletisim odakli yazilim gelistirme sureclerine liderlik edildi. "
-                "On degerlendirmede 700+ proje arasinda 3. sirada yer aldi. "
-                "165.000 TL TUBITAK Ar-Ge hibesi ve Savronik sponsorlugu dahil toplam 200.000 TL butce yonetildi."
+                "Portföy kaydı korunmuştur; ancak denetlenen çalışma alanlarında kaynak repo veya yayınlanabilir teknik rapor "
+                "bulunamadı. Mimari, performans, derece, bütçe ve galeri iddiaları sahibinden kanıt ve yayın izni gelene kadar beklemededir."
             ),
             "github_url": None,
             "demo_url": None,
@@ -991,17 +996,17 @@ def seed_projects(db: Session) -> List[Project]:
             "slug": "automated-web-crawler",
             "title_en": "Automated Web Crawler",
             "title_tr": "Otomatik Web Tarayici",
-            "short_en": "Concurrent scraping system with FastAPI and PostgreSQL backend",
-            "short_tr": "FastAPI ve PostgreSQL destekli eszamanli web tarama sistemi",
+            "short_en": "Project record pending crawler source and benchmark evidence",
+            "short_tr": "Crawler kaynağı ve benchmark kanıtı bekleyen proje kaydı",
             "description_en": (
-                "High-throughput concurrent scraper built with Scrapy and BeautifulSoup. "
-                "Backend services expose ingestion and monitoring endpoints via FastAPI + PostgreSQL. "
-                "Includes robots.txt compliance, retry policies, and fault-tolerance controls with 89.9% successful execution."
+                "No crawler repository, archive, runnable benchmark, or operational screenshot was found in the audited "
+                "workspaces. Scrapy, FastAPI, PostgreSQL, worker count, retry policy, robots enforcement, and success-rate "
+                "claims are therefore not published as verified project architecture."
             ),
             "description_tr": (
-                "Scrapy ve BeautifulSoup ile gelistirilen yuksek throughput eszamanli tarama sistemi. "
-                "Backend tarafinda FastAPI + PostgreSQL ile veri alim ve izleme endpoint'leri sunuluyor. "
-                "robots.txt uyumlulugu, retry politikasi ve fault-tolerance mekanizmalari ile %89.9 basari orani saglandi."
+                "Denetlenen çalışma alanlarında crawler reposu, arşivi, çalıştırılabilir benchmark'ı veya operasyon ekranı "
+                "bulunamadı. Bu nedenle Scrapy, FastAPI, PostgreSQL, worker sayısı, retry politikası, robots uygulaması ve "
+                "başarı oranı iddiaları doğrulanmış proje mimarisi olarak yayınlanmıyor."
             ),
             "github_url": None,
             "demo_url": None,
@@ -1015,12 +1020,14 @@ def seed_projects(db: Session) -> List[Project]:
             "short_en": "Full-stack multi-platform portfolio with admin operations and CI/CD",
             "short_tr": "Admin operasyonlari ve CI/CD iceren full-stack cok platformlu portfolyo sistemi",
             "description_en": (
-                "Multi-platform system with 60+ API endpoints, JWT/RBAC auth, 24h GitHub API caching, "
-                "Supabase asset operations, SMTP notifications, and staged deployments to Vercel and Railway."
+                "Multi-platform system with 72 API endpoints, JWT/RBAC auth, 24h GitHub API caching "
+                "with in-memory fallback, Supabase asset operations, SMTP notifications, and independent "
+                "Vercel (frontend) and Railway (backend) deployments via each provider's GitHub integration."
             ),
             "description_tr": (
-                "60+ API endpoint, JWT/RBAC kimlik dogrulama, 24 saatlik GitHub API cache, "
-                "Supabase varlik yonetimi, SMTP bildirimleri ve Vercel/Railway asamali dagitimlarini iceren cok platformlu sistem."
+                "72 API endpoint, JWT/RBAC kimlik dogrulama, in-memory yedekli 24 saatlik GitHub API cache, "
+                "Supabase varlik yonetimi, SMTP bildirimleri ve her saglayicinin GitHub entegrasyonu uzerinden "
+                "bagimsiz Vercel (frontend) ve Railway (backend) dagitimlarini iceren cok platformlu sistem."
             ),
             "github_url": "https://github.com/TurkishKEBAB/Site",
             "demo_url": None,
@@ -1074,14 +1081,12 @@ def link_project_technologies(
     print("Linking project technologies...")
     mapping = {
         "isikschedule-platform": [
+            "Python",
             "TypeScript",
             "FastAPI",
             "Next.js",
-            "PostgreSQL",
-            "Redis",
-            "Docker",
+            "SQLite",
             "PyQt6",
-            "Celery",
             "JWT",
             "RBAC",
         ],

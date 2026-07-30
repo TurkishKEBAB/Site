@@ -244,8 +244,8 @@ const homeDefinition = {
     {
       title: localized("IsikSchedule product maturity", "IsikSchedule ürün olgunluğu"),
       body: localized(
-        "Built a shared scheduling core across desktop and web, serving roughly 1,000 users on desktop with a 13-algorithm engine and 86.97% coverage backed by SonarQube Cloud.",
-        "Masaüstü ve web ürünlerini aynı scheduling core etrafında kurdum; masaüstünde yaklaşık 1.000 kullanıcıya ulaşan, 13 algoritmalı ve SonarQube Cloud ile %86.97 coverage izlenen bir sistem oldu.",
+        "The desktop and web products are independent implementations: the desktop registry exposes 13 verified solvers, while the web product uses a synchronous exact search over its own SQLite-backed application.",
+        "Masaüstü ve web ürünleri bağımsız implementasyonlardır: masaüstü registry'sinde doğrulanmış 13 solver bulunur; web ürünü ise kendi SQLite tabanlı uygulamasında senkron kesin arama kullanır.",
       ),
     },
     {
@@ -306,11 +306,11 @@ const impactMetric = (
 
 export const impactMetrics: ImpactMetric[] = [
   impactMetric(
-    "~1,000",
-    "active users reached",
-    "aktif kullanıcıya erişti",
-    "Desktop deployment of IsikSchedule",
-    "IsikSchedule masaüstü dağıtımı",
+    "13",
+    "registered desktop solvers",
+    "kayıtlı masaüstü solver",
+    "Static count from the isikschedule-desktop algorithm registry",
+    "isikschedule-desktop algoritma registry'sinin statik sayımı",
   ),
   impactMetric(
     "1,550+",
@@ -402,13 +402,13 @@ export const projectRecords: ProjectRecord[] = [
     "isikschedule-platform",
     "IsikSchedule Platform",
     "IsikSchedule Platformu",
-    "Constraint-aware scheduling platform spanning desktop and web products.",
-    "Masaüstü ve web ürünlerini kapsayan constraint-aware scheduling platformu.",
-    "Built a shared scheduling domain that powers both desktop and web experiences. The product ships 13 registered algorithms, a FastAPI + Next.js web layer, JWT/RBAC, and a Dockerized multi-service runtime with PostgreSQL, Redis, and Celery.",
-    "Masaüstü ve web deneyimlerini aynı scheduling domain'iyle besleyen sistemi kurdum. Ürün; 13 kayıtlı algoritma, FastAPI + Next.js web katı, JWT/RBAC ve PostgreSQL, Redis, Celery içeren Dockerize çoklu servis mimarisi ile gelişiyor.",
-    "~1,000 active users on desktop, 86.97% coverage, and a public web release in progress.",
-    "Masaüstünde ~1.000 aktif kullanıcı, %86.97 coverage ve devam eden public web release süreci.",
-    ["FastAPI", "Next.js", "PostgreSQL", "Redis", "Celery", "Docker", "PyQt6", "SonarQube"],
+    "Independent desktop and web scheduling products for Işık University catalogs.",
+    "Işık Üniversitesi katalogları için bağımsız masaüstü ve web programlama ürünleri.",
+    "The PyQt6 desktop client has a verified 13-solver registry. The separate FastAPI + Next.js web product uses its own synchronous exact solver, SQLite persistence, Excel catalog ingestion, and JWT/admin controls; the repositories do not share a solver package.",
+    "PyQt6 masaüstü istemcisinde doğrulanmış 13 solver registry'si bulunur. Ayrı FastAPI + Next.js web ürünü kendi senkron kesin solver'ını, SQLite kalıcılığını, Excel katalog alımını ve JWT/admin kontrollerini kullanır; repolar ortak solver paketi paylaşmaz.",
+    "Measured web evidence: 1,301 catalog rows, 28 route handlers, 20 returned schedules from a bounded search; desktop user count and 86.97% coverage remain unsourced.",
+    "Web ölçümü: 1.301 katalog satırı, 28 route handler ve sınırlandırılmış aramadan dönen 20 program; masaüstü kullanıcı sayısı ve %86.97 coverage kaynaksız kaldı.",
+    ["Python", "FastAPI", "Next.js", "SQLite", "PyQt6", "JWT", "RBAC"],
     true,
     "https://github.com/TurkishKEBAB/isikschedule-core",
     "https://github.com/TurkishKEBAB/isikschedule-web",
@@ -417,51 +417,52 @@ export const projectRecords: ProjectRecord[] = [
     "teknofest-sarkan-uav-defense-platform",
     "Teknofest Sarkan UAV Defense Platform",
     "Teknofest Sarkan İHA Savunma Platformu",
-    "Telemetry reliability and anti-jamming software for a defense UAV platform.",
-    "Savunma odaklı İHA platformu için telemetri güvenilirliği ve anti-jamming yazılımı.",
-    "Led software development for anti-jamming telemetry systems and control algorithms, while coordinating cross-functional work across mechanics, electronics, and software.",
-    "Anti-jamming telemetri sistemleri ve kontrol algoritmaları için yazılım geliştirmeye liderlik ederken mekanik, elektronik ve yazılım ekipleri arasındaki koordinasyonu da üstlendim.",
-    "Ranked 3rd among 700+ projects and managed a 200,000 TL budget including a 165,000 TL TUBITAK grant.",
-    "700+ proje arasında 3. sıraya yerleşip 165.000 TL TÜBİTAK desteği dahil toplam 200.000 TL bütçe yönetildi.",
-    ["Python", "Telemetry", "Systems Design", "Team Coordination"],
+    "Project record pending technical source and publication clearance.",
+    "Teknik kaynak ve yayın izni bekleyen proje kaydı.",
+    "No source repository or publishable technical report was found in the audited workspaces, so the architecture is not represented as verified.",
+    "Denetlenen çalışma alanlarında kaynak repo veya yayınlanabilir teknik rapor bulunamadığı için mimari doğrulanmış olarak temsil edilmiyor.",
+    "Owner-provided technical evidence, ranking/budget proof, and approved visuals are pending.",
+    "Sahibinden teknik kanıt, derece/bütçe belgesi ve onaylı görseller bekleniyor.",
+    ["Systems Design", "Team Coordination"],
     true,
   ),
   projectRecord(
     "agentic-ide-thesis-project",
     "Agentic IDE",
     "Agentic IDE",
-    "A thesis-driven IDE concept centered on observe, plan, approve, and apply loops.",
-    "Observe, plan, approve ve apply döngüsü etrafında kurulan tez odaklı IDE konsepti.",
-    "Designing a modular AI-native IDE on TypeScript, Electron, and Monaco without forking VS Code. The architecture focuses on human-in-the-loop approvals, prohibited-command enforcement, and hybrid local/cloud LLM orchestration.",
-    "VS Code fork'u kullanmadan TypeScript, Electron ve Monaco tabanlı modüler bir AI-native IDE tasarlıyorum. Mimari; human-in-the-loop onaylar, riskli komut kısıtları ve hibrit lokal/bulut LLM orkestrasyonuna odaklanıyor.",
-    "Still in early architecture phase with requirements, diagrams, and CI-backed validation strategy before implementation.",
-    "Uygulamaya geçmeden önce gereksinimler, mimari diyagramlar ve CI destekli doğrulama stratejisiyle erken tasarım aşamasında.",
+    "Safety-oriented Agentic IDE thesis planning and requirements repository.",
+    "Güvenlik odaklı Agentic IDE tez planlama ve gereksinim reposu.",
+    "The repository contains planning documents and accepted ADRs, not an Electron/Monaco application. Its proposed MVP centers on a single-agent plan-first loop, explicit approval, workspace-bound writes, local retrieval, and model-provider boundaries.",
+    "Repo, Electron/Monaco uygulaması değil; planlama dokümanları ve kabul edilmiş ADR'ler içeriyor. Önerilen MVP; tek ajanlı plan-önce akış, açık onay, workspace sınırları, lokal retrieval ve model sağlayıcı sınırlarına odaklanıyor.",
+    "Evidence in the repository: 9 ADRs, 57 non-epic backlog issues, 5 MVP scenarios, and a planned 20-task evaluation target.",
+    "Repo kanıtı: 9 ADR, 57 epic dışı backlog issue'su, 5 MVP senaryosu ve planlanan 20 görevlik değerlendirme hedefi.",
     ["TypeScript", "Electron", "Monaco Editor", "LLMs", "RAG"],
     true,
+    "https://github.com/TurkishKEBAB/Agentic-Ide",
   ),
   projectRecord(
     "automated-web-crawler",
     "Automated Web Crawler",
     "Otomatik Web Crawler",
-    "Concurrent scraping platform with FastAPI and PostgreSQL backend services.",
-    "FastAPI ve PostgreSQL backend servisleriyle kurulan eşzamanlı scraping platformu.",
-    "Built a high-throughput scraping system with Scrapy, BeautifulSoup, FastAPI, and PostgreSQL. The pipeline enforces robots.txt compliance, retry logic, and fault tolerance across concurrent workers.",
-    "Scrapy, BeautifulSoup, FastAPI ve PostgreSQL ile yüksek throughput bir scraping sistemi kurdum. Pipeline; robots.txt uyumluluğu, retry mantığı ve concurrent worker'lar arasında fault tolerance sağlıyor.",
-    "Reached 89.9% successful execution with strict robots compliance and automatic retry controls.",
-    "Sıkı robots uyumluluğu ve otomatik retry kontrolleriyle %89.9 başarı oranına ulaştı.",
-    ["Python", "Scrapy", "FastAPI", "PostgreSQL", "BeautifulSoup"],
+    "Project record pending crawler source and benchmark evidence.",
+    "Crawler kaynağı ve benchmark kanıtı bekleyen proje kaydı.",
+    "No crawler repository, archive, runnable benchmark, or operational screenshot was found in the audited workspaces; no crawler architecture is published as verified.",
+    "Denetlenen çalışma alanlarında crawler reposu, arşivi, çalıştırılabilir benchmark'ı veya operasyon ekranı bulunamadı; crawler mimarisi doğrulanmış olarak yayınlanmıyor.",
+    "Source code, robots/rate-limit tests, operational logs, and approved visuals are pending.",
+    "Kaynak kodu, robots/rate-limit testleri, operasyon logları ve onaylı görseller bekleniyor.",
+    ["Python"],
     false,
   ),
   projectRecord(
     "portfolio-platform-web-desktop",
     "Portfolio Platform",
     "Portfolyo Platformu",
-    "Full-stack portfolio system with admin workflows and staged deployments.",
-    "Admin workflow'ları ve aşamalı deploy hattına sahip full-stack portfolyo sistemi.",
-    "Built a multi-platform portfolio product with 60+ API endpoints, JWT/RBAC, 24-hour GitHub caching, Supabase asset handling, SMTP notifications, and staged CI/CD deployments to Vercel and Railway.",
-    "60+ API endpoint, JWT/RBAC, 24 saatlik GitHub cache, Supabase varlık yönetimi, SMTP bildirimleri ve Vercel ile Railway üzerinden aşamalı CI/CD dağıtımları içeren çok platformlu bir portfolyo ürünü geliştirdim.",
-    "Quality Gate passed in SonarQube Cloud, with public release pending final security hotspot remediation.",
-    "SonarQube Cloud Quality Gate başarılı; public release son güvenlik hotspot düzeltmeleri sonrasına planlı.",
+    "Full-stack portfolio system with admin workflows and provider-native deployments.",
+    "Admin workflow'ları ve sağlayıcı-yerel dağıtımlara sahip full-stack portfolyo sistemi.",
+    "Built a Next.js 16 App Router frontend and FastAPI backend with 72 route handlers, JWT/RBAC, 24-hour GitHub caching with an in-memory fallback, Supabase asset handling, SMTP notifications, and independent Vercel/Railway GitHub integrations.",
+    "72 route handler'lı Next.js 16 App Router frontend ve FastAPI backend; JWT/RBAC, bellek yedekli 24 saatlik GitHub cache, Supabase varlık yönetimi, SMTP bildirimleri ve bağımsız Vercel/Railway GitHub entegrasyonları geliştirdim.",
+    "The repository verifies the gate mechanism and deployment topology; an external SonarCloud 'passed' result is not claimed without dashboard evidence.",
+    "Repo kalite kapısı mekanizmasını ve dağıtım topolojisini doğruluyor; dashboard kanıtı olmadan harici SonarCloud 'passed' sonucu iddia edilmiyor.",
     ["Next.js", "FastAPI", "PostgreSQL", "Redis", "Supabase", "Railway", "Vercel", "SonarQube"],
     false,
     "https://github.com/TurkishKEBAB/Site",
@@ -713,15 +714,15 @@ EXPERIENCE
 SELECTED HIGHLIGHTS
 - NETAS: 25 commits and 1,550 lines of code and tests across four Jira tickets on a production Java microservices platform.
 - Timezone case study: traced a silent UTC vs UTC+3 mismatch with YAML and ELK analysis, then documented remediation with 600+ lines of targeted tests.
-- IsikSchedule: built a dual-platform scheduling product serving ~1,000 active desktop users with a 13-algorithm engine and 86.97% coverage.
+- IsikSchedule: built independent desktop and web scheduling products; the desktop registry has 13 verified solvers, while the web product uses synchronous exact search over SQLite.
 - IEEE Isik (Vice President & Project Coordinator): coordinate 35+ technical events reaching 1,100+ students; SIU 2025 organization committee and IEEEXtreme'24 lead organizer.
 
 SELECTED PROJECTS
-- IsikSchedule Platform - FastAPI, Next.js, PostgreSQL, Redis, Docker, PyQt6
+- IsikSchedule Platform - PyQt6, FastAPI, Next.js, SQLite, JWT/RBAC
 - Agentic IDE - TypeScript, Electron, Monaco, LLMs, RAG
-- Teknofest Sarkan UAV Defense Platform - Python, telemetry, RF-oriented systems
-- Automated Web Crawler - Scrapy, FastAPI, PostgreSQL
-- Portfolio Platform - FastAPI, Next.js, PostgreSQL, Docker
+- Teknofest Sarkan UAV Defense Platform - source and publication clearance pending
+- Automated Web Crawler - source and benchmark evidence pending
+- Portfolio Platform - FastAPI, Next.js, PostgreSQL, Redis, provider-native Vercel/Railway
 
 KEY STACK
 Java, C#, Spring Boot, Python, FastAPI, TypeScript, Next.js, Docker, Kubernetes, AWS, Azure DevOps, PostgreSQL, Redis, RabbitMQ, Celery, ElasticSearch, SonarQube, GitHub Actions.

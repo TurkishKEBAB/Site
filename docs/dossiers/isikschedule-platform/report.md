@@ -1,5 +1,20 @@
 # IsikSchedule Platform — Dossier Research Report
 
+## 2026-07-31 re-audit addendum
+
+The previously local-only review was extended to the public repository inventory. The
+requested `https://github.com/TurkishKEBAB/isikschedule-core` repository does exist and
+was inspected at `d64bd26` (2025-11-03) in a temporary read-only clone. It is a separate
+Python `course_scheduler` application with its own planner, optimizer, local profiles,
+file exports, and UML documentation. Neither `isikschedule-web` nor
+`isikschedule-desktop` imports it. The defensible model is therefore three independent
+codebases around the same scheduling problem, not a shared core.
+
+The 2026-07-25 measurements and WebP captures remain valid for the web/desktop dossier;
+the remote `isikschedule-core` codebase is included as source context but contributes no
+new shared-runtime claim. The active payload continues to omit unsourced user counts,
+coverage claims, and aspirational PostgreSQL/Redis/Celery topology.
+
 Authored against `docs/superpowers/specs/2026-07-25-project-dossier-authoring-design.md`.
 Payload: `dossier.json` (same folder). Evidence ledger is section B below and is
 deliberately **not** part of the payload.
@@ -116,14 +131,15 @@ installed in this environment — so no desktop coverage figure is claimed.
 |---|---|---|
 | 40 | PostgreSQL + Redis + Celery topology | Exists only in `docker-compose.yml`/README as intent. `MAINTENANCE_PLAN.md` decision **K1** makes sync-first official and schedules the rework as Phase 2.1. Recorded in ADR-003 as the rejected alternative — **not** drawn as a live component. |
 
-### B.5 Source-package gaps against the brief
+### B.5 Source-package reconciliation
 
-The brief asked for `https://github.com/TurkishKEBAB/isikschedule-core`. **No such repository
-exists locally**; the desktop code lives in `isikschedule-desktop`
-(`origin = https://github.com/TurkishKEBAB/isikschedule-desktop.git`). Both were read, so the
-"at least two repositories scanned" acceptance criterion is met, but the brief's repo name
-should be corrected. Remote GitHub state was **not** fetched — findings are from the local
-working copies.
+The requested `https://github.com/TurkishKEBAB/isikschedule-core` repository exists remotely
+and was inspected at commit `d64bd26` in a temporary read-only clone. It is a standalone
+Python `course_scheduler` application with its own planner, optimizer, local profiles, file
+exports, and UML documentation. The desktop and web repositories do not import it, so it is
+source context for the scheduling problem rather than a shared runtime dependency. The
+desktop source was also read from `isikschedule-desktop` (`origin =
+https://github.com/TurkishKEBAB/isikschedule-desktop.git`).
 
 ---
 

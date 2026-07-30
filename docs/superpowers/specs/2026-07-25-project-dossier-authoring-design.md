@@ -1,5 +1,12 @@
 # Project Dossier Authoring Guide
 
+> **2026-07-31 re-audit addendum:** `Agentic-Ide` is now available as a public and local
+> source repository, but it is a planning/readiness repository without an Electron/Monaco
+> runtime. `isikschedule-core` also exists remotely and is a separate Python scheduler;
+> it is not imported by the web or desktop repositories. Sarkan and crawler remain
+> pending because no source package or approved evidence was found. See
+> `docs/dossiers/repository-audit.md` and the project-specific reports.
+
 ## Amaç
 
 Bu belge, portfolyodaki beş projenin dossier içeriklerini seed verisinden

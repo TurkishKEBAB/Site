@@ -5,9 +5,7 @@ from app.schemas.dossier import ProjectDossierUpsert
 
 EXPECTED_SLUGS = {
     "isikschedule-platform",
-    "teknofest-sarkan-uav-defense-platform",
     "agentic-ide-thesis-project",
-    "automated-web-crawler",
     "portfolio-platform-web-desktop",
 }
 
