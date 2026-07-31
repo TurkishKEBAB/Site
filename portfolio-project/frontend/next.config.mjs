@@ -22,6 +22,15 @@ const API_PROXY_ORIGIN = (
   .replace(/^http:\/\//i, "https://")
   .replace(/\/$/, "");
 
+if (
+  process.env.VERCEL_ENV === "production" &&
+  !process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY?.trim()
+) {
+  throw new Error(
+    "NEXT_PUBLIC_TURNSTILE_SITE_KEY must be configured for Vercel production builds.",
+  );
+}
+
 // Baseline security headers applied to every response.
 // Content-Security-Policy is intentionally deferred: the inline theme bootstrap
 // script in app/layout.tsx and Next.js' own runtime require a nonce/hash
