@@ -39,5 +39,5 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
 # Run as non-root
 USER appuser
 
-# Run migrations, then application
-CMD ["sh", "-c", "python -m alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000}"]
+# Run migrations, synchronize the source-controlled dossier revision, then application
+CMD ["sh", "-c", "python -m alembic upgrade head && python seed_dossiers.py --sync && uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000}"]

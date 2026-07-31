@@ -143,7 +143,12 @@ jobs:
           echo "$HOME_HTML" | grep -q "Software Engineer - Cloud & DevOps"
           echo "$HOME_HTML" | grep -q "/opengraph-image"
           curl -fsSL "${CURL_RETRY[@]}" "$PRODUCTION_FRONTEND_URL/about" >/dev/null
-          curl -fsSL "${CURL_RETRY[@]}" "$PRODUCTION_FRONTEND_URL/projects" >/dev/null
+          PROJECTS_HTML=$(curl -fsSL "${CURL_RETRY[@]}" "$PRODUCTION_FRONTEND_URL/projects")
+          echo "$PROJECTS_HTML" | grep -q "Independent desktop and web scheduling products"
+          if echo "$PROJECTS_HTML" | grep -qi "shared solver core"; then
+            echo "Projects page still contains the retired shared-solver claim"
+            exit 1
+          fi
           curl -fsSL "${CURL_RETRY[@]}" "$PRODUCTION_FRONTEND_URL/contact" >/dev/null
           curl -fsSL "${CURL_RETRY[@]}" "$PRODUCTION_FRONTEND_URL/robots.txt" | grep -q "Sitemap: https://yigitokur.me/sitemap.xml"
           curl -fsSL "${CURL_RETRY[@]}" "$PRODUCTION_FRONTEND_URL/sitemap.xml" | grep -q "https://yigitokur.me/projects"
@@ -198,6 +203,44 @@ jobs:
           echo "API readiness check failed"
           exit 1
 
+      - name: Wait for deployed dossier revision
+        env:
+          PRODUCTION_API_ROOT_URL: ${{ vars.PRODUCTION_API_ROOT_URL }}
+        run: |
+          DOSSIER_BODY=$(mktemp)
+          for attempt in {1..60}; do
+            if code=$(curl -sS --retry 2 --retry-all-errors --retry-delay 2 \
+              -o "$DOSSIER_BODY" -w "%{http_code}" \
+              "$PRODUCTION_API_ROOT_URL/api/v1/dossiers/ramazan-kopru-academic-site?language=en"); then
+              :
+            else
+              code="000"
+            fi
+
+            if [ "$code" = "200" ] && python - "$DOSSIER_BODY" <<'PY'
+          import json
+          import sys
+
+          with open(sys.argv[1], encoding="utf-8") as dossier_file:
+              payload = json.load(dossier_file)
+
+          assert payload["project_slug"] == "ramazan-kopru-academic-site"
+          assert payload["impact"]
+          assert payload["c4"]
+          assert payload["metrics"]
+          PY
+            then
+              echo "Source-controlled dossier revision is live"
+              exit 0
+            fi
+
+            echo "Attempt $attempt/60: waiting for deployed dossier revision (HTTP $code)"
+            sleep 10
+          done
+
+          echo "Deployed dossier revision did not become visible"
+          exit 1
+
       - name: Run backend smoke checks
         env:
           PRODUCTION_API_ROOT_URL: ${{ vars.PRODUCTION_API_ROOT_URL }}
@@ -217,6 +260,21 @@ jobs:
 
           curl -fsSL "$PRODUCTION_API_ROOT_URL/api/v1/admin/stats" \
             -H "Authorization: Bearer $ACCESS_TOKEN" >/dev/null
+
+          for slug in isikschedule-platform agentic-ide-thesis-project portfolio-platform-web-desktop ramazan-kopru-academic-site travel-planner-platform turkish-morphology-fst; do
+            DOSSIER_JSON=$(curl -fsSL "${CURL_RETRY[@]}" \
+              "$PRODUCTION_API_ROOT_URL/api/v1/dossiers/$slug?language=en")
+            printf '%s' "$DOSSIER_JSON" | python -c 'import json, sys; payload = json.load(sys.stdin); assert payload["impact"], "dossier impact is empty"; assert payload["c4"], "dossier C4 payload is empty"; assert payload["metrics"], "dossier metrics are empty"; assert "shared solver core" not in json.dumps(payload).lower(), "retired shared-solver claim found"'
+          done
+
+          for slug in teknofest-sarkan-uav-defense-platform automated-web-crawler; do
+            code=$(curl -sS "${CURL_RETRY[@]}" -o /dev/null -w "%{http_code}" \
+              "$PRODUCTION_API_ROOT_URL/api/v1/dossiers/$slug?language=en")
+            if [ "$code" != "404" ]; then
+              echo "Expected no dossier for pending project $slug, got HTTP $code"
+              exit 1
+            fi
+          done
 
           echo "Backend smoke checks passed"
 

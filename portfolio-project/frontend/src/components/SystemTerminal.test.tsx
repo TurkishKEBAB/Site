@@ -11,5 +11,9 @@ describe("SystemTerminal", () => {
       "src",
       "/profile.webp",
     );
+    expect(screen.getByRole("img", { name: "Yiğit Okur" })).toHaveAttribute(
+      "fetchpriority",
+      "high",
+    );
   });
 });

@@ -1,9 +1,9 @@
 import Link from "next/link";
+import dynamic from "next/dynamic";
 import { FiArrowRight, FiDownload, FiGithub, FiLinkedin, FiMail } from "react-icons/fi";
 
 import AnimatedSection from "@/components/AnimatedSection";
 import SystemTerminal from "@/components/SystemTerminal";
-import CommandCenter from "@/components/nexus/CommandCenter";
 import HeroIntro from "@/components/nexus/HeroIntro";
 import Magnetic from "@/components/nexus/Magnetic";
 import NxSectionHead from "@/components/nexus/NxSectionHead";
@@ -22,6 +22,10 @@ import type {
   GitHubStats,
   WakaTimeStats,
 } from "@/lib/systemProfile";
+
+const CommandCenter = dynamic(() => import("@/components/nexus/CommandCenter"), {
+  loading: () => <div className="panel min-h-[220px]" aria-hidden="true" />,
+});
 
 interface HomePageProps {
   locale: Locale;

@@ -1,0 +1,62 @@
+{
+  "impact_en": "Ramazan Kopru is a source-backed academic publishing site built around Next.js 14 App Router. Longform biography and research content lives in MDX, structured academic records live in JSON collections, and the repository includes route handlers plus an admin surface for content operations. The dossier describes the observed repository architecture; it does not claim a verified production deployment.",
+  "impact_tr": "Ramazan Kopru, Next.js 14 App Router etrafinda kurulmus kaynak destekli bir akademik yayin sitesidir. Uzun biyografi ve arastirma icerigi MDX'te, yapisal akademik kayitlar JSON koleksiyonlarinda tutulur; repo ayrica route handler'lar ve icerik islemleri icin admin yuzeyi icerir. Dossier gozlenen repo mimarisini anlatir, dogrulanmis production deploy iddiasi yapmaz.",
+  "metrics": [
+    {"value": "6", "numeric_value": 6, "label": "JSON content collections", "note": "profile, publications, courses, projects, theses, service", "display_order": 0},
+    {"value": "7", "numeric_value": 7, "label": "Public sections", "note": "about, research, teaching, publications, students, service, contact", "display_order": 1},
+    {"value": "14", "numeric_value": 14, "label": "Admin/API route files", "note": "admin pages and route handlers observed in app/", "display_order": 2}
+  ],
+  "c4": [
+    {
+      "label": "Context",
+      "note": "academic visitors and a maintainer use one content-focused web system",
+      "display_order": 0,
+      "tiers": [
+        [
+          {"kind": "person", "title": "Academic visitor", "sub": "reads research, teaching, and publication pages"},
+          {"kind": "person", "title": "Content maintainer", "sub": "updates academic records and profile content"}
+        ],
+        [{"kind": "system", "title": "Ramazan Kopru Academic Site", "sub": "Next.js 14 App Router academic publishing system"}]
+      ]
+    },
+    {
+      "label": "Containers",
+      "note": "the repository separates public rendering, content sources, and admin operations",
+      "display_order": 1,
+      "tiers": [
+        [{"kind": "client", "title": "Next.js App Router", "sub": "public pages, metadata, and JSON-LD"}],
+        [
+          {"kind": "container", "title": "MDX content", "sub": "biography and research longform pages"},
+          {"kind": "store", "title": "JSON data collections", "sub": "profile, publications, projects, courses, theses, service", "leaf": true},
+          {"kind": "container", "title": "Admin route handlers", "sub": "login, logout, and resource operations", "leaf": true}
+        ]
+      ]
+    }
+  ],
+  "adrs": [
+    {"id": "OBS-001", "title": "Keep academic records in JSON collections", "status": "Observed", "context": "The repository stores profile, publication, course, project, thesis, and service records under data/.", "decision": "Use structured JSON as the source for repeated academic entities and filters.", "tradeoff": "Editors need to preserve the documented JSON shape."},
+    {"id": "OBS-002", "title": "Use MDX for longform pages", "status": "Observed", "context": "Biography and research pages are longform content rather than repeated records.", "decision": "Render those pages from MDX while keeping structured records in JSON.", "tradeoff": "Content changes require a rebuild and repository review."},
+    {"id": "OBS-003", "title": "Keep administration inside the Next.js application", "status": "Observed", "context": "The app includes admin pages and route handlers for login and resource operations.", "decision": "Use the same App Router deployment boundary for public and admin surfaces.", "tradeoff": "Authentication and route-handler hardening remain part of the web application boundary."}
+  ],
+  "log": [],
+  "diagrams": [
+    {
+      "id": "content-flow",
+      "kind": "sequence",
+      "title": "Academic content request",
+      "note": "Inferred from the App Router, MDX, JSON, and route structure in the repository.",
+      "data": {
+        "kind": "sequence",
+        "actors": ["Visitor", "Next.js App Router", "MDX / JSON sources"],
+        "messages": [
+          {"from": "Visitor", "to": "Next.js App Router", "label": "request academic page"},
+          {"from": "Next.js App Router", "to": "MDX / JSON sources", "label": "load page content and records"},
+          {"from": "MDX / JSON sources", "to": "Next.js App Router", "label": "return source-backed content", "kind": "return"},
+          {"from": "Next.js App Router", "to": "Visitor", "label": "render page with metadata", "kind": "return"}
+        ]
+      },
+      "display_order": 0
+    }
+  ],
+  "gallery": []
+}
