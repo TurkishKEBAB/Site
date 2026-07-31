@@ -203,6 +203,44 @@ jobs:
           echo "API readiness check failed"
           exit 1
 
+      - name: Wait for deployed dossier revision
+        env:
+          PRODUCTION_API_ROOT_URL: ${{ vars.PRODUCTION_API_ROOT_URL }}
+        run: |
+          DOSSIER_BODY=$(mktemp)
+          for attempt in {1..60}; do
+            if code=$(curl -sS --retry 2 --retry-all-errors --retry-delay 2 \
+              -o "$DOSSIER_BODY" -w "%{http_code}" \
+              "$PRODUCTION_API_ROOT_URL/api/v1/dossiers/ramazan-kopru-academic-site?language=en"); then
+              :
+            else
+              code="000"
+            fi
+
+            if [ "$code" = "200" ] && python - "$DOSSIER_BODY" <<'PY'
+          import json
+          import sys
+
+          with open(sys.argv[1], encoding="utf-8") as dossier_file:
+              payload = json.load(dossier_file)
+
+          assert payload["project_slug"] == "ramazan-kopru-academic-site"
+          assert payload["impact"]
+          assert payload["c4"]
+          assert payload["metrics"]
+          PY
+            then
+              echo "Source-controlled dossier revision is live"
+              exit 0
+            fi
+
+            echo "Attempt $attempt/60: waiting for deployed dossier revision (HTTP $code)"
+            sleep 10
+          done
+
+          echo "Deployed dossier revision did not become visible"
+          exit 1
+
       - name: Run backend smoke checks
         env:
           PRODUCTION_API_ROOT_URL: ${{ vars.PRODUCTION_API_ROOT_URL }}
