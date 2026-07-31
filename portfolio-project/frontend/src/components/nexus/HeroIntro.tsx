@@ -7,6 +7,7 @@ const ROLES = ["ENTERPRISE BACKEND", "CLOUD & DEVOPS", "QUALITY AUTOMATION"];
 const ROLE_HOLD_MS = 850;
 const ROLE_GAP_MS = 200;
 const EXIT_MS = 140;
+const HYDRATION_ATTRIBUTE = "data-hero-intro-hydrated";
 const useIsomorphicLayoutEffect = typeof window === "undefined" ? useEffect : useLayoutEffect;
 
 /**
@@ -24,12 +25,14 @@ export default function HeroIntro() {
   const finishRef = useRef<() => void>(() => {});
 
   useIsomorphicLayoutEffect(() => {
+    document.documentElement.setAttribute(HYDRATION_ATTRIBUTE, "true");
+
     if (
       window.matchMedia("(prefers-reduced-motion: reduce)").matches ||
       sessionStorage.getItem("nx-intro-done")
     ) {
       setActive(false);
-      return undefined;
+      return () => document.documentElement.removeAttribute(HYDRATION_ATTRIBUTE);
     }
 
     const previousOverflow = document.body.style.overflow;
@@ -89,17 +92,22 @@ export default function HeroIntro() {
       cancelled = true;
       timers.forEach(clearTimeout);
       restoreOverflow();
+      document.documentElement.removeAttribute(HYDRATION_ATTRIBUTE);
     };
   }, []);
 
   if (!active) return null;
 
   return (
-    <button
+    <>
+      <noscript>
+        <style>{".nx-hero-intro { display: none !important; }"}</style>
+      </noscript>
+      <button
       type="button"
       aria-label="Skip intro"
       onClick={() => finishRef.current()}
-      className={`fixed inset-0 z-[90] grid w-full cursor-pointer place-items-center bg-[#f4f4f8] transition-opacity duration-500 dark:bg-dark-950 ${
+      className={`nx-hero-intro fixed inset-0 z-[90] grid w-full cursor-pointer place-items-center bg-[#f4f4f8] transition-opacity duration-500 dark:bg-dark-950 ${
         out ? "pointer-events-none opacity-0" : "opacity-100"
       }`}
     >
@@ -133,6 +141,7 @@ export default function HeroIntro() {
       <span className="absolute bottom-10 left-1/2 -translate-x-1/2 font-mono text-[10px] uppercase tracking-[0.2em] text-gray-400 dark:text-dark-400">
         click to skip
       </span>
-    </button>
+      </button>
+    </>
   );
 }

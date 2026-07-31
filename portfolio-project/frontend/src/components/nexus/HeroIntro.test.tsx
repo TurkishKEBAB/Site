@@ -26,6 +26,24 @@ describe("HeroIntro", () => {
     expect(html).toContain('aria-label="Skip intro"');
   });
 
+  it("includes a safe fallback when the client cannot control the overlay", () => {
+    const html = renderToStaticMarkup(<HeroIntro />);
+
+    expect(html).toContain("nx-hero-intro");
+    expect(html).toContain("<noscript>");
+    expect(html).toContain("display: none");
+  });
+
+  it("marks the document as hydrated while the intro is controlled", () => {
+    const { unmount } = render(<HeroIntro />);
+
+    expect(document.documentElement).toHaveAttribute("data-hero-intro-hydrated", "true");
+
+    unmount();
+
+    expect(document.documentElement).not.toHaveAttribute("data-hero-intro-hydrated");
+  });
+
   it("skips the overlay after the intro has completed in this session", () => {
     sessionStorage.setItem("nx-intro-done", "1");
 
