@@ -25,9 +25,9 @@ declare global {
 }
 
 interface TurnstileWidgetProps {
-  siteKey: string;
-  onToken: (token: string) => void;
-  onError: () => void;
+  readonly siteKey: string;
+  readonly onToken: (token: string) => void;
+  readonly onError: () => void;
 }
 
 const loadTurnstileScript = (): Promise<void> => {

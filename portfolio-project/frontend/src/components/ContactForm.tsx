@@ -13,8 +13,8 @@ import TurnstileWidget from "./TurnstileWidget";
 type FieldName = "name" | "email" | "subject" | "message";
 
 interface ContactFormProps {
-  locale: Locale;
-  captchaSiteKey?: string;
+  readonly locale: Locale;
+  readonly captchaSiteKey?: string;
 }
 
 const getDraftKey = (locale: Locale) => `contact-form-draft:${locale}`;
