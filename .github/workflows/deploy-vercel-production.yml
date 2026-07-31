@@ -56,6 +56,7 @@ jobs:
         run: npm ci
 
       - name: Pull Vercel production environment
+        working-directory: .
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
@@ -64,12 +65,12 @@ jobs:
           npm i -g vercel@56.3.1
           vercel pull --yes --environment=production --token="$VERCEL_TOKEN"
 
-          if [ ! -f .env.production.local ]; then
-            echo "::error title=Missing Vercel production environment::vercel pull did not create .env.production.local."
+          if [ ! -f .vercel/.env.production.local ]; then
+            echo "::error title=Missing Vercel production environment::vercel pull did not create .vercel/.env.production.local."
             exit 1
           fi
 
-          site_key_line=$(grep -E '^NEXT_PUBLIC_TURNSTILE_SITE_KEY=' .env.production.local || true)
+          site_key_line=$(grep -E '^NEXT_PUBLIC_TURNSTILE_SITE_KEY=' .vercel/.env.production.local || true)
           site_key=${site_key_line#*=}
           if [ -z "${site_key//[[:space:]]/}" ]; then
             echo "::error title=Missing Turnstile site key::NEXT_PUBLIC_TURNSTILE_SITE_KEY must be set in Vercel Production before the frontend can deploy."
@@ -78,6 +79,7 @@ jobs:
 
       - name: Build and deploy production frontend
         id: deploy
+        working-directory: .
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
