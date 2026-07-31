@@ -3,7 +3,6 @@ name: Deploy Frontend Preview (Vercel)
 on:
   push:
     branches:
-      - main
       - develop
       - "feature/frontend-*"
       - "fix/frontend-*"
