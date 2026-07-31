@@ -26,6 +26,24 @@ describe("HeroIntro", () => {
     expect(html).toContain('aria-label="Skip intro"');
   });
 
+  it("includes a safe fallback when the client cannot control the overlay", () => {
+    const html = renderToStaticMarkup(<HeroIntro />);
+
+    expect(html).toContain("nx-hero-intro");
+    expect(html).toContain("<noscript>");
+    expect(html).toContain("display: none");
+  });
+
+  it("marks the document as hydrated while the intro is controlled", () => {
+    const { unmount } = render(<HeroIntro />);
+
+    expect(document.documentElement).toHaveAttribute("data-hero-intro-hydrated", "true");
+
+    unmount();
+
+    expect(document.documentElement).not.toHaveAttribute("data-hero-intro-hydrated");
+  });
+
   it("skips the overlay after the intro has completed in this session", () => {
     sessionStorage.setItem("nx-intro-done", "1");
 
@@ -49,6 +67,19 @@ describe("HeroIntro", () => {
     expect(screen.queryByRole("button", { name: "Skip intro" })).not.toBeInTheDocument();
   });
 
+  it("keeps each role visible long enough to read", () => {
+    render(<HeroIntro />);
+
+    act(() => {
+      vi.advanceTimersByTime(500);
+    });
+
+    const role = screen.getByRole("button").querySelector<HTMLElement>("span.font-display");
+
+    expect(role).toHaveTextContent("ENTERPRISE BACKEND");
+    expect(role).toHaveClass("opacity-100");
+  });
+
   it("locks page scroll during the first-visit animation and restores it afterward", () => {
     render(<HeroIntro />);
 
@@ -56,7 +87,7 @@ describe("HeroIntro", () => {
     expect(screen.getByRole("button", { name: "Skip intro" })).toBeInTheDocument();
 
     act(() => {
-      vi.advanceTimersByTime(1000);
+      vi.advanceTimersByTime(4000);
     });
 
     expect(screen.queryByRole("button", { name: "Skip intro" })).not.toBeInTheDocument();
@@ -87,7 +118,7 @@ describe("HeroIntro", () => {
     expect(document.body.style.paddingRight).toBe("16px");
 
     act(() => {
-      vi.advanceTimersByTime(1000);
+      vi.advanceTimersByTime(4000);
     });
 
     expect(document.body.style.paddingRight).toBe("");
