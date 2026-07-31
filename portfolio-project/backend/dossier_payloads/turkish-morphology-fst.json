@@ -1,0 +1,58 @@
+{
+  "impact_en": "Turkish Morphological Analyzer (HFST) is a research/specification repository rather than a verified shipped analyzer. Its README and Mermaid diagrams describe a layered FST pipeline across lexicon, morphotactics, phonology, derivation, and a compiled-analyzer target. The audited workspace contains documentation and marker README files under fst/lexicon and fst/rules, but no compiled HFST artifact, so the dossier makes the implementation boundary explicit.",
+  "impact_tr": "Turkce Morfolojik Analizor (HFST), dogrulanmis olarak yayinlanmis bir analizorden cok arastirma ve spesifikasyon reposudur. README ve Mermaid diyagramlari sozluk, morfotaktik, fonoloji, turetim ve derlenmis analizor hedefinden olusan katmanli FST pipeline'ini tanimlar. Denetlenen workspace fst/lexicon ve fst/rules altinda dokumantasyon ve ornek README dosyalari icerir, ancak derlenmis HFST artefakti icermedigi icin dossier uygulama sinirini acikca belirtir.",
+  "metrics": [
+    {"value": "3", "numeric_value": 3, "label": "FST layers", "note": "lexicon, morphotactics, phonology", "display_order": 0},
+    {"value": "10", "numeric_value": 10, "label": "Architecture diagrams", "note": "Mermaid and image-backed diagrams under docs/diagrams", "display_order": 1},
+    {"value": "2", "numeric_value": 2, "label": "Rule areas", "note": "lexicon examples and phonology rule examples", "display_order": 2}
+  ],
+  "c4": [
+    {
+      "label": "Context",
+      "note": "the repository models analysis as a research pipeline and records the intended compiler boundary",
+      "display_order": 0,
+      "tiers": [
+        [{"kind": "person", "title": "Language researcher", "sub": "studies Turkish surface forms and analyses"}],
+        [{"kind": "system", "title": "Turkish Morphology FST", "sub": "HFST-oriented analyzer specification"}]
+      ]
+    },
+    {
+      "label": "Pipeline",
+      "note": "the documented model separates lexical entries, morphotactics, and phonological rules",
+      "display_order": 1,
+      "tiers": [
+        [{"kind": "store", "title": "Lexicon", "sub": "root and exception entries", "leaf": true}],
+        [{"kind": "component", "title": "Morphotactics", "sub": "inflection and derivation transitions"}],
+        [{"kind": "component", "title": "Phonology", "sub": "vowel harmony and consonant rules"}],
+        [{"kind": "external", "title": "HFST compiler target", "sub": "documented target; compiled artifact not present", "leaf": true}]
+      ]
+    }
+  ],
+  "adrs": [
+    {"id": "OBS-001", "title": "Model morphology as layered finite-state transducers", "status": "Observed", "context": "The system overview separates lexicon, morphotactics, and phonology into pipeline layers.", "decision": "Keep lexical, morphotactic, and phonological concerns as separate FST stages.", "tradeoff": "Composition order and boundary contracts must be defined before compilation."},
+    {"id": "OBS-002", "title": "Represent derivation as recursive part-of-speech transitions", "status": "Observed", "context": "The derivation diagram documents transitions such as noun-to-verb and verb-to-noun.", "decision": "Treat derivation as transitions that can return to inflection after a part-of-speech change.", "tradeoff": "Recursive derivation increases ambiguity and requires bounded composition rules."},
+    {"id": "OBS-003", "title": "Separate specification from compiled output", "status": "Explicit boundary", "context": "The audited workspace documents the compiled analyzer target but does not contain a compiled HFST artifact.", "decision": "Publish the repository as a research/specification record until build artifacts and executable tests are present.", "tradeoff": "Runtime performance and coverage cannot be claimed from the current source snapshot."}
+  ],
+  "log": [],
+  "diagrams": [
+    {
+      "id": "fst-pipeline",
+      "kind": "tiers",
+      "title": "Documented FST pipeline",
+      "note": "Synthesized from docs/diagrams/system_overview.md and the repository README files.",
+      "data": {
+        "kind": "tiers",
+        "tiers": [
+          [{"kind": "start", "title": "Surface form"}],
+          [{"kind": "step", "title": "Phonology FST", "via": "apply or invert sound rules"}],
+          [{"kind": "step", "title": "Morphotactics FST", "via": "match inflection and derivation"}],
+          [{"kind": "store", "title": "Lexicon FST", "via": "verify roots and exceptions"}],
+          [{"kind": "end", "title": "Morphological analysis"}]
+        ],
+        "notes": ["This is the documented target architecture; a compiled runtime was not found in the audited workspace."]
+      },
+      "display_order": 0
+    }
+  ],
+  "gallery": []
+}

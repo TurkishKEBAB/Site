@@ -1,0 +1,61 @@
+{
+  "impact_en": "Rovera Travel Planner is an observed two-runtime student project. A Vite + React 19 frontend uses TanStack Router for route composition, HeroUI and Tailwind CSS for the interface, Leaflet for map interactions, and client-side trip, favorite, budget, and profile surfaces. A separate Express 5 backend exposes auth and user routes with JWT, bcrypt, MySQL access, and multer avatar uploads. The repository contains runnable source code, while its three architecture-document files are currently empty.",
+  "impact_tr": "Rovera Travel Planner, gozlenen iki runtime'li bir ogrenci projesidir. Vite + React 19 frontend; route kompozisyonu icin TanStack Router, arayuz icin HeroUI ve Tailwind CSS, harita etkilesimleri icin Leaflet ve trip/favorite/budget/profile yuzeylerini kullanir. Ayri Express 5 backend JWT, bcrypt, MySQL ve multer avatar yuklemeleri ile auth ve user route'lari sunar. Repo calisan kaynak kodu icerir; uc mimari dokuman dosyasi ise su anda bostur.",
+  "metrics": [
+    {"value": "2", "numeric_value": 2, "label": "Runtime applications", "note": "Vite/React frontend and Express backend", "display_order": 0},
+    {"value": "2", "numeric_value": 2, "label": "API route groups", "note": "auth and user routers in backend/src/routes", "display_order": 1},
+    {"value": "8", "numeric_value": 8, "label": "Frontend route areas", "note": "home, admin, auth, budget, favorites, profile, search, trips", "display_order": 2},
+    {"value": "1", "numeric_value": 1, "label": "Upload boundary", "note": "multer-backed avatar upload middleware", "display_order": 3}
+  ],
+  "c4": [
+    {
+      "label": "Context",
+      "note": "travellers use the client application while account data is served by the API",
+      "display_order": 0,
+      "tiers": [
+        [{"kind": "person", "title": "Traveller", "sub": "searches destinations and manages trips"}],
+        [{"kind": "system", "title": "Rovera Travel Planner", "sub": "frontend plus account API"}]
+      ]
+    },
+    {
+      "label": "Containers",
+      "note": "frontend and backend are separate package/runtime boundaries",
+      "display_order": 1,
+      "tiers": [
+        [{"kind": "client", "title": "Vite + React frontend", "sub": "TanStack Router, HeroUI, Leaflet, trips and profile routes"}],
+        [{"kind": "container", "title": "Express 5 API", "sub": "JWT auth, user routes, CORS, JSON middleware"}],
+        [
+          {"kind": "store", "title": "MySQL", "sub": "database adapter configured in backend/src/config", "leaf": true},
+          {"kind": "store", "title": "Uploads directory", "sub": "multer avatar files", "leaf": true}
+        ]
+      ]
+    }
+  ],
+  "adrs": [
+    {"id": "OBS-001", "title": "Split frontend and API runtimes", "status": "Observed", "context": "The repository has a Vite frontend package and an Express backend package with separate start commands.", "decision": "Keep route rendering and API/auth concerns in separate runtime projects.", "tradeoff": "Local development needs both applications and an explicit API origin."},
+    {"id": "OBS-002", "title": "Use TanStack Router for file-based client routes", "status": "Observed", "context": "The frontend has a generated route tree and route files under src/routes.", "decision": "Compose authenticated and public travel flows through file-based client routing.", "tradeoff": "Generated route output must stay aligned with route files."},
+    {"id": "OBS-003", "title": "Use JWT plus bcrypt for account flows", "status": "Observed", "context": "The backend dependencies and auth middleware include jsonwebtoken and bcryptjs.", "decision": "Keep password hashing and bearer-token checks at the API boundary.", "tradeoff": "Token lifecycle, secret management, and refresh behavior remain operational responsibilities."}
+  ],
+  "log": [],
+  "diagrams": [
+    {
+      "id": "auth-flow",
+      "kind": "sequence",
+      "title": "Authenticated travel request",
+      "note": "Repository-backed flow across the React client, Express routes, JWT middleware, and MySQL adapter.",
+      "data": {
+        "kind": "sequence",
+        "actors": ["Traveller", "React frontend", "Express API", "MySQL"],
+        "messages": [
+          {"from": "Traveller", "to": "React frontend", "label": "submit login or trip action"},
+          {"from": "React frontend", "to": "Express API", "label": "send JSON request with bearer token"},
+          {"from": "Express API", "to": "MySQL", "label": "read or persist account data"},
+          {"from": "MySQL", "to": "Express API", "label": "return persisted result", "kind": "return"},
+          {"from": "Express API", "to": "React frontend", "label": "return JSON response", "kind": "return"}
+        ]
+      },
+      "display_order": 0
+    }
+  ],
+  "gallery": []
+}

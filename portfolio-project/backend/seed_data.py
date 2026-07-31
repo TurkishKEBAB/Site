@@ -314,6 +314,10 @@ def seed_technologies(db: Session) -> Dict[str, str]:
             "icon": None,
             "color": "#3B82F6",
         },
+        {"name": "MDX", "category": "library", "icon": None, "color": "#F9AC00"},
+        {"name": "MySQL", "category": "database", "icon": None, "color": "#4479A1"},
+        {"name": "Leaflet", "category": "library", "icon": None, "color": "#199900"},
+        {"name": "HFST", "category": "tool", "icon": None, "color": "#7C3AED"},
     ]
     for tech_data in technologies_data:
         db.add(
@@ -1034,6 +1038,45 @@ def seed_projects(db: Session) -> List[Project]:
             "featured": True,
             "display_order": 5,
         },
+        {
+            "slug": "ramazan-kopru-academic-site",
+            "title_en": "Ramazan Kopru Academic Site",
+            "title_tr": "Ramazan Kopru Akademik Sitesi",
+            "short_en": "Next.js academic publishing site with MDX content and admin routes",
+            "short_tr": "MDX icerigi ve admin route'lari olan Next.js akademik yayin sitesi",
+            "description_en": "A source-backed Next.js 14 App Router academic site with TypeScript, Tailwind CSS, MDX longform content, JSON-managed academic records, and admin route handlers.",
+            "description_tr": "TypeScript, Tailwind CSS, MDX, JSON akademik kayitlar ve admin route handler'lari kullanan kaynak destekli Next.js 14 akademik sitesi.",
+            "github_url": "https://github.com/TurkishKEBAB/RamazanKopru",
+            "demo_url": None,
+            "featured": False,
+            "display_order": 6,
+        },
+        {
+            "slug": "travel-planner-platform",
+            "title_en": "Rovera Travel Planner",
+            "title_tr": "Rovera Seyahat Planlayici",
+            "short_en": "Split React travel planner with Express authentication and MySQL persistence",
+            "short_tr": "Express kimlik dogrulamali ve MySQL kalicilikli React seyahat planlayici",
+            "description_en": "A source-backed Vite + React 19 frontend and Express 5 backend with TanStack Router, HeroUI, Leaflet, JWT, bcrypt, MySQL, and multer avatar uploads.",
+            "description_tr": "TanStack Router, HeroUI, Leaflet, JWT, bcrypt, MySQL ve multer avatar yuklemeleri kullanan Vite + React 19 frontend ve Express 5 backend projesi.",
+            "github_url": "https://github.com/Soft3112-TravelPlanner/travel-planner",
+            "demo_url": None,
+            "featured": False,
+            "display_order": 7,
+        },
+        {
+            "slug": "turkish-morphology-fst",
+            "title_en": "Turkish Morphological Analyzer (HFST)",
+            "title_tr": "Turkce Morfolojik Analizor (HFST)",
+            "short_en": "HFST morphology specification with lexicon, rule, and derivation diagrams",
+            "short_tr": "Sozluk, kural ve turetim diyagramlariyla HFST morfoloji spesifikasyonu",
+            "description_en": "A research/specification repository documenting lexicon, morphotactics, phonology, derivation, and a compiled-analyzer target without claiming a shipped HFST artifact.",
+            "description_tr": "Sozluk, morfotaktik, fonoloji ve turetim katmanlarini belgeleyen, yayinlanmis HFST artefakti iddiasi yapmayan arastirma ve spesifikasyon reposu.",
+            "github_url": "https://github.com/TurkishKEBAB/turkish-morphology-fst",
+            "demo_url": None,
+            "featured": False,
+            "display_order": 8,
+        },
     ]
     created_projects: List[Project] = []
     for item in projects_data:
@@ -1124,6 +1167,24 @@ def link_project_technologies(
             "Railway",
             "SonarQube",
         ],
+        "ramazan-kopru-academic-site": [
+            "TypeScript",
+            "Next.js",
+            "React",
+            "Tailwind CSS",
+            "MDX",
+            "GitHub Actions",
+        ],
+        "travel-planner-platform": [
+            "TypeScript",
+            "React",
+            "JavaScript",
+            "SQL",
+            "JWT",
+            "MySQL",
+            "Leaflet",
+        ],
+        "turkish-morphology-fst": ["Git", "HFST"],
     }
     project_by_slug = {project.slug: project for project in projects}
     links = 0

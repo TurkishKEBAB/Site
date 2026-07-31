@@ -10,6 +10,7 @@ project catalog without an invented architecture dossier.
 Usage (inside the backend container or with DATABASE_URL exported):
     python seed_dossiers.py           # seed projects that have no dossier yet
     python seed_dossiers.py --force   # overwrite existing dossiers too
+    python seed_dossiers.py --sync    # apply the current source revision once
 
 Gallery images are referenced as /projects/* and must exist in
 frontend/public/projects/ to render; missing files only affect the gallery.
@@ -24,360 +25,97 @@ from pathlib import Path
 
 from sqlalchemy.orm import Session
 
-from app.crud.dossier import get_dossier_by_project_id, upsert_dossier
+from app.crud.dossier import delete_dossier, get_dossier_by_project_id, upsert_dossier
+from app.crud.site import get_site_config, set_site_config
 from app.database import SessionLocal
-from app.models.project import Project
+from app.models.project import Project, ProjectTechnology, ProjectTranslation
+from app.models.technology import Technology
 from app.schemas.dossier import ProjectDossierUpsert
 
-# Historical payloads are retained below only as migration context. The active
-# seed map is rebuilt from verified or explicitly pending-source content after
-# this literal; legacy marketing claims never reach the API seed loop.
-_LEGACY_DOSSIER_CONTENT: dict[str, dict] = {
-    "teknofest-sarkan-uav-defense-platform": {
-        "impact_en": (
-            "3rd place among 700+ Teknofest projects: anti-jam telemetry and a "
-            "frequency-hopping link held 99.2% uptime in contested-spectrum field "
-            "tests, delivered across mechanics, electronics, and software on a "
-            "200K ₺ budget."
+DOSSIER_SEED_REVISION_KEY = "dossier_seed_revision"
+DOSSIER_SEED_REVISION = "2026-07-31-evidence-audit-v2"
+DOSSIER_REMOVED_SLUGS = (
+    "teknofest-sarkan-uav-defense-platform",
+    "automated-web-crawler",
+)
+
+PROJECT_CATALOG_CONTENT: dict[str, dict] = {
+    "ramazan-kopru-academic-site": {
+        "title_en": "Ramazan Kopru Academic Site",
+        "title_tr": "Ramazan Kopru Akademik Sitesi",
+        "short_en": "Next.js academic publishing site with MDX content and admin routes",
+        "short_tr": "MDX icerigi ve admin route'lari olan Next.js akademik yayin sitesi",
+        "description_en": (
+            "A source-backed academic website built with Next.js 14 App Router, TypeScript, "
+            "Tailwind CSS, MDX longform content, JSON-managed academic records, and "
+            "route handlers for administrative content operations."
         ),
-        "impact_tr": (
-            "700+ Teknofest projesi arasında 3.lük: anti-jam telemetri ve frekans "
-            "atlamalı bağlantı, saha testlerinde %99,2 kesintisizlik sağladı; "
-            "mekanik, elektronik ve yazılım 200 bin ₺ bütçeyle teslim edildi."
+        "description_tr": (
+            "Next.js 14 App Router, TypeScript, Tailwind CSS, uzun MDX icerigi, JSON tabanli "
+            "akademik kayitlar ve yonetim islemleri icin route handler'lar kullanan akademik site."
         ),
-        "metrics": [
-            {"value": "3rd", "label": "final rank", "note": "among 700+ projects", "display_order": 0},
-            {"value": "200K ₺", "label": "budget managed", "note": "165K ₺ TÜBİTAK grant", "display_order": 1},
-            {"value": "3", "label": "domains", "note": "mech · electronics · software", "display_order": 2},
-            {"value": "99.2%", "label": "telemetry uptime", "note": "field tests", "display_order": 3},
-        ],
-        "c4": [
-            {
-                "label": "Context",
-                "note": "operator, platform, and a hostile RF environment",
-                "display_order": 0,
-                "tiers": [
-                    [{"kind": "person", "title": "Ground Operator", "sub": "pilots & monitors"}],
-                    [{"kind": "system", "title": "Sarkan UAV", "sub": "anti-jam telemetry & control"}],
-                    [{"kind": "external", "title": "RF Environment", "sub": "contested spectrum", "leaf": True}],
-                ],
-            },
-            {
-                "label": "Containers",
-                "note": "software units across ground and air",
-                "display_order": 1,
-                "tiers": [
-                    [{"kind": "container", "title": "Ground Station UI", "sub": "telemetry dashboards"}],
-                    [
-                        {"kind": "container", "title": "Telemetry Link", "sub": "frequency-hopping radio"},
-                        {"kind": "container", "title": "Anti-jam Module", "sub": "signal scoring & fallback"},
-                    ],
-                    [{"kind": "container", "title": "FC Bridge", "sub": "command uplink", "leaf": True}],
-                ],
-            },
-        ],
-        "adrs": [
-            {
-                "id": "ADR-001",
-                "title": "Frequency-hopping fallback over single-band",
-                "status": "Accepted",
-                "date": "2023-04",
-                "context": "Judged scenarios include active jamming; a single-band link dies with the band.",
-                "decision": "Score link quality continuously and hop on degradation, with a slow-but-robust fallback channel.",
-                "tradeoff": "Lower peak bandwidth; hop synchronization added protocol complexity.",
-                "display_order": 0,
-            },
-            {
-                "id": "ADR-002",
-                "title": "Python on the ground station",
-                "status": "Accepted",
-                "date": "2023-02",
-                "context": "Three sub-teams iterate on dashboards and control logic under competition deadlines.",
-                "decision": "Python for iteration speed; hot paths isolated behind a thin native layer.",
-                "tradeoff": "Careful profiling needed to keep the telemetry loop under budget.",
-                "display_order": 1,
-            },
-        ],
-        "log": [
-            {"hash": "f8a12dc", "tag": "finals", "date": "2023-09", "title": "3rd place — 700+ projects", "display_order": 0},
-            {"hash": "c47e901", "date": "2023-07", "title": "Anti-jam rewrite after field loss", "note": "Link scoring tuned on real interference data.", "display_order": 1},
-            {"hash": "9b3d54a", "date": "2023-05", "title": "First full-range field test", "display_order": 2},
-            {"hash": "2e6f0b7", "tag": "kickoff", "date": "2023-01", "title": "Team formed · TÜBİTAK grant secured", "display_order": 3},
-        ],
-        "diagrams": [
-            {
-                "id": "seq-jam",
-                "kind": "sequence",
-                "title": "Sequence — jam recovery",
-                "note": "link degradation to recovery, field-tested",
-                "display_order": 0,
-                "data": {
-                    "actors": ["Ground Station", "Telemetry Link", "Anti-jam", "UAV"],
-                    "messages": [
-                        {"from": "Ground Station", "to": "UAV", "label": "heartbeat · 10 Hz"},
-                        {"from": "UAV", "to": "Ground Station", "label": "telemetry frame", "kind": "return"},
-                        {"from": "Anti-jam", "to": "Anti-jam", "label": "score link quality"},
-                        {"from": "Anti-jam", "to": "Telemetry Link", "label": "quality < θ → hop"},
-                        {"from": "Telemetry Link", "to": "UAV", "label": "sync channel №4"},
-                        {"from": "UAV", "to": "Ground Station", "label": "resume telemetry", "kind": "return"},
-                    ],
-                },
-            },
-            {
-                "id": "link-state",
-                "kind": "tiers",
-                "title": "State — link quality",
-                "note": "fallback ladder under jamming",
-                "display_order": 1,
-                "data": {
-                    "tiers": [
-                        [{"kind": "state", "title": "locked", "sub": "full bandwidth"}],
-                        [{"kind": "state", "title": "degraded", "sub": "score < θ₁"}],
-                        [{"kind": "state", "title": "hopping", "sub": "channel scan"}],
-                        [
-                            {"kind": "final", "title": "re-locked", "via": "sync ok"},
-                            {"kind": "error", "title": "fallback", "sub": "low-rate channel", "via": "scan fail"},
-                        ],
-                    ],
-                    "notes": ["fallback keeps the command uplink alive at minimum rate", "re-locked resets the scoring window"],
-                },
-            },
-        ],
-        "gallery": [
-            {"id": "sarkan-gs", "src": "/projects/sarkan-gs.png", "caption": "fig 01 — ground station · live telemetry", "display_order": 0},
-            {"id": "sarkan-field", "src": "/projects/sarkan-field.png", "caption": "fig 02 — field test day", "display_order": 1},
+        "github_url": "https://github.com/TurkishKEBAB/RamazanKopru",
+        "demo_url": None,
+        "featured": False,
+        "display_order": 6,
+        "technologies": [
+            "TypeScript",
+            "Next.js",
+            "React",
+            "Tailwind CSS",
+            "MDX",
+            "GitHub Actions",
         ],
     },
-    "agentic-ide-thesis-project": {
-        "impact_en": (
-            "Thesis project: an AI-native IDE built on Monaco without forking "
-            "VS Code — every agent change passes a human approval gate and a "
-            "prohibited-command policy engine, against local and cloud LLM backends."
+    "travel-planner-platform": {
+        "title_en": "Rovera Travel Planner",
+        "title_tr": "Rovera Seyahat Planlayici",
+        "short_en": "Split React travel planner with Express authentication and MySQL persistence",
+        "short_tr": "Express kimlik dogrulamali ve MySQL kalicilikli React seyahat planlayici",
+        "description_en": (
+            "A source-backed two-runtime student project: a Vite + React 19 frontend with "
+            "TanStack Router, HeroUI, Tailwind CSS, Leaflet, trips, favorites, budget, and "
+            "profile routes; plus an Express 5 backend with JWT authentication, bcrypt, "
+            "MySQL access, and multer avatar uploads."
         ),
-        "impact_tr": (
-            "Tez projesi: VS Code fork'lamadan Monaco üzerine kurulan AI-native "
-            "IDE — her ajan değişikliği insan onay kapısından ve yasaklı-komut "
-            "politika motorundan geçiyor; yerel ve bulut LLM arka uçlarıyla çalışıyor."
+        "description_tr": (
+            "Vite + React 19 frontend ve Express 5 backend olarak ayrilan ogrenci projesi. "
+            "Frontend TanStack Router, HeroUI, Tailwind CSS, Leaflet ve seyahat route'lari; "
+            "backend JWT, bcrypt, MySQL ve multer avatar yuklemeleri icerir."
         ),
-        "metrics": [
-            {"value": "4", "label": "loop stages", "note": "observe · plan · approve · apply", "display_order": 0},
-            {"value": "0", "label": "VS Code forks", "note": "extends Monaco directly", "display_order": 1},
-            {"value": "2", "label": "LLM backends", "note": "local + cloud", "display_order": 2},
-            {"value": "37", "label": "requirements", "note": "v0 spec, CI-validated", "display_order": 3},
-        ],
-        "c4": [
-            {
-                "label": "Context",
-                "note": "a developer, an IDE, and the models behind it",
-                "display_order": 0,
-                "tiers": [
-                    [{"kind": "person", "title": "Developer", "sub": "reviews & approves every change"}],
-                    [{"kind": "system", "title": "Agentic IDE", "sub": "AI-native editor · thesis project"}],
-                    [
-                        {"kind": "external", "title": "Local LLM", "sub": "on-device inference", "leaf": True},
-                        {"kind": "external", "title": "Cloud LLM APIs", "sub": "heavy reasoning", "leaf": True},
-                    ],
-                ],
-            },
-            {
-                "label": "Containers",
-                "note": "modular pieces — no VS Code fork",
-                "display_order": 1,
-                "tiers": [
-                    [{"kind": "client", "title": "Monaco Shell", "sub": "Electron · editor surface"}],
-                    [{"kind": "container", "title": "Agent Orchestrator", "sub": "observe → plan loops"}],
-                    [
-                        {"kind": "container", "title": "Approval Gate", "sub": "human-in-the-loop"},
-                        {"kind": "container", "title": "Policy Engine", "sub": "prohibited-command enforcement", "leaf": True},
-                    ],
-                    [{"kind": "store", "title": "RAG Index", "sub": "code context", "leaf": True}],
-                ],
-            },
-        ],
-        "adrs": [
-            {
-                "id": "ADR-001",
-                "title": "Extend Monaco, don't fork VS Code",
-                "status": "Accepted",
-                "date": "2025-10",
-                "context": "Forks inherit a huge maintenance surface and drift from upstream fast.",
-                "decision": "Build a thin Electron shell around Monaco; own only the agentic layer.",
-                "tradeoff": "No VS Code extension ecosystem — every integration is deliberate.",
-                "display_order": 0,
-            },
-            {
-                "id": "ADR-002",
-                "title": "Approval gate before any apply",
-                "status": "Accepted",
-                "date": "2025-11",
-                "context": "Agent edits without review are the main trust failure in AI tooling.",
-                "decision": "Every plan renders as a diff the developer must approve; prohibited commands hard-blocked.",
-                "tradeoff": "Slower autonomous loops — accepted, safety is the thesis.",
-                "display_order": 1,
-            },
-        ],
-        "log": [
-            {"hash": "a71b3f9", "date": "2026-06", "title": "Policy engine spike", "note": "Prohibited-command rules validated in CI.", "display_order": 0},
-            {"hash": "5c09d2e", "date": "2026-04", "title": "Prototype shell boots", "note": "Monaco + Electron with agent sidebar.", "display_order": 1},
-            {"hash": "d3e871c", "tag": "spec", "date": "2026-02", "title": "Requirements + C4 diagrams frozen", "display_order": 2},
-            {"hash": "84f2a06", "tag": "thesis", "date": "2025-10", "title": "Proposal accepted", "display_order": 3},
-        ],
-        "diagrams": [
-            {
-                "id": "loop",
-                "kind": "tiers",
-                "title": "Activity — agent loop",
-                "note": "the thesis loop: nothing applies without approval",
-                "display_order": 0,
-                "data": {
-                    "tiers": [
-                        [{"kind": "start", "title": "observe"}],
-                        [{"kind": "step", "title": "Plan", "sub": "LLM drafts change-set"}],
-                        [{"kind": "step", "title": "Policy Check", "sub": "prohibited commands"}],
-                        [{"kind": "decision", "title": "human approves?"}],
-                        [
-                            {"kind": "step", "title": "Apply", "sub": "diff patched to workspace", "via": "yes"},
-                            {"kind": "error", "title": "Discard → replan", "via": "no"},
-                        ],
-                        [{"kind": "end", "title": "verify"}],
-                    ],
-                    "notes": ["verify failures feed the next observe pass"],
-                },
-            },
-            {
-                "id": "seq-approve",
-                "kind": "sequence",
-                "title": "Sequence — approval gate",
-                "display_order": 1,
-                "data": {
-                    "actors": ["Developer", "Monaco UI", "Orchestrator", "LLM", "Policy"],
-                    "messages": [
-                        {"from": "Developer", "to": "Monaco UI", "label": "prompt"},
-                        {"from": "Monaco UI", "to": "Orchestrator", "label": "task + context"},
-                        {"from": "Orchestrator", "to": "LLM", "label": "plan request"},
-                        {"from": "LLM", "to": "Orchestrator", "label": "change-set", "kind": "return"},
-                        {"from": "Orchestrator", "to": "Policy", "label": "validate(commands)"},
-                        {"from": "Policy", "to": "Orchestrator", "label": "allow / block list", "kind": "return"},
-                        {"from": "Monaco UI", "to": "Developer", "label": "diff for review", "kind": "return"},
-                        {"from": "Developer", "to": "Monaco UI", "label": "approve ✓"},
-                    ],
-                },
-            },
-        ],
-        "gallery": [
-            {"id": "aide-shell", "src": "/projects/aide-shell.png", "caption": "fig 01 — shell prototype · plan view", "display_order": 0},
-            {"id": "aide-diff", "src": "/projects/aide-diff.png", "caption": "fig 02 — approval gate · diff review", "display_order": 1},
-        ],
+        "github_url": "https://github.com/Soft3112-TravelPlanner/travel-planner",
+        "demo_url": None,
+        "featured": False,
+        "display_order": 7,
+        "technologies": ["TypeScript", "React", "JavaScript", "SQL", "JWT", "MySQL", "Leaflet"],
     },
-    "automated-web-crawler": {
-        "impact_en": (
-            "Politeness-first crawler: robots.txt hard-enforced with per-domain "
-            "rate budgets; eight concurrent workers sustain an 89.9% success rate "
-            "behind three-tier retries with backoff and jitter."
+    "turkish-morphology-fst": {
+        "title_en": "Turkish Morphological Analyzer (HFST)",
+        "title_tr": "Turkce Morfolojik Analizor (HFST)",
+        "short_en": "HFST morphology specification with lexicon, rule, and derivation diagrams",
+        "short_tr": "Sozluk, kural ve turetim diyagramlariyla HFST morfoloji spesifikasyonu",
+        "description_en": (
+            "A research/specification repository for a Turkish morphological analyzer. Its "
+            "README and diagrams define lexicon, morphotactics, phonology, derivation, and "
+            "a compiled-analyzer target; the audited workspace does not contain a compiled "
+            "HFST artifact, so this record does not present a shipped runtime."
         ),
-        "impact_tr": (
-            "Nezaket-öncelikli crawler: robots.txt katı biçimde uygulanır, domain "
-            "başına hız bütçesi vardır; sekiz eşzamanlı işçi, backoff+jitter'lı üç "
-            "kademeli yeniden deneme ile %89,9 başarı oranını korur."
+        "description_tr": (
+            "Turkce morfolojik analizor icin arastirma ve spesifikasyon reposu. README ve "
+            "diyagramlar sozluk, morfotaktik, fonoloji, turetim ve derlenmis analizor hedefini "
+            "tanımlar; denetlenen workspace derlenmis HFST artefakti icermedigi icin calisan "
+            "runtime iddiasi yapilmaz."
         ),
-        "metrics": [
-            {"value": "89.9%", "label": "success rate", "note": "across runs", "display_order": 0},
-            {"value": "100%", "label": "robots.txt respect", "note": "hard-enforced", "display_order": 1},
-            {"value": "×8", "label": "workers", "note": "concurrent", "display_order": 2},
-            {"value": "3", "label": "retry tiers", "note": "backoff + jitter", "display_order": 3},
-        ],
-        "c4": [
-            {
-                "label": "Pipeline",
-                "note": "single-layer container view — request to row",
-                "display_order": 0,
-                "tiers": [
-                    [{"kind": "container", "title": "Scheduler", "sub": "crawl frontier · rate limits"}],
-                    [{"kind": "container", "title": "Worker Pool", "sub": "Scrapy · concurrent fetch"}],
-                    [{"kind": "container", "title": "Parser Pipeline", "sub": "BeautifulSoup · normalize"}],
-                    [{"kind": "store", "title": "PostgreSQL", "sub": "FastAPI-served store"}],
-                ],
-            },
-        ],
-        "adrs": [
-            {
-                "id": "ADR-001",
-                "title": "Scrapy over hand-rolled asyncio",
-                "status": "Accepted",
-                "date": "2024-03",
-                "context": "Custom fetch loops kept reinventing throttling, dedupe, and retry logic.",
-                "decision": "Adopt Scrapy's scheduler/middleware model; custom code only in pipelines.",
-                "tradeoff": "Framework constraints on exotic crawl patterns.",
-                "display_order": 0,
-            },
-            {
-                "id": "ADR-002",
-                "title": "Politeness budget per domain",
-                "status": "Accepted",
-                "date": "2024-04",
-                "context": "Fault tolerance is worthless if targets block the crawler.",
-                "decision": "robots.txt hard-enforced + per-domain rate budgets and backoff with jitter.",
-                "tradeoff": "Slower full-corpus sweeps; success rate is the metric that matters.",
-                "display_order": 1,
-            },
-        ],
-        "log": [
-            {"hash": "7e4c1aa", "date": "2024-07", "title": "89.9% success across full run", "display_order": 0},
-            {"hash": "3b90f5d", "date": "2024-05", "title": "Retry tiers + fault isolation", "note": "Worker crashes no longer poison the queue.", "display_order": 1},
-            {"hash": "c25a8e1", "tag": "v0.1", "date": "2024-03", "title": "Scrapy skeleton + FastAPI store", "display_order": 2},
-        ],
-        "diagrams": [
-            {
-                "id": "fetch-flow",
-                "kind": "tiers",
-                "title": "Flowchart — fetch decision",
-                "note": "politeness first: robots gate before every fetch",
-                "display_order": 0,
-                "data": {
-                    "tiers": [
-                        [{"kind": "start", "title": "frontier pop"}],
-                        [{"kind": "decision", "title": "robots.txt allows?"}],
-                        [
-                            {"kind": "step", "title": "Fetch", "sub": "rate budget per domain", "via": "yes"},
-                            {"kind": "end", "title": "skip · log", "via": "no"},
-                        ],
-                        [{"kind": "decision", "title": "2xx?"}],
-                        [
-                            {"kind": "step", "title": "Parse", "sub": "BeautifulSoup", "via": "yes"},
-                            {"kind": "error", "title": "Retry tier +1", "sub": "backoff + jitter", "via": "no"},
-                        ],
-                        [{"kind": "store", "title": "store row"}],
-                    ],
-                    "notes": ["retry tier 3 exhausted → dead-letter", "new links → dedupe → frontier"],
-                },
-            },
-            {
-                "id": "erd-crawl",
-                "kind": "schema",
-                "title": "ERD — crawl store",
-                "display_order": 1,
-                "data": {
-                    "tiers": [
-                        [{"name": "domain", "kind": "table", "rows": ["host · pk", "robots_cache", "rate_budget"]}],
-                        [{"name": "page", "kind": "table", "rows": ["url · pk", "domain · fk", "status", "content_hash"]}],
-                        [
-                            {"name": "fetch_log", "kind": "table", "rows": ["id · pk", "page_url · fk", "attempt", "outcome"]},
-                            {"name": "link", "kind": "table", "rows": ["src · fk", "dst · fk", "rel"]},
-                        ],
-                    ],
-                    "relations": [
-                        {"from": "domain", "label": "1:N", "to": "page"},
-                        {"from": "page", "label": "1:N", "to": "fetch_log"},
-                        {"from": "page", "label": "N:M", "to": "link"},
-                    ],
-                },
-            },
-        ],
-        "gallery": [
-            {"id": "crawler-dash", "src": "/projects/crawler-dash.png", "caption": "fig 01 — run dashboard · success curve", "display_order": 0},
-            {"id": "crawler-logs", "src": "/projects/crawler-logs.png", "caption": "fig 02 — worker logs · retry cascade", "display_order": 1},
-        ],
+        "github_url": "https://github.com/TurkishKEBAB/turkish-morphology-fst",
+        "demo_url": None,
+        "featured": False,
+        "display_order": 8,
+        "technologies": ["Git", "HFST"],
     },
+}
+
+# Active dossier payloads are source-backed. Projects without source or approved evidence remain cards only.
+DOSSIER_CONTENT: dict[str, dict] = {
     "portfolio-platform-web-desktop": {
         # Re-authored from first-party evidence; see
         # docs/superpowers/specs/2026-07-25-portfolio-platform-evidence-ledger.md.
@@ -644,21 +382,14 @@ _LEGACY_DOSSIER_CONTENT: dict[str, dict] = {
     },
 }
 
-# Keep only the first-party portfolio payload from the historical literal.
-# Other entries are either loaded from research evidence or intentionally
-# omitted until their source and visual clearance are supplied.
-DOSSIER_CONTENT: dict[str, dict] = {
-    "portfolio-platform-web-desktop": _LEGACY_DOSSIER_CONTENT[
-        "portfolio-platform-web-desktop"
-    ],
-}
-
-
 def _load_external_dossier_payloads() -> None:
-    payload_path = Path(__file__).resolve().parent / "dossier_payloads" / "isikschedule-platform.json"
-    DOSSIER_CONTENT["isikschedule-platform"] = json.loads(
-        payload_path.read_text(encoding="utf-8")
-    )
+    payload_root = Path(__file__).resolve().parent / "dossier_payloads"
+    for slug in (
+        "isikschedule-platform",
+        *PROJECT_CATALOG_CONTENT,
+    ):
+        payload_path = payload_root / f"{slug}.json"
+        DOSSIER_CONTENT[slug] = json.loads(payload_path.read_text(encoding="utf-8"))
 
 
 _load_external_dossier_payloads()
@@ -906,12 +637,117 @@ def seed_dossiers(db: Session, force: bool = False) -> None:
         print(f"  + {slug}: dossier seeded")
 
 
+def sync_project_catalog(db: Session) -> None:
+    """Upsert the audited project cards and their source-backed technologies."""
+    for slug, content in PROJECT_CATALOG_CONTENT.items():
+        project = db.query(Project).filter(Project.slug == slug).first()
+        if project is None:
+            project = Project(
+                slug=slug,
+                title=content["title_en"],
+                short_description=content["short_en"],
+                description=content["description_en"],
+                github_url=content["github_url"],
+                demo_url=content["demo_url"],
+                featured=content["featured"],
+                display_order=content["display_order"],
+            )
+            db.add(project)
+            db.flush()
+
+        project.title = content["title_en"]
+        project.short_description = content["short_en"]
+        project.description = content["description_en"]
+        project.github_url = content["github_url"]
+        project.demo_url = content["demo_url"]
+        project.featured = content["featured"]
+        project.display_order = content["display_order"]
+
+        for language, title_key, short_key, description_key in (
+            ("en", "title_en", "short_en", "description_en"),
+            ("tr", "title_tr", "short_tr", "description_tr"),
+        ):
+            translation = (
+                db.query(ProjectTranslation)
+                .filter_by(project_id=project.id, language=language)
+                .first()
+            )
+            if translation is None:
+                translation = ProjectTranslation(project_id=project.id, language=language)
+                db.add(translation)
+            translation.title = content[title_key]
+            translation.short_description = content[short_key]
+            translation.description = content[description_key]
+
+        for technology_name in content["technologies"]:
+            technology = (
+                db.query(Technology).filter(Technology.name == technology_name).first()
+            )
+            if technology is None:
+                technology = Technology(
+                    name=technology_name,
+                    slug=technology_name.lower().replace(" ", "-").replace("/", "-"),
+                    category="tool",
+                )
+                db.add(technology)
+                db.flush()
+            link = (
+                db.query(ProjectTechnology)
+                .filter_by(project_id=project.id, technology_id=technology.id)
+                .first()
+            )
+            if link is None:
+                db.add(
+                    ProjectTechnology(
+                        project_id=project.id,
+                        technology_id=technology.id,
+                    )
+                )
+
+    db.commit()
+
+
+def sync_dossiers(db: Session) -> bool:
+    """Apply the source-controlled dossier revision once per database.
+
+    The normal seed command is intentionally non-destructive. Production needs
+    a separate, revisioned operation so an already-seeded database receives
+    corrected source-backed content without running the destructive full seed.
+    The revision marker is written last; a failed run remains retryable.
+    """
+    current = get_site_config(db, DOSSIER_SEED_REVISION_KEY)
+    if current and current.value == DOSSIER_SEED_REVISION:
+        print(f"  = dossier revision {DOSSIER_SEED_REVISION} already applied")
+        return False
+
+    sync_project_catalog(db)
+    seed_dossiers(db, force=True)
+    for slug in DOSSIER_REMOVED_SLUGS:
+        project = db.query(Project).filter(Project.slug == slug).first()
+        if project and delete_dossier(db, project.id):
+            print(f"  - {slug}: obsolete dossier removed")
+
+    set_site_config(
+        db,
+        DOSSIER_SEED_REVISION_KEY,
+        DOSSIER_SEED_REVISION,
+        description="Source-controlled dossier payload revision applied by deployment startup.",
+    )
+    print(f"  + dossier revision {DOSSIER_SEED_REVISION} recorded")
+    return True
+
+
 def main() -> None:
     force = "--force" in sys.argv[1:]
+    sync = "--sync" in sys.argv[1:]
     db = SessionLocal()
     try:
-        print(f"Seeding project dossiers (force={force})...")
-        seed_dossiers(db, force=force)
+        if sync:
+            print(f"Synchronizing project dossiers (revision={DOSSIER_SEED_REVISION})...")
+            sync_dossiers(db)
+        else:
+            print(f"Seeding project dossiers (force={force})...")
+            seed_dossiers(db, force=force)
         print("Done.")
     finally:
         db.close()
