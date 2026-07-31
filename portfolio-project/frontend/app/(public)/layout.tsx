@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 import NexusBackground from "@/components/NexusBackground";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
+import HeroIntro from "@/components/nexus/HeroIntro";
 
 export default function PublicLayout({
   children,
@@ -11,6 +12,7 @@ export default function PublicLayout({
 }>) {
   return (
     <div className="min-h-screen flex flex-col relative">
+      <HeroIntro />
       <NexusBackground />
       <Navigation />
       <main className="flex-1 relative z-10">{children}</main>

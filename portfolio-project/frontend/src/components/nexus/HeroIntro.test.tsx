@@ -49,6 +49,19 @@ describe("HeroIntro", () => {
     expect(screen.queryByRole("button", { name: "Skip intro" })).not.toBeInTheDocument();
   });
 
+  it("keeps each role visible long enough to read", () => {
+    render(<HeroIntro />);
+
+    act(() => {
+      vi.advanceTimersByTime(500);
+    });
+
+    const role = screen.getByRole("button").querySelector<HTMLElement>("span.font-display");
+
+    expect(role).toHaveTextContent("ENTERPRISE BACKEND");
+    expect(role).toHaveClass("opacity-100");
+  });
+
   it("locks page scroll during the first-visit animation and restores it afterward", () => {
     render(<HeroIntro />);
 
@@ -56,7 +69,7 @@ describe("HeroIntro", () => {
     expect(screen.getByRole("button", { name: "Skip intro" })).toBeInTheDocument();
 
     act(() => {
-      vi.advanceTimersByTime(1000);
+      vi.advanceTimersByTime(4000);
     });
 
     expect(screen.queryByRole("button", { name: "Skip intro" })).not.toBeInTheDocument();
@@ -87,7 +100,7 @@ describe("HeroIntro", () => {
     expect(document.body.style.paddingRight).toBe("16px");
 
     act(() => {
-      vi.advanceTimersByTime(1000);
+      vi.advanceTimersByTime(4000);
     });
 
     expect(document.body.style.paddingRight).toBe("");
