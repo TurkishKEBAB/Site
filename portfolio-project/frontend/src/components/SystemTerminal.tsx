@@ -79,7 +79,9 @@ type Tab = "fetch" | "java" | "shell";
 export default function SystemTerminal({ profileSrc = "/profile.webp", className = "" }: { profileSrc?: string; className?: string }) {
   const [tab, setTab] = useState<Tab>("fetch");
   const [rawPhoto, setRawPhoto] = useState(false);
-  const [now, setNow] = useState(() => Date.now());
+  // Keep the server and first client render identical; the live value starts
+  // immediately after hydration in the effect below.
+  const [now, setNow] = useState(UPTIME_EPOCH);
   const [lines, setLines] = useState<Line[]>([
     { id: -2, html: '<span class="ps-dim">yo-shell 2.0 · javac / java ready</span>' },
     { id: -1, html: '<span class="ps-dim">Type a command or press ▶ Run.</span>' },
@@ -91,6 +93,7 @@ export default function SystemTerminal({ profileSrc = "/profile.webp", className
   const outRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    setNow(Date.now());
     const t = setInterval(() => setNow(Date.now()), 1000);
     return () => clearInterval(t);
   }, []);

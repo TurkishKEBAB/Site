@@ -1,4 +1,5 @@
-import { act, render, screen } from "@testing-library/react";
+import { act, fireEvent, render, screen } from "@testing-library/react";
+import { renderToStaticMarkup } from "react-dom/server";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import HeroIntro from "./HeroIntro";
@@ -16,6 +17,36 @@ describe("HeroIntro", () => {
   afterEach(() => {
     vi.useRealTimers();
     document.body.style.overflow = "";
+    document.body.style.paddingRight = "";
+  });
+
+  it("renders the intro overlay in the initial server markup", () => {
+    const html = renderToStaticMarkup(<HeroIntro />);
+
+    expect(html).toContain('aria-label="Skip intro"');
+  });
+
+  it("skips the overlay after the intro has completed in this session", () => {
+    sessionStorage.setItem("nx-intro-done", "1");
+
+    render(<HeroIntro />);
+
+    expect(screen.queryByRole("button", { name: "Skip intro" })).not.toBeInTheDocument();
+    expect(document.body.style.overflow).toBe("");
+  });
+
+  it("allows the visitor to skip the intro immediately", () => {
+    render(<HeroIntro />);
+
+    fireEvent.click(screen.getByRole("button", { name: "Skip intro" }));
+
+    expect(sessionStorage.getItem("nx-intro-done")).toBe("1");
+
+    act(() => {
+      vi.advanceTimersByTime(140);
+    });
+
+    expect(screen.queryByRole("button", { name: "Skip intro" })).not.toBeInTheDocument();
   });
 
   it("locks page scroll during the first-visit animation and restores it afterward", () => {
@@ -43,5 +74,22 @@ describe("HeroIntro", () => {
     unmount();
 
     expect(document.body.style.overflow).toBe("auto");
+  });
+
+  it("preserves the scrollbar width while the page is locked", () => {
+    Object.defineProperty(document.documentElement, "clientWidth", {
+      configurable: true,
+      value: window.innerWidth - 16,
+    });
+
+    render(<HeroIntro />);
+
+    expect(document.body.style.paddingRight).toBe("16px");
+
+    act(() => {
+      vi.advanceTimersByTime(1000);
+    });
+
+    expect(document.body.style.paddingRight).toBe("");
   });
 });

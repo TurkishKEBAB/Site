@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 
 const ROLES = ["ENTERPRISE BACKEND", "CLOUD & DEVOPS", "QUALITY AUTOMATION"];
 // Keep the first-visit reveal below one second so it cannot become the
@@ -8,6 +8,7 @@ const ROLES = ["ENTERPRISE BACKEND", "CLOUD & DEVOPS", "QUALITY AUTOMATION"];
 const ROLE_HOLD_MS = 180;
 const ROLE_GAP_MS = 40;
 const EXIT_MS = 140;
+const useIsomorphicLayoutEffect = typeof window === "undefined" ? useEffect : useLayoutEffect;
 
 /**
  * Cinematic intro overlay (design's hero intro). On the first home visit of a
@@ -15,25 +16,41 @@ const EXIT_MS = 140;
  * Skipped under prefers-reduced-motion or once seen (sessionStorage). Click to skip.
  */
 export default function HeroIntro() {
-  const [active, setActive] = useState(false);
+  // Render the overlay in the server markup so the homepage cannot paint before
+  // the client has had a chance to read sessionStorage and start the intro.
+  const [active, setActive] = useState(true);
   const [index, setIndex] = useState(0);
   const [wordShown, setWordShown] = useState(false);
   const [out, setOut] = useState(false);
   const finishRef = useRef<() => void>(() => {});
 
-  useEffect(() => {
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return undefined;
-    if (sessionStorage.getItem("nx-intro-done")) return undefined;
+  useIsomorphicLayoutEffect(() => {
+    if (
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches ||
+      sessionStorage.getItem("nx-intro-done")
+    ) {
+      setActive(false);
+      return undefined;
+    }
 
-    setActive(true);
     const previousOverflow = document.body.style.overflow;
+    const previousPaddingRight = document.body.style.paddingRight;
+    const scrollbarWidth = Math.max(0, window.innerWidth - document.documentElement.clientWidth);
+    const computedPaddingRight = Number.parseFloat(window.getComputedStyle(document.body).paddingRight) || 0;
+    const paddingCompensated = scrollbarWidth > 0;
     let overflowRestored = false;
     const restoreOverflow = () => {
       if (overflowRestored) return;
       overflowRestored = true;
       document.body.style.overflow = previousOverflow;
+      if (paddingCompensated) {
+        document.body.style.paddingRight = previousPaddingRight;
+      }
     };
     document.body.style.overflow = "hidden";
+    if (paddingCompensated) {
+      document.body.style.paddingRight = `${computedPaddingRight + scrollbarWidth}px`;
+    }
 
     let cursor = 0;
     let cancelled = false;
