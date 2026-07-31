@@ -27,6 +27,8 @@ describe("ContactForm", () => {
     mocks.sendMessage.mockReset();
     mocks.showToast.mockReset();
     mocks.writeText.mockReset();
+    delete (window as unknown as { turnstile?: unknown }).turnstile;
+    document.getElementById("cloudflare-turnstile-script")?.remove();
     Object.defineProperty(navigator, "clipboard", {
       configurable: true,
       value: {
@@ -54,6 +56,89 @@ describe("ContactForm", () => {
     expect(screen.getByLabelText("Message")).toHaveValue(
       "I would like to discuss a backend-heavy collaboration.",
     );
+  });
+
+  it("includes the Turnstile token when submitting a protected contact form", async () => {
+    const turnstile = {
+      render: vi.fn(
+        (_container: HTMLElement, options: { callback: (token: string) => void }) => {
+          options.callback("turnstile-token");
+          return "widget-id";
+        },
+      ),
+      remove: vi.fn(),
+      reset: vi.fn(),
+    };
+    Object.defineProperty(window, "turnstile", {
+      configurable: true,
+      value: turnstile,
+    });
+    mocks.sendMessage.mockResolvedValueOnce({
+      success: true,
+      message: "Delivered",
+      message_id: "msg-1",
+    });
+
+    render(<ContactForm locale="en" captchaSiteKey="site-key" />);
+
+    await waitFor(() => {
+      expect(turnstile.render).toHaveBeenCalled();
+    });
+
+    fireEvent.change(screen.getByLabelText("Full name"), {
+      target: { value: "Grace Hopper" },
+    });
+    fireEvent.change(screen.getByLabelText("Email address"), {
+      target: { value: "grace@example.com" },
+    });
+    fireEvent.change(screen.getByLabelText("Subject"), {
+      target: { value: "Platform role" },
+    });
+    fireEvent.change(screen.getByLabelText("Message"), {
+      target: { value: "I am interested in discussing a backend platform opportunity." },
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: "Send message" }));
+
+    await waitFor(() => {
+      expect(mocks.sendMessage).toHaveBeenCalledWith(
+        expect.objectContaining({ captcha_token: "turnstile-token" }),
+      );
+    });
+  });
+
+  it("does not submit a protected form before the security check completes", async () => {
+    const turnstile = {
+      render: vi.fn(() => "widget-id"),
+      remove: vi.fn(),
+    };
+    Object.defineProperty(window, "turnstile", {
+      configurable: true,
+      value: turnstile,
+    });
+
+    render(<ContactForm locale="en" captchaSiteKey="site-key" />);
+
+    await waitFor(() => {
+      expect(turnstile.render).toHaveBeenCalled();
+    });
+
+    fireEvent.change(screen.getByLabelText("Full name"), {
+      target: { value: "Grace Hopper" },
+    });
+    fireEvent.change(screen.getByLabelText("Email address"), {
+      target: { value: "grace@example.com" },
+    });
+    fireEvent.change(screen.getByLabelText("Message"), {
+      target: { value: "I am interested in discussing a backend platform opportunity." },
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: "Send message" }));
+
+    expect(mocks.sendMessage).not.toHaveBeenCalled();
+    expect(
+      await screen.findByText("Please complete the security check before sending."),
+    ).toBeInTheDocument();
   });
 
   it("keeps the draft and shows fallback actions when submit fails", async () => {

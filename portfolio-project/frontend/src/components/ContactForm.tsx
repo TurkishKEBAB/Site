@@ -8,17 +8,22 @@ import { useToast } from "@/components/Toast";
 import { contactContent, siteConfig, type Locale } from "@/content/site";
 import { contactService } from "@/services/contactService";
 
+import TurnstileWidget from "./TurnstileWidget";
+
 type FieldName = "name" | "email" | "subject" | "message";
 
 interface ContactFormProps {
   locale: Locale;
+  captchaSiteKey?: string;
 }
 
 const getDraftKey = (locale: Locale) => `contact-form-draft:${locale}`;
 
-export default function ContactForm({ locale }: ContactFormProps) {
+export default function ContactForm({ locale, captchaSiteKey: captchaSiteKeyOverride }: ContactFormProps) {
   const text = contactContent[locale];
   const { showToast } = useToast();
+  const captchaSiteKey =
+    captchaSiteKeyOverride ?? process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY ?? "";
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -29,6 +34,9 @@ export default function ContactForm({ locale }: ContactFormProps) {
   const [errors, setErrors] = useState<Partial<Record<FieldName, string>>>({});
   const [submitError, setSubmitError] = useState("");
   const [copied, setCopied] = useState(false);
+  const [captchaToken, setCaptchaToken] = useState("");
+  const [captchaError, setCaptchaError] = useState(false);
+  const [captchaRenderKey, setCaptchaRenderKey] = useState(0);
 
   useEffect(() => {
     const savedDraft = window.localStorage.getItem(getDraftKey(locale));
@@ -109,16 +117,27 @@ export default function ContactForm({ locale }: ContactFormProps) {
       return;
     }
 
+    if (captchaSiteKey && !captchaToken) {
+      setSubmitError(captchaError ? text.captchaUnavailable : text.captchaRequired);
+      return;
+    }
+
     setLoading(true);
     setSubmitError("");
     setCopied(false);
 
     try {
-      const response = await contactService.sendMessage(formData);
+      const response = await contactService.sendMessage({
+        ...formData,
+        ...(captchaToken ? { captcha_token: captchaToken } : {}),
+      });
       showToast("success", response.message || text.success);
       setFormData({ name: "", email: "", subject: "", message: "" });
       setErrors({});
       setSubmitError("");
+      setCaptchaToken("");
+      setCaptchaError(false);
+      setCaptchaRenderKey((value) => value + 1);
       window.localStorage.removeItem(getDraftKey(locale));
     } catch (error) {
       console.error("Contact form submission failed", error);
@@ -189,6 +208,23 @@ export default function ContactForm({ locale }: ContactFormProps) {
           <p className="mt-1.5 text-xs text-red-500 dark:text-red-400">{errors.message}</p>
         )}
       </div>
+
+      {captchaSiteKey && (
+        <div className="space-y-2">
+          <TurnstileWidget
+            key={`${captchaSiteKey}-${captchaRenderKey}`}
+            siteKey={captchaSiteKey}
+            onToken={(token) => {
+              setCaptchaToken(token);
+              setCaptchaError(false);
+            }}
+            onError={() => {
+              setCaptchaToken("");
+              setCaptchaError(true);
+            }}
+          />
+        </div>
+      )}
 
       {submitError && (
         <div className="rounded border border-amber-400/30 bg-amber-400/10 p-4 space-y-3">

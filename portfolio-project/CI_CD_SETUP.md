@@ -127,6 +127,8 @@ Set these values in Railway production service environment:
 Set in Vercel production environment:
 
 - `NEXT_PUBLIC_API_BASE_URL=https://<backend-domain>/api/v1`
+- `NEXT_PUBLIC_TURNSTILE_SITE_KEY` (the public Cloudflare Turnstile site key
+  registered for the production frontend; the secret stays in Railway)
 
 ## Sentry Release and Alert Policy
 
