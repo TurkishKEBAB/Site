@@ -3,9 +3,11 @@
 import { useEffect, useRef, useState } from "react";
 
 const ROLES = ["ENTERPRISE BACKEND", "CLOUD & DEVOPS", "QUALITY AUTOMATION"];
-const ROLE_HOLD_MS = 700;
-const ROLE_GAP_MS = 120;
-const EXIT_MS = 360;
+// Keep the first-visit reveal below one second so it cannot become the
+// homepage's largest-contentful-paint blocker on a cold mobile load.
+const ROLE_HOLD_MS = 180;
+const ROLE_GAP_MS = 40;
+const EXIT_MS = 140;
 
 /**
  * Cinematic intro overlay (design's hero intro). On the first home visit of a

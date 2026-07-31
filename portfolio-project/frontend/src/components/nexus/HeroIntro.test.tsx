@@ -25,7 +25,7 @@ describe("HeroIntro", () => {
     expect(screen.getByRole("button", { name: "Skip intro" })).toBeInTheDocument();
 
     act(() => {
-      vi.advanceTimersByTime(3200);
+      vi.advanceTimersByTime(1000);
     });
 
     expect(screen.queryByRole("button", { name: "Skip intro" })).not.toBeInTheDocument();
