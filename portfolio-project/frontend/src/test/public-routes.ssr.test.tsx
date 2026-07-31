@@ -88,6 +88,7 @@ describe("public route SSR", () => {
     expect(html).toContain("Command center");
     expect(html).toContain("Featured systems");
     expect(html).toContain(homeContent[locale].secondaryCta);
+    expect(html).not.toContain('aria-label="Skip intro"');
     expect(html).not.toContain("Loading");
   });
 

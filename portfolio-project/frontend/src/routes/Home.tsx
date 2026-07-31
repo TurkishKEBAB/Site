@@ -4,7 +4,6 @@ import { FiArrowRight, FiDownload, FiGithub, FiLinkedin, FiMail } from "react-ic
 
 import AnimatedSection from "@/components/AnimatedSection";
 import SystemTerminal from "@/components/SystemTerminal";
-import HeroIntro from "@/components/nexus/HeroIntro";
 import Magnetic from "@/components/nexus/Magnetic";
 import NxSectionHead from "@/components/nexus/NxSectionHead";
 import TechTicker from "@/components/nexus/TechTicker";
@@ -62,7 +61,6 @@ export default function Home({
 
   return (
     <div className="relative">
-      <HeroIntro />
       {/* ── hero ───────────────────────────────────────────────── */}
       <section className="relative overflow-hidden px-0 pb-20 pt-28 md:pb-24 md:pt-32">
         <div className="container-custom">

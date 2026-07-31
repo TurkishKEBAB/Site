@@ -3,16 +3,15 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 
 const ROLES = ["ENTERPRISE BACKEND", "CLOUD & DEVOPS", "QUALITY AUTOMATION"];
-// Keep the first-visit reveal below one second so it cannot become the
-// homepage's largest-contentful-paint blocker on a cold mobile load.
-const ROLE_HOLD_MS = 180;
-const ROLE_GAP_MS = 40;
+// Give each role a readable beat while keeping the full intro under four seconds.
+const ROLE_HOLD_MS = 850;
+const ROLE_GAP_MS = 200;
 const EXIT_MS = 140;
 const useIsomorphicLayoutEffect = typeof window === "undefined" ? useEffect : useLayoutEffect;
 
 /**
- * Cinematic intro overlay (design's hero intro). On the first home visit of a
- * session it covers the page and reveals each role title in turn, then lifts.
+ * Cinematic intro overlay (design's hero intro). On the first public route visit
+ * of a session it covers the page and reveals each role title in turn, then lifts.
  * Skipped under prefers-reduced-motion or once seen (sessionStorage). Click to skip.
  */
 export default function HeroIntro() {
