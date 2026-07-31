@@ -3,9 +3,9 @@ Seed project dossiers (C4 / ADR / log / diagrams / gallery).
 
 Seed content is evidence-led and loads through crud.dossier.upsert_dossier, so
 it is idempotent per project; existing dossiers are skipped unless --force.
-The active map is intentionally limited to projects with a verified source
-package or a first-party evidence ledger. Pending project cards remain in the
-project catalog without an invented architecture dossier.
+The dossier map is intentionally limited to projects with a verified source
+package or a first-party evidence ledger. The project catalog map also carries
+pending cards so --sync can repair their metadata without inventing a dossier.
 
 Usage (inside the backend container or with DATABASE_URL exported):
     python seed_dossiers.py           # seed projects that have no dossier yet
@@ -33,13 +33,148 @@ from app.models.technology import Technology
 from app.schemas.dossier import ProjectDossierUpsert
 
 DOSSIER_SEED_REVISION_KEY = "dossier_seed_revision"
-DOSSIER_SEED_REVISION = "2026-07-31-evidence-audit-v2"
+DOSSIER_SEED_REVISION = "2026-07-31-evidence-audit-v3"
 DOSSIER_REMOVED_SLUGS = (
     "teknofest-sarkan-uav-defense-platform",
     "automated-web-crawler",
 )
 
 PROJECT_CATALOG_CONTENT: dict[str, dict] = {
+    "isikschedule-platform": {
+        "title_en": "IsikSchedule Platform",
+        "title_tr": "IsikSchedule Platformu",
+        "short_en": "Independent desktop and web scheduling products for Işık University catalogs",
+        "short_tr": "Işık Üniversitesi katalogları için bağımsız masaüstü ve web programlama ürünleri",
+        "description_en": (
+            "The portfolio tracks multiple independent scheduling codebases rather than a shared solver package: "
+            "the PyQt6 desktop client has a verified 13-solver registry, while the FastAPI + Next.js web product "
+            "uses its own synchronous exact search and SQLite persistence. The public web repository also contains "
+            "JWT/admin controls, Excel catalog ingestion, and shareable schedule flows."
+        ),
+        "description_tr": (
+            "Portföyde ortak bir solver paketi olarak değil, bağımsız ders programlama kod tabanları olarak izlenir: "
+            "PyQt6 masaüstü istemcisinde doğrulanmış 13 solver kayıtlıdır; FastAPI + Next.js web ürünü ise "
+            "kendi senkron kesin aramasını ve SQLite kalıcılığını kullanır. Web reposunda ayrıca JWT/admin kontrolleri, "
+            "Excel katalog alımı ve paylaşılabilir program akışları bulunur."
+        ),
+        "github_url": "https://github.com/TurkishKEBAB/isikschedule-core",
+        "demo_url": "https://github.com/TurkishKEBAB/isikschedule-web",
+        "featured": True,
+        "display_order": 1,
+        "technologies": [
+            "Python",
+            "TypeScript",
+            "FastAPI",
+            "Next.js",
+            "SQLite",
+            "PyQt6",
+            "JWT",
+            "RBAC",
+        ],
+    },
+    "agentic-ide-thesis-project": {
+        "title_en": "Agentic IDE (Thesis Project)",
+        "title_tr": "Agentic IDE (Tez Projesi)",
+        "short_en": "Safety-oriented Agentic IDE thesis planning and requirements repository",
+        "short_tr": "Güvenlik odaklı Agentic IDE tez planlama ve gereksinim reposu",
+        "description_en": (
+            "A thesis planning repository, not a shipped IDE implementation. Its accepted ADRs and backlog define "
+            "an Electron + Monaco MVP, a single-agent plan-first approval loop, local retrieval, explicit model "
+            "selection, workspace-bound writes, rollback, audit events, and a 20-task evaluation target."
+        ),
+        "description_tr": (
+            "Henüz dağıtılmış bir IDE uygulaması değil, tez planlama reposudur. Kabul edilmiş ADR'leri ve backlog'u; "
+            "Electron + Monaco MVP'sini, tek ajanlı plan-önce/onaylı akışı, lokal retrieval'ı, açık model seçimini, "
+            "workspace sınırlarını, rollback'i, audit event'lerini ve 20 görevlik değerlendirme hedefini tanımlar."
+        ),
+        "github_url": "https://github.com/TurkishKEBAB/Agentic-Ide",
+        "demo_url": None,
+        "featured": True,
+        "display_order": 2,
+        "technologies": [
+            "TypeScript",
+            "Electron",
+            "Monaco Editor",
+            "LLMs",
+            "RAG",
+            "GitHub Actions",
+        ],
+    },
+    "teknofest-sarkan-uav-defense-platform": {
+        "title_en": "Teknofest Sarkan UAV Defense Platform",
+        "title_tr": "Teknofest Sarkan IHA Savunma Platformu",
+        "short_en": "Project record pending technical source and publication clearance",
+        "short_tr": "Teknik kaynak ve yayın izni bekleyen proje kaydı",
+        "description_en": (
+            "The portfolio record is retained, but no source repository or publishable technical report was found "
+            "in the audited workspaces. Architecture, performance, ranking, budget, and gallery claims remain pending "
+            "owner-provided evidence and publication clearance."
+        ),
+        "description_tr": (
+            "Portföy kaydı korunmuştur; ancak denetlenen çalışma alanlarında kaynak repo veya yayınlanabilir teknik rapor "
+            "bulunamadı. Mimari, performans, derece, bütçe ve galeri iddiaları sahibinden kanıt ve yayın izni gelene kadar "
+            "beklemededir."
+        ),
+        "github_url": None,
+        "demo_url": None,
+        "featured": True,
+        "display_order": 3,
+        "technologies": [],
+    },
+    "automated-web-crawler": {
+        "title_en": "Automated Web Crawler",
+        "title_tr": "Otomatik Web Tarayici",
+        "short_en": "Project record pending crawler source and benchmark evidence",
+        "short_tr": "Crawler kaynağı ve benchmark kanıtı bekleyen proje kaydı",
+        "description_en": (
+            "No crawler repository, archive, runnable benchmark, or operational screenshot was found in the audited "
+            "workspaces. Scrapy, FastAPI, PostgreSQL, worker count, retry policy, robots enforcement, and success-rate "
+            "claims are therefore not published as verified project architecture."
+        ),
+        "description_tr": (
+            "Denetlenen çalışma alanlarında crawler reposu, arşivi, çalıştırılabilir benchmark'ı veya operasyon ekranı "
+            "bulunamadı. Bu nedenle Scrapy, FastAPI, PostgreSQL, worker sayısı, retry politikası, robots uygulaması ve "
+            "başarı oranı iddiaları doğrulanmış proje mimarisi olarak yayınlanmıyor."
+        ),
+        "github_url": None,
+        "demo_url": None,
+        "featured": True,
+        "display_order": 4,
+        "technologies": [],
+    },
+    "portfolio-platform-web-desktop": {
+        "title_en": "Portfolio Platform (Web + Desktop)",
+        "title_tr": "Portfolyo Platformu (Web + Masaustu)",
+        "short_en": "Full-stack multi-platform portfolio with admin operations and CI/CD",
+        "short_tr": "Admin operasyonlari ve CI/CD iceren full-stack cok platformlu portfolyo sistemi",
+        "description_en": (
+            "Multi-platform system with 72 API endpoints, JWT/RBAC auth, 24h GitHub API caching "
+            "with in-memory fallback, Supabase asset operations, SMTP notifications, and independent "
+            "Vercel (frontend) and Railway (backend) deployments via each provider's GitHub integration."
+        ),
+        "description_tr": (
+            "72 API endpoint, JWT/RBAC kimlik dogrulama, in-memory yedekli 24 saatlik GitHub API cache, "
+            "Supabase varlik yonetimi, SMTP bildirimleri ve her saglayicinin GitHub entegrasyonu uzerinden "
+            "bagimsiz Vercel (frontend) ve Railway (backend) dagitimlarini iceren cok platformlu sistem."
+        ),
+        "github_url": "https://github.com/TurkishKEBAB/Site",
+        "demo_url": None,
+        "featured": True,
+        "display_order": 5,
+        "technologies": [
+            "FastAPI",
+            "React",
+            "PostgreSQL",
+            "Docker",
+            "Redis",
+            "JWT",
+            "RBAC",
+            "Supabase",
+            "Vercel",
+            "Railway",
+            "SonarQube",
+        ],
+    },
     "ramazan-kopru-academic-site": {
         "title_en": "Ramazan Kopru Academic Site",
         "title_tr": "Ramazan Kopru Akademik Sitesi",
@@ -389,6 +524,8 @@ def _load_external_dossier_payloads() -> None:
         *PROJECT_CATALOG_CONTENT,
     ):
         payload_path = payload_root / f"{slug}.json"
+        if not payload_path.is_file():
+            continue
         DOSSIER_CONTENT[slug] = json.loads(payload_path.read_text(encoding="utf-8"))
 
 
@@ -638,7 +775,7 @@ def seed_dossiers(db: Session, force: bool = False) -> None:
 
 
 def sync_project_catalog(db: Session) -> None:
-    """Upsert the audited project cards and their source-backed technologies."""
+    """Upsert every audited project card and its evidence-backed technologies."""
     for slug, content in PROJECT_CATALOG_CONTENT.items():
         project = db.query(Project).filter(Project.slug == slug).first()
         if project is None:
@@ -679,6 +816,7 @@ def sync_project_catalog(db: Session) -> None:
             translation.short_description = content[short_key]
             translation.description = content[description_key]
 
+        desired_technology_ids = set()
         for technology_name in content["technologies"]:
             technology = (
                 db.query(Technology).filter(Technology.name == technology_name).first()
@@ -691,6 +829,7 @@ def sync_project_catalog(db: Session) -> None:
                 )
                 db.add(technology)
                 db.flush()
+            desired_technology_ids.add(technology.id)
             link = (
                 db.query(ProjectTechnology)
                 .filter_by(project_id=project.id, technology_id=technology.id)
@@ -703,6 +842,10 @@ def sync_project_catalog(db: Session) -> None:
                         technology_id=technology.id,
                     )
                 )
+
+        for link in db.query(ProjectTechnology).filter_by(project_id=project.id).all():
+            if link.technology_id not in desired_technology_ids:
+                db.delete(link)
 
     db.commit()
 

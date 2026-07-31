@@ -1142,17 +1142,10 @@ def link_project_technologies(
             "GitHub Actions",
         ],
         "teknofest-sarkan-uav-defense-platform": [
-            "Python",
-            "Git",
-            "PostgreSQL",
+            # No technical source was available during the evidence audit.
         ],
         "automated-web-crawler": [
-            "Python",
-            "Scrapy",
-            "BeautifulSoup",
-            "FastAPI",
-            "PostgreSQL",
-            "Pytest",
+            # No crawler source or benchmark was available during the evidence audit.
         ],
         "portfolio-platform-web-desktop": [
             "FastAPI",

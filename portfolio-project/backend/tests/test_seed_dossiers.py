@@ -5,7 +5,7 @@ from pathlib import Path
 import seed_dossiers
 from app.crud.dossier import get_dossier_by_project_id, upsert_dossier
 from app.models.dossier import ProjectDossier
-from app.models.project import Project
+from app.models.project import Project, ProjectTechnology
 from app.models.site import SiteConfig
 from app.schemas.dossier import ProjectDossierUpsert
 
@@ -16,6 +16,11 @@ EXPECTED_SLUGS = {
     "ramazan-kopru-academic-site",
     "travel-planner-platform",
     "turkish-morphology-fst",
+}
+
+EXPECTED_PROJECT_CATALOG_SLUGS = EXPECTED_SLUGS | {
+    "teknofest-sarkan-uav-defense-platform",
+    "automated-web-crawler",
 }
 
 
@@ -66,10 +71,25 @@ def test_audited_projects_have_source_catalog_records_and_remote_provenance():
         )
 
 
+def test_project_catalog_covers_every_seeded_project_card():
+    assert set(seed_dossiers.PROJECT_CATALOG_CONTENT) == EXPECTED_PROJECT_CATALOG_SLUGS
+
+
 def test_sync_dossiers_is_revisioned_and_removes_pending_records(
-    db_session, create_project
+    db_session, create_project, create_technology
 ):
     active = create_project(slug="portfolio-platform-web-desktop")
+    corrected = create_project(
+        slug="isikschedule-platform",
+        title="Legacy IsikSchedule",
+        short_description="Legacy scheduling claim",
+        description="Legacy scheduling description",
+    )
+    stale_technology = create_technology(name="Legacy Stack")
+    db_session.add(
+        ProjectTechnology(project_id=corrected.id, technology_id=stale_technology.id)
+    )
+    db_session.commit()
     pending = create_project(slug="automated-web-crawler")
     stale_payload = ProjectDossierUpsert.model_validate(
         {
@@ -92,6 +112,18 @@ def test_sync_dossiers_is_revisioned_and_removes_pending_records(
     assert refreshed is not None
     assert (
         refreshed.impact_en == seed_dossiers.DOSSIER_CONTENT[active.slug]["impact_en"]
+    )
+    refreshed_card = db_session.query(Project).filter_by(id=corrected.id).one()
+    expected_card = seed_dossiers.PROJECT_CATALOG_CONTENT[corrected.slug]
+    assert refreshed_card.title == expected_card["title_en"]
+    assert refreshed_card.short_description == expected_card["short_en"]
+    assert refreshed_card.description == expected_card["description_en"]
+    assert refreshed_card.github_url == expected_card["github_url"]
+    assert (
+        db_session.query(ProjectTechnology)
+        .filter_by(project_id=corrected.id, technology_id=stale_technology.id)
+        .first()
+        is None
     )
     assert (
         db_session.query(ProjectDossier).filter_by(project_id=pending.id).first()
