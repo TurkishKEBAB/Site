@@ -1,4 +1,4 @@
-import { act, render, screen } from "@testing-library/react";
+import { act, fireEvent, render, screen } from "@testing-library/react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -24,6 +24,29 @@ describe("HeroIntro", () => {
     const html = renderToStaticMarkup(<HeroIntro />);
 
     expect(html).toContain('aria-label="Skip intro"');
+  });
+
+  it("skips the overlay after the intro has completed in this session", () => {
+    sessionStorage.setItem("nx-intro-done", "1");
+
+    render(<HeroIntro />);
+
+    expect(screen.queryByRole("button", { name: "Skip intro" })).not.toBeInTheDocument();
+    expect(document.body.style.overflow).toBe("");
+  });
+
+  it("allows the visitor to skip the intro immediately", () => {
+    render(<HeroIntro />);
+
+    fireEvent.click(screen.getByRole("button", { name: "Skip intro" }));
+
+    expect(sessionStorage.getItem("nx-intro-done")).toBe("1");
+
+    act(() => {
+      vi.advanceTimersByTime(140);
+    });
+
+    expect(screen.queryByRole("button", { name: "Skip intro" })).not.toBeInTheDocument();
   });
 
   it("locks page scroll during the first-visit animation and restores it afterward", () => {
