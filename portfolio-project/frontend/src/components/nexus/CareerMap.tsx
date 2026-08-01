@@ -183,22 +183,39 @@ export function CareerMap({
                     position: "absolute",
                     left: xPct(node.t) + "%",
                     top: laneY(node.lane),
-                    transform: "translate(-50%, -50%)" + (head ? " rotate(45deg)" : ""),
-                    width: 13,
-                    height: 13,
-                    borderRadius: head ? 2 : 9999,
-                    border: "2px solid " + color,
+                    transform: "translate(-50%, -50%)",
+                    width: 24,
+                    height: 24,
+                    border: "none",
+                    borderRadius: 9999,
                     boxSizing: "border-box",
-                    background: selected ? color : "var(--bg-page)",
-                    boxShadow: selected ? "0 0 12px " + color : "none",
+                    background: "transparent",
                     cursor: "pointer",
                     padding: 0,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
                     transition: "all 200ms " + CM_EASE,
                     zIndex: 2,
-                    outline: node.kind === "origin" ? "1px solid " + color : "none",
-                    outlineOffset: 3,
                   }}
-                />
+                >
+                  <span
+                    aria-hidden="true"
+                    style={{
+                      display: "block",
+                      width: 13,
+                      height: 13,
+                      borderRadius: head ? 2 : 9999,
+                      border: "2px solid " + color,
+                      boxSizing: "border-box",
+                      background: selected ? color : "var(--bg-page)",
+                      boxShadow: selected ? "0 0 12px " + color : "none",
+                      transform: head ? "rotate(45deg)" : "none",
+                      outline: node.kind === "origin" ? "1px solid " + color : "none",
+                      outlineOffset: 3,
+                    }}
+                  />
+                </button>
                 <span
                   aria-hidden="true"
                   style={{
