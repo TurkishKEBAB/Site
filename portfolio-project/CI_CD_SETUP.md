@@ -165,10 +165,11 @@ continue without an upload attempt.
 
 Workflow: `.github/workflows/deploy-production.yml` (`Production Verification`)
 
-Vercel and Railway perform the actual production deployment through their
-provider integrations. This workflow is a post-deploy quality and smoke
-verification workflow; it is not a pre-deploy blocker for those external
-integrations.
+Railway performs the backend production deployment through its provider
+integration. The frontend production deployment is explicit in
+`.github/workflows/deploy-vercel-production.yml`, using the production-scoped
+Vercel credentials and environment. The existing verification workflow remains
+responsible for post-deploy quality and smoke checks.
 
 - Verification gates:
   - `Backend Quality (Production Verification)`
