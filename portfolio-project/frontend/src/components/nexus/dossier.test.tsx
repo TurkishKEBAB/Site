@@ -168,8 +168,8 @@ describe("DiagramGallery", () => {
 
 describe("CareerMap", () => {
   it("shows the first node's story and advances with the stepper", () => {
-    render(<CareerMap lanes={careerGraph.lanes} nodes={careerGraph.nodes} links={careerGraph.links} />);
-    expect(screen.getByText(/init — Software Engineering/)).toBeInTheDocument();
+    render(<CareerMap locale="en" initial="university-start" lanes={careerGraph.lanes} nodes={careerGraph.nodes} links={careerGraph.links} />);
+    expect(screen.getByRole("heading", { name: /init — Software Engineering/i })).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: "Next entry" }));
     expect(screen.getByRole("heading", { name: "Core curriculum lands" })).toBeInTheDocument();
