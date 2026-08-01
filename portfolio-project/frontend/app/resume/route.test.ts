@@ -11,6 +11,7 @@ describe("GET /resume", () => {
     expect(response.headers.get("content-disposition")).toBe(
       'attachment; filename="yigit-okur-cv.pdf"',
     );
+    expect(response.headers.get("cache-control")).toBe("public, max-age=3600");
     expect(new TextDecoder().decode(bytes.slice(0, 5))).toBe("%PDF-");
   });
 });
