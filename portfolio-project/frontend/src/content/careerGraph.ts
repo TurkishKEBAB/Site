@@ -3,10 +3,18 @@ import type { LocalizedString } from "@/content/site";
 // GitLens-style career history for the About page.
 
 export interface CareerLane {
+  /** Doubles as the branch name shown in the graph rail. */
   id: string;
-  name: LocalizedString;
+  /** What the branch is for, rendered under the branch name. */
+  role: LocalizedString;
   color: string;
   ongoing?: boolean;
+}
+
+/** Year marker on the map's time axis, anchored to a node position. */
+export interface CareerAxisMark {
+  t: number;
+  label: string;
 }
 
 export interface CareerNode {
@@ -32,18 +40,19 @@ export interface CareerGraph {
   lanes: CareerLane[];
   nodes: CareerNode[];
   links: CareerLink[];
+  axis: CareerAxisMark[];
 }
 
 const localized = (en: string, tr: string): LocalizedString => ({ en, tr });
 
 export const careerGraph: CareerGraph = {
   lanes: [
-    { id: "origin", name: localized("origin · foundation", "origin · temel"), color: "var(--syn-keyword)" },
-    { id: "main", name: localized("main · software engineering", "main · yazılım mühendisliği"), color: "var(--primary-400)", ongoing: true },
-    { id: "projects", name: localized("projects · shipped systems", "projects · teslim edilen sistemler"), color: "var(--gold-400)", ongoing: true },
-    { id: "industry", name: localized("industry · professional delivery", "industry · profesyonel teslim"), color: "var(--syn-fn)" },
-    { id: "community", name: localized("community · leadership", "community · liderlik"), color: "var(--status-green)", ongoing: true },
-    { id: "signals", name: localized("signals · learning", "signals · öğrenme"), color: "var(--syn-fn)", ongoing: true },
+    { id: "origin", role: localized("foundation", "temel"), color: "var(--lane-origin)" },
+    { id: "main", role: localized("software engineering", "yazılım mühendisliği"), color: "var(--lane-main)", ongoing: true },
+    { id: "projects", role: localized("shipped systems", "teslim edilen sistemler"), color: "var(--lane-projects)", ongoing: true },
+    { id: "industry", role: localized("professional delivery", "profesyonel teslim"), color: "var(--lane-industry)" },
+    { id: "community", role: localized("leadership", "liderlik"), color: "var(--lane-community)", ongoing: true },
+    { id: "signals", role: localized("learning", "öğrenme"), color: "var(--lane-signals)", ongoing: true },
   ],
   nodes: [
     {
@@ -376,5 +385,14 @@ export const careerGraph: CareerGraph = {
     { from: "ieee-lead", to: "head" },
     { from: "certifications", to: "head" },
     { from: "interests", to: "head" },
+  ],
+  // The timeline compresses school years and expands recent ones, so the axis
+  // states its years outright instead of implying an even scale.
+  axis: [
+    { t: 2, label: "2019" },
+    { t: 24, label: "2023" },
+    { t: 38, label: "2024" },
+    { t: 66, label: "2025" },
+    { t: 93, label: "2026" },
   ],
 };

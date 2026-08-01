@@ -15,13 +15,12 @@ export function CareerLog({ locale, lanes, nodes }: Readonly<{ locale: Locale; l
     laneById[lane.id] = lane;
   });
   const laneColor = (id: string) => laneById[id]?.color ?? "var(--accent-text)";
-  const laneName = (id: string) => laneById[id] ? label(laneById[id].name, locale) : id;
   const ordered = [...nodes].sort((a, b) => b.t - a.t);
   const openLabel = locale === "tr" ? "Projeyi aç" : "Open project";
 
   return (
     <div style={{ fontFamily: "var(--font-mono)" }}>
-      <div style={{ marginBottom: 14, fontSize: 11, color: "var(--text-faint)" }}>
+      <div style={{ marginBottom: 14, fontSize: 11, color: "var(--text-muted)" }}>
         <span style={{ color: "var(--accent-text)" }}>$</span> git log --graph --oneline --all
       </div>
       {ordered.map((node, index) => {
@@ -53,13 +52,13 @@ export function CareerLog({ locale, lanes, nodes }: Readonly<{ locale: Locale; l
               <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 10, fontSize: 11 }}>
                 <span style={{ color: "var(--accent-text)" }}>{shortHash(node.id)}</span>
                 <span style={{ display: "inline-flex", alignItems: "center", gap: 5, color }}>
-                  <span aria-hidden="true">({head ? "HEAD → " : ""}{laneName(node.lane).split(" ")[0]})</span>
+                  <span aria-hidden="true">({head ? "HEAD → " : ""}{node.lane})</span>
                 </span>
-                <span style={{ color: "var(--text-faint)" }}>{label(node.when, locale)}</span>
+                <span style={{ color: "var(--text-muted)" }}>{label(node.when, locale)}</span>
               </div>
-              <h4 style={{ margin: "6px 0 0", fontFamily: "var(--font-display)", fontSize: 16, fontWeight: 600, letterSpacing: "-0.01em", color: "var(--text-1)" }}>
+              <h3 style={{ margin: "6px 0 0", fontFamily: "var(--font-display)", fontSize: 16, fontWeight: 600, letterSpacing: "-0.01em", color: "var(--text-1)" }}>
                 {title}
-              </h4>
+              </h3>
               {node.body ? <p style={{ margin: "4px 0 0", maxWidth: "46rem", fontFamily: "var(--font-sans)", fontSize: 13, lineHeight: 1.6, color: "var(--text-muted)" }}>{label(node.body, locale)}</p> : null}
               {node.bullets?.length ? (
                 <ul style={{ margin: "8px 0 0", paddingLeft: 18, maxWidth: "46rem", fontFamily: "var(--font-sans)", fontSize: 12.5, lineHeight: 1.6, color: "var(--text-muted)" }}>

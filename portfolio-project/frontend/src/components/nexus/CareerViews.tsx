@@ -35,7 +35,7 @@ export function CareerViews({ locale, graphLabel, logLabel }: Readonly<{ locale:
         </button>
       </div>
       {mode === "graph" ? (
-        <CareerMap locale={locale} lanes={careerGraph.lanes} nodes={careerGraph.nodes} links={careerGraph.links} />
+        <CareerMap locale={locale} lanes={careerGraph.lanes} nodes={careerGraph.nodes} links={careerGraph.links} axis={careerGraph.axis} />
       ) : (
         <CareerLog locale={locale} lanes={careerGraph.lanes} nodes={careerGraph.nodes} />
       )}
