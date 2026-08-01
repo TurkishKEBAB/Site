@@ -106,6 +106,7 @@ describe("public route SSR", () => {
     expect(html).toContain("NETAŞ");
     expect(html).not.toContain("Education");
     expect(html).not.toContain("Current signal");
+    expect(html).not.toContain("Recent proof points");
     expect(html).not.toContain("Delivery with scale");
     expect(html).not.toMatch(/adalab/i);
     expect(html).toContain("Managed skill");

@@ -43,9 +43,6 @@ interface AboutLocaleContent {
   journeyLabel: string;
   journeyTitle: string;
   journeyBody: string;
-  highlightsLabel: string;
-  highlightsTitle: string;
-  highlights: string[];
 }
 
 interface ContactLocaleContent {
@@ -117,9 +114,6 @@ const resolveLocalizedRecord = <T extends Record<string, LocalizedString>>(
       getLocaleValue(entry, locale),
     ]),
   ) as { [K in keyof T]: string };
-
-const resolveLocalizedList = (value: LocalizedString[], locale: Locale): string[] =>
-  value.map((entry) => getLocaleValue(entry, locale));
 
 const buildSeoEntry = (
   title: LocalizedString,
@@ -484,26 +478,6 @@ const aboutDefinition = {
     "I optimize for teams where code quality, diagnosis depth, and delivery ownership matter at the same time. The work I enjoy most sits at the intersection of enterprise defects, algorithm-heavy backend systems, and operationally reliable products.",
     "Kod kalitesi, teşhis derinliği ve teslim sahipliğinin aynı anda önem taşıdığı ekiplere doğru ilerliyorum. En çok sevdiğim problemler; enterprise defect'ler, algoritma ağırlıklı backend sistemleri ve operasyonel olarak güvenilir ürünlerin kesişiminde yer alıyor.",
   ),
-  highlightsLabel: localized("Selected highlights", "Seçili başlıklar"),
-  highlightsTitle: localized("Recent proof points", "Son dönem kanıtlar"),
-  highlights: [
-    localized(
-      "NETAS internship: 25 commits and 1,550 lines of code and tests across four Jira tickets on a production Java microservices platform.",
-      "NETAS stajı: production Java mikroservis platformunda dört Jira ticket boyunca 25 commit ve 1.550 satır kod-test katkısı.",
-    ),
-    localized(
-      "Timezone investigation: proved a silent UTC vs UTC+3 mismatch with YAML and ELK analysis, then documented the fix path with 600+ lines of tests.",
-      "Timezone incelemesi: sessiz kalan UTC vs UTC+3 uyumsuzluğunu YAML ve ELK analizi ile kanıtlayıp çözüm yolunu 600+ satır test ile belgeledim.",
-    ),
-    localized(
-      "IEEE Işık leadership: coordinate 35+ technical events reaching 1,100+ students while connecting engineering delivery with community ownership.",
-      "IEEE Işık liderliği: 1.100+ öğrenciye ulaşan 35+ teknik etkinliği koordine ederken mühendislik teslimini topluluk sahipliğiyle birleştiriyorum.",
-    ),
-    localized(
-      "Cross-domain adaptation: moved between enterprise software, architecture project coordination, mentoring, and defense-tech delivery without losing execution quality.",
-      "Alanlar arası adaptasyon: enterprise yazılım, mimari proje koordinasyonu, mentorluk ve savunma teknolojileri teslimi arasında uygulama kalitesini koruyarak geçiş yaptım.",
-    ),
-  ],
 };
 
 const resolveAboutContent = (locale: Locale): AboutLocaleContent => ({
@@ -513,9 +487,6 @@ const resolveAboutContent = (locale: Locale): AboutLocaleContent => ({
   journeyLabel: getLocaleValue(aboutDefinition.journeyLabel, locale),
   journeyTitle: getLocaleValue(aboutDefinition.journeyTitle, locale),
   journeyBody: getLocaleValue(aboutDefinition.journeyBody, locale),
-  highlightsLabel: getLocaleValue(aboutDefinition.highlightsLabel, locale),
-  highlightsTitle: getLocaleValue(aboutDefinition.highlightsTitle, locale),
-  highlights: resolveLocalizedList(aboutDefinition.highlights, locale),
 });
 
 export const aboutContent = buildLocaleMap(resolveAboutContent) satisfies Record<
