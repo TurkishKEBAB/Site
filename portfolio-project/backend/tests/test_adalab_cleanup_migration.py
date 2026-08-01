@@ -32,7 +32,8 @@ def test_adalab_cleanup_migration_removes_experience_and_translations():
                 CREATE TABLE experiences (
                     id TEXT PRIMARY KEY,
                     title TEXT NOT NULL,
-                    organization TEXT NOT NULL
+                    organization TEXT NOT NULL,
+                    description TEXT
                 )
                 """
             )
@@ -44,7 +45,8 @@ def test_adalab_cleanup_migration_removes_experience_and_translations():
                     id TEXT PRIMARY KEY,
                     experience_id TEXT NOT NULL,
                     title TEXT NOT NULL,
-                    organization TEXT NOT NULL
+                    organization TEXT NOT NULL,
+                    description TEXT
                 )
                 """
             )
@@ -52,9 +54,14 @@ def test_adalab_cleanup_migration_removes_experience_and_translations():
         connection.execute(
             sa.text(
                 """
-                INSERT INTO experiences (id, title, organization) VALUES
-                ('adalab-id', 'Software Engineer', 'AdaLab'),
-                ('netas-id', 'Software Engineer Intern', 'NETAS')
+                INSERT INTO experiences (id, title, organization, description) VALUES
+                ('adalab-id', 'Software Engineer', 'AdaLab', NULL),
+                ('netas-id', 'Software Engineer Intern', 'NETAS', NULL),
+                ('legacy-edu-id', 'Bachelor of Software Engineering', 'Isik University',
+                 'Member of IEEE Student Branch. Student Assistant for OOP. '
+                 || 'AdaLab assistant at The Academic Data Analytics Laboratory.'),
+                ('odd-wording-id', 'Researcher', 'Isik University',
+                 'Worked with the adalab team on analytics.')
                 """
             )
         )
@@ -71,10 +78,19 @@ def test_adalab_cleanup_migration_removes_experience_and_translations():
         migration.op = Operations(MigrationContext.configure(connection))
         migration.upgrade()
 
-        remaining_experiences = connection.execute(sa.text("SELECT id FROM experiences")).scalars().all()
+        remaining_experiences = connection.execute(
+            sa.text("SELECT id FROM experiences ORDER BY id")
+        ).scalars().all()
         remaining_translations = connection.execute(
             sa.text("SELECT id FROM experience_translations")
         ).scalars().all()
+        descriptions = dict(
+            connection.execute(sa.text("SELECT id, description FROM experiences")).all()
+        )
 
-    assert remaining_experiences == ["netas-id"]
+    assert remaining_experiences == ["legacy-edu-id", "netas-id", "odd-wording-id"]
     assert remaining_translations == ["netas-en"]
+    # The education record keeps its own history but loses the retired mention.
+    assert descriptions["legacy-edu-id"] == "Member of IEEE Student Branch. Student Assistant for OOP."
+    # Wording the targeted replace cannot match is dropped rather than leaked.
+    assert descriptions["odd-wording-id"] is None
