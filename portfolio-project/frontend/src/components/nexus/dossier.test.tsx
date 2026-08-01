@@ -167,11 +167,37 @@ describe("DiagramGallery", () => {
 });
 
 describe("CareerMap", () => {
+  const graph = (
+    <CareerMap
+      locale="en"
+      initial="university-start"
+      lanes={careerGraph.lanes}
+      nodes={careerGraph.nodes}
+      links={careerGraph.links}
+      axis={careerGraph.axis}
+    />
+  );
+
   it("shows the first node's story and advances with the stepper", () => {
-    render(<CareerMap lanes={careerGraph.lanes} nodes={careerGraph.nodes} links={careerGraph.links} />);
-    expect(screen.getByText(/init — Software Engineering/)).toBeInTheDocument();
+    render(graph);
+    expect(screen.getByRole("heading", { name: /init — Software Engineering/i })).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: "Next entry" }));
     expect(screen.getByRole("heading", { name: "Core curriculum lands" })).toBeInTheDocument();
+  });
+
+  it("walks the timeline with the arrow keys from the selected commit", () => {
+    render(graph);
+    const selected = screen.getByRole("button", { name: /init — Software Engineering/i });
+    expect(selected).toHaveAttribute("tabindex", "0");
+
+    fireEvent.keyDown(selected, { key: "ArrowRight" });
+    expect(screen.getByRole("heading", { name: "Core curriculum lands" })).toBeInTheDocument();
+  });
+
+  it("keeps commit dates out of the plot so labels cannot collide", () => {
+    render(graph);
+    // The read-out names the date once; the plot itself carries no date text.
+    expect(screen.getAllByText("2023 – 2027 (Expected)")).toHaveLength(1);
   });
 });

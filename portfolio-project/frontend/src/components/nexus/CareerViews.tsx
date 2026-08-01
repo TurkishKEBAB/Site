@@ -4,6 +4,7 @@ import { useState } from "react";
 import { FiGitBranch, FiTerminal } from "react-icons/fi";
 
 import { careerGraph } from "@/content/careerGraph";
+import type { Locale } from "@/content/site";
 
 import { CareerLog } from "./CareerLog";
 import { CareerMap } from "./CareerMap";
@@ -11,7 +12,7 @@ import { CareerMap } from "./CareerMap";
 type Mode = "graph" | "log";
 
 /** About career section: toggle between the git-graph map and the git-log view. */
-export function CareerViews({ graphLabel, logLabel }: Readonly<{ graphLabel: string; logLabel: string }>) {
+export function CareerViews({ locale, graphLabel, logLabel }: Readonly<{ locale: Locale; graphLabel: string; logLabel: string }>) {
   const [mode, setMode] = useState<Mode>("graph");
 
   const chip = (active: boolean) =>
@@ -23,7 +24,7 @@ export function CareerViews({ graphLabel, logLabel }: Readonly<{ graphLabel: str
 
   return (
     <div>
-      <div className="mb-6 flex items-center gap-2" role="group" aria-label="Career view">
+      <div className="mb-6 flex items-center gap-2" role="group" aria-label={locale === "tr" ? "Kariyer görünümü" : "Career view"}>
         <button type="button" onClick={() => setMode("graph")} className={chip(mode === "graph")} aria-pressed={mode === "graph"}>
           <FiGitBranch size={12} aria-hidden="true" />
           {graphLabel}
@@ -34,9 +35,9 @@ export function CareerViews({ graphLabel, logLabel }: Readonly<{ graphLabel: str
         </button>
       </div>
       {mode === "graph" ? (
-        <CareerMap lanes={careerGraph.lanes} nodes={careerGraph.nodes} links={careerGraph.links} />
+        <CareerMap locale={locale} lanes={careerGraph.lanes} nodes={careerGraph.nodes} links={careerGraph.links} axis={careerGraph.axis} />
       ) : (
-        <CareerLog lanes={careerGraph.lanes} nodes={careerGraph.nodes} />
+        <CareerLog locale={locale} lanes={careerGraph.lanes} nodes={careerGraph.nodes} />
       )}
     </div>
   );

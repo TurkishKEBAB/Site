@@ -23,12 +23,25 @@
     --border-1: #e5e7eb;
     --surface-card: rgba(255, 255, 255, 0.8);
     --surface-card-solid: #ffffff;
+    /* Opaque twin of .panel — for surfaces that must occlude the ambient
+       background layer (the career graph reads as noise through glass). */
+    --surface-panel-solid: #ffffff;
     --bg-page: #f4f4f8;
     --gold-400: #f0b400;
     --status-green: #10b981;
     --syn-keyword: #7c3aed;
     --syn-fn: #2563eb;
     --syn-err: #dc2626;
+
+    /* Career-map branch palette. Six hues that stay distinguishable from each
+       other and legible as 9px labels on both surfaces — the syntax tokens
+       above are tuned for code on dark and wash out on white. */
+    --lane-origin: #7c3aed;
+    --lane-main: #007aa3;
+    --lane-projects: #96660a;
+    --lane-industry: #2563eb;
+    --lane-community: #047857;
+    --lane-signals: #c2410c;
     --primary-300: #83e8ff;
     --primary-400: #00d4ff;
     --primary-700: #007aa3;
@@ -59,11 +72,19 @@
     --border-1: #1e1e3e;
     --surface-card: rgba(18, 18, 42, 0.6);
     --surface-card-solid: #0a0a14;
+    --surface-panel-solid: #0d0d20;
     --bg-page: #06060e;
     --status-green: #34d399;
     --syn-keyword: #c792ea;
     --syn-fn: #82aaff;
     --syn-err: #ff9a9a;
+
+    --lane-origin: #c792ea;
+    --lane-main: #00d4ff;
+    --lane-projects: #f0b400;
+    --lane-industry: #82aaff;
+    --lane-community: #34d399;
+    --lane-signals: #f78c6c;
   }
 
   html {
@@ -508,4 +529,191 @@
 
 @media (prefers-reduced-motion: reduce) {
   .nx-index-row:hover { padding-left: 8px !important; }
+}
+
+/* ══════════════════════════════════════════════════════════════
+   Career map · git graph
+   Topology first: the plot carries dots and branch lines only.
+   Dates, titles and prose live in the read-out below it, so no
+   two labels can ever collide inside the canvas.
+   ══════════════════════════════════════════════════════════════ */
+.cm-surface {
+  background: var(--surface-panel-solid);
+  border: 1px solid var(--border-1);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+/* A permanently visible slim scrollbar is the affordance that tells narrow
+   screens the plot continues past the right edge. */
+.cm-scroll {
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-1) transparent;
+}
+.cm-scroll::-webkit-scrollbar { height: 8px; }
+.cm-scroll::-webkit-scrollbar-track { background: transparent; }
+.cm-scroll::-webkit-scrollbar-thumb {
+  background: var(--border-1);
+  border-radius: 4px;
+}
+
+/* Branch names stay pinned while the plot scrolls sideways. */
+.cm-rail {
+  position: sticky;
+  left: 0;
+  z-index: 3;
+  background: var(--surface-panel-solid);
+  border-right: 1px solid var(--border-1);
+}
+
+.cm-branch {
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  letter-spacing: 0.06em;
+}
+
+/* Secondary text in the map carries --text-muted, not --text-faint: at 9–10px
+   the faint tier sits at 2.9:1 and fails WCAG AA. Size, case and tracking do
+   the de-emphasis instead of colour. */
+.cm-role {
+  display: block;
+  margin-top: 2px;
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.cm-node {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  border: 0;
+  border-radius: 9999px;
+  background: none;
+  transform: translate(-50%, -50%);
+  cursor: pointer;
+  z-index: 2;
+}
+.cm-node:focus-visible {
+  outline: 2px solid var(--accent-text);
+  outline-offset: 0;
+}
+
+.cm-dot {
+  width: 12px;
+  height: 12px;
+  box-sizing: border-box;
+  border: 2px solid currentColor;
+  border-radius: 9999px;
+  background: var(--surface-panel-solid);
+  transition:
+    transform 180ms var(--ease-nx),
+    background-color 180ms var(--ease-nx),
+    box-shadow 180ms var(--ease-nx);
+}
+.cm-node:hover .cm-dot { transform: scale(1.3); }
+.cm-node[aria-pressed="true"] .cm-dot {
+  background: currentColor;
+  box-shadow: 0 0 14px currentColor;
+}
+
+.cm-dot--head {
+  width: 14px;
+  height: 14px;
+  border-radius: 2px;
+  transform: rotate(45deg);
+}
+.cm-node:hover .cm-dot--head { transform: rotate(45deg) scale(1.25); }
+.cm-node[aria-pressed="true"] .cm-dot--head { transform: rotate(45deg); }
+
+/* Soft halo, drawn only for the current commit. */
+.cm-ring {
+  position: absolute;
+  width: 26px;
+  height: 26px;
+  border: 1px solid currentColor;
+  border-radius: 9999px;
+  opacity: 0;
+  transform: scale(0.55);
+  transition:
+    opacity 200ms var(--ease-nx),
+    transform 200ms var(--ease-nx);
+}
+.cm-node[aria-pressed="true"] .cm-ring {
+  opacity: 0.4;
+  transform: scale(1);
+}
+
+/* Ties the current commit down to its year on the axis. */
+.cm-guide {
+  position: absolute;
+  width: 1px;
+  background: currentColor;
+  opacity: 0.22;
+  pointer-events: none;
+}
+
+/* One label at a time, and only while pointing at a commit. */
+.cm-chip {
+  position: absolute;
+  z-index: 4;
+  max-width: 244px;
+  padding: 6px 9px;
+  border: 1px solid var(--border-1);
+  border-left: 2px solid currentColor;
+  border-radius: 3px;
+  background: var(--surface-panel-solid);
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.16);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  line-height: 1.5;
+  color: var(--text-1);
+  pointer-events: none;
+}
+.cm-chip time {
+  display: block;
+  color: var(--text-muted);
+}
+
+.dark .cm-chip { box-shadow: 0 10px 28px rgba(0, 0, 0, 0.5); }
+
+.cm-axis-label {
+  position: absolute;
+  font-family: var(--font-mono);
+  font-size: 9.5px;
+  letter-spacing: 0.16em;
+  color: var(--text-muted);
+  transform: translateX(-50%);
+  white-space: nowrap;
+}
+
+.cm-step {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border: 1px solid var(--border-1);
+  border-radius: 3px;
+  background: transparent;
+  font-family: var(--font-mono);
+  font-size: 14px;
+  color: var(--text-muted);
+  transition: border-color 160ms var(--ease-nx), color 160ms var(--ease-nx);
+}
+.cm-step:not(:disabled):hover {
+  border-color: var(--accent-text);
+  color: var(--accent-text);
+}
+.cm-step:disabled {
+  color: var(--text-faint);
+  opacity: 0.4;
 }

@@ -88,19 +88,27 @@ describe("public route SSR", () => {
     expect(html).toContain("Command center");
     expect(html).toContain("Featured systems");
     expect(html).toContain(homeContent[locale].secondaryCta);
+    expect(html).not.toMatch(/adalab/i);
     expect(html).not.toContain('aria-label="Skip intro"');
     expect(html).not.toContain("Loading");
   });
 
-  it("renders the about route with scannable highlight content", () => {
+  it("renders the about route as a complete GitLens history", () => {
     const locale = "en";
     const html = renderToStaticMarkup(<About locale={locale} />);
 
     expect(html).toContain(aboutContent[locale].pageSubtitle);
-    expect(html).toContain("Current signal");
     expect(html).toContain("Career map");
     expect(html).toContain("Tech radar");
-    expect(html).toContain("Delivery with scale");
+    expect(html).toContain("Professional summary");
+    expect(html).toContain("FRC Houston World Championship finalist");
+    expect(html).toContain("IşıkSchedule Platform");
+    expect(html).toContain("NETAŞ");
+    expect(html).not.toContain("Education");
+    expect(html).not.toContain("Current signal");
+    expect(html).not.toContain("Recent proof points");
+    expect(html).not.toContain("Delivery with scale");
+    expect(html).not.toMatch(/adalab/i);
     expect(html).toContain("Managed skill");
     expect(html).not.toContain("No experience found");
   });

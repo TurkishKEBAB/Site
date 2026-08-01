@@ -145,7 +145,7 @@ INSERT INTO experiences (title, organization, location, experience_type, start_d
 'education', 
 '2023-09-01', 
 TRUE,
-'Member of Işık IEEE Student Branch - Project Coordinator & Vice President. Student Assistant in CSE Department for OOP. AdaLab assistant at The Academic Data Analytics Laboratory.',
+'Member of Işık IEEE Student Branch - Project Coordinator & Vice President. Student Assistant in CSE Department for OOP.',
 1),
 
 ('Software & Electronics Department', 
