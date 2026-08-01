@@ -64,21 +64,23 @@ describe("About live skills", () => {
     expect(screen.getAllByText("Admin-created skill").length).toBeGreaterThanOrEqual(2);
   });
 
-  it("renders the curated CV dossier in both locales without AdaLab", () => {
+  it("renders the GitLens-first About surface in both locales without AdaLab", () => {
     vi.mocked(useSkillsQuery).mockReturnValue(queryState() as never);
 
     const { rerender } = render(<About locale="en" />);
 
     expect(screen.getByRole("heading", { name: /professional summary/i })).toBeInTheDocument();
-    expect(screen.getAllByText(/NETA/).length).toBeGreaterThan(0);
-    expect(screen.getByText(/I[sş]ıkSchedule Platform/i)).toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: /certifications/i })).toBeInTheDocument();
+    expect(screen.getByTestId("career-views")).toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: /^education$/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: /current signal/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: /what's behind the numbers/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: /delivery with scale/i })).not.toBeInTheDocument();
     expect(screen.queryByText(/adalab/i)).not.toBeInTheDocument();
 
     rerender(<About locale="tr" />);
 
-    expect(screen.getByRole("heading", { name: /eğitim/i })).toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: /sertifikalar/i })).toBeInTheDocument();
+    expect(screen.getByTestId("career-views")).toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: /^eğitim$/i })).not.toBeInTheDocument();
     expect(screen.queryByText(/adalab/i)).not.toBeInTheDocument();
   });
 
