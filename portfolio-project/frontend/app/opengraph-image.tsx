@@ -60,7 +60,6 @@ export default function OpenGraphImage() {
             <span>NETAS</span>
             <span>IsikSchedule</span>
             <span>IEEE</span>
-            <span>AdaLab</span>
           </div>
         </div>
       </div>

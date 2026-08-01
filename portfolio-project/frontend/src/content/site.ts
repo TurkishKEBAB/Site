@@ -244,17 +244,17 @@ const homeDefinition = {
       ),
     },
     {
-      title: localized("IsikSchedule product maturity", "IsikSchedule ürün olgunluğu"),
+      title: localized("IşıkSchedule product maturity", "IşıkSchedule ürün olgunluğu"),
       body: localized(
         "The desktop and web products are independent implementations: the desktop registry exposes 13 verified solvers, while the web product uses a synchronous exact search over its own SQLite-backed application.",
         "Masaüstü ve web ürünleri bağımsız implementasyonlardır: masaüstü registry'sinde doğrulanmış 13 solver bulunur; web ürünü ise kendi SQLite tabanlı uygulamasında senkron kesin arama kullanır.",
       ),
     },
     {
-      title: localized("Leadership and research throughput", "Liderlik ve araştırma çıktıları"),
+      title: localized("Leadership and community delivery", "Liderlik ve topluluk çıktıları"),
       body: localized(
-        "Coordinate IEEE Isik operations reaching 1,100+ students, support AdaLab research, and stay comfortable moving between delivery, mentoring, and community ownership.",
-        "IEEE Işık tarafında 1.100+ öğrenciye ulaşan operasyonları koordine ediyor, AdaLab araştırmalarına destek oluyor ve teslim, mentorluk ile topluluk sahipliğini birlikte yürütecek esnekliği koruyorum.",
+        "Coordinate IEEE Isik operations reaching 1,100+ students and stay comfortable moving between delivery, mentoring, and community ownership.",
+        "IEEE Işık tarafında 1.100+ öğrenciye ulaşan operasyonları koordine ediyor; teslim, mentorluk ve topluluk sahipliğini birlikte yürütüyorum.",
       ),
     },
   ] satisfies HomeOverviewCard[],
@@ -403,7 +403,7 @@ export const projectRecords: ProjectRecord[] = [
   projectRecord(
     "isikschedule-platform",
     "IsikSchedule Platform",
-    "IsikSchedule Platformu",
+    "IşıkSchedule Platformu",
     "Independent desktop and web scheduling products for Işık University catalogs.",
     "Işık Üniversitesi katalogları için bağımsız masaüstü ve web programlama ürünleri.",
     "The PyQt6 desktop client has a verified 13-solver registry. The separate FastAPI + Next.js web product uses its own synchronous exact solver, SQLite persistence, Excel catalog ingestion, and JWT/admin controls; the repositories do not share a solver package.",
@@ -496,8 +496,8 @@ const aboutDefinition = {
       "Timezone incelemesi: sessiz kalan UTC vs UTC+3 uyumsuzluğunu YAML ve ELK analizi ile kanıtlayıp çözüm yolunu 600+ satır test ile belgeledim.",
     ),
     localized(
-      "IEEE Isik and AdaLab: combine 35+ technical events, 1,100+ student reach, and ongoing AI/data analytics research support.",
-      "IEEE Işık ve AdaLab: 35+ teknik etkinlik, 1.100+ öğrenci erişimi ve süren AI/veri analitiği araştırma desteğini birlikte yürüttüm.",
+      "IEEE Işık leadership: coordinate 35+ technical events reaching 1,100+ students while connecting engineering delivery with community ownership.",
+      "IEEE Işık liderliği: 1.100+ öğrenciye ulaşan 35+ teknik etkinliği koordine ederken mühendislik teslimini topluluk sahipliğiyle birleştiriyorum.",
     ),
     localized(
       "Cross-domain adaptation: moved between enterprise software, architecture project coordination, mentoring, and defense-tech delivery without losing execution quality.",
@@ -702,56 +702,6 @@ export const defaultKeywords = [
   "Platform Engineering",
   "Portfolio",
 ];
-
-export const resumeText = `Yiğit Okur
-Software Engineer | Cloud & DevOps Focus
-Website: https://yigitokur.me
-Email: yigitokur@ieee.org
-Phone: +90 535 573 3873
-Location: Bağcılar, İstanbul, Turkey
-
-SUMMARY
-Third-year Software Engineering student at Isik University seeking a part-time software engineering or Cloud/DevOps role. Contributed to production systems at NETAS on an enterprise Java microservices platform and ships personal products with CI/CD, Docker, PostgreSQL, and SonarQube.
-
-EDUCATION
-- Isik University - B.Sc. Software Engineering (2023-2027 expected)
-- Ergun Oner-Mehmet Oner Anatolian High School (2019-2023)
-
-EXPERIENCE
-- NETAS Telekomunikasyon A.S. - Software Engineering Intern (Jan 2026 - Feb 2026)
-- Arch of Sigma - Project Management Intern, Remote (Nov 2025 - Jan 2026)
-- Isik University CSE Department - Student Assistant (Feb 2024 - Present)
-- AdaLab - Academic Data Analytics Lab - Research Assistant (Dec 2025 - Present)
-
-SELECTED HIGHLIGHTS
-- NETAS: 25 commits and 1,550 lines of code and tests across four Jira tickets on a production Java microservices platform.
-- Timezone case study: traced a silent UTC vs UTC+3 mismatch with YAML and ELK analysis, then documented remediation with 600+ lines of targeted tests.
-- IsikSchedule: built independent desktop and web scheduling products; the desktop registry has 13 verified solvers, while the web product uses synchronous exact search over SQLite.
-- IEEE Isik (Vice President & Project Coordinator): coordinate 35+ technical events reaching 1,100+ students; SIU 2025 organization committee and IEEEXtreme'24 lead organizer.
-
-SELECTED PROJECTS
-- IsikSchedule Platform - PyQt6, FastAPI, Next.js, SQLite, JWT/RBAC
-- Agentic IDE - TypeScript, Electron, Monaco, LLMs, RAG
-- Teknofest Sarkan UAV Defense Platform - source and publication clearance pending
-- Automated Web Crawler - source and benchmark evidence pending
-- Portfolio Platform - FastAPI, Next.js, PostgreSQL, Redis, provider-native Vercel/Railway
-
-KEY STACK
-Java, C#, Spring Boot, Python, FastAPI, TypeScript, Next.js, Docker, Kubernetes, AWS, Azure DevOps, PostgreSQL, Redis, RabbitMQ, Celery, ElasticSearch, SonarQube, GitHub Actions.
-
-CERTIFICATIONS
-- Cloud & DevOps: Linux for Cloud & DevOps Engineers; Master System Design & Software Architecture; Networking Fundamentals (CCNA); DevSecOps.
-- AI & Engineering: A.I. & Machine Learning Bootcamp (Miuul); Data Structures + Algorithms; TechCamp.
-- Language: English C1 (Cambridge University & American Culture Institute); Java Programming (C ve Sistem Programcilari Dernegi).
-
-ACHIEVEMENTS
-- FIRST Robotics Competition (FRC) Houston World Championship Finalist - Team 7840 EMONER (2019).
-- TUBITAK 4009: research in physics, optics, and CRISPR-Cas9 technology.
-
-LINKS
-GitHub: https://github.com/TurkishKEBAB
-LinkedIn: https://www.linkedin.com/in/yigit-okur-050b5b278
-`;
 
 export const getFeaturedProjects = (): ProjectRecord[] =>
   projectRecords.filter((project) => project.featured);

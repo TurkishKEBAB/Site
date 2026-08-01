@@ -64,6 +64,24 @@ describe("About live skills", () => {
     expect(screen.getAllByText("Admin-created skill").length).toBeGreaterThanOrEqual(2);
   });
 
+  it("renders the curated CV dossier in both locales without AdaLab", () => {
+    vi.mocked(useSkillsQuery).mockReturnValue(queryState() as never);
+
+    const { rerender } = render(<About locale="en" />);
+
+    expect(screen.getByRole("heading", { name: /professional summary/i })).toBeInTheDocument();
+    expect(screen.getAllByText(/NETA/).length).toBeGreaterThan(0);
+    expect(screen.getByText(/I[sş]ıkSchedule Platform/i)).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: /certifications/i })).toBeInTheDocument();
+    expect(screen.queryByText(/adalab/i)).not.toBeInTheDocument();
+
+    rerender(<About locale="tr" />);
+
+    expect(screen.getByRole("heading", { name: /eğitim/i })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: /sertifikalar/i })).toBeInTheDocument();
+    expect(screen.queryByText(/adalab/i)).not.toBeInTheDocument();
+  });
+
   it("renders loading, error/retry, and empty states", () => {
     const refetch = vi.fn();
     vi.mocked(useSkillsQuery).mockReturnValue(

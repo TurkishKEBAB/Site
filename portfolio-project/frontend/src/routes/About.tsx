@@ -3,6 +3,7 @@
 import AnimatedSection from "@/components/AnimatedSection";
 import CapabilityMatrix, { type CapabilityGroup } from "@/components/nexus/CapabilityMatrix";
 import { CareerViews } from "@/components/nexus/CareerViews";
+import CvDossier from "@/components/nexus/CvDossier";
 import NxSectionHead from "@/components/nexus/NxSectionHead";
 import ScrambleHeading from "@/components/nexus/ScrambleHeading";
 import TechRadar from "@/components/nexus/TechRadar";
@@ -20,15 +21,7 @@ const nowCards = [
     title: { en: "Graduation thesis", tr: "Bitirme tezi" },
     body: {
       en: "Agentic IDE on Electron + Monaco — observe / plan / approve / apply loops.",
-      tr: "Electron + Monaco uzerinde agentic IDE — gozlemle / planla / onayla / uygula dongusu.",
-    },
-  },
-  {
-    tag: { en: "RESEARCH", tr: "ARASTIRMA" },
-    title: { en: "AdaLab · Data Analytics", tr: "AdaLab · Veri Analitigi" },
-    body: {
-      en: "Research assistant supporting AI & data-analytics work.",
-      tr: "AI ve veri-analitigi calismalarini destekleyen arastirma asistani.",
+      tr: "Electron + Monaco üzerinde agentic IDE — gözlemle / planla / onayla / uygula döngüsü.",
     },
   },
   {
@@ -36,7 +29,7 @@ const nowCards = [
     title: { en: "Ex-NETAS intern", tr: "Ex-NETAS stajyer" },
     body: {
       en: "Shipped production code across four Jira tickets on a Java microservices platform.",
-      tr: "Java mikroservis platformunda dort Jira ticket boyunca production kod teslim ettim.",
+      tr: "Java mikroservis platformunda dört Jira ticket boyunca production kod teslim ettim.",
     },
   },
   {
@@ -86,10 +79,12 @@ export default function About({ locale }: AboutPageProps) {
         </div>
       </section>
 
+      <CvDossier locale={locale} />
+
       {/* 02 — now */}
       <section className="mt-20">
-        <NxSectionHead index="02" label={tr ? "Simdi" : "Now"} title={tr ? "Guncel sinyal" : "Current signal"} />
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <NxSectionHead index="03" label={tr ? "Şimdi" : "Now"} title={tr ? "Güncel sinyal" : "Current signal"} />
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {nowCards.map((card, index) => (
             <AnimatedSection key={card.title.en} delay={index * 0.04}>
               <div className="panel-hover h-full p-5">
@@ -112,9 +107,9 @@ export default function About({ locale }: AboutPageProps) {
       {/* 03 — proof points */}
       <section className="mt-20">
         <NxSectionHead
-          index="03"
-          label={tr ? "Son donem kanitlar" : "Recent proof points"}
-          title={tr ? "Sayilarin ardindaki" : "What's behind the numbers"}
+          index="04"
+          label={tr ? "Son dönem kanıtlar" : "Recent proof points"}
+          title={tr ? "Sayıların ardındaki" : "What's behind the numbers"}
         />
         <div className="grid gap-4 md:grid-cols-2">
           {text.highlights.map((highlight, index) => (
@@ -130,34 +125,34 @@ export default function About({ locale }: AboutPageProps) {
       {/* 04 — career map */}
       <section className="mt-20">
         <NxSectionHead
-          index="04"
-          label={tr ? "Yon" : "Trajectory"}
-          title={tr ? "Kariyer haritasi" : "Career map"}
+          index="05"
+          label={tr ? "Yön" : "Trajectory"}
+          title={tr ? "Kariyer haritası" : "Career map"}
           subtitle={
             tr
-              ? "Dallanan bir git grafigi olarak kariyer — hikayesini okumak icin bir dugume tikla."
+              ? "Dallanan bir git grafiği olarak kariyer — hikayesini okumak için bir düğüme tıkla."
               : "Career as a branching git graph — click a node to read its story."
           }
         />
-        <CareerViews graphLabel={tr ? "grafik" : "graph"} logLabel={tr ? "kayit" : "log"} />
+        <CareerViews graphLabel={tr ? "grafik" : "graph"} logLabel={tr ? "kayıt" : "log"} />
       </section>
 
       {/* 05 — capabilities */}
       <section className="mt-20">
         <NxSectionHead
-          index="05"
+          index="06"
           label={tr ? "Yetkinlikler" : "Capabilities"}
           title={tr ? "Teknik sistem" : "Technical system"}
-          subtitle={tr ? "Matrisi odaklamak icin domain'e gore filtrele." : "Filter by domain to focus the matrix."}
+          subtitle={tr ? "Matrisi odaklamak için domain'e göre filtrele." : "Filter by domain to focus the matrix."}
         />
         {isLoading ? (
           <p role="status" className="font-mono text-xs uppercase tracking-[0.16em] text-gray-500 dark:text-dark-400">
-            {tr ? "Yetenekler yukleniyor..." : "Loading skills..."}
+            {tr ? "Yetenekler yükleniyor..." : "Loading skills..."}
           </p>
         ) : isError ? (
           <div role="alert" className="border-t border-gray-200 py-6 dark:border-dark-600">
             <p className="font-mono text-xs uppercase tracking-[0.16em] text-red-500">
-              {tr ? "Yetenekler yuklenemedi." : "Skills could not be loaded."}
+              {tr ? "Yetenekler yüklenemedi." : "Skills could not be loaded."}
             </p>
             <button
               type="button"
@@ -171,7 +166,7 @@ export default function About({ locale }: AboutPageProps) {
           <CapabilityMatrix locale={locale} groups={capabilityGroups} />
         ) : (
           <p className="font-mono text-xs uppercase tracking-[0.16em] text-gray-500 dark:text-dark-400">
-            {tr ? "Henuz yetenek bulunmuyor." : "No skills found yet."}
+            {tr ? "Henüz yetenek bulunmuyor." : "No skills found yet."}
           </p>
         )}
       </section>
@@ -179,10 +174,10 @@ export default function About({ locale }: AboutPageProps) {
       {/* 06 — tech radar */}
       <section className="mt-20">
         <NxSectionHead
-          index="06"
+          index="07"
           label={tr ? "Tech radar" : "Tech radar"}
           title={tr ? "Adopt · dene · degerlendir" : "Adopt · trial · assess"}
-          subtitle={tr ? "Stack'imin bugun durdugu yer — adi icin bir blip'in uzerine gel." : "Where my stack sits today — hover a blip for the name."}
+          subtitle={tr ? "Stack'imin bugün durduğu yer — adı için bir blip'in üzerine gel." : "Where my stack sits today — hover a blip for the name."}
         />
         {hasSkills ? <TechRadar locale={locale} blips={radarBlips} /> : null}
       </section>
@@ -190,7 +185,7 @@ export default function About({ locale }: AboutPageProps) {
       {/* 07 — impact metrics */}
       <section className="mt-20">
         <NxSectionHead
-          index="07"
+          index="08"
           label={tr ? "Etki metrikleri" : "Impact metrics"}
           title={tr ? "Olcekle birlikte teslim" : "Delivery with scale"}
         />

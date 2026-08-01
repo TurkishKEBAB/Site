@@ -88,6 +88,7 @@ describe("public route SSR", () => {
     expect(html).toContain("Command center");
     expect(html).toContain("Featured systems");
     expect(html).toContain(homeContent[locale].secondaryCta);
+    expect(html).not.toMatch(/adalab/i);
     expect(html).not.toContain('aria-label="Skip intro"');
     expect(html).not.toContain("Loading");
   });
@@ -101,6 +102,9 @@ describe("public route SSR", () => {
     expect(html).toContain("Career map");
     expect(html).toContain("Tech radar");
     expect(html).toContain("Delivery with scale");
+    expect(html).toContain("Professional summary");
+    expect(html).toContain("IşıkSchedule Platform");
+    expect(html).not.toMatch(/adalab/i);
     expect(html).toContain("Managed skill");
     expect(html).not.toContain("No experience found");
   });
