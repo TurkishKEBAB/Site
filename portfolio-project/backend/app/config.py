@@ -48,6 +48,13 @@ class Settings(BaseSettings):
     SMTP_PORT: int = 587
     SMTP_USERNAME: Optional[str] = None
     SMTP_PASSWORD: Optional[str] = None
+    # Hosts that block outbound SMTP (Railway among them) let the TCP connect
+    # hang until aiosmtplib's 60s default fires — twice per contact submission,
+    # so the request took ~122s and the browser gave up before it returned.
+    SMTP_TIMEOUT_SECONDS: float = 5.0
+    # Set false where SMTP is known to be unreachable: delivery is skipped
+    # outright and the message is served from the admin inbox instead.
+    EMAIL_ENABLED: bool = True
 
     # Redis
     REDIS_URL: str = "redis://localhost:6379/0"
