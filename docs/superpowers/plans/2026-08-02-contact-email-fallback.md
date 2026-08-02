@@ -153,6 +153,7 @@ git commit -m "fix(backend): persist contact submissions without smtp"
 - Modify: `portfolio-project/backend/app/config.py` (`Settings.SMTP_USERNAME`, `Settings.SMTP_PASSWORD`)
 - Modify: `portfolio-project/backend/app/services/email_service.py` (`EmailService.send_email`)
 - Modify: `portfolio-project/backend/.env.example`
+- Modify: `portfolio-project/backend/README.md`
 - Modify: `portfolio-project/CI_CD_SETUP.md`
 - Test: `portfolio-project/backend/tests/test_email_service.py` (create if absent)
 
@@ -175,7 +176,11 @@ async def test_send_email_skips_smtp_when_credentials_are_missing(monkeypatch):
     monkeypatch.setattr("app.services.email_service.settings.SMTP_USERNAME", None)
     monkeypatch.setattr("app.services.email_service.settings.SMTP_PASSWORD", None)
 
+    calls = 0
+
     async def fail_if_called(*args, **kwargs):
+        nonlocal calls
+        calls += 1
         raise AssertionError("SMTP must not be called without credentials")
 
     monkeypatch.setattr("app.services.email_service.aiosmtplib.send", fail_if_called)
@@ -187,6 +192,7 @@ async def test_send_email_skips_smtp_when_credentials_are_missing(monkeypatch):
     )
 
     assert result is False
+    assert calls == 0
 ```
 
 - [ ] **Step 2: Run the new test and confirm it fails**
