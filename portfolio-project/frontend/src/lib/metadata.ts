@@ -4,8 +4,22 @@ import { defaultKeywords, getLocaleValue, seoContent, siteConfig, type Locale } 
 
 type SeoKey = keyof typeof seoContent;
 
-export const getSiteUrl = (): string =>
-  process.env.NEXT_PUBLIC_SITE_URL || siteConfig.siteUrl;
+// A misconfigured NEXT_PUBLIC_SITE_URL (scheme-less host, stray whitespace)
+// used to reach `new URL(path, base)` untouched and abort the production build
+// with `TypeError: Invalid URL`. Metadata is not worth failing a deploy over, so
+// anything that is not an absolute URL falls back to the canonical domain.
+export const getSiteUrl = (): string => {
+  const configured = process.env.NEXT_PUBLIC_SITE_URL?.trim();
+  if (!configured) {
+    return siteConfig.siteUrl;
+  }
+
+  try {
+    return new URL(configured).origin;
+  } catch {
+    return siteConfig.siteUrl;
+  }
+};
 
 export const buildMetadata = (
   key: SeoKey,
