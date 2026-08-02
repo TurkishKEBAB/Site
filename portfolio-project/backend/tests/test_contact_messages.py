@@ -325,3 +325,104 @@ def test_contact_item_not_found_paths(client, admin_headers, invalid_uuid):
     assert read_missing.status_code == 404
     assert replied_missing.status_code == 404
     assert delete_missing.status_code == 404
+
+
+def test_contact_message_schema_accepts_postgres_inet_objects():
+    """psycopg3 loads `inet` columns as ipaddress objects, not str.
+
+    Production served HTTP 500 on every admin inbox read because Pydantic
+    rejected them; SQLite-backed tests never saw it since the variant only
+    activates on PostgreSQL.
+    """
+    import ipaddress
+    import uuid as uuid_mod
+    from datetime import datetime, timezone
+
+    from app.schemas.contact import ContactMessage
+
+    for raw in (
+        ipaddress.IPv4Address("81.213.5.9"),
+        ipaddress.IPv4Interface("81.213.5.9/32"),
+        ipaddress.IPv6Address("2001:db8::1"),
+        "81.213.5.9",
+        None,
+    ):
+        parsed = ContactMessage.model_validate(
+            {
+                "id": uuid_mod.uuid4(),
+                "name": "Probe",
+                "email": "probe@example.com",
+                "subject": "s",
+                "message": "a message long enough to pass validation",
+                "ip_address": raw,
+                "user_agent": None,
+                "created_at": datetime.now(timezone.utc),
+            }
+        )
+        assert parsed.ip_address is None or isinstance(parsed.ip_address, str)
+
+    assert (
+        ContactMessage.model_validate(
+            {
+                "id": uuid_mod.uuid4(),
+                "name": "Probe",
+                "email": "probe@example.com",
+                "subject": "s",
+                "message": "a message long enough to pass validation",
+                "ip_address": ipaddress.IPv4Interface("81.213.5.9/32"),
+                "user_agent": None,
+                "created_at": datetime.now(timezone.utc),
+            }
+        ).ip_address
+        == "81.213.5.9"
+    )
+
+
+def test_admin_message_list_survives_inet_ip_addresses(
+    client, admin_headers, create_contact_message, monkeypatch
+):
+    import ipaddress
+
+    from app.api.v1 import contact as contact_router
+
+    stored = create_contact_message(name="Inet User")
+    original = contact_router.contact_crud.get_contact_messages
+
+    def _with_inet_ip(db, **kwargs):
+        rows = original(db, **kwargs)
+        for row in rows:
+            row.ip_address = ipaddress.IPv4Address("81.213.5.9")
+        return rows
+
+    monkeypatch.setattr(contact_router.contact_crud, "get_contact_messages", _with_inet_ip)
+
+    response = client.get("/api/v1/contact/", headers=admin_headers)
+
+    assert response.status_code == 200
+    assert response.json()["messages"][0]["ip_address"] == "81.213.5.9"
+    assert stored is not None
+
+
+def test_server_errors_still_carry_cors_headers(client, admin_headers, monkeypatch):
+    """A 500 without CORS headers reaches the browser as net::ERR_FAILED."""
+    from app.api.v1 import contact as contact_router
+    from app.config import settings as app_settings
+
+    def _boom(*args, **kwargs):
+        raise RuntimeError("simulated failure")
+
+    monkeypatch.setattr(contact_router.contact_crud, "get_contact_messages", _boom)
+    origin = app_settings.ALLOWED_ORIGINS[0]
+
+    # The default TestClient re-raises server exceptions instead of returning
+    # the response the browser would actually receive.
+    from starlette.testclient import TestClient
+
+    with TestClient(client.app, raise_server_exceptions=False) as raw_client:
+        response = raw_client.get(
+            "/api/v1/contact/",
+            headers={**admin_headers, "Origin": origin},
+        )
+
+    assert response.status_code == 500
+    assert response.headers["access-control-allow-origin"] == origin
