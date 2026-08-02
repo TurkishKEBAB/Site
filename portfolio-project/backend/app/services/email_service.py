@@ -45,6 +45,12 @@ class EmailService:
         Returns:
             True if email was sent successfully
         """
+        if not self.smtp_username or not self.smtp_password:
+            logger.warning(
+                "SMTP notifications are disabled because credentials are missing"
+            )
+            return False
+
         try:
             # Create message
             message = MIMEMultipart("alternative")

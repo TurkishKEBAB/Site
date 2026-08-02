@@ -46,8 +46,8 @@ class Settings(BaseSettings):
     # Email (SMTP)
     SMTP_HOST: str = "smtp.gmail.com"
     SMTP_PORT: int = 587
-    SMTP_USERNAME: str
-    SMTP_PASSWORD: str
+    SMTP_USERNAME: Optional[str] = None
+    SMTP_PASSWORD: Optional[str] = None
 
     # Redis
     REDIS_URL: str = "redis://localhost:6379/0"

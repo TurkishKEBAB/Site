@@ -33,11 +33,14 @@ def test_submit_contact_message_success(client, monkeypatch):
 
 
 def test_submit_contact_message_email_failure_is_non_blocking(client, monkeypatch):
+    notification_calls = []
+
     class DummyEmailService:
         async def send_contact_form_confirmation(self, **kwargs):
             raise RuntimeError("smtp down")
 
         async def send_admin_notification(self, **kwargs):
+            notification_calls.append(kwargs)
             return True
 
     monkeypatch.setattr("app.api.v1.contact.EmailService", DummyEmailService)
@@ -53,6 +56,8 @@ def test_submit_contact_message_email_failure_is_non_blocking(client, monkeypatc
     )
 
     assert response.status_code == 201
+    assert response.json()["email_sent"] is False
+    assert notification_calls[0]["user_email"] == "jane@example.com"
 
 
 def test_submit_contact_message_allows_blank_subject_and_stores_message(
