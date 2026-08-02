@@ -14,7 +14,7 @@ class ContactMessageBase(BaseModel):
 
     name: str = Field(..., min_length=1, max_length=255)
     email: EmailStr
-    subject: str = Field(..., min_length=1, max_length=500)
+    subject: str = Field(default="", max_length=500)
     message: str = Field(..., min_length=10, max_length=5000)
 
 
@@ -42,6 +42,7 @@ class ContactMessageResponse(BaseModel):
     success: bool
     message: str
     message_id: uuid.UUID
+    email_sent: bool
 
 
 class ContactMessageUpdate(BaseModel):
