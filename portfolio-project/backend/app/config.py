@@ -74,6 +74,11 @@ class Settings(BaseSettings):
     CAPTCHA_SECRET_KEY: Optional[str] = None
     CAPTCHA_VERIFY_URL: Optional[str] = None
     CAPTCHA_REQUIRED_PATHS: str = "/api/v1/contact/"
+    # When the CAPTCHA provider rejects or cannot issue a token (revoked site
+    # key, Cloudflare outage), accept the submission instead of sealing the
+    # contact form shut. The rate limiter stays as the abuse control and every
+    # bypass is logged. Off by default so verification stays strict.
+    CAPTCHA_FAIL_OPEN: bool = False
 
     @property
     def ALLOWED_ORIGINS(self) -> List[str]:
