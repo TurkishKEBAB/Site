@@ -233,6 +233,31 @@ describe("ContactForm", () => {
     });
   });
 
+  it("shows the Turkish copy error when the clipboard is unavailable", async () => {
+    mocks.sendMessage.mockRejectedValueOnce(new Error("backend unavailable"));
+    mocks.writeText.mockRejectedValueOnce(new Error("clipboard unavailable"));
+
+    render(<ContactForm locale="tr" />);
+
+    fireEvent.change(screen.getByLabelText("Ad soyad"), {
+      target: { value: "Grace Hopper" },
+    });
+    fireEvent.change(screen.getByLabelText("E-posta adresi"), {
+      target: { value: "grace@example.com" },
+    });
+    fireEvent.change(screen.getByLabelText("Mesaj"), {
+      target: { value: "Dağıtık sistemler hakkında görüşmek istiyorum." },
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: "Mesajı gönder" }));
+    await screen.findByText(/İletişim API'si şu anda ulaşılamıyor/);
+    fireEvent.click(screen.getByRole("button", { name: "Mesajı kopyala" }));
+
+    await waitFor(() => {
+      expect(mocks.showToast).toHaveBeenCalledWith("error", "Mesaj kopyalanamadı.");
+    });
+  });
+
   it("clears the saved draft after a successful submit", async () => {
     mocks.sendMessage.mockResolvedValueOnce({
       success: true,
