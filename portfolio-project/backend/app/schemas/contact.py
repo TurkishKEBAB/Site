@@ -8,6 +8,8 @@ import uuid
 
 from pydantic import BaseModel, EmailStr, Field, ConfigDict
 
+from app.schemas.common import IpAddressStr
+
 
 class ContactMessageBase(BaseModel):
     """Base contact message schema"""
@@ -29,7 +31,7 @@ class ContactMessage(ContactMessageBase):
     id: uuid.UUID
     is_read: bool = False
     is_replied: bool = False
-    ip_address: Optional[str] = None
+    ip_address: IpAddressStr = None
     user_agent: Optional[str] = Field(None, max_length=512)
     created_at: datetime
 
