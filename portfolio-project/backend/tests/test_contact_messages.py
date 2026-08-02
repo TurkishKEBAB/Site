@@ -227,6 +227,52 @@ def test_submit_contact_requires_captcha_when_enabled(client, monkeypatch):
     assert response.json()["detail"] == "Captcha verification failed"
 
 
+def test_submit_contact_accepts_unverified_captcha_when_fail_open(client, monkeypatch):
+    """A dead/rotated site key must not lock the contact form shut.
+
+    With CAPTCHA_FAIL_OPEN the submission still reaches the admin inbox; the
+    rate limiter remains the abuse control.
+    """
+
+    class DummyEmailService:
+        async def send_contact_form_confirmation(self, **kwargs):
+            return True
+
+        async def send_admin_notification(self, **kwargs):
+            return True
+
+    async def fake_verify_captcha_token(*args, **kwargs):
+        return False
+
+    monkeypatch.setattr("app.api.v1.contact.EmailService", DummyEmailService)
+    monkeypatch.setattr("app.api.v1.contact.settings.CAPTCHA_ENABLED", True)
+    monkeypatch.setattr("app.api.v1.contact.settings.CAPTCHA_FAIL_OPEN", True)
+    monkeypatch.setattr(
+        "app.api.v1.contact.verify_captcha_token", fake_verify_captcha_token
+    )
+
+    response = client.post(
+        "/api/v1/contact/",
+        json={
+            "name": "Fail Open User",
+            "email": "failopen@example.com",
+            "subject": "Fail open",
+            "message": "This message must survive a broken captcha widget",
+        },
+    )
+
+    assert response.status_code == 201
+    payload = response.json()
+    assert payload["success"] is True
+    assert payload["message_id"]
+
+
+def test_submit_contact_fail_open_defaults_to_disabled():
+    from app.config import Settings
+
+    assert Settings.model_fields["CAPTCHA_FAIL_OPEN"].default is False
+
+
 def test_get_messages_requires_admin(client, user_headers):
     unauth = client.get("/api/v1/contact/")
     forbidden = client.get("/api/v1/contact/", headers=user_headers)

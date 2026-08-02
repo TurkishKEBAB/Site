@@ -141,6 +141,54 @@ describe("ContactForm", () => {
     ).toBeInTheDocument();
   });
 
+  it("still submits when the security check cannot load", async () => {
+    // A revoked Turnstile site key makes Cloudflare fire error-callback, which
+    // used to leave the contact form permanently unsubmittable.
+    const turnstile = {
+      render: vi.fn(
+        (_container: HTMLElement, options: { "error-callback": () => boolean }) => {
+          options["error-callback"]();
+          return "widget-id";
+        },
+      ),
+      remove: vi.fn(),
+    };
+    Object.defineProperty(window, "turnstile", {
+      configurable: true,
+      value: turnstile,
+    });
+    mocks.sendMessage.mockResolvedValueOnce({
+      success: true,
+      message: "Delivered",
+      message_id: "msg-1",
+    });
+
+    render(<ContactForm locale="en" captchaSiteKey="site-key" />);
+
+    expect(
+      await screen.findByText(
+        "The security check could not load, so your message goes straight to the admin inbox.",
+      ),
+    ).toBeInTheDocument();
+
+    fireEvent.change(screen.getByLabelText("Full name"), {
+      target: { value: "Grace Hopper" },
+    });
+    fireEvent.change(screen.getByLabelText("Email address"), {
+      target: { value: "grace@example.com" },
+    });
+    fireEvent.change(screen.getByLabelText("Message"), {
+      target: { value: "I am interested in discussing a backend platform opportunity." },
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: "Send message" }));
+
+    await waitFor(() => {
+      expect(mocks.sendMessage).toHaveBeenCalled();
+    });
+    expect(mocks.sendMessage.mock.calls[0][0]).not.toHaveProperty("captcha_token");
+  });
+
   it("keeps the draft and shows fallback actions when submit fails", async () => {
     mocks.sendMessage.mockRejectedValueOnce(new Error("backend unavailable"));
 

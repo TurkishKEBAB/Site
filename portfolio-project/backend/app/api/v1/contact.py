@@ -52,9 +52,15 @@ async def submit_contact_message(
             captcha_token=captcha_token, remote_ip=ip_address
         )
         if not captcha_ok:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Captcha verification failed",
+            if not settings.CAPTCHA_FAIL_OPEN:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="Captcha verification failed",
+                )
+            logger.warning(
+                "Captcha verification failed for {} but CAPTCHA_FAIL_OPEN is "
+                "enabled; accepting submission",
+                ip_address or "unknown ip",
             )
 
     message = contact_crud.create_contact_message(
