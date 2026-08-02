@@ -1542,7 +1542,10 @@ export interface components {
             message: string;
             /** Name */
             name: string;
-            /** Subject */
+            /**
+             * Subject
+             * @default
+             */
             subject: string;
             /** User Agent */
             user_agent?: string | null;
@@ -1563,7 +1566,10 @@ export interface components {
             message: string;
             /** Name */
             name: string;
-            /** Subject */
+            /**
+             * Subject
+             * @default
+             */
             subject: string;
         };
         /**
@@ -1587,6 +1593,8 @@ export interface components {
          * @description Public response after submitting contact form
          */
         ContactMessageResponse: {
+            /** Email Sent */
+            email_sent: boolean;
             /** Message */
             message: string;
             /**

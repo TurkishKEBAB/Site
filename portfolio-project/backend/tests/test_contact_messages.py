@@ -1,5 +1,7 @@
 """Contact endpoint tests."""
 
+import pytest
+
 
 def test_submit_contact_message_success(client, monkeypatch):
     class DummyEmailService:
@@ -24,15 +26,21 @@ def test_submit_contact_message_success(client, monkeypatch):
     assert response.status_code == 201
     payload = response.json()
     assert payload["success"] is True
-    assert payload["message"] == "Your message has been sent successfully."
+    assert payload["message"] == (
+        "Your message has been received and is visible in the admin panel."
+    )
+    assert payload["email_sent"] is True
 
 
 def test_submit_contact_message_email_failure_is_non_blocking(client, monkeypatch):
+    notification_calls = []
+
     class DummyEmailService:
         async def send_contact_form_confirmation(self, **kwargs):
             raise RuntimeError("smtp down")
 
         async def send_admin_notification(self, **kwargs):
+            notification_calls.append(kwargs)
             return True
 
     monkeypatch.setattr("app.api.v1.contact.EmailService", DummyEmailService)
@@ -48,6 +56,114 @@ def test_submit_contact_message_email_failure_is_non_blocking(client, monkeypatc
     )
 
     assert response.status_code == 201
+    assert response.json()["email_sent"] is False
+    assert notification_calls[0]["user_email"] == "jane@example.com"
+
+
+def test_submit_contact_message_admin_notification_failure_is_non_blocking(
+    client, monkeypatch
+):
+    class DummyEmailService:
+        async def send_contact_form_confirmation(self, **kwargs):
+            return True
+
+        async def send_admin_notification(self, **kwargs):
+            raise RuntimeError("smtp admin notification down")
+
+    monkeypatch.setattr("app.api.v1.contact.EmailService", DummyEmailService)
+
+    response = client.post(
+        "/api/v1/contact/",
+        json={
+            "name": "Admin Notification Failure",
+            "email": "admin-failure@example.com",
+            "subject": "Admin notification",
+            "message": "The submission should still be stored safely.",
+        },
+    )
+
+    assert response.status_code == 201
+    assert response.json()["email_sent"] is False
+
+
+def test_submit_contact_message_handles_email_service_constructor_failure(
+    client, monkeypatch
+):
+    class FailingEmailService:
+        def __init__(self):
+            raise RuntimeError("email service unavailable")
+
+    monkeypatch.setattr("app.api.v1.contact.EmailService", FailingEmailService)
+
+    response = client.post(
+        "/api/v1/contact/",
+        json={
+            "name": "Email Service Failure",
+            "email": "service-failure@example.com",
+            "subject": "Service failure",
+            "message": "The submission should remain visible in the inbox.",
+        },
+    )
+
+    assert response.status_code == 201
+    assert response.json()["email_sent"] is False
+
+
+def test_submit_contact_message_allows_blank_subject_and_stores_message(
+    client, admin_headers, monkeypatch
+):
+    class DummyEmailService:
+        async def send_contact_form_confirmation(self, **kwargs):
+            return False
+
+        async def send_admin_notification(self, **kwargs):
+            return False
+
+    monkeypatch.setattr("app.api.v1.contact.EmailService", DummyEmailService)
+    response = client.post(
+        "/api/v1/contact/",
+        json={
+            "name": "Blank Subject",
+            "email": "blank@example.com",
+            "subject": "",
+            "message": "This message must appear in the admin inbox.",
+        },
+    )
+
+    assert response.status_code == 201
+    assert response.json()["email_sent"] is False
+
+    messages = client.get("/api/v1/contact/", headers=admin_headers)
+    assert messages.status_code == 200
+    assert messages.json()["total"] == 1
+    assert messages.json()["messages"][0]["email"] == "blank@example.com"
+    assert messages.json()["messages"][0]["message"] == (
+        "This message must appear in the admin inbox."
+    )
+
+
+def test_submit_contact_message_reports_smtp_success(client, monkeypatch):
+    class DummyEmailService:
+        async def send_contact_form_confirmation(self, **kwargs):
+            return True
+
+        async def send_admin_notification(self, **kwargs):
+            return True
+
+    monkeypatch.setattr("app.api.v1.contact.EmailService", DummyEmailService)
+
+    response = client.post(
+        "/api/v1/contact/",
+        json={
+            "name": "Delivered User",
+            "email": "delivered@example.com",
+            "subject": "Delivery",
+            "message": "Both notification messages should report success.",
+        },
+    )
+
+    assert response.status_code == 201
+    assert response.json()["email_sent"] is True
 
 
 def test_submit_contact_message_validation(client):

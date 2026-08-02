@@ -84,6 +84,8 @@ export default function Admin() {
     skills: adminLanguage === 'tr' ? 'Beceriler' : 'Skills',
     experiences: adminLanguage === 'tr' ? 'Deneyimler' : 'Experiences',
     messages: adminLanguage === 'tr' ? 'Mesajlar' : 'Messages',
+    message: adminLanguage === 'tr' ? 'Mesaj' : 'Message',
+    reply: adminLanguage === 'tr' ? 'Yanıtla' : 'Reply',
     yes: adminLanguage === 'tr' ? 'Evet' : 'Yes',
     no: adminLanguage === 'tr' ? 'Hayır' : 'No',
     unreadSuffix: adminLanguage === 'tr' ? 'okunmamış' : 'unread',

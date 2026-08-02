@@ -2,7 +2,7 @@ import type { AdminCopy, AdminMessage } from "@/components/admin/types";
 import { formatAdminDate } from "@/lib/admin/format";
 
 interface MessagesTabProps {
-  text: Pick<AdminCopy, "incomingMessages" | "delete" | "deleting">;
+  text: Pick<AdminCopy, "incomingMessages" | "message" | "reply" | "delete" | "deleting">;
   messages: AdminMessage[];
   messagesLoading: boolean;
   messageActionId: string | null;
@@ -20,6 +20,13 @@ export function MessagesTab({
   onMarkAsRead,
   onDeleteMessage,
 }: MessagesTabProps) {
+  const buildReplyHref = (message: AdminMessage) => {
+    const replySubject = message.subject ? `Re: ${message.subject}` : "Re: Portfolio contact";
+    const replyBody = `\n\n--- Original message ---\n${message.message}`;
+
+    return `mailto:${message.email}?subject=${encodeURIComponent(replySubject)}&body=${encodeURIComponent(replyBody)}`;
+  };
+
   return (
     <div className="space-y-6">
       <div>
@@ -43,6 +50,9 @@ export function MessagesTab({
                 Konu
               </th>
               <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
+                {text.message}
+              </th>
+              <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
                 Durum
               </th>
               <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
@@ -54,7 +64,7 @@ export function MessagesTab({
           <tbody className="divide-y divide-gray-200 bg-white dark:divide-dark-600 dark:bg-gray-900/20">
             {messagesLoading && (
               <tr>
-                <td colSpan={6} className="px-4 py-6 text-center text-sm text-gray-500 dark:text-gray-400">
+                <td colSpan={7} className="px-4 py-6 text-center text-sm text-gray-500 dark:text-gray-400">
                   Mesajlar yükleniyor...
                 </td>
               </tr>
@@ -62,7 +72,7 @@ export function MessagesTab({
 
             {!messagesLoading && messages.length === 0 && (
               <tr>
-                <td colSpan={6} className="px-4 py-6 text-center text-sm text-gray-500 dark:text-gray-400">
+                <td colSpan={7} className="px-4 py-6 text-center text-sm text-gray-500 dark:text-gray-400">
                   Henüz mesaj bulunmuyor.
                 </td>
               </tr>
@@ -78,6 +88,15 @@ export function MessagesTab({
                 </td>
                 <td className="px-4 py-3 text-sm text-gray-600 dark:text-gray-300">
                   {message.subject || "—"}
+                </td>
+                <td className="px-4 py-3 text-sm text-gray-600 dark:text-gray-300">
+                  <p className="max-w-xl whitespace-pre-wrap break-words">{message.message}</p>
+                  <a
+                    href={buildReplyHref(message)}
+                    className="mt-2 inline-flex text-xs font-semibold text-primary-600 hover:underline dark:text-primary-300"
+                  >
+                    {text.reply}
+                  </a>
                 </td>
                 <td className="px-4 py-3 text-sm">
                   {!message.is_read ? (

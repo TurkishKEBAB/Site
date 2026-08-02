@@ -38,6 +38,8 @@ export interface AdminCopy {
   skills: string;
   experiences: string;
   messages: string;
+  message: string;
+  reply: string;
   yes: string;
   no: string;
   unreadSuffix: string;

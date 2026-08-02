@@ -64,29 +64,47 @@ async def submit_contact_message(
         user_agent=user_agent,
     )
 
+    email_sent = False
     try:
         email_service = EmailService()
         message_preview = message.message[:100]
 
-        await email_service.send_contact_form_confirmation(
-            user_email=message.email,
-            user_name=message.name,
-            message_content=message_preview,
-        )
+        try:
+            confirmation_sent = await email_service.send_contact_form_confirmation(
+                user_email=message.email,
+                user_name=message.name,
+                message_content=message_preview,
+            )
+        except Exception:
+            confirmation_sent = False
+            logger.exception(
+                "Contact confirmation email failed for message {}", message.id
+            )
 
-        await email_service.send_admin_notification(
-            user_name=message.name,
-            user_email=message.email,
-            subject=message.subject,
-            message_content=message.message,
-        )
+        try:
+            admin_notification_sent = await email_service.send_admin_notification(
+                user_name=message.name,
+                user_email=message.email,
+                subject=message.subject,
+                message_content=message.message,
+            )
+        except Exception:
+            admin_notification_sent = False
+            logger.exception(
+                "Contact admin notification failed for message {}", message.id
+            )
+
+        email_sent = confirmation_sent and admin_notification_sent
     except Exception:
-        logger.exception("Email sending failed while processing contact message")
+        logger.exception(
+            "Email service could not process contact message {}", message.id
+        )
 
     return {
         "success": True,
-        "message": "Your message has been sent successfully.",
+        "message": "Your message has been received and is visible in the admin panel.",
         "message_id": message.id,
+        "email_sent": email_sent,
     }
 
 

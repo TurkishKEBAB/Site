@@ -12,6 +12,7 @@ export interface ContactSubmitResponse {
   success: boolean;
   message: string;
   message_id: string;
+  email_sent: boolean;
 }
 
 export interface ContactMessageResponse {

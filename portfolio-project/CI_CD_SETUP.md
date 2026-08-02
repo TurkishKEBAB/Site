@@ -104,12 +104,14 @@ Set these values in Railway production service environment:
 - `SECRET_KEY` (min 32 chars)
 - `FRONTEND_URL`
 - `ADMIN_EMAILS`
-- `SMTP_USERNAME`
-- `SMTP_PASSWORD`
 - `REDIS_URL`
 - `CAPTCHA_ENABLED=true`
 - `CAPTCHA_PROVIDER=turnstile`
 - `CAPTCHA_SECRET_KEY`
+
+SMTP delivery is optional. Set `SMTP_USERNAME` and `SMTP_PASSWORD` when email
+notifications are desired; valid submissions remain available in the admin
+contact inbox without them.
 
 ### Recommended
 

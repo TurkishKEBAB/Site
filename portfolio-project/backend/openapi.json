@@ -883,8 +883,8 @@
             "type": "string"
           },
           "subject": {
+            "default": "",
             "maxLength": 500,
-            "minLength": 1,
             "title": "Subject",
             "type": "string"
           },
@@ -904,7 +904,6 @@
         "required": [
           "name",
           "email",
-          "subject",
           "message",
           "id",
           "created_at"
@@ -945,8 +944,8 @@
             "type": "string"
           },
           "subject": {
+            "default": "",
             "maxLength": 500,
-            "minLength": 1,
             "title": "Subject",
             "type": "string"
           }
@@ -954,7 +953,6 @@
         "required": [
           "name",
           "email",
-          "subject",
           "message"
         ],
         "title": "ContactMessageCreate",
@@ -1000,6 +998,10 @@
       "ContactMessageResponse": {
         "description": "Public response after submitting contact form",
         "properties": {
+          "email_sent": {
+            "title": "Email Sent",
+            "type": "boolean"
+          },
           "message": {
             "title": "Message",
             "type": "string"
@@ -1017,7 +1019,8 @@
         "required": [
           "success",
           "message",
-          "message_id"
+          "message_id",
+          "email_sent"
         ],
         "title": "ContactMessageResponse",
         "type": "object"

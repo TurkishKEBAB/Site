@@ -9,7 +9,7 @@ FastAPI backend for Yiğit Okur's professional portfolio website.
 - ✅ **Project Showcase**: Portfolio projects with technologies and translations
 - ✅ **Skills Management**: Proficiency-based skill tracking
 - ✅ **Experience Timeline**: Education, work, and volunteer activities
-- ✅ **Contact Form**: Email notifications via SMTP
+- ✅ **Contact Form**: Database-backed admin inbox with optional SMTP notifications
 - ✅ **GitHub Integration**: Cached repository data (24h cache)
 - ✅ **Multi-language**: TR, EN, DE, FR support
 - ✅ **File Upload**: Supabase Storage with image optimization
@@ -23,7 +23,7 @@ FastAPI backend for Yiğit Okur's professional portfolio website.
 - **Database**: PostgreSQL 15+ with SQLAlchemy ORM
 - **Cache**: Redis
 - **Storage**: Supabase Storage
-- **Email**: SMTP (Gmail/SendGrid)
+- **Email**: Optional SMTP (Gmail/SendGrid); admin inbox is always available
 - **Authentication**: JWT with bcrypt
 - **Validation**: Pydantic v2
 
@@ -130,7 +130,7 @@ cp .env.example .env
 # Required variables:
 # - DATABASE_URL
 # - SECRET_KEY (generate with: openssl rand -hex 32)
-# - SMTP credentials for email
+# - (Optional) SMTP credentials for email notifications
 # - REDIS_URL
 # - (Optional) SUPABASE_URL and SUPABASE_KEY
 ```
@@ -147,8 +147,8 @@ GITHUB_API_TOKEN=
 
 SMTP_HOST=smtp.gmail.com
 SMTP_PORT=587
-SMTP_USERNAME=yigitokur@ieee.org
-SMTP_PASSWORD=your-app-password
+SMTP_USERNAME=
+SMTP_PASSWORD=
 
 REDIS_URL=redis://localhost:6379/0
 
@@ -252,7 +252,7 @@ GET /api/v1/messages
 Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGc...
 ```
 
-## 📧 Email Configuration
+## 📧 Optional Email Configuration
 
 ### Gmail Setup
 
@@ -264,6 +264,9 @@ Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGc...
 SMTP_USERNAME=yigitokur@ieee.org
 SMTP_PASSWORD=your-16-char-app-password
 ```
+
+SMTP is optional. When it is not configured or temporarily unavailable, valid
+contact submissions remain available in the authenticated admin inbox.
 
 ## 🐳 Docker Deployment
 
@@ -287,8 +290,8 @@ Environment variables to set:
 - `DATABASE_URL`
 - `SECRET_KEY`
 - `REDIS_URL`
-- `SMTP_USERNAME`
-- `SMTP_PASSWORD`
+- `SMTP_USERNAME` (optional)
+- `SMTP_PASSWORD` (optional)
 - `FRONTEND_URL`
 - `ENVIRONMENT=production`
 
