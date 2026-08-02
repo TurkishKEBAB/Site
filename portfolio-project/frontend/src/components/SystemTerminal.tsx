@@ -7,7 +7,7 @@ const UPTIME_EPOCH = Date.parse("2023-09-18T09:00:00+03:00");
 
 const fetchRows: Array<[string, string]> = [
   ["os", "YO.sys v2026 LTS"],
-  ["host", "Isik University · SE '27"],
+  ["host", "Işık University · SE '27"],
   ["kernel", "6.1-enterprise-lts"],
   ["shell", "java / spring / aws"],
   ["focus", "Cloud & DevOps"],
@@ -24,7 +24,7 @@ const JAVA_HTML = `<span class="j-kw">public class</span> <span class="j-type">P
             {<span class="j-str">"name"</span>,   <span class="j-str">"Yiğit Okur"</span>},
             {<span class="j-str">"role"</span>,   <span class="j-str">"Software Engineer"</span>},
             {<span class="j-str">"focus"</span>,  <span class="j-str">"Cloud &amp; DevOps"</span>},
-            {<span class="j-str">"edu"</span>,    <span class="j-str">"Isik University · SE '27"</span>},
+            {<span class="j-str">"edu"</span>,    <span class="j-str">"Işık University · SE '27"</span>},
             {<span class="j-str">"status"</span>, <span class="j-str">"[ available ]"</span>},
         };
         <span class="j-type">System</span>.out.<span class="j-fn">println</span>(<span class="j-str">"&gt; init system.profile"</span>);
@@ -41,7 +41,7 @@ const profileOutput = [
   '<span class="c-key">name</span>      <span class="c-val">Yiğit Okur</span>',
   '<span class="c-key">role</span>      <span class="c-val">Software Engineer</span>',
   '<span class="c-key">focus</span>     <span class="c-val">Cloud &amp; DevOps</span>',
-  '<span class="c-key">edu</span>       <span class="c-val">Isik University · SE ’27</span>',
+  '<span class="c-key">edu</span>       <span class="c-val">Işık University · SE ’27</span>',
   '<span class="c-key">status</span>    <span class="c-ok">[ available ]</span>',
   '<span class="c-dim">// part-time SWE &amp; cloud roles</span>',
   '<span class="c-prompt">&gt;</span> <span class="c-ok">profile loaded</span>',

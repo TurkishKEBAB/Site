@@ -74,11 +74,11 @@ export default function Admin() {
   const adminLanguage: AdminLanguage = language === 'tr' ? 'tr' : 'en';
   const dateLocale = adminLanguage === 'tr' ? 'tr-TR' : 'en-US';
   const text: AdminCopy = {
-    loading: adminLanguage === 'tr' ? 'Yukleniyor...' : 'Loading...',
-    adminPanel: adminLanguage === 'tr' ? 'Admin Panel' : 'Admin Panel',
-    welcome: adminLanguage === 'tr' ? 'Hos geldin' : 'Welcome',
-    logout: adminLanguage === 'tr' ? 'Cikis Yap' : 'Log Out',
-    dashboard: adminLanguage === 'tr' ? 'Dashboard' : 'Dashboard',
+    loading: adminLanguage === 'tr' ? 'Yükleniyor...' : 'Loading...',
+    adminPanel: adminLanguage === 'tr' ? 'Yönetim Paneli' : 'Admin Panel',
+    welcome: adminLanguage === 'tr' ? 'Hoş geldin' : 'Welcome',
+    logout: adminLanguage === 'tr' ? 'Çıkış Yap' : 'Log Out',
+    dashboard: adminLanguage === 'tr' ? 'Kontrol Paneli' : 'Dashboard',
     projects: adminLanguage === 'tr' ? 'Projeler' : 'Projects',
     technologies: adminLanguage === 'tr' ? 'Teknolojiler' : 'Technologies',
     skills: adminLanguage === 'tr' ? 'Beceriler' : 'Skills',
@@ -87,35 +87,35 @@ export default function Admin() {
     message: adminLanguage === 'tr' ? 'Mesaj' : 'Message',
     reply: adminLanguage === 'tr' ? 'Yanıtla' : 'Reply',
     yes: adminLanguage === 'tr' ? 'Evet' : 'Yes',
-    no: adminLanguage === 'tr' ? 'Hayir' : 'No',
-    unreadSuffix: adminLanguage === 'tr' ? 'okunmamis' : 'unread',
-    allViewed: adminLanguage === 'tr' ? 'Tumu goruntulendi' : 'All viewed',
-    welcomeUser: adminLanguage === 'tr' ? 'Hos geldin' : 'Welcome',
-    projectManagement: adminLanguage === 'tr' ? 'Projeler Yonetimi' : 'Projects Management',
-    technologyManagement: adminLanguage === 'tr' ? 'Teknoloji Katalogu' : 'Technology Catalog',
-    skillManagement: adminLanguage === 'tr' ? 'Beceriler Yonetimi' : 'Skills Management',
-    experienceManagement: adminLanguage === 'tr' ? 'Deneyimler Yonetimi' : 'Experiences Management',
+    no: adminLanguage === 'tr' ? 'Hayır' : 'No',
+    unreadSuffix: adminLanguage === 'tr' ? 'okunmamış' : 'unread',
+    allViewed: adminLanguage === 'tr' ? 'Tümü görüntülendi' : 'All viewed',
+    welcomeUser: adminLanguage === 'tr' ? 'Hoş geldin' : 'Welcome',
+    projectManagement: adminLanguage === 'tr' ? 'Proje Yönetimi' : 'Project Management',
+    technologyManagement: adminLanguage === 'tr' ? 'Teknoloji Kataloğu' : 'Technology Catalog',
+    skillManagement: adminLanguage === 'tr' ? 'Beceri Yönetimi' : 'Skill Management',
+    experienceManagement: adminLanguage === 'tr' ? 'Deneyim Yönetimi' : 'Experience Management',
     incomingMessages: adminLanguage === 'tr' ? 'Gelen Mesajlar' : 'Incoming Messages',
     addProject: adminLanguage === 'tr' ? '+ Yeni Proje Ekle' : '+ Add New Project',
     addTechnology: adminLanguage === 'tr' ? '+ Yeni Teknoloji Ekle' : '+ Add Technology',
     addSkill: adminLanguage === 'tr' ? '+ Yeni Beceri Ekle' : '+ Add New Skill',
     addExperience: adminLanguage === 'tr' ? '+ Yeni Deneyim Ekle' : '+ Add New Experience',
-    edit: adminLanguage === 'tr' ? 'Duzenle' : 'Edit',
+    edit: adminLanguage === 'tr' ? 'Düzenle' : 'Edit',
     delete: adminLanguage === 'tr' ? 'Sil' : 'Delete',
     deleting: adminLanguage === 'tr' ? 'Siliniyor...' : 'Deleting...',
-    translate: adminLanguage === 'tr' ? 'Ceviriler' : 'Translations',
+    translate: adminLanguage === 'tr' ? 'Çeviriler' : 'Translations',
     images: adminLanguage === 'tr' ? 'Resimler' : 'Images',
     dossier: adminLanguage === 'tr' ? 'Dosya' : 'Dossier',
-    blogManagement: adminLanguage === 'tr' ? 'Blog Yonetimi' : 'Blog Management',
-    addBlogPost: adminLanguage === 'tr' ? '+ Yeni Yazi Ekle' : '+ Add Blog Post',
-    blogTranslations: adminLanguage === 'tr' ? 'Ceviriler' : 'Translations',
-    published: adminLanguage === 'tr' ? 'Yayinda' : 'Published',
+    blogManagement: adminLanguage === 'tr' ? 'Blog Yönetimi' : 'Blog Management',
+    addBlogPost: adminLanguage === 'tr' ? '+ Yeni Yazı Ekle' : '+ Add Blog Post',
+    blogTranslations: adminLanguage === 'tr' ? 'Çeviriler' : 'Translations',
+    published: adminLanguage === 'tr' ? 'Yayında' : 'Published',
     draft: adminLanguage === 'tr' ? 'Taslak' : 'Draft',
-    technologyLoading: adminLanguage === 'tr' ? 'Teknolojiler yukleniyor...' : 'Loading technologies...',
-    noTechnologies: adminLanguage === 'tr' ? 'Henuz teknoloji bulunmuyor.' : 'No technologies found.',
+    technologyLoading: adminLanguage === 'tr' ? 'Teknolojiler yükleniyor...' : 'Loading technologies...',
+    noTechnologies: adminLanguage === 'tr' ? 'Henüz teknoloji bulunmuyor.' : 'No technologies found.',
     sessionExpired:
       adminLanguage === 'tr'
-        ? 'Oturum sureniz doldu. Lutfen tekrar giris yapin.'
+          ? 'Oturum süreniz doldu. Lütfen tekrar giriş yapın.'
         : 'Your session has expired. Please sign in again.',
   };
 
@@ -345,7 +345,7 @@ export default function Admin() {
     } catch (error) {
       handleApiError(
         error,
-        adminLanguage === 'tr' ? 'Blog yazilari yuklenemedi.' : 'Failed to load blog posts.',
+        adminLanguage === 'tr' ? 'Blog yazıları yüklenemedi.' : 'Failed to load blog posts.',
       );
     } finally {
       setBlogPostsLoading(false);
@@ -358,7 +358,7 @@ export default function Admin() {
       const techs = await technologyService.getAll();
       setTechnologies(techs);
     } catch (error) {
-      handleApiError(error, adminLanguage === 'tr' ? 'Teknolojiler yuklenemedi.' : 'Failed to load technologies.');
+      handleApiError(error, adminLanguage === 'tr' ? 'Teknolojiler yüklenemedi.' : 'Failed to load technologies.');
     } finally {
       setLoadingTechnologies(false);
     }
@@ -606,10 +606,10 @@ export default function Admin() {
           ...payload,
           slug: normalizeOptional(values.slug) || undefined,
         });
-        showToast('success', adminLanguage === 'tr' ? 'Yazi olusturuldu.' : 'Blog post created.');
+        showToast('success', adminLanguage === 'tr' ? 'Yazı oluşturuldu.' : 'Blog post created.');
       } else if (activeBlogPost) {
         await blogService.updatePost(activeBlogPost.id, payload);
-        showToast('success', adminLanguage === 'tr' ? 'Yazi guncellendi.' : 'Blog post updated.');
+        showToast('success', adminLanguage === 'tr' ? 'Yazı güncellendi.' : 'Blog post updated.');
       }
 
       closeBlogModal(true);
@@ -617,7 +617,7 @@ export default function Admin() {
     } catch (error) {
       handleApiError(
         error,
-        adminLanguage === 'tr' ? 'Yazi kaydedilemedi.' : 'Blog post could not be saved.',
+        adminLanguage === 'tr' ? 'Yazı kaydedilemedi.' : 'Blog post could not be saved.',
       );
     } finally {
       setBlogFormSubmitting(false);
@@ -628,7 +628,7 @@ export default function Admin() {
     const post = blogPosts.find((item) => item.id === postId);
     const confirmed = window.confirm(
       adminLanguage === 'tr'
-        ? 'Bu blog yazisini silmek istediginizden emin misiniz?'
+        ? 'Bu blog yazısını silmek istediğinizden emin misiniz?'
         : `Are you sure you want to delete "${post?.title || 'this post'}"?`,
     );
     if (!confirmed) {
@@ -638,12 +638,12 @@ export default function Admin() {
     setBlogActionId(postId);
     try {
       await blogService.deletePost(postId);
-      showToast('success', adminLanguage === 'tr' ? 'Yazi silindi.' : 'Blog post deleted.');
+      showToast('success', adminLanguage === 'tr' ? 'Yazı silindi.' : 'Blog post deleted.');
       await loadBlogPosts();
     } catch (error) {
       handleApiError(
         error,
-        adminLanguage === 'tr' ? 'Yazi silinemedi.' : 'Blog post could not be deleted.',
+        adminLanguage === 'tr' ? 'Yazı silinemedi.' : 'Blog post could not be deleted.',
       );
     } finally {
       setBlogActionId(null);
@@ -664,7 +664,7 @@ export default function Admin() {
     } catch (error) {
       handleApiError(
         error,
-        adminLanguage === 'tr' ? 'Ceviriler yuklenemedi.' : 'Translations could not be loaded.',
+        adminLanguage === 'tr' ? 'Çeviriler yüklenemedi.' : 'Translations could not be loaded.',
       );
     } finally {
       setBlogTranslationsLoading(false);
@@ -699,14 +699,14 @@ export default function Admin() {
       showToast(
         'success',
         adminLanguage === 'tr'
-          ? `${languageCode.toUpperCase()} cevirisi kaydedildi.`
+          ? `${languageCode.toUpperCase()} çevirisi kaydedildi.`
           : `${languageCode.toUpperCase()} translation saved.`,
       );
       await loadBlogTranslations(currentBlogPostForTranslations);
     } catch (error) {
       handleApiError(
         error,
-        adminLanguage === 'tr' ? 'Ceviri kaydedilemedi.' : 'Translation could not be saved.',
+        adminLanguage === 'tr' ? 'Çeviri kaydedilemedi.' : 'Translation could not be saved.',
       );
     }
   };
@@ -792,7 +792,7 @@ export default function Admin() {
       if (status !== 404) {
         handleApiError(
           error,
-          adminLanguage === 'tr' ? 'Proje dosyasi yuklenemedi.' : 'Project dossier could not be loaded.',
+          adminLanguage === 'tr' ? 'Proje dosyası yüklenemedi.' : 'Project dossier could not be loaded.',
         );
       }
     } finally {
@@ -814,13 +814,13 @@ export default function Admin() {
       setDossierFormValues(formValuesFromDossier(dossier));
       showToast(
         'success',
-        adminLanguage === 'tr' ? 'Proje dosyasi kaydedildi.' : 'Project dossier saved.',
+        adminLanguage === 'tr' ? 'Proje dosyası kaydedildi.' : 'Project dossier saved.',
       );
       closeDossierEditor(true);
     } catch (error) {
       handleApiError(
         error,
-        adminLanguage === 'tr' ? 'Proje dosyasi kaydedilemedi.' : 'Project dossier could not be saved.',
+        adminLanguage === 'tr' ? 'Proje dosyası kaydedilemedi.' : 'Project dossier could not be saved.',
       );
     } finally {
       setDossierSaving(false);
@@ -1048,10 +1048,10 @@ export default function Admin() {
 
       if (technologyFormMode === 'create') {
         await technologyService.create(payload);
-        showToast('success', adminLanguage === 'tr' ? 'Teknoloji olusturuldu.' : 'Technology created.');
+        showToast('success', adminLanguage === 'tr' ? 'Teknoloji oluşturuldu.' : 'Technology created.');
       } else if (activeTechnology) {
         await technologyService.update(activeTechnology.id, payload);
-        showToast('success', adminLanguage === 'tr' ? 'Teknoloji guncellendi.' : 'Technology updated.');
+        showToast('success', adminLanguage === 'tr' ? 'Teknoloji güncellendi.' : 'Technology updated.');
       }
 
       closeTechnologyModal();
@@ -1066,7 +1066,7 @@ export default function Admin() {
   const handleDeleteTechnology = async (technologyId: string) => {
     const confirmed = window.confirm(
       adminLanguage === 'tr'
-        ? 'Bu teknolojiyi silmek istediginizden emin misiniz?'
+        ? 'Bu teknolojiyi silmek istediğinizden emin misiniz?'
         : 'Are you sure you want to delete this technology?',
     );
     if (!confirmed) {
@@ -1564,7 +1564,7 @@ export default function Admin() {
             </div>
             {dossierLoading ? (
               <p className="py-12 text-center font-mono text-xs uppercase tracking-wide text-gray-500 dark:text-dark-400">
-                {adminLanguage === 'tr' ? 'Proje dosyasi yukleniyor...' : 'Loading project dossier...'}
+                {adminLanguage === 'tr' ? 'Proje dosyası yükleniyor...' : 'Loading project dossier...'}
               </p>
             ) : (
               <DossierEditor
@@ -1625,10 +1625,10 @@ export default function Admin() {
                 <h3 className="mt-2 font-display text-2xl font-bold text-gray-900 dark:text-dark-50">
                   {blogFormMode === 'create'
                     ? adminLanguage === 'tr'
-                      ? 'Yeni yazi'
+                      ? 'Yeni yazı'
                       : 'New blog post'
                     : adminLanguage === 'tr'
-                      ? 'Yaziyi duzenle'
+                      ? 'Yazıyı düzenle'
                       : 'Edit blog post'}
                 </h3>
               </div>
@@ -1679,7 +1679,7 @@ export default function Admin() {
             </div>
             {blogTranslationsLoading ? (
               <p className="py-8 text-center font-mono text-xs uppercase tracking-wide text-gray-500 dark:text-dark-400">
-                {adminLanguage === 'tr' ? 'Ceviriler yukleniyor...' : 'Loading translations...'}
+                {adminLanguage === 'tr' ? 'Çeviriler yükleniyor...' : 'Loading translations...'}
               </p>
             ) : (
               <BlogTranslationEditor

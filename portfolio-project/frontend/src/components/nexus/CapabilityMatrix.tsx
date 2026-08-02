@@ -23,9 +23,9 @@ const filters = (locale: Locale) =>
         ["all", "Tümü"],
         ["backend", "Backend"],
         ["cloud", "Cloud"],
-        ["product", "Urun"],
+        ["product", "Ürün"],
         ["testing", "Test"],
-        ["research", "Arastirma"],
+        ["research", "Araştırma"],
       ]
     : [
         ["all", "All"],

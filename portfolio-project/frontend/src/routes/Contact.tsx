@@ -49,8 +49,8 @@ export default function Contact({ locale }: ContactPageProps) {
                 { icon: FiMapPin, label: tr ? "Konum" : "Location", value: siteConfig.location[locale] },
                 {
                   icon: FiClock,
-                  label: tr ? "Donus suresi" : "Response time",
-                  value: tr ? "Genellikle 24 saat icinde" : "Usually within 24 hours",
+                  label: tr ? "Dönüş süresi" : "Response time",
+                  value: tr ? "Genellikle 24 saat içinde" : "Usually within 24 hours",
                 },
               ].map((item) => (
                 <div key={item.label} className="flex items-start gap-3">

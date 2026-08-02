@@ -124,6 +124,17 @@ describe("public route SSR", () => {
     expect(html).not.toContain("No featured project");
   });
 
+  it("renders Turkish project and contact copy", () => {
+    const projectsHtml = renderToStaticMarkup(<Projects locale="tr" />);
+    const contactHtml = renderToStaticMarkup(<Contact locale="tr" />);
+
+    expect(projectsHtml).toContain("Arşiv");
+    expect(projectsHtml).toContain("Proje indeksi");
+    expect(projectsHtml).toContain("Tüm sistemler");
+    expect(contactHtml).toContain(contactContent.tr.pageTitle);
+    expect(contactHtml).toContain("yigitokur@ieee.org");
+  });
+
   it("renders the contact route with direct channels even without API data", () => {
     const locale = "en";
     const html = renderToStaticMarkup(<Contact locale={locale} />);

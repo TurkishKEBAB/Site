@@ -128,7 +128,7 @@ export const careerGraph: CareerGraph = {
       title: localized("Portfolio Platform", "Portfolyo Platformu"),
       body: localized(
         "Full-stack portfolio system with 60+ API endpoints, JWT/RBAC, GitHub caching, Supabase assets, SMTP notifications, and staged Vercel/Railway deployments.",
-        "60+ API endpoint, JWT/RBAC, GitHub cache, Supabase varlık yönetimi, SMTP bildirimleri ve aşamalı Vercel/Railway dağıtımlarına sahip full-stack portfolyo sistemi.",
+        "60'tan fazla API uç noktası, JWT/RBAC, GitHub önbelleği, Supabase varlık yönetimi, SMTP bildirimleri ve aşamalı Vercel/Railway dağıtımlarına sahip tam kapsamlı portfolyo sistemi.",
       ),
       tags: ["FastAPI", "Next.js", "PostgreSQL", "Docker", "Vercel", "Railway"],
       href: "https://github.com/TurkishKEBAB/Site",
@@ -142,7 +142,7 @@ export const careerGraph: CareerGraph = {
       title: localized("Student Assistant — Işık CSE", "Öğrenci Asistanı — Işık CSE"),
       body: localized(
         "Mentors students during OOP labs, reviews code, and reinforces clean-code and software-design fundamentals.",
-        "OOP laboratuvarlarında öğrencilere mentorluk yapıyor, kod inceliyor ve clean code ile yazılım tasarım temellerini güçlendiriyorum.",
+        "OOP laboratuvarlarında öğrencilere mentorluk yapıyor, kod inceliyor ve temiz kod ile yazılım tasarımı temellerini güçlendiriyorum.",
       ),
       tags: ["OOP", "Clean Code", "Mentoring"],
       kind: "branch",
@@ -169,7 +169,7 @@ export const careerGraph: CareerGraph = {
       title: localized("Teknofest Sarkan UAV defense platform", "Teknofest Sarkan İHA savunma platformu"),
       body: localized(
         "Software lead for anti-jamming telemetry and control algorithms; ranked 3rd among 700+ projects in preliminary evaluation.",
-        "Anti-jamming telemetri ve kontrol algoritmaları için yazılım liderliği; ön değerlendirmede 700+ proje arasında 3.lük.",
+        "Karıştırma önleme telemetrisi ve kontrol algoritmaları için yazılım liderliği; ön değerlendirmede 700'den fazla proje arasında üçüncü sırada yer aldı.",
       ),
       bullets: [
         localized("Managed a 200,000₺ budget including a 165,000₺ TÜBİTAK R&D grant and Savronik Defense sponsorship.", "165.000₺ TÜBİTAK Ar-Ge hibesi ve Savronik Defense sponsorluğu dahil 200.000₺ bütçeyi yönettim."),
@@ -186,10 +186,10 @@ export const careerGraph: CareerGraph = {
       title: localized("IşıkSchedule Platform", "IşıkSchedule Platformu"),
       body: localized(
         "Dual-platform scheduling product with a constraint-aware engine and a desktop deployment serving approximately 1,000 active users.",
-        "Yaklaşık 1.000 aktif kullanıcıya hizmet veren masaüstü dağıtımı ve kısıt farkındalıklı motoru olan çift platformlu programlama ürünü.",
+        "Yaklaşık 1.000 aktif kullanıcıya hizmet veren masaüstü dağıtımı ve kısıtları dikkate alan motoruyla çift platformlu ders programı oluşturma ürünü.",
       ),
       bullets: [
-        localized("Built a 13-algorithm engine including Genetic, Simulated Annealing, Tabu Search, PSO, and Hybrid GA+SA.", "Genetic, Simulated Annealing, Tabu Search, PSO ve Hybrid GA+SA dahil 13 algoritmalı motor geliştirdim."),
+        localized("Built a 13-algorithm engine including Genetic, Simulated Annealing, Tabu Search, PSO, and Hybrid GA+SA.", "Genetic, Simulated Annealing, Tabu Search, PSO ve Hybrid GA+SA dahil 13 algoritmalı bir motor geliştirdim."),
         localized("Architected the PyQt6 to FastAPI/Next.js dual-platform migration with PostgreSQL, Redis, Celery, and JWT/RBAC.", "PyQt6'tan FastAPI/Next.js çift platformuna; PostgreSQL, Redis, Celery ve JWT/RBAC içeren geçiş mimarisini tasarladım."),
         localized("Maintained 86.97% test coverage with SonarQube Cloud and 1.9% duplication across 14k lines.", "SonarQube Cloud ile %86,97 test kapsamını ve 14 bin satırda %1,9 kod tekrarını korudum."),
       ],
@@ -202,10 +202,10 @@ export const careerGraph: CareerGraph = {
       lane: "projects",
       t: 72,
       when: localized("Aug 2025 – Nov 2025", "Ağustos 2025 – Kasım 2025"),
-      title: localized("Automated Web Crawler", "Otomatik Web Crawler"),
+      title: localized("Automated Web Crawler", "Otomatik Web Tarayıcısı"),
       body: localized(
         "High-throughput concurrent scraping system with strict robots.txt compliance, retries, fault tolerance, and an 89.9% successful execution rate.",
-        "Sıkı robots.txt uyumu, retry ve hata toleransı ile %89,9 başarılı çalışma oranına ulaşan yüksek verimli eşzamanlı scraping sistemi.",
+        "Sıkı robots.txt uyumu, yeniden deneme ve hata toleransıyla %89,9 başarılı çalışma oranına ulaşan yüksek verimli eşzamanlı web tarama sistemi.",
       ),
       tags: ["Python", "Scrapy", "FastAPI", "PostgreSQL", "89.9% success"],
       kind: "milestone",
@@ -218,7 +218,7 @@ export const careerGraph: CareerGraph = {
       title: localized("Certifications and engineering practice", "Sertifikalar ve mühendislik pratiği"),
       body: localized(
         "Cloud and DevOps, system design, networking, DevSecOps, AI/ML, data structures, Java, English C1, and public speaking training.",
-        "Cloud ve DevOps, sistem tasarımı, networking, DevSecOps, AI/ML, veri yapıları, Java, İngilizce C1 ve etkili konuşma eğitimleri.",
+        "Bulut ve DevOps, sistem tasarımı, ağ teknolojileri, DevSecOps, yapay zekâ/makine öğrenmesi, veri yapıları, Java, C1 düzeyinde İngilizce ve topluluk önünde konuşma eğitimleri.",
       ),
       tags: ["Cloud", "DevOps", "CCNA", "DevSecOps", "AI/ML", "English C1"],
       kind: "milestone",
@@ -231,11 +231,11 @@ export const careerGraph: CareerGraph = {
       title: localized("Agentic IDE thesis project", "Agentic IDE bitirme projesi"),
       body: localized(
         "AI-native IDE architecture built around Observe → Plan → Approve → Apply with human-in-the-loop controls.",
-        "Observe → Plan → Approve → Apply döngüsü ve human-in-the-loop kontrolleri etrafında tasarlanan AI-native IDE mimarisi.",
+        "Gözlemle → Planla → Onayla → Uygula döngüsü ve insan denetimli kontroller etrafında tasarlanan yapay zekâ tabanlı IDE mimarisi.",
       ),
       bullets: [
-        localized("Designing hybrid local/cloud LLM orchestration with privacy-by-design routing for sensitive code.", "Hassas kod için privacy-by-design yönlendirmesiyle hibrit local/cloud LLM orkestrasyonu tasarlıyorum."),
-        localized("Establishing CI-backed unit, integration, and E2E testing before the first implementation commit.", "İlk implementasyon commit'inden önce CI destekli unit, integration ve E2E test stratejisi oluşturuyorum."),
+        localized("Designing hybrid local/cloud LLM orchestration with privacy-by-design routing for sensitive code.", "Hassas kod için gizliliği tasarımın merkezine alan yönlendirmeyle hibrit yerel/bulut büyük dil modeli orkestrasyonu tasarlıyorum."),
+        localized("Establishing CI-backed unit, integration, and E2E testing before the first implementation commit.", "İlk uygulama gönderiminden önce CI destekli birim, entegrasyon ve uçtan uca test stratejisi oluşturuyorum."),
       ],
       tags: ["TypeScript", "Electron", "Monaco", "LLMs", "RAG"],
       kind: "branch",
@@ -264,7 +264,7 @@ export const careerGraph: CareerGraph = {
       title: localized("IEEE Işık Student Branch", "IEEE Işık Öğrenci Kolu"),
       body: localized(
         "Vice President and Project Coordinator for 35+ technical workshops, hackathons, and industry events reaching 1,100+ students.",
-        "1.100+ öğrenciye ulaşan 35+ teknik workshop, hackathon ve sektör buluşmasında Başkan Yardımcısı ve Proje Koordinatörü olarak görev yapıyorum.",
+        "1.100'den fazla öğrenciye ulaşan 35'ten fazla teknik atölye çalışması, hackathon ve sektör buluşmasında Başkan Yardımcısı ve Proje Koordinatörü olarak görev yapıyorum.",
       ),
       tags: ["Leadership", "Events", "1,100+ students"],
       kind: "branch",
@@ -291,12 +291,12 @@ export const careerGraph: CareerGraph = {
       title: localized("branch: NETAŞ — Software Engineering Intern", "branch: NETAŞ — Yazılım Mühendisliği Stajyeri"),
       body: localized(
         "Contributed production-grade code and tests to the KKTC e-Nüfus enterprise digitization project within a six-person team.",
-        "Altı kişilik ekip içinde KKTC e-Nüfus kurumsal dijitalleştirme projesine production seviyesinde kod ve test katkısı sağladım.",
+        "Altı kişilik ekip içinde KKTC e-Nüfus kurumsal dijitalleştirme projesine üretim kalitesinde kod ve test katkısı sağladım.",
       ),
       bullets: [
         localized("Identified a critical UTC vs UTC+3 mismatch in YAML configuration and proved silent date-boundary errors with 600+ lines of tests.", "YAML yapısındaki kritik UTC ve UTC+3 uyumsuzluğunu tespit ederek sessiz tarih-sınırı hatasını 600+ satır test ile kanıtladım."),
         localized("Worked across Spring Cloud Config, Zuul Gateway, REST/SOAP, Redis, RabbitMQ, PostgreSQL, ElasticSearch, and Kibana.", "Spring Cloud Config, Zuul Gateway, REST/SOAP, Redis, RabbitMQ, PostgreSQL, ElasticSearch ve Kibana ile çalıştım."),
-        localized("Optimized JSF/PrimeFaces queries and implemented date-aware resolution, Vue formatting, Turkish collation, i18n, and null-safety guards.", "JSF/PrimeFaces sorgularını optimize ettim; tarih duyarlı çözümleme, Vue formatlama, Türkçe sıralama, i18n ve null-safety kontrolleri geliştirdim."),
+        localized("Optimized JSF/PrimeFaces queries and implemented date-aware resolution, Vue formatting, Turkish collation, i18n, and null-safety guards.", "JSF/PrimeFaces sorgularını optimize ettim; tarih duyarlı çözümleme, Vue biçimlendirmesi, Türkçe sıralama, i18n ve null güvenliği kontrolleri geliştirdim."),
       ],
       tags: ["Java", "Spring Cloud", "ELK", "Redis", "RabbitMQ", "PostgreSQL"],
       kind: "branch",
@@ -322,7 +322,7 @@ export const careerGraph: CareerGraph = {
       title: localized("Awards, research, and service", "Başarılar, araştırma ve gönüllülük"),
       body: localized(
         "FRC Houston finalist experience, TÜBİTAK research, and active participation in environmental and engineering communities.",
-        "FRC Houston finalist deneyimi, TÜBİTAK araştırması ve çevre/mühendislik topluluklarında aktif katılım.",
+        "FRC Houston finalisti olarak edindiğim deneyim, TÜBİTAK araştırması ve çevre/mühendislik topluluklarına aktif katılım.",
       ),
       tags: ["FRC", "TÜBİTAK", "TEMA", "WWF Türkiye"],
       kind: "milestone",
@@ -348,7 +348,7 @@ export const careerGraph: CareerGraph = {
       title: localized("Interests", "İlgi alanları"),
       body: localized(
         "Chess, guitar, piano, vocal training, fitness, and swimming keep the system human and balanced.",
-        "Satranç, gitar, piyano, ses eğitimi, fitness ve yüzme sistemi insani ve dengeli tutuyor.",
+        "Satranç, gitar, piyano, ses eğitimi, fiziksel antrenman ve yüzme hayatımı insani ve dengeli tutuyor.",
       ),
       tags: ["Chess", "Guitar", "Piano", "Fitness", "Swimming"],
       kind: "milestone",
@@ -361,7 +361,7 @@ export const careerGraph: CareerGraph = {
       title: localized("HEAD — building the next hard system", "HEAD — sıradaki zor sistemi kuruyor"),
       body: localized(
         "Third-year Software Engineering student focused on backend systems, Cloud/DevOps, AI-native tooling, and quality gates.",
-        "Backend sistemleri, Cloud/DevOps, AI-native araçlar ve kalite kapılarına odaklanan üçüncü sınıf Yazılım Mühendisliği öğrencisi.",
+        "Arka uç sistemleri, bulut/DevOps, yapay zekâ tabanlı araçlar ve kalite kapılarına odaklanan üçüncü sınıf Yazılım Mühendisliği öğrencisi.",
       ),
       tags: ["Backend", "Cloud", "DevOps", "AI-native tooling"],
       kind: "head",

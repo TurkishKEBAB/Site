@@ -151,15 +151,15 @@ export default function ContactForm({ locale, captchaSiteKey: captchaSiteKeyOver
     try {
       await navigator.clipboard.writeText(messagePayload);
       setCopied(true);
-      showToast("success", locale === "tr" ? "Mesaj panoya kopyalandi." : "Message copied to clipboard.");
+      showToast("success", locale === "tr" ? "Mesaj panoya kopyalandı." : "Message copied to clipboard.");
     } catch (error) {
       console.error("Failed to copy contact message", error);
-      showToast("error", locale === "tr" ? "Mesaj kopyalanamadi." : "Unable to copy the message.");
+      showToast("error", locale === "tr" ? "Mesaj kopyalanamadı." : "Unable to copy the message.");
     }
   };
 
   const mailtoHref = `mailto:${siteConfig.email}?subject=${encodeURIComponent(
-    formData.subject || (locale === "tr" ? "Portfolyo iletisimi" : "Portfolio outreach"),
+    formData.subject || (locale === "tr" ? "Portfolyo iletişimi" : "Portfolio outreach"),
   )}&body=${encodeURIComponent(messagePayload)}`;
 
   const inputClass = (field: FieldName) =>
@@ -232,7 +232,7 @@ export default function ContactForm({ locale, captchaSiteKey: captchaSiteKeyOver
           <div className="flex flex-wrap gap-2">
             <button type="button" onClick={handleCopy} className="btn-secondary text-xs">
               <FiCopy size={12} />
-              {copied ? (locale === "tr" ? "Kopyalandi" : "Copied") : (locale === "tr" ? "Mesaji kopyala" : "Copy message")}
+              {copied ? (locale === "tr" ? "Kopyalandı" : "Copied") : (locale === "tr" ? "Mesajı kopyala" : "Copy message")}
             </button>
             <a href={mailtoHref} className="btn-secondary text-xs">
               <FiMail size={12} />

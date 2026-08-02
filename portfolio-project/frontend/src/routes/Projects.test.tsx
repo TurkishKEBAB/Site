@@ -101,4 +101,40 @@ describe("Projects", () => {
     expect(screen.getByTestId("dossier-modal")).toHaveTextContent("API impact");
     expect(useProjectDossierQuery).toHaveBeenCalledWith("demo-project", "en");
   });
+
+  it("renders Turkish loading, error, and empty states", () => {
+    useProjectDossierQuery.mockReturnValue({
+      data: undefined,
+      isLoading: false,
+      isError: false,
+      refetch: vi.fn(),
+    });
+    useProjectsQuery.mockReturnValue({
+      data: undefined,
+      isLoading: true,
+      isError: false,
+      refetch: vi.fn(),
+    });
+
+    const { rerender } = render(<Projects locale="tr" />);
+    expect(screen.getByRole("status")).toHaveTextContent("Proje indeksi yükleniyor...");
+
+    useProjectsQuery.mockReturnValue({
+      data: undefined,
+      isLoading: false,
+      isError: true,
+      refetch: vi.fn(),
+    });
+    rerender(<Projects locale="tr" />);
+    expect(screen.getByRole("alert")).toHaveTextContent("Proje indeksi yüklenemedi.");
+
+    useProjectsQuery.mockReturnValue({
+      data: { items: [], total: 0, page: 1, size: 100, pages: 0 },
+      isLoading: false,
+      isError: false,
+      refetch: vi.fn(),
+    });
+    rerender(<Projects locale="tr" />);
+    expect(screen.getByText("Henüz proje bulunmuyor.")).toBeInTheDocument();
+  });
 });

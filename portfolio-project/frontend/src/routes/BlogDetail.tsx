@@ -38,7 +38,7 @@ export default function BlogDetail({ locale, bundle }: BlogDetailPageProps) {
             </p>
             <div className="flex flex-wrap gap-3">
               <Link href="/blog" className="btn-secondary">
-                {locale === "tr" ? "Blog listesine don" : "Back to blog"}
+                {locale === "tr" ? "Blog listesine dön" : "Back to blog"}
               </Link>
               <Link href="/projects" className="btn-primary">
                 {text.blogBackToProjects}
@@ -64,7 +64,7 @@ export default function BlogDetail({ locale, bundle }: BlogDetailPageProps) {
             className="inline-flex items-center gap-2 font-mono text-xs tracking-wide text-primary-600 transition-colors hover:text-primary-600 dark:text-primary-400"
           >
             <FiArrowLeft size={14} />
-            {locale === "tr" ? "Blog listesine don" : "Back to blog"}
+              {locale === "tr" ? "Blog listesine dön" : "Back to blog"}
           </Link>
         </div>
 
@@ -106,7 +106,7 @@ export default function BlogDetail({ locale, bundle }: BlogDetailPageProps) {
 
                   <footer className="flex flex-col gap-4 border-t border-gray-200 pt-6 dark:border-dark-600 sm:flex-row sm:items-center sm:justify-between">
                     <span className="font-mono text-[11px] uppercase tracking-[0.18em] text-gray-400 dark:text-dark-400">
-                      {locale === "tr" ? "Son guncelleme" : "Last updated"}{" "}
+                      {locale === "tr" ? "Son güncelleme" : "Last updated"}{" "}
                       {formatDate(post.updated_at, locale)}
                     </span>
                     <a
@@ -116,7 +116,7 @@ export default function BlogDetail({ locale, bundle }: BlogDetailPageProps) {
                       className="btn-secondary"
                     >
                       <FiShare2 size={14} />
-                      <span>{locale === "tr" ? "Paylas" : "Share"}</span>
+                      <span>{locale === "tr" ? "Paylaş" : "Share"}</span>
                     </a>
                   </footer>
                 </div>
@@ -128,7 +128,7 @@ export default function BlogDetail({ locale, bundle }: BlogDetailPageProps) {
             {bundle.relatedPosts.length > 0 ? (
               <AnimatedSection delay={0.06}>
                 <PanelCard>
-                  <h2 className="sys-label mb-4 block">// {locale === "tr" ? "ILGILI" : "RELATED"}</h2>
+                  <h2 className="sys-label mb-4 block">// {locale === "tr" ? "İLGİLİ" : "RELATED"}</h2>
                   <div className="space-y-4">
                     {bundle.relatedPosts.map((post) => (
                       <Link key={post.id} href={`/blog/${post.slug}`} className="group block">
