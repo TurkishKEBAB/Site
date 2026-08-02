@@ -247,8 +247,9 @@ git commit -m "fix(backend): make smtp delivery optional"
 In the existing message-tab test, add a multiline message and assert the body and reply link:
 
 ```tsx
-expect(screen.getByText("Hello\nPlease reply with next steps.")).toBeInTheDocument();
-expect(screen.getByRole("link", { name: "Reply" })).toHaveAttribute(
+expect(screen.getByText(/Hello\s+Please reply with next steps\./)).toBeInTheDocument();
+const graceRow = screen.getByText("Grace").closest("tr");
+expect(within(graceRow as HTMLTableRowElement).getByRole("link", { name: "Reply" })).toHaveAttribute(
   "href",
   expect.stringContaining("mailto:grace@example.com?subject=Re%3A%20Platform"),
 );
