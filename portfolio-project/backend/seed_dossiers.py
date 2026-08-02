@@ -33,7 +33,7 @@ from app.models.technology import Technology
 from app.schemas.dossier import ProjectDossierUpsert
 
 DOSSIER_SEED_REVISION_KEY = "dossier_seed_revision"
-DOSSIER_SEED_REVISION = "2026-07-31-evidence-audit-v3"
+DOSSIER_SEED_REVISION = "2026-08-02-localization-audit-v1"
 DOSSIER_REMOVED_SLUGS = (
     "teknofest-sarkan-uav-defense-platform",
     "automated-web-crawler",
