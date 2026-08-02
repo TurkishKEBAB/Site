@@ -135,7 +135,7 @@ export const siteConfig = {
   email: "yigitokur@ieee.org",
   phone: "+90 535 573 3873",
   phoneHref: "tel:+905355733873",
-  location: localized("Bağcılar, İstanbul, Turkey", "Bağcılar, İstanbul, Türkiye"),
+  location: localized("Bağcılar, Istanbul, Turkey", "Bağcılar, İstanbul, Türkiye"),
   github: "https://github.com/TurkishKEBAB",
   linkedin: "https://www.linkedin.com/in/yigit-okur-050b5b278",
   twitter: "https://x.com/biznedenokuruz",
@@ -156,7 +156,7 @@ const uiDictionaryDefinitions = {
   footerContact: localized("Contact", "İletişim"),
   footerAvailability: localized(
     "Open to engineering collaborations",
-    "Mühendislik iş birliklerine açık",
+    "Mühendislik iş birliklerine açığım",
   ),
   footerStack: localized("Next.js / React / Tailwind CSS", "Next.js / React / Tailwind CSS"),
   contactCopy: localized("Copy message", "Mesajı kopyala"),
@@ -169,7 +169,7 @@ const uiDictionaryDefinitions = {
   ),
   blogUnavailableBody: localized(
     "The public site still loads from repo-canonical content, but blog posts depend on the API right now.",
-    "Public site repo içeriğinden yüklenmeye devam ediyor, ancak blog yazıları şimdilik API bağımlı.",
+    "Herkese açık site depo kaynaklı içerikten yüklenmeye devam ediyor, ancak blog yazıları şu anda API'ye bağlı.",
   ),
   blogBackToProjects: localized("View projects", "Projeleri gör"),
   blogBackToAbout: localized("View profile", "Profili gör"),
@@ -177,7 +177,7 @@ const uiDictionaryDefinitions = {
   notFoundTitle: localized("Page not found", "Sayfa bulunamadı"),
   notFoundBody: localized(
     "This route does not exist on the new public surface. The core profile content is available below.",
-    "Bu rota yeni public yüzeyde bulunmuyor. Aşağıdaki temel profil içeriğine dönebilirsiniz.",
+    "Bu rota yeni herkese açık yüzeyde bulunmuyor. Temel profil içeriğine aşağıdan ulaşabilirsiniz.",
   ),
   notFoundAction: localized("Return home", "Ana sayfaya dön"),
 } satisfies Record<string, LocalizedString>;
@@ -186,23 +186,26 @@ export const uiDictionary = buildLocaleMap((locale) =>
   resolveLocalizedRecord(uiDictionaryDefinitions, locale),
 );
 
-const homeRoleParts = ["ENTERPRISE BACKEND", "CLOUD & DEVOPS", "QUALITY AUTOMATION"];
+const homeRoleParts: Record<Locale, string[]> = {
+  en: ["ENTERPRISE BACKEND", "CLOUD & DEVOPS", "QUALITY AUTOMATION"],
+  tr: ["KURUMSAL ARKA UÇ", "BULUT VE DEVOPS", "KALİTE OTOMASYONU"],
+};
 
 const homeDefinition = {
   heroEyebrow: localized("> init system.profile", "> sistem.profil başlatılıyor"),
   heroTitleFirst: localized("YİĞİT", "YİĞİT"),
   heroTitleSecond: localized("OKUR", "OKUR"),
   heroDescription: localized(
-    "Third-year Software Engineering student at Isik University focused on enterprise backend systems, cloud delivery, and DevOps automation. At NETAS, I contributed production code across four Jira tickets and turned a silent timezone mismatch into a documented regression safety net with targeted tests.",
-    "Işık Üniversitesi'nde üçüncü sınıf Yazılım Mühendisliği öğrencisi olarak enterprise backend sistemleri, cloud delivery ve DevOps otomasyonu üzerine odaklanıyorum. NETAS'ta dört Jira ticket boyunca production koda katkıda bulunup sessiz kalan timezone uyumsuzluğunu hedefli testlerle kalıcı bir regression güvencesine çevirdim.",
+    "Third-year Software Engineering student at Işık University focused on enterprise backend systems, cloud delivery, and DevOps automation. At NETAŞ, I contributed production code across four Jira tickets and turned a silent timezone mismatch into a documented regression safety net with targeted tests.",
+    "Işık Üniversitesi'nde üçüncü sınıf Yazılım Mühendisliği öğrencisiyim; kurumsal arka uç sistemleri, bulut altyapıları ve DevOps otomasyonuna odaklanıyorum. NETAS'ta dört Jira kaydında üretim koduna katkıda bulundum; sessiz bir saat dilimi uyumsuzluğunu hedefli testlerle belgelenmiş bir regresyon güvence ağına dönüştürdüm.",
   ),
   availabilityLabel: localized(
     "Available for part-time software engineering and cloud roles",
-    "Part-time software engineering ve cloud rollerine açığım",
+    "Yarı zamanlı yazılım mühendisliği ve bulut rollerine açığım",
   ),
   availabilityNote: localized(
     "Open to backend, platform, DevOps, and quality-focused engineering teams.",
-    "Backend, platform, DevOps ve kalite odaklı mühendislik ekiplerine açığım.",
+    "Arka uç, platform, DevOps ve kalite odaklı mühendislik ekiplerine açığım.",
   ),
   primaryCta: localized("Get in touch", "İletişime geç"),
   secondaryCta: localized("Download CV", "CV indir"),
@@ -213,7 +216,7 @@ const homeDefinition = {
   skillsTitle: localized("Technical system", "Teknik sistemim"),
   skillsSubtitle: localized(
     "Grouped by the stacks I actually use to ship backend, cloud, observability, and product work.",
-    "Backend, cloud, observability ve ürün teslimi için gerçekte kullandığım teknoloji grupları.",
+    "Arka uç, bulut, gözlemlenebilirlik ve ürün geliştirme teslimleri için gerçekten kullandığım teknoloji grupları.",
   ),
   projectsLabel: localized("Featured work", "Öne çıkan işler"),
   projectsTitle: localized("Selected projects", "Seçili projeler"),
@@ -225,30 +228,30 @@ const homeDefinition = {
   ctaTitle: localized("Let's build something sharp", "Birlikte keskin bir şeyler üretelim"),
   ctaBody: localized(
     "If you want to discuss backend systems, cloud architecture, DevOps automation, or AI-native workflows, I am happy to connect.",
-    "Backend sistemleri, cloud mimarisi, DevOps otomasyonu veya AI-native workflow'lar konuşmak istersen bağlanabiliriz.",
+    "Arka uç sistemleri, bulut mimarisi, DevOps otomasyonu veya yapay zekâ tabanlı iş akışları hakkında konuşmak isterseniz memnuniyetle iletişime geçebilirim.",
   ),
   scroll: localized("Scroll", "Kaydır"),
   roleParts: homeRoleParts,
   overviewCards: [
     {
-      title: localized("NETAS production case study", "NETAS production case study"),
+      title: localized("NETAS production case study", "NETAS üretim vaka çalışması"),
       body: localized(
         "Shipped 25 commits and 1,550 lines of code and tests across four Jira tickets, then proved a silent timezone mismatch with YAML and ELK analysis plus 600+ lines of targeted tests.",
-        "Dört Jira ticket boyunca 25 commit ve 1.550 satır kod-test katkısı yaptım; ardından sessiz timezone uyumsuzluğunu YAML ve ELK analizi ile ortaya koyup 600+ satır hedefli testle kanıtladım.",
+        "Dört Jira kaydında 25 commit ve 1.550 satır kod ile test teslim ettim; ardından sessiz bir saat dilimi uyumsuzluğunu YAML ve ELK analiziyle ortaya çıkarıp 600'den fazla satır hedefli testle kanıtladım.",
       ),
     },
     {
       title: localized("IşıkSchedule product maturity", "IşıkSchedule ürün olgunluğu"),
       body: localized(
         "The desktop and web products are independent implementations: the desktop registry exposes 13 verified solvers, while the web product uses a synchronous exact search over its own SQLite-backed application.",
-        "Masaüstü ve web ürünleri bağımsız implementasyonlardır: masaüstü registry'sinde doğrulanmış 13 solver bulunur; web ürünü ise kendi SQLite tabanlı uygulamasında senkron kesin arama kullanır.",
+        "Masaüstü ve web ürünleri bağımsız uygulamalardır: masaüstü kayıt defterinde 13 doğrulanmış çözücü bulunur; web ürünü ise kendi SQLite tabanlı uygulamasında senkron kesin arama kullanır.",
       ),
     },
     {
       title: localized("Leadership and community delivery", "Liderlik ve topluluk çıktıları"),
       body: localized(
-        "Coordinate IEEE Isik operations reaching 1,100+ students and stay comfortable moving between delivery, mentoring, and community ownership.",
-        "IEEE Işık tarafında 1.100+ öğrenciye ulaşan operasyonları koordine ediyor; teslim, mentorluk ve topluluk sahipliğini birlikte yürütüyorum.",
+        "Coordinate IEEE Işık operations reaching 1,100+ students and stay comfortable moving between delivery, mentoring, and community ownership.",
+        "IEEE Işık operasyonlarını 1.100'den fazla öğrenciye ulaşacak şekilde koordine ediyor; teslimat, mentorluk ve topluluk sorumluluğu arasında rahatça hareket ediyorum.",
       ),
     },
   ] satisfies HomeOverviewCard[],
@@ -276,7 +279,7 @@ const resolveHomeContent = (locale: Locale): HomeLocaleContent => ({
   ctaTitle: getLocaleValue(homeDefinition.ctaTitle, locale),
   ctaBody: getLocaleValue(homeDefinition.ctaBody, locale),
   scroll: getLocaleValue(homeDefinition.scroll, locale),
-  roleParts: [...homeDefinition.roleParts],
+  roleParts: [...getLocaleValue(homeDefinition.roleParts, locale)],
   overviewCards: homeDefinition.overviewCards.map((card) => ({
     title: getLocaleValue(card.title, locale),
     body: getLocaleValue(card.body, locale),
@@ -304,22 +307,22 @@ export const impactMetrics: ImpactMetric[] = [
   impactMetric(
     "13",
     "registered desktop solvers",
-    "kayıtlı masaüstü solver",
+    "kayıtlı masaüstü çözücüler",
     "Static count from the isikschedule-desktop algorithm registry",
-    "isikschedule-desktop algoritma registry'sinin statik sayımı",
+    "isikschedule-desktop algoritma kayıt defterinin statik sayımı",
   ),
   impactMetric(
     "1,550+",
     "lines of code and tests",
     "satır kod ve test",
     "NETAS production contributions",
-    "NETAS production katkısı",
+    "NETAS üretim katkısı",
   ),
   impactMetric(
     "35+",
     "technical events delivered",
-    "teknik etkinlik düzenlendi",
-    "IEEE Isik leadership and coordination",
+    "düzenlenen teknik etkinlikler",
+    "IEEE Işık leadership and coordination",
     "IEEE Işık liderliği ve koordinasyonu",
   ),
 ];
@@ -337,33 +340,33 @@ const skillGroup = (
 export const skillGroups: SkillGroup[] = [
   skillGroup(
     "Backend and architecture",
-    "Backend ve mimari",
+    "Arka uç ve mimari",
     "Production-facing APIs, enterprise Java services, and clean system boundaries.",
-    "Production odaklı API'ler, enterprise Java servisleri ve temiz sistem sınırları.",
+    "Üretime dönük API'ler, kurumsal Java servisleri ve temiz sistem sınırları.",
   ),
   skillGroup(
     "Cloud, observability, and delivery",
-    "Cloud, observability ve delivery",
+    "Bulut, gözlemlenebilirlik ve teslimat",
     "Deploy, diagnose, and stabilize distributed systems with quality gates.",
-    "Kalite kapılarıyla dağıtık sistemleri deploy etme, izleme ve stabil hale getirme.",
+    "Kalite kapılarıyla dağıtık sistemleri dağıtıyor, teşhis ediyor ve kararlı hâle getiriyorum.",
   ),
   skillGroup(
     "Product and interface layer",
     "Ürün ve arayüz katmanı",
     "Enough frontend fluency to ship end-to-end products without losing system quality.",
-    "Sistem kalitesini kaybetmeden uçtan uca ürün çıkarmaya yetecek kadar frontend yetkinliği.",
+    "Sistem kalitesini kaybetmeden uçtan uca ürünler geliştirmeye yetecek ön yüz yetkinliği.",
   ),
   skillGroup(
     "Testing and automation",
     "Test ve otomasyon",
     "Test-first debugging, structured quality gates, and reliable delivery pipelines.",
-    "Test-first debugging, yapılandırılmış kalite kapıları ve güvenilir teslim pipeline'ları.",
+    "Test öncelikli hata ayıklama, yapılandırılmış kalite kapıları ve güvenilir teslimat hatları.",
   ),
   skillGroup(
     "Research and AI-native tooling",
-    "Araştırma ve AI-native tooling",
+    "Araştırma ve yapay zekâ tabanlı araçlar",
     "Agentic systems, LLM workflows, and algorithm-heavy problem solving.",
-    "Ajan tabanlı sistemler, LLM workflow'ları ve algoritma ağırlıklı problem çözümü.",
+    "Ajan tabanlı sistemler, büyük dil modeli iş akışları ve algoritma ağırlıklı problem çözümü.",
   ),
 ];
 
@@ -396,14 +399,14 @@ const projectRecord = (
 export const projectRecords: ProjectRecord[] = [
   projectRecord(
     "isikschedule-platform",
-    "IsikSchedule Platform",
+    "IşıkSchedule Platform",
     "IşıkSchedule Platformu",
     "Independent desktop and web scheduling products for Işık University catalogs.",
-    "Işık Üniversitesi katalogları için bağımsız masaüstü ve web programlama ürünleri.",
+    "Işık Üniversitesi katalogları için bağımsız masaüstü ve web ders programı oluşturma ürünleri.",
     "The PyQt6 desktop client has a verified 13-solver registry. The separate FastAPI + Next.js web product uses its own synchronous exact solver, SQLite persistence, Excel catalog ingestion, and JWT/admin controls; the repositories do not share a solver package.",
-    "PyQt6 masaüstü istemcisinde doğrulanmış 13 solver registry'si bulunur. Ayrı FastAPI + Next.js web ürünü kendi senkron kesin solver'ını, SQLite kalıcılığını, Excel katalog alımını ve JWT/admin kontrollerini kullanır; repolar ortak solver paketi paylaşmaz.",
+    "PyQt6 masaüstü istemcisinde doğrulanmış 13 çözücülü kayıt defteri bulunur. Ayrı FastAPI + Next.js web ürünü kendi senkron kesin çözücüsünü, SQLite kalıcılığını, Excel katalog içe aktarımını ve JWT/yönetici kontrollerini kullanır; depolar ortak bir çözücü paketi paylaşmaz.",
     "Measured web evidence: 1,301 catalog rows, 28 route handlers, 20 returned schedules from a bounded search; desktop user count and 86.97% coverage remain unsourced.",
-    "Web ölçümü: 1.301 katalog satırı, 28 route handler ve sınırlandırılmış aramadan dönen 20 program; masaüstü kullanıcı sayısı ve %86.97 coverage kaynaksız kaldı.",
+    "Web ölçümleri: 1.301 katalog satırı, 28 rota işleyicisi ve sınırlı bir aramadan dönen 20 program; masaüstü kullanıcı sayısı ve %86,97 kapsam ölçümü kaynaklandırılmamıştır.",
     ["Python", "FastAPI", "Next.js", "SQLite", "PyQt6", "JWT", "RBAC"],
     true,
     "https://github.com/TurkishKEBAB/isikschedule-core",
@@ -427,11 +430,11 @@ export const projectRecords: ProjectRecord[] = [
     "Agentic IDE",
     "Agentic IDE",
     "Safety-oriented Agentic IDE thesis planning and requirements repository.",
-    "Güvenlik odaklı Agentic IDE tez planlama ve gereksinim reposu.",
+    "Güvenlik odaklı Agentic IDE tez planlama ve gereksinim deposu.",
     "The repository contains planning documents and accepted ADRs, not an Electron/Monaco application. Its proposed MVP centers on a single-agent plan-first loop, explicit approval, workspace-bound writes, local retrieval, and model-provider boundaries.",
-    "Repo, Electron/Monaco uygulaması değil; planlama dokümanları ve kabul edilmiş ADR'ler içeriyor. Önerilen MVP; tek ajanlı plan-önce akış, açık onay, workspace sınırları, lokal retrieval ve model sağlayıcı sınırlarına odaklanıyor.",
+    "Depo, Electron/Monaco uygulaması değil; planlama belgeleri ve kabul edilmiş ADR'ler içeriyor. Önerilen MVP; tek ajanlı plan-önce döngüye, açık onaya, çalışma alanı sınırlarına, yerel bilgi erişimine ve model sağlayıcısı sınırlarına odaklanıyor.",
     "Evidence in the repository: 9 ADRs, 57 non-epic backlog issues, 5 MVP scenarios, and a planned 20-task evaluation target.",
-    "Repo kanıtı: 9 ADR, 57 epic dışı backlog issue'su, 5 MVP senaryosu ve planlanan 20 görevlik değerlendirme hedefi.",
+    "Depo kanıtı: 9 ADR, 57 epik dışı iş listesi girdisi, 5 MVP senaryosu ve planlanan 20 görevlik değerlendirme hedefi.",
     ["TypeScript", "Electron", "Monaco Editor", "LLMs", "RAG"],
     true,
     "https://github.com/TurkishKEBAB/Agentic-Ide",
@@ -439,13 +442,13 @@ export const projectRecords: ProjectRecord[] = [
   projectRecord(
     "automated-web-crawler",
     "Automated Web Crawler",
-    "Otomatik Web Crawler",
+    "Otomatik Web Tarayıcısı",
     "Project record pending crawler source and benchmark evidence.",
-    "Crawler kaynağı ve benchmark kanıtı bekleyen proje kaydı.",
+    "Tarayıcı kaynağı ve karşılaştırma kanıtı bekleyen proje kaydı.",
     "No crawler repository, archive, runnable benchmark, or operational screenshot was found in the audited workspaces; no crawler architecture is published as verified.",
-    "Denetlenen çalışma alanlarında crawler reposu, arşivi, çalıştırılabilir benchmark'ı veya operasyon ekranı bulunamadı; crawler mimarisi doğrulanmış olarak yayınlanmıyor.",
+    "Denetlenen çalışma alanlarında tarayıcı deposu, arşivi, çalıştırılabilir karşılaştırması veya operasyon ekranı bulunamadı; tarayıcı mimarisi doğrulanmış olarak yayımlanmıyor.",
     "Source code, robots/rate-limit tests, operational logs, and approved visuals are pending.",
-    "Kaynak kodu, robots/rate-limit testleri, operasyon logları ve onaylı görseller bekleniyor.",
+    "Kaynak kodu, robots/rate-limit testleri, operasyon günlükleri ve onaylı görseller bekleniyor.",
     ["Python"],
     false,
   ),
@@ -454,11 +457,11 @@ export const projectRecords: ProjectRecord[] = [
     "Portfolio Platform",
     "Portfolyo Platformu",
     "Full-stack portfolio system with admin workflows and provider-native deployments.",
-    "Admin workflow'ları ve sağlayıcı-yerel dağıtımlara sahip full-stack portfolyo sistemi.",
+    "Yönetici iş akışları ve sağlayıcıya özgü dağıtımlara sahip tam kapsamlı portfolyo sistemi.",
     "Built a Next.js 16 App Router frontend and FastAPI backend with 72 route handlers, JWT/RBAC, 24-hour GitHub caching with an in-memory fallback, Supabase asset handling, SMTP notifications, and independent Vercel/Railway GitHub integrations.",
-    "72 route handler'lı Next.js 16 App Router frontend ve FastAPI backend; JWT/RBAC, bellek yedekli 24 saatlik GitHub cache, Supabase varlık yönetimi, SMTP bildirimleri ve bağımsız Vercel/Railway GitHub entegrasyonları geliştirdim.",
+    "72 rota işleyicisine sahip Next.js 16 App Router ön yüzü ve FastAPI arka ucu geliştirdim; sistemde JWT/RBAC, bellek yedeklemeli 24 saatlik GitHub önbelleği, Supabase varlık yönetimi, SMTP bildirimleri ve bağımsız Vercel/Railway GitHub entegrasyonları bulunuyor.",
     "The repository verifies the gate mechanism and deployment topology; an external SonarCloud 'passed' result is not claimed without dashboard evidence.",
-    "Repo kalite kapısı mekanizmasını ve dağıtım topolojisini doğruluyor; dashboard kanıtı olmadan harici SonarCloud 'passed' sonucu iddia edilmiyor.",
+    "Depo kalite kapısı mekanizmasını ve dağıtım topolojisini doğruluyor; gösterge paneli kanıtı olmadan harici SonarCloud 'passed' sonucu iddia edilmiyor.",
     ["Next.js", "FastAPI", "PostgreSQL", "Redis", "Supabase", "Railway", "Vercel", "SonarQube"],
     false,
     "https://github.com/TurkishKEBAB/Site",
@@ -470,13 +473,13 @@ const aboutDefinition = {
   pageTitle: localized("About", "Hakkımda"),
   pageSubtitle: localized(
     "A third-year software engineering student building durable backend systems, cloud delivery paths, and high-ownership engineering leverage.",
-    "Dayanıklı backend sistemleri, cloud delivery süreçleri ve yüksek sahiplik üreten bir üçüncü sınıf yazılım mühendisliği öğrencisi.",
+    "Dayanıklı arka uç sistemleri, bulut teslimat yolları ve yüksek sorumlulukla değer üreten üçüncü sınıf bir yazılım mühendisliği öğrencisi.",
   ),
   journeyLabel: localized("Current trajectory", "Güncel rota"),
   journeyTitle: localized("What I optimize for", "Neyi optimize ediyorum"),
   journeyBody: localized(
     "I optimize for teams where code quality, diagnosis depth, and delivery ownership matter at the same time. The work I enjoy most sits at the intersection of enterprise defects, algorithm-heavy backend systems, and operationally reliable products.",
-    "Kod kalitesi, teşhis derinliği ve teslim sahipliğinin aynı anda önem taşıdığı ekiplere doğru ilerliyorum. En çok sevdiğim problemler; enterprise defect'ler, algoritma ağırlıklı backend sistemleri ve operasyonel olarak güvenilir ürünlerin kesişiminde yer alıyor.",
+    "Kod kalitesi, teşhis derinliği ve teslimat sorumluluğunun aynı anda önem taşıdığı ekiplerde çalışmaya odaklanıyorum. En çok keyif aldığım işler; kurumsal hataların, algoritma ağırlıklı arka uç sistemlerinin ve operasyonel açıdan güvenilir ürünlerin kesişiminde yer alıyor.",
   ),
 };
 
@@ -532,7 +535,7 @@ const contactDefinition = {
   pageTitle: localized("Get in touch", "İletişime geç"),
   pageSubtitle: localized(
     "The reliable path is direct contact first. The form still works when the API is healthy and degrades gracefully when it is not.",
-    "Güvenilir yol önce doğrudan iletişimdir. Form API sağlıklıyken çalışır, değilse de zarif biçimde degrade olur.",
+    "En güvenilir yol doğrudan iletişim kurmaktır. Form API sağlıklıyken çalışır; API kullanılamadığında da taslağınızı koruyarak çalışmaya devam eder.",
   ),
   formLabel: localized("Message", "Mesaj"),
   formTitle: localized("Send a note", "Bir not bırak"),
@@ -565,7 +568,7 @@ const contactDefinition = {
   availabilityTitle: localized("Currently open to", "Şu alanlara açığım"),
   availabilityBody: localized(
     "Part-time software engineering, backend systems, cloud platform work, and DevOps automation roles.",
-    "Part-time software engineering, backend sistemleri, cloud platform çalışmaları ve DevOps otomasyonu rolleri.",
+    "Yarı zamanlı yazılım mühendisliği, arka uç sistemleri, bulut platformu çalışmaları ve DevOps otomasyonu rolleri.",
   ),
 };
 
@@ -603,49 +606,49 @@ const seoDefinitions = {
     ),
     description: localized(
       "Portfolio of Yiğit Okur focused on backend systems, cloud-native architecture, DevOps automation, and high-impact engineering delivery.",
-      "Yiğit Okur'un backend sistemleri, cloud-native mimari, DevOps otomasyonu ve yüksek etkili mühendislik teslimine odaklı portfolyosu.",
+      "Yiğit Okur'un arka uç sistemleri, bulut-yerel mimari, DevOps otomasyonu ve yüksek etkili mühendislik teslimatına odaklı portfolyosu.",
     ),
   },
   about: {
     title: localized("About | Yiğit Okur", "Hakkımda | Yiğit Okur"),
     description: localized(
       "Impact-oriented profile of Yiğit Okur across enterprise debugging, scheduling systems, technical leadership, and research support.",
-      "Yiğit Okur'un enterprise debugging, scheduling sistemleri, teknik liderlik ve araştırma desteğini birleştiren etki odaklı profili.",
+      "Yiğit Okur'un kurumsal hata ayıklama, ders programı oluşturma sistemleri, teknik liderlik ve araştırma desteğini birleştiren etki odaklı profili.",
     ),
   },
   projects: {
     title: localized("Projects | Yiğit Okur", "Projeler | Yiğit Okur"),
     description: localized(
       "Selected engineering projects across scheduling optimization, defense telemetry, AI-native tooling, and platform delivery.",
-      "Scheduling optimizasyonu, savunma telemetrisi, AI-native tooling ve platform teslimini kapsayan seçili mühendislik projeleri.",
+      "Ders programı optimizasyonu, savunma telemetrisi, yapay zekâ tabanlı araçlar ve platform teslimatını kapsayan seçili mühendislik projeleri.",
     ),
   },
   contact: {
     title: localized("Contact | Yiğit Okur", "İletişim | Yiğit Okur"),
     description: localized(
       "Direct contact channels for software engineering collaboration, backend roles, and cloud-focused opportunities.",
-      "Yazılım mühendisliği iş birlikleri, backend roller ve cloud odaklı fırsatlar için doğrudan iletişim kanalları.",
+      "Yazılım mühendisliği iş birlikleri, arka uç rolleri ve bulut odaklı fırsatlar için doğrudan iletişim kanalları.",
     ),
   },
   blog: {
     title: localized("Blog | Yiğit Okur", "Blog | Yiğit Okur"),
     description: localized(
       "Engineering notes and case studies. Blog reliability improvements are planned via ISR in a later phase.",
-      "Mühendislik notları ve case study'ler. Blog güvenilirliği sonraki fazda ISR ile geliştirilecek.",
+      "Mühendislik notları ve vaka çalışmaları. Blog güvenilirliği sonraki aşamada ISR ile geliştirilecek.",
     ),
   },
   login: {
     title: localized("Admin Login | Yiğit Okur", "Admin Girişi | Yiğit Okur"),
     description: localized(
       "Admin access for the portfolio control surface.",
-      "Portfolyo yönetim yüzeyi için admin erişimi.",
+      "Portfolyo yönetim yüzeyi için yönetici erişimi.",
     ),
   },
   admin: {
     title: localized("Admin | Yiğit Okur", "Admin | Yiğit Okur"),
     description: localized(
       "Authenticated portfolio administration surface.",
-      "Kimlik doğrulanmış portfolyo yönetim yüzeyi.",
+      "Kimliği doğrulanmış portfolyo yönetim yüzeyi.",
     ),
   },
 } satisfies Record<

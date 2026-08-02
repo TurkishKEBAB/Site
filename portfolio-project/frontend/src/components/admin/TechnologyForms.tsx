@@ -34,16 +34,16 @@ const FORM_TEXT = {
   },
   tr: {
     createTitle: "Yeni Teknoloji Ekle",
-    editTitle: "Teknolojiyi Duzenle",
+    editTitle: "Teknolojiyi Düzenle",
     name: "Ad",
     slug: "Slug",
-    icon: "Ikon",
+    icon: "İkon",
     category: "Kategori",
     color: "Renk",
-    cancel: "Iptal",
+    cancel: "İptal",
     saving: "Kaydediliyor...",
-    create: "Olustur",
-    update: "Guncelle",
+    create: "Oluştur",
+    update: "Güncelle",
   },
 } as const;
 

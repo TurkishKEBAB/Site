@@ -39,7 +39,7 @@ export default function Footer() {
               {getLocaleValue(
                 {
                   en: "Software engineer focused on backend systems, cloud-native architecture, and durable product delivery.",
-                  tr: "Backend sistemleri, cloud-native mimari ve dayanikli urun teslimine odaklanan yazilim muhendisi.",
+                  tr: "Backend sistemleri, cloud-native mimari ve dayanıklı ürün teslimine odaklanan yazılım mühendisi.",
                 },
                 locale,
               )}

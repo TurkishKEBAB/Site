@@ -95,6 +95,6 @@ export const githubDetail: GitHubDetail = {
     ["member since", "2021"],
     ["location", "Istanbul · TR"],
     ["focus", "backend · cloud · devops"],
-    ["affiliation", "Isik University · IEEE"],
+    ["affiliation", "Işık University · IEEE"],
   ],
 };

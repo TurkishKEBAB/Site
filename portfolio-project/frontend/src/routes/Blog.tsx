@@ -33,12 +33,12 @@ export default function Blog({ locale, posts, degraded }: BlogPageProps) {
         </span>
         <ScrambleHeading
           as="h1"
-          text={tr ? "Muhendislik notlari" : "Engineering notes"}
+          text={tr ? "Mühendislik notları" : "Engineering notes"}
           className="mt-3.5 font-display text-4xl font-bold tracking-tight text-gray-900 dark:text-dark-50 md:text-5xl"
         />
         <p className="mt-4 text-lg leading-relaxed text-gray-600 dark:text-dark-300">
           {tr
-            ? "Production hata ayiklama, kalite sistemleri ve AI-native arac arastirmasindan saha notlari. Bir notu okumak icin tikla."
+            ? "Production hata ayıklama, kalite sistemleri ve AI-native araç araştırmasından saha notları. Bir notu okumak için tıkla."
             : "Field notes from production debugging, quality systems, and AI-native tooling research. Click a note to read."}
         </p>
       </header>

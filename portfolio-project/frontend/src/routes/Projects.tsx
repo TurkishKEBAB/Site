@@ -64,7 +64,7 @@ export default function Projects({
       <header className="max-w-3xl">
         <span className="flex items-center gap-2.5 font-mono text-[11px] uppercase tracking-[0.24em] text-gray-400 dark:text-dark-400">
           <span className="h-px w-5 bg-primary-400/60" aria-hidden="true" />
-          <span className="text-primary-600 dark:text-primary-400">//</span> {tr ? "Arsiv" : "Archive"}
+          <span className="text-primary-600 dark:text-primary-400">//</span> {tr ? "Arşiv" : "Archive"}
         </span>
         <ScrambleHeading
           as="h1"
@@ -73,7 +73,7 @@ export default function Projects({
         />
         <p className="mt-4 text-lg leading-relaxed text-gray-600 dark:text-dark-300">
           {tr
-            ? "Urun olgunlugu, teknik derinlik ve teslim sorumlulugunu temsil eden secili muhendislik calismalari. Tam vaka icin herhangi bir girisi acin."
+            ? "Ürün olgunluğu, teknik derinlik ve teslim sorumluluğunu temsil eden seçili mühendislik çalışmaları. Tam vaka için herhangi bir girişi açın."
             : "Selected engineering work representing product maturity, technical depth, and delivery ownership. Open any entry for the full case."}
         </p>
       </header>
@@ -82,22 +82,22 @@ export default function Projects({
       <section className="mt-20">
         <NxSectionHead
           index="//"
-          label={tr ? "Indeks" : "Index"}
+          label={tr ? "İndeks" : "Index"}
           title={tr ? "Tüm sistemler" : "All systems"}
           subtitle={
             tr
-              ? "Numarali proje girisleri. Mimari, kararlar, gelisim kaydi ve galeri iceren tam dosya icin herhangi bir satira tikla."
+              ? "Numaralı proje girişleri. Mimari, kararlar, gelişim kaydı ve galeri içeren tam dosya için herhangi bir satıra tıkla."
               : "Numbered project entries. Click any row for the full dossier — architecture, decisions, log, gallery."
           }
         />
         {isLoading ? (
           <p role="status" className="border-t border-gray-200 py-8 text-center font-mono text-xs uppercase tracking-[0.16em] text-gray-500 dark:border-dark-600 dark:text-dark-400">
-            {tr ? "Proje indeksi yukleniyor..." : "Loading project index..."}
+            {tr ? "Proje indeksi yükleniyor..." : "Loading project index..."}
           </p>
         ) : isError ? (
           <div role="alert" className="border-t border-gray-200 py-8 text-center dark:border-dark-600">
             <p className="font-mono text-xs uppercase tracking-[0.16em] text-red-500">
-              {tr ? "Proje indeksi yuklenemedi." : "Project index is unavailable."}
+              {tr ? "Proje indeksi yüklenemedi." : "Project index is unavailable."}
             </p>
             <button
               type="button"
@@ -111,7 +111,7 @@ export default function Projects({
           <ProjectIndex projects={dossierProjects} onSelect={setSelected} featuredLabel={labels.featured} />
         ) : (
           <p className="border-t border-gray-200 py-8 text-center font-mono text-xs uppercase tracking-[0.16em] text-gray-500 dark:border-dark-600 dark:text-dark-400">
-            {tr ? "Henuz proje bulunmuyor." : "No projects found yet."}
+            {tr ? "Henüz proje bulunmuyor." : "No projects found yet."}
           </p>
         )}
       </section>

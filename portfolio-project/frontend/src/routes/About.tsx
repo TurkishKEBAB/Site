@@ -59,7 +59,7 @@ export default function About({ locale }: AboutPageProps) {
           title={tr ? "Kariyer haritası" : "Career map"}
           subtitle={
             tr
-              ? "Dallanan bir git grafiği olarak kariyer — hikayesini okumak için bir düğüme tıkla."
+              ? "Dallanan bir Git grafiği olarak kariyer — hikâyesini okumak için bir düğüme tıkla."
               : "Career as a branching git graph — click a node to read its story."
           }
         />
@@ -71,7 +71,7 @@ export default function About({ locale }: AboutPageProps) {
           index="03"
           label={tr ? "Yetkinlikler" : "Capabilities"}
           title={tr ? "Teknik sistem" : "Technical system"}
-          subtitle={tr ? "Matrisi odaklamak için domain'e göre filtrele." : "Filter by domain to focus the matrix."}
+          subtitle={tr ? "Matrisi odaklamak için alana göre filtrele." : "Filter by domain to focus the matrix."}
         />
         {isLoading ? (
           <p role="status" className="font-mono text-xs uppercase tracking-[0.16em] text-gray-500 dark:text-dark-400">
@@ -103,8 +103,8 @@ export default function About({ locale }: AboutPageProps) {
         <NxSectionHead
           index="04"
           label="Tech radar"
-          title={tr ? "Adopt · dene · değerlendir" : "Adopt · trial · assess"}
-          subtitle={tr ? "Stack'imin bugün durduğu yer — adı için bir blip'in üzerine gel." : "Where my stack sits today — hover a blip for the name."}
+          title={tr ? "Benimse · dene · değerlendir" : "Adopt · trial · assess"}
+          subtitle={tr ? "Teknoloji yığınımın bugün durduğu yer — adını görmek için bir noktaya gel." : "Where my stack sits today — hover a blip for the name."}
         />
         {hasSkills ? <TechRadar locale={locale} blips={radarBlips} /> : null}
       </section>
