@@ -43,6 +43,8 @@ const experienceText = {
 
 const messageText = {
   incomingMessages: "Incoming Messages",
+  message: "Message",
+  reply: "Reply",
   delete: "Delete",
   deleting: "Deleting...",
 };
@@ -412,7 +414,7 @@ describe("admin tab components", () => {
             name: "Grace",
             email: "grace@example.com",
             subject: "Platform",
-            message: "Hello",
+            message: "Hello\nPlease reply with next steps.",
             is_read: false,
             is_replied: false,
             created_at: "2026-04-26T12:00:00Z",
@@ -450,6 +452,12 @@ describe("admin tab components", () => {
     fireEvent.click(screen.getAllByRole("button", { name: "Delete" })[0]);
 
     expect(screen.getByText("Grace")).toBeInTheDocument();
+    expect(screen.getByText(/Hello\s+Please reply with next steps\./)).toBeInTheDocument();
+    const graceRow = screen.getByText("Grace").closest("tr");
+    expect(within(graceRow as HTMLTableRowElement).getByRole("link", { name: "Reply" })).toHaveAttribute(
+      "href",
+      expect.stringContaining("mailto:grace@example.com?subject=Re%3A%20Platform"),
+    );
     expect(screen.getByText("Yanıtlandı")).toBeInTheDocument();
     expect(screen.getAllByText("Okundu")).toHaveLength(2);
     expect(screen.getByRole("button", { name: "Deleting..." })).toBeDisabled();
