@@ -340,14 +340,14 @@ def seed_skills(db: Session) -> None:
     print("Adding skills...")
     category_tr = {
         "Cloud & DevOps": "Bulut ve DevOps",
-        "Observability & Infra": "Gozlemlenebilirlik ve Altyapi",
+        "Observability & Infra": "Gözlemlenebilirlik ve Altyapı",
         "Backend": "Backend",
         "Architecture": "Mimari",
         "Testing & Automation": "Test ve Otomasyon",
         "Frontend": "Frontend",
         "Languages": "Diller",
         "AI & Data": "Yapay Zeka ve Veri",
-        "Tooling": "Araclar",
+        "Tooling": "Araçlar",
     }
     skills_data = [
         {
@@ -492,7 +492,7 @@ def seed_skills(db: Session) -> None:
         },
         {
             "name": "Clean Architecture",
-            "name_tr": "Clean Architecture",
+            "name_tr": "Temiz Mimari",
             "category": "Architecture",
             "proficiency": 87,
             "icon": "🏛️",
@@ -506,7 +506,7 @@ def seed_skills(db: Session) -> None:
         },
         {
             "name": "Constraint Optimization",
-            "name_tr": "Kisit Optimizasyonu",
+            "name_tr": "Kısıt Optimizasyonu",
             "category": "Architecture",
             "proficiency": 88,
             "icon": "🧠",
@@ -527,7 +527,7 @@ def seed_skills(db: Session) -> None:
         },
         {
             "name": "CI/CD Pipelines",
-            "name_tr": "CI/CD Pipeline'lari",
+            "name_tr": "CI/CD İş Akışları",
             "category": "Testing & Automation",
             "proficiency": 86,
             "icon": "🔁",
@@ -632,7 +632,7 @@ def seed_skills(db: Session) -> None:
         },
         {
             "name": "Retrieval-Augmented Generation (RAG)",
-            "name_tr": "Retrieval-Augmented Generation (RAG)",
+            "name_tr": "Bilgi Erişimiyle Zenginleştirilmiş Üretim (RAG)",
             "category": "AI & Data",
             "proficiency": 72,
             "icon": "📚",
@@ -723,49 +723,49 @@ def seed_experiences(db: Session) -> None:
     experiences_data = [
         {
             "title_en": "B.Sc. Software Engineering",
-            "title_tr": "Yazilim Muhendisligi Lisans Programi",
-            "organization_en": "Isik University",
-            "organization_tr": "Isik Universitesi",
-            "location_en": "Istanbul, Turkiye",
-            "location_tr": "Istanbul, Turkiye",
+            "title_tr": "Yazılım Mühendisliği Lisans Programı",
+            "organization_en": "Işık University",
+            "organization_tr": "Işık Üniversitesi",
+            "location_en": "Istanbul, Turkey",
+            "location_tr": "İstanbul, Türkiye",
             "experience_type": "education",
             "start_date": date(2023, 9, 1),
             "end_date": date(2027, 6, 1),
             "is_current": True,
             "description_en": "Third-year Software Engineering student. Expected graduation in 2027.",
-            "description_tr": "Ucuncu sinif Yazilim Muhendisligi ogrencisi. Beklenen mezuniyet: 2027.",
+            "description_tr": "Üçüncü sınıf Yazılım Mühendisliği öğrencisi. Beklenen mezuniyet: 2027.",
         },
         {
             "title_en": "High School Diploma",
-            "title_tr": "Lise Diplomasi",
-            "organization_en": "Ergun Oner-Mehmet Oner Anatolian High School",
-            "organization_tr": "Ergun Oner-Mehmet Oner Anadolu Lisesi",
-            "location_en": "Istanbul, Turkiye",
-            "location_tr": "Istanbul, Turkiye",
+            "title_tr": "Lise Diploması",
+            "organization_en": "Ergün Öner-Mehmet Öner Anatolian High School",
+            "organization_tr": "Ergün Öner-Mehmet Öner Anadolu Lisesi",
+            "location_en": "Istanbul, Turkey",
+            "location_tr": "İstanbul, Türkiye",
             "experience_type": "education",
             "start_date": date(2019, 9, 1),
             "end_date": date(2023, 6, 1),
             "is_current": False,
             "description_en": "Software and electronics focused high school education.",
-            "description_tr": "Yazilim ve elektronik odakli lise egitimi.",
+            "description_tr": "Yazılım ve elektronik odaklı lise eğitimi.",
         },
         {
             "title_en": "Software Engineering Intern",
-            "title_tr": "Yazilim Muhendisligi Stajyeri",
-            "organization_en": "NETAS Telekomunikasyon A.S.",
-            "organization_tr": "NETAS Telekomunikasyon A.S.",
-            "location_en": "Istanbul, Turkiye",
-            "location_tr": "Istanbul, Turkiye",
+            "title_tr": "Yazılım Mühendisliği Stajyeri",
+            "organization_en": "NETAŞ Telecommunications Inc.",
+            "organization_tr": "NETAŞ Telekomünikasyon A.Ş.",
+            "location_en": "Istanbul, Turkey",
+            "location_tr": "İstanbul, Türkiye",
             "experience_type": "work",
             "start_date": date(2026, 1, 1),
             "end_date": date(2026, 2, 1),
             "is_current": False,
             "description_en": "Contributed production-grade code and tests to an enterprise Java microservices platform. Identified a critical v1/v2 timezone mismatch through YAML configuration and ELK analysis, and documented remediation with 600+ lines of tests.",
-            "description_tr": "Kurumsal Java mikroservis platformunda canli ortama giden kod ve test katkisi saglandi. YAML konfigurasyonu ve ELK analizi ile kritik v1/v2 timezone uyumsuzlugu tespit edilip 600+ satir test ile cozum dokumante edildi.",
+            "description_tr": "Kurumsal Java mikroservis platformunda üretim ortamına giden kod ve test katkısı sağladım. YAML yapılandırması ve ELK analiziyle kritik v1/v2 saat dilimi uyumsuzluğunu tespit edip çözümü 600'den fazla satır testle belgeledim.",
         },
         {
             "title_en": "Project Management Intern (Remote)",
-            "title_tr": "Proje Yonetimi Stajyeri (Uzaktan)",
+            "title_tr": "Proje Yönetimi Stajyeri (Uzaktan)",
             "organization_en": "Arch of Sigma",
             "organization_tr": "Arch of Sigma",
             "location_en": "Remote",
@@ -775,95 +775,95 @@ def seed_experiences(db: Session) -> None:
             "end_date": date(2026, 1, 1),
             "is_current": False,
             "description_en": "Supported cross-border architecture and engineering projects across Turkiye and the Balkans by coordinating documentation, deliverables, and milestone tracking.",
-            "description_tr": "Turkiye ve Balkanlar'daki sinir otesi mimarlik/muhendislik projelerinde dokumantasyon, teslimat ve kilometre tasi takibi koordinasyonu saglandi.",
+            "description_tr": "Türkiye ve Balkanlar'daki sınır ötesi mimarlık ve mühendislik projelerinde dokümantasyon, teslimat ve kilometre taşı takibi koordinasyonunu sağladım.",
         },
         {
             "title_en": "Student Assistant",
-            "title_tr": "Ogrenci Asistani",
-            "organization_en": "Isik University - CSE Department",
-            "organization_tr": "Isik Universitesi - CSE Bolumu",
-            "location_en": "Istanbul, Turkiye",
-            "location_tr": "Istanbul, Turkiye",
+            "title_tr": "Öğrenci Asistanı",
+            "organization_en": "Işık University - CSE Department",
+            "organization_tr": "Işık Üniversitesi - CSE Bölümü",
+            "location_en": "Istanbul, Turkey",
+            "location_tr": "İstanbul, Türkiye",
             "experience_type": "work",
             "start_date": date(2024, 2, 1),
             "end_date": None,
             "is_current": True,
             "description_en": "Mentors students in OOP lab sessions with focus on clean code and software design fundamentals.",
-            "description_tr": "OOP laboratuvarlarinda ogrencilere clean code ve yazilim tasarim temelleri uzerine mentorluk sagliyor.",
+            "description_tr": "OOP laboratuvarlarında öğrencilere temiz kod ve yazılım tasarımı temelleri üzerine mentorluk sağlıyorum.",
         },
         {
             "title_en": "Vice President & Project Coordinator",
-            "title_tr": "Baskan Yardimcisi ve Proje Koordinatoru",
-            "organization_en": "IEEE Isik Student Branch",
-            "organization_tr": "IEEE Isik Ogrenci Kolu",
-            "location_en": "Istanbul, Turkiye",
-            "location_tr": "Istanbul, Turkiye",
+            "title_tr": "Başkan Yardımcısı ve Proje Koordinatörü",
+            "organization_en": "IEEE Işık Student Branch",
+            "organization_tr": "IEEE Işık Öğrenci Kolu",
+            "location_en": "Istanbul, Turkey",
+            "location_tr": "İstanbul, Türkiye",
             "experience_type": "volunteer",
             "start_date": date(2025, 11, 1),
             "end_date": None,
             "is_current": True,
             "description_en": "Leads operations, workshops, hackathons, and industry networking events for 1,100+ students.",
-            "description_tr": "1.100+ ogrenciye ulasan teknik etkinlikler, hackathonlar ve sektor bulusmalari dahil operasyonlari yonetiyor.",
+            "description_tr": "1.100'den fazla öğrenciye ulaşan teknik etkinlikler, hackathonlar ve sektör buluşmaları dâhil operasyonları yönetiyorum.",
         },
         {
             "title_en": "Organization Committee Member",
-            "title_tr": "Organizasyon Komitesi Uyesi",
+            "title_tr": "Organizasyon Komitesi Üyesi",
             "organization_en": "2025 IEEE Signal Processing & Communications Applications (SIU) Conference",
-            "organization_tr": "2025 IEEE Sinyal Isleme ve Iletisim Uygulamalari (SIU) Konferansi",
-            "location_en": "Turkiye",
-            "location_tr": "Turkiye",
+            "organization_tr": "2025 IEEE Sinyal İşleme ve İletişim Uygulamaları (SIU) Konferansı",
+            "location_en": "Turkey",
+            "location_tr": "Türkiye",
             "experience_type": "volunteer",
             "start_date": date(2025, 11, 1),
             "end_date": date(2025, 11, 30),
             "is_current": False,
             "description_en": "Coordinated venue logistics and technical session infrastructure for 300+ attendees.",
-            "description_tr": "300+ katilimci icin mekan lojistigi ve teknik oturum altyapisinin koordinasyonuna katkida bulundu.",
+            "description_tr": "300'den fazla katılımcı için mekân lojistiği ve teknik oturum altyapısının koordinasyonuna katkıda bulundum.",
         },
         {
             "title_en": "Lead Organizer",
-            "title_tr": "Bas Organizator",
+            "title_tr": "Baş Organizatör",
             "organization_en": "IEEEXtreme'24 Programming Camp",
-            "organization_tr": "IEEEXtreme'24 Programlama Kampi",
-            "location_en": "Istanbul, Turkiye",
-            "location_tr": "Istanbul, Turkiye",
+            "organization_tr": "IEEEXtreme'24 Programlama Kampı",
+            "location_en": "Istanbul, Turkey",
+            "location_tr": "İstanbul, Türkiye",
             "experience_type": "volunteer",
             "start_date": date(2024, 7, 1),
             "end_date": date(2024, 7, 31),
             "is_current": False,
             "description_en": "Directed a national programming bootcamp focused on competitive programming, algorithms, and data structures.",
-            "description_tr": "Rekabetci programlama, algoritma ve veri yapilari odakli ulusal capta bir programlama kampini yonetti.",
+            "description_tr": "Rekabetçi programlama, algoritma ve veri yapıları odaklı ulusal çapta bir programlama kampını yönettim.",
         },
         {
             "title_en": "Environmental Volunteer",
-            "title_tr": "Cevre Gonullusu",
-            "organization_en": "TEMA Foundation & WWF Turkiye",
-            "organization_tr": "TEMA Vakfi ve WWF Turkiye",
-            "location_en": "Turkiye",
-            "location_tr": "Turkiye",
+            "title_tr": "Çevre Gönüllüsü",
+            "organization_en": "TEMA Foundation & WWF Türkiye",
+            "organization_tr": "TEMA Vakfı ve WWF Türkiye",
+            "location_en": "Turkey",
+            "location_tr": "Türkiye",
             "experience_type": "volunteer",
             "start_date": date(2022, 1, 1),
             "end_date": None,
             "is_current": True,
             "description_en": "Participates in reforestation, environmental protection, and wildlife awareness initiatives.",
-            "description_tr": "Agaclandirma, cevre koruma ve yaban hayati farkindalik calismalarina gonullu destek veriyor.",
+            "description_tr": "Ağaçlandırma, çevre koruma ve yaban hayatı farkındalığı çalışmalarına gönüllü destek veriyorum.",
         },
         {
             "title_en": "Software Lead",
-            "title_tr": "Yazilim Takim Lideri",
+            "title_tr": "Yazılım Takım Lideri",
             "organization_en": "Teknofest Sarkan UAV Defense Platform",
-            "organization_tr": "Teknofest Sarkan IHA Savunma Platformu",
-            "location_en": "Turkiye",
-            "location_tr": "Turkiye",
+            "organization_tr": "Teknofest Sarkan İHA Savunma Platformu",
+            "location_en": "Turkey",
+            "location_tr": "Türkiye",
             "experience_type": "activity",
             "start_date": date(2024, 5, 1),
             "end_date": date(2025, 5, 1),
             "is_current": False,
             "description_en": "Led anti-jamming telemetry software and team coordination. Project ranked 3rd among 700+ proposals in preliminary evaluation.",
-            "description_tr": "Anti-jamming telemetri yazilimi ve ekip koordinasyonuna liderlik etti. Proje on degerlendirmede 700+ basvuru arasinda 3. oldu.",
+            "description_tr": "Karıştırma önleme telemetri yazılımına ve ekip koordinasyonuna liderlik ettim. Proje ön değerlendirmede 700'den fazla başvuru arasında üçüncü oldu.",
         },
         {
             "title_en": "FRC Houston World Championship Finalist",
-            "title_tr": "FRC Houston Dunya Sampiyonasi Finalisti",
+            "title_tr": "FRC Houston Dünya Şampiyonası Finalisti",
             "organization_en": "FIRST Robotics Competition - Team 7840 EMONER",
             "organization_tr": "FIRST Robotics Competition - Team 7840 EMONER",
             "location_en": "Houston, USA",
@@ -873,7 +873,7 @@ def seed_experiences(db: Session) -> None:
             "end_date": date(2019, 4, 30),
             "is_current": False,
             "description_en": "Reached world championship finals with Team 7840 and gained competitive robotics experience.",
-            "description_tr": "Team 7840 ile dunya sampiyonasi finallerine katilarak rekabetci robotik deneyimi kazandi.",
+            "description_tr": "Team 7840 ile dünya şampiyonası finallerine katılarak rekabetçi robotik deneyimi kazandım.",
         },
     ]
     for index, item in enumerate(experiences_data, start=1):
@@ -920,10 +920,10 @@ def seed_projects(db: Session) -> List[Project]:
     projects_data = [
         {
             "slug": "isikschedule-platform",
-            "title_en": "IsikSchedule Platform",
-            "title_tr": "IsikSchedule Platformu",
+            "title_en": "IşıkSchedule Platform",
+            "title_tr": "IşıkSchedule Platformu",
             "short_en": "Independent desktop and web scheduling products for Işık University catalogs",
-            "short_tr": "Işık Üniversitesi katalogları için bağımsız masaüstü ve web programlama ürünleri",
+            "short_tr": "Işık Üniversitesi katalogları için bağımsız masaüstü ve web ders programı oluşturma ürünleri",
             "description_en": (
                 "The portfolio tracks multiple independent scheduling codebases rather than a shared solver package: "
                 "the PyQt6 desktop client has a verified 13-solver registry, while the FastAPI + Next.js web product "
@@ -931,9 +931,9 @@ def seed_projects(db: Session) -> List[Project]:
                 "JWT/admin controls, Excel catalog ingestion, and shareable schedule flows."
             ),
             "description_tr": (
-                "Portföyde ortak bir solver paketi olarak değil, bağımsız ders programlama kod tabanları olarak izlenir: "
-                "PyQt6 masaüstü istemcisinde doğrulanmış 13 solver kayıtlıdır; FastAPI + Next.js web ürünü ise "
-                "kendi senkron kesin aramasını ve SQLite kalıcılığını kullanır. Web reposunda ayrıca JWT/admin kontrolleri, "
+                "Portföyde ortak bir çözücü paketi olarak değil, bağımsız ders programlama kod tabanları olarak izlenir: "
+                "PyQt6 masaüstü istemcisinde doğrulanmış 13 çözücü kayıtlıdır; FastAPI + Next.js web ürünü ise "
+                "kendi senkron kesin aramasını ve SQLite kalıcılığını kullanır. Web deposunda ayrıca JWT/yönetici kontrolleri, "
                 "Excel katalog alımı ve paylaşılabilir program akışları bulunur."
             ),
             "github_url": "https://github.com/TurkishKEBAB/isikschedule-core",
@@ -946,16 +946,16 @@ def seed_projects(db: Session) -> List[Project]:
             "title_en": "Agentic IDE (Thesis Project)",
             "title_tr": "Agentic IDE (Tez Projesi)",
             "short_en": "Safety-oriented Agentic IDE thesis planning and requirements repository",
-            "short_tr": "Güvenlik odaklı Agentic IDE tez planlama ve gereksinim reposu",
+            "short_tr": "Güvenlik odaklı Agentic IDE tez planlama ve gereksinim deposu",
             "description_en": (
                 "A thesis planning repository, not a shipped IDE implementation. Its accepted ADRs and backlog define "
                 "an Electron + Monaco MVP, a single-agent plan-first approval loop, local retrieval, explicit model "
                 "selection, workspace-bound writes, rollback, audit events, and a 20-task evaluation target."
             ),
             "description_tr": (
-                "Henüz dağıtılmış bir IDE uygulaması değil, tez planlama reposudur. Kabul edilmiş ADR'leri ve backlog'u; "
-                "Electron + Monaco MVP'sini, tek ajanlı plan-önce/onaylı akışı, lokal retrieval'ı, açık model seçimini, "
-                "workspace sınırlarını, rollback'i, audit event'lerini ve 20 görevlik değerlendirme hedefini tanımlar."
+                "Henüz dağıtılmış bir IDE uygulaması değil, tez planlama deposudur. Kabul edilmiş ADR'leri ve iş listesini; "
+                "Electron + Monaco MVP'sini, tek ajanlı plan-önce/onaylı akışı, yerel bilgi erişimini, açık model seçimini, "
+                "çalışma alanı sınırlarını, geri almayı, denetim olaylarını ve 20 görevlik değerlendirme hedefini tanımlar."
             ),
             "github_url": "https://github.com/TurkishKEBAB/Agentic-Ide",
             "demo_url": None,
@@ -965,7 +965,7 @@ def seed_projects(db: Session) -> List[Project]:
         {
             "slug": "teknofest-sarkan-uav-defense-platform",
             "title_en": "Teknofest Sarkan UAV Defense Platform",
-            "title_tr": "Teknofest Sarkan IHA Savunma Platformu",
+            "title_tr": "Teknofest Sarkan İHA Savunma Platformu",
             "short_en": "Project record pending technical source and publication clearance",
             "short_tr": "Teknik kaynak ve yayın izni bekleyen proje kaydı",
             "description_en": (
@@ -985,17 +985,17 @@ def seed_projects(db: Session) -> List[Project]:
         {
             "slug": "automated-web-crawler",
             "title_en": "Automated Web Crawler",
-            "title_tr": "Otomatik Web Tarayici",
+            "title_tr": "Otomatik Web Tarayıcısı",
             "short_en": "Project record pending crawler source and benchmark evidence",
-            "short_tr": "Crawler kaynağı ve benchmark kanıtı bekleyen proje kaydı",
+            "short_tr": "Tarayıcı kaynağı ve karşılaştırma kanıtı bekleyen proje kaydı",
             "description_en": (
                 "No crawler repository, archive, runnable benchmark, or operational screenshot was found in the audited "
                 "workspaces. Scrapy, FastAPI, PostgreSQL, worker count, retry policy, robots enforcement, and success-rate "
                 "claims are therefore not published as verified project architecture."
             ),
             "description_tr": (
-                "Denetlenen çalışma alanlarında crawler reposu, arşivi, çalıştırılabilir benchmark'ı veya operasyon ekranı "
-                "bulunamadı. Bu nedenle Scrapy, FastAPI, PostgreSQL, worker sayısı, retry politikası, robots uygulaması ve "
+                "Denetlenen çalışma alanlarında tarayıcı deposu, arşivi, çalıştırılabilir karşılaştırması veya operasyon ekranı "
+                "bulunamadı. Bu nedenle Scrapy, FastAPI, PostgreSQL, işçi sayısı, yeniden deneme politikası, robots uygulaması ve "
                 "başarı oranı iddiaları doğrulanmış proje mimarisi olarak yayınlanmıyor."
             ),
             "github_url": None,
@@ -1006,18 +1006,18 @@ def seed_projects(db: Session) -> List[Project]:
         {
             "slug": "portfolio-platform-web-desktop",
             "title_en": "Portfolio Platform (Web + Desktop)",
-            "title_tr": "Portfolyo Platformu (Web + Masaustu)",
+            "title_tr": "Portfolyo Platformu (Web + Masaüstü)",
             "short_en": "Full-stack multi-platform portfolio with admin operations and CI/CD",
-            "short_tr": "Admin operasyonlari ve CI/CD iceren full-stack cok platformlu portfolyo sistemi",
+            "short_tr": "Yönetici operasyonları ve CI/CD içeren tam kapsamlı çok platformlu portfolyo sistemi",
             "description_en": (
                 "Multi-platform system with 72 API endpoints, JWT/RBAC auth, 24h GitHub API caching "
                 "with in-memory fallback, Supabase asset operations, SMTP notifications, and independent "
                 "Vercel (frontend) and Railway (backend) deployments via each provider's GitHub integration."
             ),
             "description_tr": (
-                "72 API endpoint, JWT/RBAC kimlik dogrulama, in-memory yedekli 24 saatlik GitHub API cache, "
-                "Supabase varlik yonetimi, SMTP bildirimleri ve her saglayicinin GitHub entegrasyonu uzerinden "
-                "bagimsiz Vercel (frontend) ve Railway (backend) dagitimlarini iceren cok platformlu sistem."
+                "72 API uç noktası, JWT/RBAC kimlik doğrulama, bellek yedeklemeli 24 saatlik GitHub API önbelleği, "
+                "Supabase varlık yönetimi, SMTP bildirimleri ve her sağlayıcının GitHub entegrasyonu üzerinden "
+                "bağımsız Vercel (ön yüz) ve Railway (arka uç) dağıtımlarını içeren çok platformlu sistem."
             ),
             "github_url": "https://github.com/TurkishKEBAB/Site",
             "demo_url": None,
@@ -1027,11 +1027,11 @@ def seed_projects(db: Session) -> List[Project]:
         {
             "slug": "ramazan-kopru-academic-site",
             "title_en": "Ramazan Kopru Academic Site",
-            "title_tr": "Ramazan Kopru Akademik Sitesi",
+            "title_tr": "Ramazan Köprü Akademik Sitesi",
             "short_en": "Next.js academic publishing site with MDX content and admin routes",
-            "short_tr": "MDX icerigi ve admin route'lari olan Next.js akademik yayin sitesi",
+            "short_tr": "MDX içeriği ve yönetici rotaları olan Next.js akademik yayın sitesi",
             "description_en": "A source-backed Next.js 14 App Router academic site with TypeScript, Tailwind CSS, MDX longform content, JSON-managed academic records, and admin route handlers.",
-            "description_tr": "TypeScript, Tailwind CSS, MDX, JSON akademik kayitlar ve admin route handler'lari kullanan kaynak destekli Next.js 14 akademik sitesi.",
+            "description_tr": "TypeScript, Tailwind CSS, MDX, JSON akademik kayıtlar ve yönetici rota işleyicileri kullanan kaynak destekli Next.js 14 akademik sitesi.",
             "github_url": "https://github.com/TurkishKEBAB/RamazanKopru",
             "demo_url": None,
             "featured": False,
@@ -1040,11 +1040,11 @@ def seed_projects(db: Session) -> List[Project]:
         {
             "slug": "travel-planner-platform",
             "title_en": "Rovera Travel Planner",
-            "title_tr": "Rovera Seyahat Planlayici",
+            "title_tr": "Rovera Seyahat Planlayıcısı",
             "short_en": "Split React travel planner with Express authentication and MySQL persistence",
-            "short_tr": "Express kimlik dogrulamali ve MySQL kalicilikli React seyahat planlayici",
+            "short_tr": "Express kimlik doğrulamalı ve MySQL kalıcılıklı React seyahat planlayıcısı",
             "description_en": "A source-backed Vite + React 19 frontend and Express 5 backend with TanStack Router, HeroUI, Leaflet, JWT, bcrypt, MySQL, and multer avatar uploads.",
-            "description_tr": "TanStack Router, HeroUI, Leaflet, JWT, bcrypt, MySQL ve multer avatar yuklemeleri kullanan Vite + React 19 frontend ve Express 5 backend projesi.",
+            "description_tr": "TanStack Router, HeroUI, Leaflet, JWT, bcrypt, MySQL ve multer avatar yüklemeleri kullanan Vite + React 19 ön yüzü ve Express 5 arka ucu projesi.",
             "github_url": "https://github.com/Soft3112-TravelPlanner/travel-planner",
             "demo_url": None,
             "featured": False,
@@ -1053,11 +1053,11 @@ def seed_projects(db: Session) -> List[Project]:
         {
             "slug": "turkish-morphology-fst",
             "title_en": "Turkish Morphological Analyzer (HFST)",
-            "title_tr": "Turkce Morfolojik Analizor (HFST)",
+            "title_tr": "Türkçe Morfolojik Analizörü (HFST)",
             "short_en": "HFST morphology specification with lexicon, rule, and derivation diagrams",
-            "short_tr": "Sozluk, kural ve turetim diyagramlariyla HFST morfoloji spesifikasyonu",
+            "short_tr": "Sözlük, kural ve türetim diyagramlarıyla HFST morfoloji spesifikasyonu",
             "description_en": "A research/specification repository documenting lexicon, morphotactics, phonology, derivation, and a compiled-analyzer target without claiming a shipped HFST artifact.",
-            "description_tr": "Sozluk, morfotaktik, fonoloji ve turetim katmanlarini belgeleyen, yayinlanmis HFST artefakti iddiasi yapmayan arastirma ve spesifikasyon reposu.",
+            "description_tr": "Sözlük, morfotaktik, fonoloji ve türetim katmanlarını belgeleyen, yayımlanmış HFST artefaktı iddiası yapmayan araştırma ve spesifikasyon deposu.",
             "github_url": "https://github.com/TurkishKEBAB/turkish-morphology-fst",
             "demo_url": None,
             "featured": False,
@@ -1242,10 +1242,10 @@ def seed_ui_translations(db: Session) -> None:
         ("en", "nav_blog", "Blog"),
         ("en", "nav_contact", "Contact"),
         ("tr", "nav_home", "Ana Sayfa"),
-        ("tr", "nav_about", "Hakkimda"),
+        ("tr", "nav_about", "Hakkımda"),
         ("tr", "nav_projects", "Projeler"),
         ("tr", "nav_blog", "Blog"),
-        ("tr", "nav_contact", "Iletisim"),
+        ("tr", "nav_contact", "İletişim"),
     ]
     for language, key, value in entries:
         db.add(Translation(language=language, translation_key=key, value=value))
@@ -1267,16 +1267,31 @@ def seed_blog_posts(db: Session, author: User) -> None:
                 "I reproduced the defect through targeted logs and implemented a test matrix with 600+ lines "
                 "to document and prevent regressions."
             ),
+            "title_tr": "Kurumsal Mikroservislerde Sessiz Bir Saat Dilimi Hatasını Ayıklamak",
+            "excerpt_tr": "YAML ve ELK izleriyle v1/v2 saat dilimi uyuşmazlığını saptamaya dair kısa bir vaka çalışması.",
+            "content_tr": (
+                "NETAS'taki stajım sırasında UTC ve UTC+3 yapılandırmaları arasındaki sessiz tarih sınırı "
+                "uyuşmazlığını inceledim. Sorun istemci tarafı doğrulamasıyla yakalanmıyordu. Hedefli loglar "
+                "üzerinden hatayı yeniden ürettim ve regresyonları belgelemek ve önlemek için 600'den fazla "
+                "satırdan oluşan bir test matrisi uyguladım."
+            ),
             "reading_time": 5,
         },
         {
             "slug": "building-constraint-aware-schedulers",
             "title": "Building Constraint-Aware Schedulers Across Desktop and Web",
-            "excerpt": "Notes from IsikSchedule architecture decisions and algorithmic tradeoffs.",
+            "excerpt": "Notes from IşıkSchedule architecture decisions and algorithmic tradeoffs.",
             "content": (
-                "IsikSchedule combines hard constraints and preference optimization with a set of heuristic and "
+                "IşıkSchedule combines hard constraints and preference optimization with a set of heuristic and "
                 "metaheuristic algorithms. This post summarizes architecture choices that made desktop and web "
                 "versions share the same core domain logic."
+            ),
+            "title_tr": "Masaüstü ve Web'de Kısıt Farkındalıklı Ders Programı Oluşturucular Geliştirmek",
+            "excerpt_tr": "IşıkSchedule mimari kararları ve algoritmik ödünleşimler üzerine notlar.",
+            "content_tr": (
+                "IşıkSchedule, sert kısıtları tercih optimizasyonuyla bir dizi buluşsal ve meta-sezgisel "
+                "algoritmayla birleştiriyor. Bu yazı, masaüstü ve web sürümlerinin aynı temel alan mantığını "
+                "paylaşmasını sağlayan mimari tercihleri özetliyor."
             ),
             "reading_time": 4,
         },
@@ -1300,9 +1315,9 @@ def seed_blog_posts(db: Session, author: User) -> None:
             BlogTranslation(
                 blog_post_id=post.id,
                 language="tr",
-                title=item["title"],
-                content=item["content"],
-                excerpt=item["excerpt"],
+                title=item["title_tr"],
+                content=item["content_tr"],
+                excerpt=item["excerpt_tr"],
             )
         )
     db.commit()

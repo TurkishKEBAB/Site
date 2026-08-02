@@ -1,6 +1,6 @@
 {
   "impact_en": "Ramazan Kopru is a source-backed academic publishing site built around Next.js 14 App Router. Longform biography and research content lives in MDX, structured academic records live in JSON collections, and the repository includes route handlers plus an admin surface for content operations. The dossier describes the observed repository architecture; it does not claim a verified production deployment.",
-  "impact_tr": "Ramazan Kopru, Next.js 14 App Router etrafinda kurulmus kaynak destekli bir akademik yayin sitesidir. Uzun biyografi ve arastirma icerigi MDX'te, yapisal akademik kayitlar JSON koleksiyonlarinda tutulur; repo ayrica route handler'lar ve icerik islemleri icin admin yuzeyi icerir. Dossier gozlenen repo mimarisini anlatir, dogrulanmis production deploy iddiasi yapmaz.",
+  "impact_tr": "Ramazan Köprü, Next.js 14 App Router etrafında kurulmuş kaynak destekli bir akademik yayın sitesidir. Uzun biyografi ve araştırma içeriği MDX'te, yapısal akademik kayıtlar JSON koleksiyonlarında tutulur; depo ayrıca rota işleyicileri ve içerik işlemleri için bir yönetim yüzeyi içerir. Dosya, gözlenen depo mimarisini anlatır; doğrulanmış bir üretim dağıtımı iddiası yapmaz.",
   "metrics": [
     {"value": "6", "numeric_value": 6, "label": "JSON content collections", "note": "profile, publications, courses, projects, theses, service", "display_order": 0},
     {"value": "7", "numeric_value": 7, "label": "Public sections", "note": "about, research, teaching, publications, students, service, contact", "display_order": 1},

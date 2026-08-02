@@ -35,7 +35,7 @@ const compact = (value: number) =>
   value >= 1000 ? `${(value / 1000).toFixed(1)}k` : String(value);
 
 const unavailableText = (locale: Locale) =>
-  locale === "tr" ? "Veri gecici olarak yok" : "Data temporarily unavailable";
+  locale === "tr" ? "Veri geçici olarak yok" : "Data temporarily unavailable";
 
 function Unavailable({ locale }: { locale: Locale }) {
   return (
@@ -48,22 +48,22 @@ function Unavailable({ locale }: { locale: Locale }) {
 export default function CommandCenter({ locale, waka, github, contributions }: CommandCenterProps) {
   const tr = locale === "tr";
   const [expanded, setExpanded] = useState<null | "waka" | "github">(null);
-  const expandLabel = tr ? "genislet" : "expand";
+  const expandLabel = tr ? "genişlet" : "expand";
 
   const wakaStats = waka
     ? [
         { value: toHours(waka.all_time_seconds), unit: "h", label: tr ? "Toplam takip" : "Total tracked" },
         { value: toHours(waka.last_7_days_seconds, 1), unit: "h", label: tr ? "Bu hafta" : "This week" },
-        { value: toHours(waka.daily_average_seconds, 1), unit: "h", label: tr ? "Gunluk ortalama" : "Daily average" },
+        { value: toHours(waka.daily_average_seconds, 1), unit: "h", label: tr ? "Günlük ortalama" : "Daily average" },
       ]
     : [];
 
   const githubStats = github
     ? [
-        { value: compact(github.public_repos), label: tr ? "Public repo" : "Public repos" },
+        { value: compact(github.public_repos), label: tr ? "Herkese açık depo" : "Public repos" },
         { value: compact(github.total_commits), label: tr ? "Commit" : "Commits" },
         { value: compact(github.total_pull_requests), label: tr ? "Pull request" : "Pull requests" },
-        { value: compact(github.total_stars), label: tr ? "Yildiz" : "Stars earned" },
+        { value: compact(github.total_stars), label: tr ? "Yıldız" : "Stars earned" },
       ]
     : [];
 
@@ -168,7 +168,7 @@ export default function CommandCenter({ locale, waka, github, contributions }: C
                   style={index === 0 ? undefined : { backgroundColor: `rgba(0,212,255,${opacity})` }}
                 />
               ))}
-              <span>{tr ? "Cok" : "More"}</span>
+              <span>{tr ? "Çok" : "More"}</span>
             </div>
           </>
         ) : null}
@@ -178,8 +178,8 @@ export default function CommandCenter({ locale, waka, github, contributions }: C
       <TelemetryModal
         open={expanded === "waka"}
         label="WakaTime · Dashboard"
-        title={tr ? "Aktivite ozeti" : "Activity overview"}
-        meta={tr ? "son 7 gun · anlik goruntu" : "last 7 days · snapshot"}
+        title={tr ? "Aktivite özeti" : "Activity overview"}
+        meta={tr ? "son 7 gün · anlık görüntü" : "last 7 days · snapshot"}
         onClose={() => setExpanded(null)}
       >
         <WakaDetailView stats={wakaStats} languages={waka?.languages ?? []} detail={wakaDetail} />
@@ -188,7 +188,7 @@ export default function CommandCenter({ locale, waka, github, contributions }: C
         open={expanded === "github"}
         label={`GitHub · @${githubHandle}`}
         title={tr ? "Analitik & aktivite" : "Analytics & activity"}
-        meta={tr ? "public profil · gunluk guncellenir" : "public profile · updated daily"}
+        meta={tr ? "herkese açık profil · günlük güncellenir" : "public profile · updated daily"}
         onClose={() => setExpanded(null)}
       >
         <GitHubDetailView stats={githubStats} cells={contributions?.cells ?? []} detail={githubDetail} />

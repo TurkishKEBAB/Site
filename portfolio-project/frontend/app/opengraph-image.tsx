@@ -58,7 +58,7 @@ export default function OpenGraphImage() {
           </div>
           <div style={{ display: "flex", gap: 24, fontSize: 24, color: "#7ddfff" }}>
             <span>NETAS</span>
-            <span>IsikSchedule</span>
+            <span>IşıkSchedule</span>
             <span>IEEE</span>
           </div>
         </div>

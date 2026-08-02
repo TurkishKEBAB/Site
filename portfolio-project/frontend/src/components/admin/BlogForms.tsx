@@ -51,18 +51,18 @@ const blogFormText = {
     update: "Save changes",
   },
   tr: {
-    title: "Baslik",
+    title: "Başlık",
     slug: "Slug",
-    excerpt: "Ozet",
-    content: "Markdown icerik",
-    coverImage: "Kapak gorseli URL",
+    excerpt: "Özet",
+    content: "Markdown içeriği",
+    coverImage: "Kapak görseli URL",
     tags: "Etiketler",
-    readingTime: "Okuma suresi (dakika)",
-    published: "Bu yaziyi yayinla",
-    cancel: "Iptal",
+    readingTime: "Okuma süresi (dakika)",
+    published: "Bu yazıyı yayınla",
+    cancel: "İptal",
     saving: "Kaydediliyor...",
-    create: "Yazi olustur",
-    update: "Degisiklikleri kaydet",
+    create: "Yazı oluştur",
+    update: "Değişiklikleri kaydet",
   },
 } as const;
 
@@ -284,7 +284,7 @@ export function BlogTranslationEditor({
 
       <form onSubmit={submit} className="space-y-4">
         <label className="block space-y-1.5 text-sm text-gray-700 dark:text-dark-200">
-          <span>{isTurkish ? "Baslik" : "Title"}</span>
+          <span>{isTurkish ? "Başlık" : "Title"}</span>
           <input
             value={values.title}
             onChange={(event) => setValues((previous) => ({ ...previous, title: event.target.value }))}
@@ -293,7 +293,7 @@ export function BlogTranslationEditor({
           />
         </label>
         <label className="block space-y-1.5 text-sm text-gray-700 dark:text-dark-200">
-          <span>{isTurkish ? "Ozet" : "Excerpt"}</span>
+          <span>{isTurkish ? "Özet" : "Excerpt"}</span>
           <textarea
             value={values.excerpt || ""}
             onChange={(event) => setValues((previous) => ({ ...previous, excerpt: event.target.value }))}
@@ -302,7 +302,7 @@ export function BlogTranslationEditor({
           />
         </label>
         <label className="block space-y-1.5 text-sm text-gray-700 dark:text-dark-200">
-          <span>{isTurkish ? "Markdown icerik" : "Markdown body"}</span>
+          <span>{isTurkish ? "Markdown içeriği" : "Markdown body"}</span>
           <textarea
             value={values.content}
             onChange={(event) => setValues((previous) => ({ ...previous, content: event.target.value }))}
@@ -313,7 +313,7 @@ export function BlogTranslationEditor({
         </label>
         <div className="flex justify-end">
           <button type="submit" disabled={loading || saving} className="btn-primary disabled:opacity-50">
-            {saving ? (isTurkish ? "Kaydediliyor..." : "Saving...") : isTurkish ? "Ceviriyi kaydet" : "Save translation"}
+            {saving ? (isTurkish ? "Kaydediliyor..." : "Saving...") : isTurkish ? "Çeviriyi kaydet" : "Save translation"}
           </button>
         </div>
       </form>

@@ -33,7 +33,7 @@ from app.models.technology import Technology
 from app.schemas.dossier import ProjectDossierUpsert
 
 DOSSIER_SEED_REVISION_KEY = "dossier_seed_revision"
-DOSSIER_SEED_REVISION = "2026-07-31-evidence-audit-v3"
+DOSSIER_SEED_REVISION = "2026-08-02-localization-audit-v1"
 DOSSIER_REMOVED_SLUGS = (
     "teknofest-sarkan-uav-defense-platform",
     "automated-web-crawler",
@@ -41,10 +41,10 @@ DOSSIER_REMOVED_SLUGS = (
 
 PROJECT_CATALOG_CONTENT: dict[str, dict] = {
     "isikschedule-platform": {
-        "title_en": "IsikSchedule Platform",
-        "title_tr": "IsikSchedule Platformu",
+        "title_en": "IşıkSchedule Platform",
+        "title_tr": "IşıkSchedule Platformu",
         "short_en": "Independent desktop and web scheduling products for Işık University catalogs",
-        "short_tr": "Işık Üniversitesi katalogları için bağımsız masaüstü ve web programlama ürünleri",
+        "short_tr": "Işık Üniversitesi katalogları için bağımsız masaüstü ve web ders programı oluşturma ürünleri",
         "description_en": (
             "The portfolio tracks multiple independent scheduling codebases rather than a shared solver package: "
             "the PyQt6 desktop client has a verified 13-solver registry, while the FastAPI + Next.js web product "
@@ -52,9 +52,9 @@ PROJECT_CATALOG_CONTENT: dict[str, dict] = {
             "JWT/admin controls, Excel catalog ingestion, and shareable schedule flows."
         ),
         "description_tr": (
-            "Portföyde ortak bir solver paketi olarak değil, bağımsız ders programlama kod tabanları olarak izlenir: "
-            "PyQt6 masaüstü istemcisinde doğrulanmış 13 solver kayıtlıdır; FastAPI + Next.js web ürünü ise "
-            "kendi senkron kesin aramasını ve SQLite kalıcılığını kullanır. Web reposunda ayrıca JWT/admin kontrolleri, "
+            "Portföyde ortak bir çözücü paketi olarak değil, bağımsız ders programlama kod tabanları olarak izlenir: "
+            "PyQt6 masaüstü istemcisinde doğrulanmış 13 çözücü kayıtlıdır; FastAPI + Next.js web ürünü ise "
+            "kendi senkron kesin aramasını ve SQLite kalıcılığını kullanır. Web deposunda ayrıca JWT/yönetici kontrolleri, "
             "Excel katalog alımı ve paylaşılabilir program akışları bulunur."
         ),
         "github_url": "https://github.com/TurkishKEBAB/isikschedule-core",
@@ -76,16 +76,16 @@ PROJECT_CATALOG_CONTENT: dict[str, dict] = {
         "title_en": "Agentic IDE (Thesis Project)",
         "title_tr": "Agentic IDE (Tez Projesi)",
         "short_en": "Safety-oriented Agentic IDE thesis planning and requirements repository",
-        "short_tr": "Güvenlik odaklı Agentic IDE tez planlama ve gereksinim reposu",
+        "short_tr": "Güvenlik odaklı Agentic IDE tez planlama ve gereksinim deposu",
         "description_en": (
             "A thesis planning repository, not a shipped IDE implementation. Its accepted ADRs and backlog define "
             "an Electron + Monaco MVP, a single-agent plan-first approval loop, local retrieval, explicit model "
             "selection, workspace-bound writes, rollback, audit events, and a 20-task evaluation target."
         ),
         "description_tr": (
-            "Henüz dağıtılmış bir IDE uygulaması değil, tez planlama reposudur. Kabul edilmiş ADR'leri ve backlog'u; "
-            "Electron + Monaco MVP'sini, tek ajanlı plan-önce/onaylı akışı, lokal retrieval'ı, açık model seçimini, "
-            "workspace sınırlarını, rollback'i, audit event'lerini ve 20 görevlik değerlendirme hedefini tanımlar."
+            "Henüz dağıtılmış bir IDE uygulaması değil, tez planlama deposudur. Kabul edilmiş ADR'leri ve iş listesini; "
+            "Electron + Monaco MVP'sini, tek ajanlı plan-önce/onaylı akışı, yerel bilgi erişimini, açık model seçimini, "
+            "çalışma alanı sınırlarını, geri almayı, denetim olaylarını ve 20 görevlik değerlendirme hedefini tanımlar."
         ),
         "github_url": "https://github.com/TurkishKEBAB/Agentic-Ide",
         "demo_url": None,
@@ -102,7 +102,7 @@ PROJECT_CATALOG_CONTENT: dict[str, dict] = {
     },
     "teknofest-sarkan-uav-defense-platform": {
         "title_en": "Teknofest Sarkan UAV Defense Platform",
-        "title_tr": "Teknofest Sarkan IHA Savunma Platformu",
+        "title_tr": "Teknofest Sarkan İHA Savunma Platformu",
         "short_en": "Project record pending technical source and publication clearance",
         "short_tr": "Teknik kaynak ve yayın izni bekleyen proje kaydı",
         "description_en": (
@@ -123,17 +123,17 @@ PROJECT_CATALOG_CONTENT: dict[str, dict] = {
     },
     "automated-web-crawler": {
         "title_en": "Automated Web Crawler",
-        "title_tr": "Otomatik Web Tarayici",
+        "title_tr": "Otomatik Web Tarayıcısı",
         "short_en": "Project record pending crawler source and benchmark evidence",
-        "short_tr": "Crawler kaynağı ve benchmark kanıtı bekleyen proje kaydı",
+        "short_tr": "Tarayıcı kaynağı ve karşılaştırma kanıtı bekleyen proje kaydı",
         "description_en": (
             "No crawler repository, archive, runnable benchmark, or operational screenshot was found in the audited "
             "workspaces. Scrapy, FastAPI, PostgreSQL, worker count, retry policy, robots enforcement, and success-rate "
             "claims are therefore not published as verified project architecture."
         ),
         "description_tr": (
-            "Denetlenen çalışma alanlarında crawler reposu, arşivi, çalıştırılabilir benchmark'ı veya operasyon ekranı "
-            "bulunamadı. Bu nedenle Scrapy, FastAPI, PostgreSQL, worker sayısı, retry politikası, robots uygulaması ve "
+            "Denetlenen çalışma alanlarında tarayıcı deposu, arşivi, çalıştırılabilir karşılaştırması veya operasyon ekranı "
+            "bulunamadı. Bu nedenle Scrapy, FastAPI, PostgreSQL, işçi sayısı, yeniden deneme politikası, robots uygulaması ve "
             "başarı oranı iddiaları doğrulanmış proje mimarisi olarak yayınlanmıyor."
         ),
         "github_url": None,
@@ -144,18 +144,18 @@ PROJECT_CATALOG_CONTENT: dict[str, dict] = {
     },
     "portfolio-platform-web-desktop": {
         "title_en": "Portfolio Platform (Web + Desktop)",
-        "title_tr": "Portfolyo Platformu (Web + Masaustu)",
+        "title_tr": "Portfolyo Platformu (Web + Masaüstü)",
         "short_en": "Full-stack multi-platform portfolio with admin operations and CI/CD",
-        "short_tr": "Admin operasyonlari ve CI/CD iceren full-stack cok platformlu portfolyo sistemi",
+        "short_tr": "Yönetici operasyonları ve CI/CD içeren tam kapsamlı çok platformlu portfolyo sistemi",
         "description_en": (
             "Multi-platform system with 72 API endpoints, JWT/RBAC auth, 24h GitHub API caching "
             "with in-memory fallback, Supabase asset operations, SMTP notifications, and independent "
             "Vercel (frontend) and Railway (backend) deployments via each provider's GitHub integration."
         ),
         "description_tr": (
-            "72 API endpoint, JWT/RBAC kimlik dogrulama, in-memory yedekli 24 saatlik GitHub API cache, "
-            "Supabase varlik yonetimi, SMTP bildirimleri ve her saglayicinin GitHub entegrasyonu uzerinden "
-            "bagimsiz Vercel (frontend) ve Railway (backend) dagitimlarini iceren cok platformlu sistem."
+            "72 API uç noktası, JWT/RBAC kimlik doğrulama, bellek yedeklemeli 24 saatlik GitHub API önbelleği, "
+            "Supabase varlık yönetimi, SMTP bildirimleri ve her sağlayıcının GitHub entegrasyonu üzerinden "
+            "bağımsız Vercel (ön yüz) ve Railway (arka uç) dağıtımlarını içeren çok platformlu sistem."
         ),
         "github_url": "https://github.com/TurkishKEBAB/Site",
         "demo_url": None,
@@ -177,17 +177,17 @@ PROJECT_CATALOG_CONTENT: dict[str, dict] = {
     },
     "ramazan-kopru-academic-site": {
         "title_en": "Ramazan Kopru Academic Site",
-        "title_tr": "Ramazan Kopru Akademik Sitesi",
+        "title_tr": "Ramazan Köprü Akademik Sitesi",
         "short_en": "Next.js academic publishing site with MDX content and admin routes",
-        "short_tr": "MDX icerigi ve admin route'lari olan Next.js akademik yayin sitesi",
+        "short_tr": "MDX içeriği ve yönetici rotaları olan Next.js akademik yayın sitesi",
         "description_en": (
             "A source-backed academic website built with Next.js 14 App Router, TypeScript, "
             "Tailwind CSS, MDX longform content, JSON-managed academic records, and "
             "route handlers for administrative content operations."
         ),
         "description_tr": (
-            "Next.js 14 App Router, TypeScript, Tailwind CSS, uzun MDX icerigi, JSON tabanli "
-            "akademik kayitlar ve yonetim islemleri icin route handler'lar kullanan akademik site."
+            "Next.js 14 App Router, TypeScript, Tailwind CSS, uzun MDX içeriği, JSON tabanlı "
+            "akademik kayıtlar ve yönetim işlemleri için rota işleyicileri kullanan akademik site."
         ),
         "github_url": "https://github.com/TurkishKEBAB/RamazanKopru",
         "demo_url": None,
@@ -204,9 +204,9 @@ PROJECT_CATALOG_CONTENT: dict[str, dict] = {
     },
     "travel-planner-platform": {
         "title_en": "Rovera Travel Planner",
-        "title_tr": "Rovera Seyahat Planlayici",
+        "title_tr": "Rovera Seyahat Planlayıcısı",
         "short_en": "Split React travel planner with Express authentication and MySQL persistence",
-        "short_tr": "Express kimlik dogrulamali ve MySQL kalicilikli React seyahat planlayici",
+        "short_tr": "Express kimlik doğrulamalı ve MySQL kalıcılıklı React seyahat planlayıcısı",
         "description_en": (
             "A source-backed two-runtime student project: a Vite + React 19 frontend with "
             "TanStack Router, HeroUI, Tailwind CSS, Leaflet, trips, favorites, budget, and "
@@ -214,9 +214,9 @@ PROJECT_CATALOG_CONTENT: dict[str, dict] = {
             "MySQL access, and multer avatar uploads."
         ),
         "description_tr": (
-            "Vite + React 19 frontend ve Express 5 backend olarak ayrilan ogrenci projesi. "
-            "Frontend TanStack Router, HeroUI, Tailwind CSS, Leaflet ve seyahat route'lari; "
-            "backend JWT, bcrypt, MySQL ve multer avatar yuklemeleri icerir."
+            "Vite + React 19 ön yüzü ve Express 5 arka ucu olarak ayrılan öğrenci projesi. "
+            "Ön yüz TanStack Router, HeroUI, Tailwind CSS, Leaflet ve seyahat rotaları; "
+            "arka uç JWT, bcrypt, MySQL ve multer avatar yüklemeleri içerir."
         ),
         "github_url": "https://github.com/Soft3112-TravelPlanner/travel-planner",
         "demo_url": None,
@@ -226,9 +226,9 @@ PROJECT_CATALOG_CONTENT: dict[str, dict] = {
     },
     "turkish-morphology-fst": {
         "title_en": "Turkish Morphological Analyzer (HFST)",
-        "title_tr": "Turkce Morfolojik Analizor (HFST)",
+        "title_tr": "Türkçe Morfolojik Analizörü (HFST)",
         "short_en": "HFST morphology specification with lexicon, rule, and derivation diagrams",
-        "short_tr": "Sozluk, kural ve turetim diyagramlariyla HFST morfoloji spesifikasyonu",
+        "short_tr": "Sözlük, kural ve türetim diyagramlarıyla HFST morfoloji spesifikasyonu",
         "description_en": (
             "A research/specification repository for a Turkish morphological analyzer. Its "
             "README and diagrams define lexicon, morphotactics, phonology, derivation, and "
@@ -236,10 +236,10 @@ PROJECT_CATALOG_CONTENT: dict[str, dict] = {
             "HFST artifact, so this record does not present a shipped runtime."
         ),
         "description_tr": (
-            "Turkce morfolojik analizor icin arastirma ve spesifikasyon reposu. README ve "
-            "diyagramlar sozluk, morfotaktik, fonoloji, turetim ve derlenmis analizor hedefini "
-            "tanımlar; denetlenen workspace derlenmis HFST artefakti icermedigi icin calisan "
-            "runtime iddiasi yapilmaz."
+            "Türkçe morfolojik analizörü için araştırma ve spesifikasyon deposu. README ve "
+            "diyagramlar sözlük, morfotaktik, fonoloji, türetim ve derlenmiş analizör hedefini "
+            "tanımlar; denetlenen çalışma alanı derlenmiş HFST artefaktı içermediği için çalışan "
+            "bir çalışma zamanı iddiası yapılmaz."
         ),
         "github_url": "https://github.com/TurkishKEBAB/turkish-morphology-fst",
         "demo_url": None,
@@ -269,16 +269,17 @@ DOSSIER_CONTENT: dict[str, dict] = {
             "checks that curl the live site and exercise an admin API round-trip."
         ),
         "impact_tr": (
-            "Bu portfolyo, birbirinden bağımsız dağıtılan iki katman olarak yayınlanır: "
-            "Vercel üzerinde Next.js 16 App Router frontend ve Railway üzerinde FastAPI "
-            "backend (72 route handler, JWT/RBAC); her biri CI güdümlü deploy yerine "
-            "sağlayıcının kendi GitHub entegrasyonuyla dağıtılır. Public sayfalar ISR "
-            "(revalidate) ile sunucuda render edilir, böylece soğuk backend siteyi "
-            "boşaltmaz; GitHub istatistikleri, Redis yoksa süreç-içi belleğe düşen 24 "
-            "saatlik Redis önbelleğinin arkasındadır. Her push, 16 workflow'luk bir CI "
+            "Bu portfolyo, birbirinden bağımsız dağıtılan iki katman olarak yayımlanır: "
+            "Vercel üzerinde Next.js 16 App Router ön yüzü ve Railway üzerinde FastAPI "
+            "arka ucu (72 rota işleyicisi, JWT/RBAC); her biri CI odaklı dağıtım yerine "
+            "sağlayıcının kendi GitHub entegrasyonuyla yayımlanır. Herkese açık sayfalar ISR "
+            "(revalidate) ile sunucuda oluşturulur, böylece arka uç hazır değilken bile site boş kalmaz; "
+            "GitHub istatistikleri, Redis yoksa süreç-içi belleğe düşen 24 "
+            "saatlik Redis önbelleğinin arkasındadır. Her gönderim, 16 iş akışlı bir CI "
             "duvarını (testler, OpenAPI-drift, CodeQL, bağımlılık ve tedarik zinciri "
             "denetimleri, zorunlu SonarCloud kalite kapısı) ve ardından canlı siteyi "
-            "curl'leyip admin API round-trip'i yapan post-deploy smoke check'lerini "
+            "curl ile kontrol edip yönetici API gidiş-dönüşünü deneyen dağıtım sonrası "
+            "duman testlerini "
             "çalıştırır."
         ),
         "metrics": [
@@ -554,11 +555,11 @@ DOSSIER_CONTENT["agentic-ide-thesis-project"] = {
         "planned 20-task evaluation target; implementation results are not claimed yet."
     ),
     "impact_tr": (
-        "Agentic IDE, dağıtılmış bir IDE değil; güvenlik odaklı bitirme tezi planlama reposudur. "
-        "Güvensiz ve opak çok dosyalı AI değişikliklerini ölçülebilir bir plan-önce akışına dönüştürür: "
+        "Agentic IDE, dağıtılmış bir IDE değil; güvenlik odaklı bitirme tezi planlama deposudur. "
+        "Güvensiz ve opak çok dosyalı yapay zekâ değişikliklerini ölçülebilir bir plan-önce iş akışına dönüştürür: "
         "tek ajan bağlamı gözlemler, değişiklik önerir, politika kontrollerinden geçer, insan onayı bekler "
-        "ve ancak bundan sonra workspace sınırları içinde yazar. Repo bu yönü 9 ADR, 57 epic dışı backlog "
-        "issue'su, 5 MVP senaryosu ve planlanan 20 görevlik değerlendirme hedefiyle destekliyor; henüz "
+        "ve ancak bundan sonra çalışma alanı sınırları içinde yazar. Depo bu yönü 9 ADR, 57 epik dışı iş listesi "
+        "girdisi, 5 MVP senaryosu ve planlanan 20 görevlik değerlendirme hedefiyle destekliyor; henüz "
         "uygulama sonucu iddia edilmiyor."
     ),
     "metrics": [

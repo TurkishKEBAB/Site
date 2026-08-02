@@ -224,7 +224,7 @@ export default function Home({
           title={tr ? "Öne çıkan sistemler" : "Featured systems"}
           subtitle={
             tr
-              ? "Urun olcegi, teknik derinlik ve teslim sorumlulugunu temsil eden odakli bir set."
+              ? "Ürün ölçeği, teknik derinlik ve teslim sorumluluğunu temsil eden odaklı bir set."
               : "A focused set representing product scale, technical depth, and delivery ownership."
           }
         />

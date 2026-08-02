@@ -144,3 +144,22 @@ def test_sync_dossiers_is_revisioned_and_removes_pending_records(
     assert revision.value == seed_dossiers.DOSSIER_SEED_REVISION
 
     assert seed_dossiers.sync_dossiers(db_session) is False
+
+
+def test_sync_dossiers_reapplies_when_seed_revision_changes(db_session):
+    db_session.add(
+        SiteConfig(
+            key=seed_dossiers.DOSSIER_SEED_REVISION_KEY,
+            value="2026-07-31-evidence-audit-v3",
+        )
+    )
+    db_session.commit()
+
+    assert seed_dossiers.sync_dossiers(db_session) is True
+
+    revision = (
+        db_session.query(SiteConfig)
+        .filter_by(key=seed_dossiers.DOSSIER_SEED_REVISION_KEY)
+        .one()
+    )
+    assert revision.value == seed_dossiers.DOSSIER_SEED_REVISION

@@ -49,4 +49,14 @@ describe("careerGraph", () => {
       expect(ids.has(link.to)).toBe(true);
     }
   });
+
+  it("keeps Turkish career copy fully localized", () => {
+    const netas = careerGraph.nodes.find((node) => node.id === "netas-start");
+    const agenticIde = careerGraph.nodes.find((node) => node.id === "agentic-ide");
+
+    expect(netas?.body?.tr).toContain("üretim kalitesinde kod");
+    expect(netas?.body?.tr).not.toMatch(/production|clean code|null-safety/i);
+    expect(agenticIde?.body?.tr).toContain("insan denetimli");
+    expect(agenticIde?.body?.tr).not.toMatch(/human-in-the-loop|AI-native|local\/cloud/i);
+  });
 });
