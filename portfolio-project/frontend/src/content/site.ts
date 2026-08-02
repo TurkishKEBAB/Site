@@ -560,8 +560,8 @@ const contactDefinition = {
     "L\u00fctfen g\u00f6ndermeden \u00f6nce g\u00fcvenlik kontrol\u00fcn\u00fc tamamlay\u0131n.",
   ),
   captchaUnavailable: localized(
-    "The security check could not load. Please try again or use the email draft instead.",
-    "G\u00fcvenlik kontrol\u00fc y\u00fcklenemedi. L\u00fctfen tekrar deneyin veya e-posta tasla\u011f\u0131n\u0131 kullan\u0131n.",
+    "The security check could not load, so your message goes straight to the admin inbox.",
+    "G\u00fcvenlik kontrol\u00fc y\u00fcklenemedi; mesaj\u0131n\u0131z do\u011frudan y\u00f6netim paneline iletilecek.",
   ),
   validation: contactValidationMessages,
   infoTitle: localized("Direct channels", "Doğrudan kanallar"),

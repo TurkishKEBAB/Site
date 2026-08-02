@@ -117,8 +117,11 @@ export default function ContactForm({ locale, captchaSiteKey: captchaSiteKeyOver
       return;
     }
 
-    if (captchaSiteKey && !captchaToken) {
-      setSubmitError(captchaError ? text.captchaUnavailable : text.captchaRequired);
+    // Only block on a widget that is actually working. When Turnstile itself
+    // fails (revoked site key, provider outage) the message is still delivered
+    // to the admin inbox rather than the form sealing itself shut.
+    if (captchaSiteKey && !captchaToken && !captchaError) {
+      setSubmitError(text.captchaRequired);
       return;
     }
 
@@ -223,6 +226,11 @@ export default function ContactForm({ locale, captchaSiteKey: captchaSiteKeyOver
               setCaptchaError(true);
             }}
           />
+          {captchaError && (
+            <p className="text-xs text-gray-500 dark:text-dark-400">
+              {text.captchaUnavailable}
+            </p>
+          )}
         </div>
       )}
 
