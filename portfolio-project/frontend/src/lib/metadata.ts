@@ -15,7 +15,13 @@ export const getSiteUrl = (): string => {
   }
 
   try {
-    return new URL(configured).origin;
+    const parsed = new URL(configured);
+    // `localhost:3000` and `mailto:…` parse fine but expose an opaque origin —
+    // the literal string "null" — which throws again at the next `new URL()`.
+    if (parsed.protocol !== "https:" && parsed.protocol !== "http:") {
+      return siteConfig.siteUrl;
+    }
+    return parsed.origin;
   } catch {
     return siteConfig.siteUrl;
   }

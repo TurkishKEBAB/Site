@@ -43,6 +43,18 @@ describe("metadata helpers", () => {
     expect(getSiteUrl()).toBe("https://yigitokur.me");
   });
 
+  // `new URL("localhost:3000")` parses (scheme "localhost:") and yields the
+  // literal string "null" as its origin, which throws again one line later.
+  it.each(["localhost:3000", "mailto:hi@example.com", "file:///tmp/site", "ftp://example.com"])(
+    "falls back for %s, which parses but has no usable HTTP origin",
+    (value) => {
+      process.env.NEXT_PUBLIC_SITE_URL = value;
+
+      expect(getSiteUrl()).toBe("https://yigitokur.me");
+      expect(() => buildMetadata("about", "en", "/about")).not.toThrow();
+    },
+  );
+
   it("honours a valid NEXT_PUBLIC_SITE_URL override", () => {
     process.env.NEXT_PUBLIC_SITE_URL = "https://staging.yigitokur.me";
 
