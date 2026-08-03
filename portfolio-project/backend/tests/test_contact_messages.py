@@ -426,3 +426,33 @@ def test_server_errors_still_carry_cors_headers(client, admin_headers, monkeypat
 
     assert response.status_code == 500
     assert response.headers["access-control-allow-origin"] == origin
+
+
+@pytest.mark.parametrize(
+    "origin, expect_header",
+    [
+        (None, False),          # non-browser client: nothing to echo
+        ("https://evil.example", False),  # origin outside ALLOWED_ORIGINS
+    ],
+)
+def test_server_error_cors_headers_are_scoped_to_allowed_origins(
+    client, admin_headers, monkeypatch, origin, expect_header
+):
+    from starlette.testclient import TestClient
+
+    from app.api.v1 import contact as contact_router
+
+    def _boom(*args, **kwargs):
+        raise RuntimeError("simulated failure")
+
+    monkeypatch.setattr(contact_router.contact_crud, "get_contact_messages", _boom)
+
+    headers = dict(admin_headers)
+    if origin is not None:
+        headers["Origin"] = origin
+
+    with TestClient(client.app, raise_server_exceptions=False) as raw_client:
+        response = raw_client.get("/api/v1/contact/", headers=headers)
+
+    assert response.status_code == 500
+    assert ("access-control-allow-origin" in response.headers) is expect_header
