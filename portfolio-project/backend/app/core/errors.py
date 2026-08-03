@@ -174,6 +174,30 @@ async def rate_limit_exception_handler(
     return _inject_rate_limit_headers(request, response)
 
 
+def cors_headers_for(request: Request) -> Dict[str, str]:
+    """Build CORS headers for a response that bypasses CORSMiddleware.
+
+    Handlers registered for bare ``Exception`` run in Starlette's
+    ``ServerErrorMiddleware``, which sits *outside* ``CORSMiddleware``. The 500
+    therefore ships without ``Access-Control-Allow-Origin`` and the browser
+    reports an opaque ``net::ERR_FAILED`` instead of the real status — which is
+    exactly how the admin inbox failure hid itself.
+    """
+    origin = request.headers.get("origin")
+    if not origin:
+        return {}
+
+    allowed = settings.ALLOWED_ORIGINS
+    if "*" not in allowed and origin not in allowed:
+        return {}
+
+    return {
+        "Access-Control-Allow-Origin": origin,
+        "Access-Control-Allow-Credentials": "true",
+        "Vary": "Origin",
+    }
+
+
 async def general_exception_handler(request: Request, exc: Exception) -> JSONResponse:
     logger.opt(exception=True).error("Unhandled exception on {}: {}", request.url.path, exc)
     capture_exception(exc)
@@ -192,4 +216,5 @@ async def general_exception_handler(request: Request, exc: Exception) -> JSONRes
             },
             legacy_detail=public_message,
         ),
+        headers=cors_headers_for(request),
     )

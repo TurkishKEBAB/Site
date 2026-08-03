@@ -2,6 +2,8 @@
 Site Configuration, Translations, and Analytics Schemas
 """
 from pydantic import BaseModel, Field, ConfigDict
+
+from app.schemas.common import IpAddressStr
 from typing import Optional, Dict, Any
 from datetime import datetime
 import uuid
@@ -68,7 +70,7 @@ class PageViewCreate(BaseModel):
 class PageView(PageViewCreate):
     """Page view response schema"""
     id: uuid.UUID
-    ip_address: Optional[str] = None
+    ip_address: IpAddressStr = None
     user_agent: Optional[str] = None
     viewed_at: datetime
     

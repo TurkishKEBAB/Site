@@ -51,6 +51,12 @@ class EmailService:
             )
             return False
 
+        if not settings.EMAIL_ENABLED:
+            logger.info(
+                "Email delivery is disabled; skipping message to {}", to_email
+            )
+            return False
+
         try:
             # Create message
             message = MIMEMultipart("alternative")
@@ -78,6 +84,7 @@ class EmailService:
                 username=self.smtp_username,
                 password=self.smtp_password,
                 start_tls=True,
+                timeout=settings.SMTP_TIMEOUT_SECONDS,
             )
             
             logger.info(f"Email sent successfully to {to_email}")
