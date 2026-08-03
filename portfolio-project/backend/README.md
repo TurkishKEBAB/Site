@@ -265,8 +265,10 @@ SMTP_USERNAME=yigitokur@ieee.org
 SMTP_PASSWORD=your-16-char-app-password
 ```
 
-SMTP is optional. When it is not configured or temporarily unavailable, valid
-contact submissions remain available in the authenticated admin inbox.
+SMTP notifications are disabled by default. Contact submissions are always
+available in the authenticated admin inbox; set `EMAIL_ENABLED=true` and
+provide SMTP credentials only when outbound notifications are explicitly
+desired.
 
 ## 🐳 Docker Deployment
 

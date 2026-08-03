@@ -52,9 +52,9 @@ class Settings(BaseSettings):
     # hang until aiosmtplib's 60s default fires — twice per contact submission,
     # so the request took ~122s and the browser gave up before it returned.
     SMTP_TIMEOUT_SECONDS: float = 5.0
-    # Set false where SMTP is known to be unreachable: delivery is skipped
-    # outright and the message is served from the admin inbox instead.
-    EMAIL_ENABLED: bool = True
+    # Contact submissions are stored in the admin inbox by default. Enable
+    # SMTP explicitly only when outbound email notifications are required.
+    EMAIL_ENABLED: bool = False
 
     # Redis
     REDIS_URL: str = "redis://localhost:6379/0"

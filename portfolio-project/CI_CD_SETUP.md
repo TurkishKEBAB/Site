@@ -109,9 +109,10 @@ Set these values in Railway production service environment:
 - `CAPTCHA_PROVIDER=turnstile`
 - `CAPTCHA_SECRET_KEY`
 
-SMTP delivery is optional. Set `SMTP_USERNAME` and `SMTP_PASSWORD` when email
-notifications are desired; valid submissions remain available in the admin
-contact inbox without them.
+Contact submissions are delivered to the authenticated admin contact inbox by
+default. Outbound SMTP notifications are opt-in: set `EMAIL_ENABLED=true` and
+provide `SMTP_USERNAME` and `SMTP_PASSWORD` only when they are explicitly
+desired. Valid submissions remain available in the admin inbox either way.
 
 ### Recommended
 

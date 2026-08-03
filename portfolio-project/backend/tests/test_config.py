@@ -38,6 +38,13 @@ def test_admin_emails_default_is_empty():
     assert settings.admin_email_list == []
 
 
+def test_email_delivery_is_disabled_by_default():
+    settings = _build_settings()
+
+    assert Settings.model_fields["EMAIL_ENABLED"].default is False
+    assert settings.EMAIL_ENABLED is False
+
+
 def test_production_requires_admin_emails():
     settings = _build_settings(
         ENVIRONMENT="production",
