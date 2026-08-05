@@ -10,5 +10,5 @@ flake8>=6.1.0,<8.0.0
 mypy>=1.0.0,<2.0.0
 
 # Build tools
-wheel>=0.42.0
+wheel>=0.47.0
 setuptools>=69.0.2
