@@ -124,7 +124,7 @@ def create_skill(db: Session, skill: SkillCreate) -> Skill:
                 name=translation.name,
                 category=translation.category
             )
-            db.add(db_translation)
+            db_skill.translations.append(db_translation)
     
     db.commit()
     db.refresh(db_skill)
@@ -140,14 +140,33 @@ def update_skill(db: Session, skill_id: uuid.UUID, skill_update: SkillUpdate) ->
         return None
     
     update_data = skill_update.model_dump(exclude_unset=True)
-    
+    translations = update_data.pop("translations", None)
+
     for field, value in update_data.items():
         setattr(db_skill, field, value)
-    
+
+    if translations is not None:
+        existing_by_language = {
+            translation.language: translation
+            for translation in db_skill.translations
+        }
+
+        for translation_data in translations:
+            translation = existing_by_language.get(translation_data["language"])
+            if translation is None:
+                translation = SkillTranslation(
+                    language=translation_data["language"],
+                    name=translation_data["name"],
+                    category=translation_data["category"],
+                )
+                db_skill.translations.append(translation)
+                existing_by_language[translation.language] = translation
+            else:
+                translation.name = translation_data["name"]
+                translation.category = translation_data["category"]
+
     db.commit()
-    db.refresh(db_skill)
-    
-    return db_skill
+    return get_skill_by_id(db, skill_id=skill_id)
 
 
 def delete_skill(db: Session, skill_id: uuid.UUID) -> bool:
