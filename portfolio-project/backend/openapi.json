@@ -4185,6 +4185,20 @@
               }
             ],
             "title": "Ring"
+          },
+          "translations": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/SkillTranslationCreate"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Translations"
           }
         },
         "title": "SkillUpdate",

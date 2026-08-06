@@ -53,6 +53,67 @@ def test_create_update_delete_skill(client, admin_headers):
     assert deleted.status_code == 204
 
 
+def test_skill_translations_are_created_and_updated(client, admin_headers):
+    created = client.post(
+        "/api/v1/skills/",
+        headers=admin_headers,
+        json={
+            "name": "Message Queues",
+            "category": "Architecture",
+            "domain": "backend",
+            "ring": "trial",
+            "translations": [
+                {
+                    "language": "en",
+                    "name": "Message Queues",
+                    "category": "Architecture",
+                },
+                {
+                    "language": "tr",
+                    "name": "Mesaj Kuyrukları",
+                    "category": "Mimari",
+                },
+            ],
+        },
+    )
+    assert created.status_code == 201
+    skill_id = created.json()["id"]
+    assert {
+        translation["language"]: translation["name"]
+        for translation in created.json()["translations"]
+    } == {"en": "Message Queues", "tr": "Mesaj Kuyrukları"}
+
+    updated = client.put(
+        f"/api/v1/skills/{skill_id}",
+        headers=admin_headers,
+        json={
+            "translations": [
+                {
+                    "language": "en",
+                    "name": "Event Streaming",
+                    "category": "Architecture",
+                },
+                {
+                    "language": "tr",
+                    "name": "Olay Akışları",
+                    "category": "Mimari",
+                },
+            ]
+        },
+    )
+
+    assert updated.status_code == 200
+    assert {
+        translation["language"]: translation["name"]
+        for translation in updated.json()["translations"]
+    } == {"en": "Event Streaming", "tr": "Olay Akışları"}
+
+    translated = client.get(f"/api/v1/skills/{skill_id}?language=tr")
+    assert translated.status_code == 200
+    assert translated.json()["name"] == "Olay Akışları"
+    assert translated.json()["category"] == "Mimari"
+
+
 def test_skill_admin_endpoints_require_admin(client, user_headers):
     payload = {"name": "Kubernetes", "category": "DevOps", "domain": "cloud", "ring": "trial"}
 

@@ -55,6 +55,7 @@ class SkillUpdate(BaseModel):
     ring: Optional[SkillRing] = None
     icon: Optional[str] = Field(None, max_length=500)
     display_order: Optional[int] = None
+    translations: Optional[List[SkillTranslationCreate]] = None
 
 
 class Skill(SkillBase):

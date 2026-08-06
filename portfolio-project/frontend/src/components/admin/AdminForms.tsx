@@ -35,6 +35,8 @@ export const defaultProjectFormValues: ProjectFormValues = {
 
 export interface SkillFormValues {
   name: string;
+  nameTr: string;
+  sameName: boolean;
   category: string;
   domain: SkillDomain;
   ring: SkillRing;
@@ -44,8 +46,28 @@ export interface SkillFormValues {
 export const SKILL_DOMAINS: SkillDomain[] = ['backend', 'cloud', 'product', 'testing', 'research'];
 export const SKILL_RINGS: SkillRing[] = ['adopt', 'trial', 'assess', 'hold'];
 
+export interface SkillCategoryOption {
+  value: string;
+  en: string;
+  tr: string;
+}
+
+export const SKILL_CATEGORIES: SkillCategoryOption[] = [
+  { value: 'AI & Data', en: 'AI & Data', tr: 'Yapay Zeka ve Veri' },
+  { value: 'Architecture', en: 'Architecture', tr: 'Mimari' },
+  { value: 'Backend', en: 'Backend', tr: 'Backend' },
+  { value: 'Cloud & DevOps', en: 'Cloud & DevOps', tr: 'Bulut ve DevOps' },
+  { value: 'Frontend', en: 'Frontend', tr: 'Frontend' },
+  { value: 'Languages', en: 'Languages', tr: 'Diller' },
+  { value: 'Observability & Infra', en: 'Observability & Infra', tr: 'Gözlemlenebilirlik ve Altyapı' },
+  { value: 'Testing & Automation', en: 'Testing & Automation', tr: 'Test ve Otomasyon' },
+  { value: 'Tooling', en: 'Tooling', tr: 'Araçlar' },
+];
+
 export const defaultSkillFormValues: SkillFormValues = {
   name: '',
+  nameTr: '',
+  sameName: false,
   category: '',
   domain: 'backend',
   ring: 'assess',
@@ -98,7 +120,9 @@ const FORM_TEXT = {
     skill: {
       createTitle: 'Yeni Beceri Ekle',
       editTitle: 'Beceri Düzenle',
-      name: 'Beceri Adı',
+      nameEn: 'İngilizce Beceri Adı',
+      nameTr: 'Türkçe Beceri Adı',
+      sameName: 'Türkçe ve İngilizce adları aynı',
       category: 'Kategori',
       categoryPlaceholder: 'Kategori Seçin',
       domain: 'Alan (Matris grubu)',
@@ -161,7 +185,9 @@ const FORM_TEXT = {
     skill: {
       createTitle: 'Add New Skill',
       editTitle: 'Edit Skill',
-      name: 'Skill Name',
+      nameEn: 'English Name',
+      nameTr: 'Turkish Name',
+      sameName: 'Turkish and English names are the same',
       category: 'Category',
       categoryPlaceholder: 'Select Category',
       domain: 'Domain (Matrix group)',
@@ -446,6 +472,25 @@ export function SkillForm({ initialValues, onSubmit, onCancel, loading, mode, la
   const handleChange = (event: ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = event.target;
 
+    if (name === 'sameName' && event.target instanceof HTMLInputElement) {
+      const sameName = event.target.checked;
+      setValues((prev) => ({
+        ...prev,
+        sameName,
+        nameTr: sameName ? prev.name : prev.nameTr,
+      }));
+      return;
+    }
+
+    if (name === 'name') {
+      setValues((prev) => ({
+        ...prev,
+        name: value,
+        nameTr: prev.sameName ? value : prev.nameTr,
+      }));
+      return;
+    }
+
     setValues((prev) => ({ ...prev, [name]: value }));
   };
 
@@ -466,18 +511,50 @@ export function SkillForm({ initialValues, onSubmit, onCancel, loading, mode, la
       </div>
 
       <div className="space-y-4">
-        <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-200">
-            {text.name} <span className="text-red-500">*</span>
-          </label>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <div>
+            <label htmlFor="skill-name-en" className="block text-sm font-medium text-gray-700 dark:text-gray-200">
+              {text.nameEn} <span className="text-red-500">*</span>
+            </label>
+            <input
+              id="skill-name-en"
+              name="name"
+              value={values.name}
+              onChange={handleChange}
+              required
+              className="mt-1 w-full rounded-lg border border-gray-300 bg-white p-2.5 text-gray-900 shadow-sm focus:border-primary-500 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100"
+              placeholder="Python"
+            />
+          </div>
+          <div>
+            <label htmlFor="skill-name-tr" className="block text-sm font-medium text-gray-700 dark:text-gray-200">
+              {text.nameTr} <span className="text-red-500">*</span>
+            </label>
+            <input
+              id="skill-name-tr"
+              name="nameTr"
+              value={values.nameTr}
+              onChange={handleChange}
+              required
+              readOnly={values.sameName}
+              className="mt-1 w-full rounded-lg border border-gray-300 bg-white p-2.5 text-gray-900 shadow-sm focus:border-primary-500 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100 read-only:bg-gray-100 dark:read-only:bg-gray-800"
+              placeholder="Python"
+            />
+          </div>
+        </div>
+
+        <div className="flex items-center gap-3">
           <input
-            name="name"
-            value={values.name}
+            id="skill-same-name"
+            type="checkbox"
+            name="sameName"
+            checked={values.sameName}
             onChange={handleChange}
-            required
-            className="mt-1 w-full rounded-lg border border-gray-300 bg-white p-2.5 text-gray-900 shadow-sm focus:border-primary-500 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100"
-            placeholder="Python"
+            className="h-5 w-5 rounded border-gray-300 text-primary-600 focus:ring-primary-500"
           />
+          <label htmlFor="skill-same-name" className="text-sm font-medium text-gray-700 dark:text-gray-200">
+            {text.sameName}
+          </label>
         </div>
 
         <div>
@@ -493,12 +570,14 @@ export function SkillForm({ initialValues, onSubmit, onCancel, loading, mode, la
             className="mt-1 w-full rounded-lg border border-gray-300 bg-white p-2.5 text-gray-900 shadow-sm focus:border-primary-500 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100"
           >
             <option value="">{text.categoryPlaceholder}</option>
-            <option value="Backend">Backend</option>
-            <option value="Frontend">Frontend</option>
-            <option value="Database">Database</option>
-            <option value="DevOps">DevOps</option>
-            <option value="Tools">Tools</option>
-            <option value="Other">Other</option>
+            {SKILL_CATEGORIES.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.en} / {option.tr}
+              </option>
+            ))}
+            {values.category && !SKILL_CATEGORIES.some((option) => option.value === values.category) && (
+              <option value={values.category}>{values.category}</option>
+            )}
           </select>
         </div>
 

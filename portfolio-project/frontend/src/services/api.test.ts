@@ -124,4 +124,23 @@ describe("api service auth responses", () => {
       window.removeEventListener("api:error", listener);
     }
   });
+
+  it("preserves an explicitly requested language over the stored UI language", async () => {
+    localStorage.setItem("lang", "tr");
+    const adapter = vi.fn(async (config) => ({
+      data: { skills: [] },
+      status: 200,
+      statusText: "OK",
+      headers: {},
+      config,
+    }));
+
+    await api.get("/skills/", { params: { language: "en" }, adapter });
+
+    expect(adapter).toHaveBeenCalledWith(
+      expect.objectContaining({
+        params: expect.objectContaining({ language: "en" }),
+      }),
+    );
+  });
 });
