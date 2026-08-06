@@ -168,6 +168,21 @@ export interface BlogPostCreate {
 export type SkillDomain = "backend" | "cloud" | "product" | "testing" | "research";
 export type SkillRing = "adopt" | "trial" | "assess" | "hold";
 
+export interface SkillTranslation {
+  id: string;
+  skill_id: string;
+  language: 'en' | 'tr' | 'de' | 'fr';
+  name: string;
+  category: string;
+  created_at: string;
+}
+
+export interface SkillTranslationCreate {
+  language: 'en' | 'tr' | 'de' | 'fr';
+  name: string;
+  category: string;
+}
+
 export interface Skill {
   id: string;
   name: string;
@@ -178,6 +193,7 @@ export interface Skill {
   icon_url?: string;
   color?: string;
   display_order: number;
+  translations?: SkillTranslation[];
 }
 
 export interface SkillCreate {
@@ -188,6 +204,7 @@ export interface SkillCreate {
   icon_url?: string | null;
   color?: string;
   display_order?: number;
+  translations?: SkillTranslationCreate[];
 }
 
 export interface SkillUpdate {
@@ -198,6 +215,7 @@ export interface SkillUpdate {
   icon_url?: string | null;
   color?: string;
   display_order?: number;
+  translations?: SkillTranslationCreate[];
 }
 
 // Experience Types

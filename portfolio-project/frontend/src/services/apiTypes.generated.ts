@@ -2780,6 +2780,8 @@ export interface components {
             name?: string | null;
             /** Ring */
             ring?: ("adopt" | "trial" | "assess" | "hold") | null;
+            /** Translations */
+            translations?: components["schemas"]["SkillTranslationCreate"][] | null;
         };
         /**
          * TechnologyCreate

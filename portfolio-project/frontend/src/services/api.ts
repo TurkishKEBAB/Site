@@ -42,7 +42,7 @@ api.interceptors.request.use(
     if (!skipLanguageHeader && shouldAttachLanguage(config)) {
       config.params = {
         ...(config.params || {}),
-        language,
+        language: config.params?.language || language,
       };
     }
 

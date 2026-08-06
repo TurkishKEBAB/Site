@@ -38,6 +38,7 @@ import {
   ProjectFormValues,
   ProjectImage,
   ProjectTranslationData,
+  SKILL_CATEGORIES,
   SkillForm,
   SkillFormValues,
   TranslationEditor,
@@ -367,7 +368,7 @@ export default function Admin() {
   const loadSkills = useCallback(async () => {
     setSkillsLoading(true);
     try {
-      const skillsData = await skillService.getSkills();
+      const skillsData = await skillService.getSkills('en');
       setSkills(skillsData);
     } catch (error) {
       handleApiError(error, 'Beceriler yüklenirken bir hata oluştu.');
@@ -1109,10 +1110,17 @@ export default function Admin() {
   };
 
   const openEditSkillModal = (skill: Skill) => {
+    const englishTranslation = skill.translations?.find((translation) => translation.language === 'en');
+    const turkishTranslation = skill.translations?.find((translation) => translation.language === 'tr');
+    const englishName = englishTranslation?.name || skill.name || '';
+    const turkishName = turkishTranslation?.name || englishName;
+
     setSkillFormMode('edit');
     setSkillFormValues({
-      name: skill.name || '',
-      category: skill.category || '',
+      name: englishName,
+      nameTr: turkishName,
+      sameName: englishName === turkishName,
+      category: englishTranslation?.category || skill.category || '',
       domain: skill.domain || 'backend',
       ring: skill.ring || 'assess',
       iconUrl: skill.icon_url || '',
@@ -1135,23 +1143,35 @@ export default function Admin() {
     setSkillFormSubmitting(true);
 
     try {
+      const name = values.name.trim();
+      const nameTr = values.sameName ? name : values.nameTr.trim() || name;
+      const categoryOption = SKILL_CATEGORIES.find((option) => option.value === values.category);
+      const category = categoryOption?.en || values.category.trim();
+      const categoryTr = categoryOption?.tr || category;
+      const translations = [
+        { language: 'en' as const, name, category },
+        { language: 'tr' as const, name: nameTr, category: categoryTr },
+      ];
+
       if (skillFormMode === 'create') {
         await skillService.createSkill({
-          name: values.name.trim(),
-          category: values.category.trim(),
+          name,
+          category,
           domain: values.domain,
           ring: values.ring,
           icon_url: values.iconUrl.trim() || null,
+          translations,
         });
 
         showToast('success', 'Beceri başarıyla oluşturuldu.');
       } else if (activeSkill) {
         await skillService.updateSkill(activeSkill.id, {
-          name: values.name.trim(),
-          category: values.category.trim(),
+          name,
+          category,
           domain: values.domain,
           ring: values.ring,
           icon_url: values.iconUrl.trim() || null,
+          translations,
         });
 
         showToast('success', 'Beceri güncellendi.');
