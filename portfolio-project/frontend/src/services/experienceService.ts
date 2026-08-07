@@ -1,5 +1,5 @@
 import api, { apiEndpoints } from './api';
-import type { Experience, ExperienceCreate } from './types';
+import type { Experience, ExperienceCreate, ExperienceTranslationCreate } from './types';
 
 export const experienceService = {
   async getExperiences(params?: {
@@ -27,6 +27,11 @@ export const experienceService = {
 
   async updateExperience(id: string, data: Partial<ExperienceCreate>): Promise<Experience> {
     const response = await api.put(apiEndpoints.experiences.update(id), data);
+    return response.data;
+  },
+
+  async addTranslation(id: string, data: ExperienceTranslationCreate): Promise<Experience> {
+    const response = await api.post(apiEndpoints.experiences.addTranslation(id), data);
     return response.data;
   },
 
