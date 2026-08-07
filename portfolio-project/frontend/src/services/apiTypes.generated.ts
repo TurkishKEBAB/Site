@@ -1116,7 +1116,7 @@ export interface paths {
         /**
          * Get Wakatime Stats
          * @description Normalized WakaTime coding stats for the Command Center.
-         *     Public, cached 24h; 503 when unavailable (no API key / upstream error).
+         *     Public, cached for the configured short refresh window; 503 when unavailable.
          */
         get: operations["get_wakatime_stats_api_v1_wakatime_stats_get"];
         put?: never;
