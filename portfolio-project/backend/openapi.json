@@ -12816,7 +12816,7 @@
     },
     "/api/v1/wakatime/stats": {
       "get": {
-        "description": "Normalized WakaTime coding stats for the Command Center.\nPublic, cached 24h; 503 when unavailable (no API key / upstream error).",
+        "description": "Normalized WakaTime coding stats for the Command Center.\nPublic, cached for the configured short refresh window; 503 when unavailable.",
         "operationId": "get_wakatime_stats_api_v1_wakatime_stats_get",
         "responses": {
           "200": {
