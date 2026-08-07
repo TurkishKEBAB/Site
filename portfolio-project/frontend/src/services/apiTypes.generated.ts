@@ -2161,8 +2161,30 @@ export interface components {
         GitHubContributions: {
             /** Cells */
             cells: number[];
+            /**
+             * Current Streak
+             * @default 0
+             */
+            current_streak: number;
+            /** Last Contribution */
+            last_contribution?: string | null;
+            /**
+             * Longest Streak
+             * @default 0
+             */
+            longest_streak: number;
             /** Total Contributions */
             total_contributions: number;
+        };
+        /**
+         * GitHubLanguage
+         * @description Repository language share calculated from the live GitHub profile.
+         */
+        GitHubLanguage: {
+            /** Name */
+            name: string;
+            /** Percent */
+            percent: number;
         };
         /**
          * GitHubRefreshResponse
@@ -2243,6 +2265,11 @@ export interface components {
         GitHubStats: {
             /** Commits Range */
             commits_range: string;
+            /**
+             * Languages
+             * @default []
+             */
+            languages: components["schemas"]["GitHubLanguage"][];
             /** Public Repos */
             public_repos: number;
             /** Total Commits */
@@ -2986,6 +3013,38 @@ export interface components {
             password: string;
         };
         /**
+         * WakaTimeBreakdown
+         * @description A live WakaTime project/editor slice with duration metadata.
+         */
+        WakaTimeBreakdown: {
+            /** Name */
+            name: string;
+            /** Percent */
+            percent: number;
+            /**
+             * Seconds
+             * @default 0
+             */
+            seconds: number;
+            /**
+             * Text
+             * @default
+             */
+            text: string;
+        };
+        /**
+         * WakaTimeDay
+         * @description The most active day in the requested WakaTime window.
+         */
+        WakaTimeDay: {
+            /** Date */
+            date: string;
+            /** Seconds */
+            seconds: number;
+            /** Text */
+            text: string;
+        };
+        /**
          * WakaTimeLanguage
          * @description A single language slice in the weekly breakdown.
          */
@@ -3008,12 +3067,23 @@ export interface components {
             daily_average_seconds: number;
             /** Daily Average Text */
             daily_average_text: string;
+            /**
+             * Editors
+             * @default []
+             */
+            editors: components["schemas"]["WakaTimeBreakdown"][];
             /** Languages */
             languages: components["schemas"]["WakaTimeLanguage"][];
             /** Last 7 Days Seconds */
             last_7_days_seconds: number;
             /** Last 7 Days Text */
             last_7_days_text: string;
+            most_active_day?: components["schemas"]["WakaTimeDay"] | null;
+            /**
+             * Projects
+             * @default []
+             */
+            projects: components["schemas"]["WakaTimeBreakdown"][];
             /** Range */
             range: string;
         };

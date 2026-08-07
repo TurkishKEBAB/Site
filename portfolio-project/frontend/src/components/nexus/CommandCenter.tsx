@@ -6,7 +6,7 @@ import { FiGithub } from "react-icons/fi";
 import { ExpandChip, GitHubDetailView, TelemetryModal, WakaDetailView } from "@/components/nexus/TelemetryDashboard";
 import { CornerFrame } from "@/components/ui";
 import { siteConfig, type Locale } from "@/content/site";
-import { githubDetail, wakaDetail } from "@/content/telemetryDetail";
+import { githubDetail } from "@/content/telemetryDetail";
 import type {
   GitHubContributions,
   GitHubStats,
@@ -179,19 +179,19 @@ export default function CommandCenter({ locale, waka, github, contributions }: C
         open={expanded === "waka"}
         label="WakaTime · Dashboard"
         title={tr ? "Aktivite özeti" : "Activity overview"}
-        meta={tr ? "son 7 gün · anlık görüntü" : "last 7 days · snapshot"}
+        meta={tr ? "son 7 gün · canlı veri" : "last 7 days · live data"}
         onClose={() => setExpanded(null)}
       >
-        <WakaDetailView stats={wakaStats} languages={waka?.languages ?? []} detail={wakaDetail} />
+        <WakaDetailView stats={wakaStats} languages={waka?.languages ?? []} data={waka} />
       </TelemetryModal>
       <TelemetryModal
         open={expanded === "github"}
         label={`GitHub · @${githubHandle}`}
         title={tr ? "Analitik & aktivite" : "Analytics & activity"}
-        meta={tr ? "herkese açık profil · günlük güncellenir" : "public profile · updated daily"}
+        meta={tr ? "herkese açık profil · canlı veri" : "public profile · live data"}
         onClose={() => setExpanded(null)}
       >
-        <GitHubDetailView stats={githubStats} cells={contributions?.cells ?? []} detail={githubDetail} />
+        <GitHubDetailView stats={githubStats} contributions={contributions} languages={github?.languages ?? []} detail={githubDetail} />
       </TelemetryModal>
     </>
   );

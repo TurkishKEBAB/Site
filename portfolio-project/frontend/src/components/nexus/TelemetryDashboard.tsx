@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect, useMemo, useState, type CSSProperties, type ReactNode } from "react";
+import { useEffect, useState, type CSSProperties, type ReactNode } from "react";
 import { FiMaximize2, FiX } from "react-icons/fi";
 
-import type { GitHubDetail, NamedPercent, TelemetryStat, WakaDetail } from "@/content/telemetryDetail";
+import type { GitHubDetail, NamedPercent, TelemetryStat } from "@/content/telemetryDetail";
+import type { GitHubContributions, WakaTimeStats } from "@/lib/systemProfile";
 
 const EASE = "cubic-bezier(0.25,0.1,0.25,1)";
 const MONO = "var(--font-mono)";
@@ -12,14 +13,6 @@ const HEAT = [0, 0.22, 0.42, 0.65, 0.92];
 const statNum: CSSProperties = { fontFamily: "var(--font-display)", fontWeight: 700, letterSpacing: "-0.025em", color: "var(--text-1)" };
 const statLabel: CSSProperties = { marginTop: 4, fontFamily: MONO, fontSize: 9.5, textTransform: "uppercase", letterSpacing: "0.14em", color: "var(--text-faint)" };
 const noteStyle: CSSProperties = { marginTop: 2, fontFamily: MONO, fontSize: 10, color: "var(--text-faint)" };
-
-/** Deterministic pseudo-random heat cells (0–4) for the contribution graph. */
-function heatCells(count: number, mul: number): number[] {
-  return Array.from({ length: count }, (_, i) => {
-    const seed = Math.sin(i * mul) * 43758.5453;
-    return Math.floor(Math.abs(seed - Math.floor(seed)) * 5);
-  });
-}
 
 function Stat({ value, unit, label, note, size = 30, accentUnit = false }: TelemetryStat & { size?: number; accentUnit?: boolean }) {
   return (
@@ -37,14 +30,14 @@ function Stat({ value, unit, label, note, size = 30, accentUnit = false }: Telem
 function Bars({ rows }: { rows: NamedPercent[] }) {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-      {rows.map((r) => (
-        <div key={r.name}>
+      {rows.map((row) => (
+        <div key={row.name}>
           <div style={{ marginBottom: 6, display: "flex", justifyContent: "space-between", fontFamily: MONO, fontSize: 11, color: "var(--text-body)" }}>
-            <span>{r.name}</span>
-            <span style={{ color: "var(--accent-text)" }}>{r.percent}%</span>
+            <span>{row.name}</span>
+            <span style={{ color: "var(--accent-text)" }}>{row.percent}%</span>
           </div>
           <div style={{ height: 6, overflow: "hidden", borderRadius: 9999, background: "var(--border-1)" }}>
-            <div style={{ height: "100%", borderRadius: 9999, background: r.color || "var(--primary-400)", width: `${r.percent}%` }} />
+            <div style={{ height: "100%", borderRadius: 9999, background: row.color || "var(--primary-400)", width: `${row.percent}%` }} />
           </div>
         </div>
       ))}
@@ -57,7 +50,6 @@ const SectionLabel = ({ children }: { children: ReactNode }) => (
   <div style={{ marginBottom: 14, fontFamily: MONO, fontSize: 10, textTransform: "uppercase", letterSpacing: "0.18em", color: "var(--text-faint)" }}>{children}</div>
 );
 
-/** Expand affordance on the compact command-center panels. */
 export function ExpandChip({ onClick, label = "expand" }: { onClick: () => void; label?: string }) {
   const [hover, setHover] = useState(false);
   return (
@@ -75,19 +67,19 @@ export function ExpandChip({ onClick, label = "expand" }: { onClick: () => void;
   );
 }
 
-/** Overlay modal (shares the dossier's accessible backdrop-button pattern). */
 export function TelemetryModal({ open, label, title, meta, onClose, children }: { open: boolean; label: string; title: string; meta?: string; onClose: () => void; children: ReactNode }) {
   useEffect(() => {
     if (!open) return undefined;
-    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
+    const onKey = (event: KeyboardEvent) => { if (event.key === "Escape") onClose(); };
     document.addEventListener("keydown", onKey);
-    const prev = document.body.style.overflow;
+    const previousOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
     return () => {
       document.removeEventListener("keydown", onKey);
-      document.body.style.overflow = prev;
+      document.body.style.overflow = previousOverflow;
     };
   }, [open, onClose]);
+
   if (!open) return null;
   return (
     <div style={{ position: "fixed", inset: 0, zIndex: 80, display: "flex", alignItems: "center", justifyContent: "center", padding: 24 }}>
@@ -109,113 +101,99 @@ export function TelemetryModal({ open, label, title, meta, onClose, children }: 
   );
 }
 
-export function WakaDetailView({ stats, languages, detail }: { stats: Array<{ value: string; unit?: string; label: string }>; languages: NamedPercent[]; detail: WakaDetail }) {
+export function WakaDetailView({
+  stats,
+  languages,
+  data,
+}: {
+  stats: Array<{ value: string; unit?: string; label: string }>;
+  languages: NamedPercent[];
+  data: Pick<WakaTimeStats, "projects" | "editors" | "most_active_day"> | null;
+}) {
   return (
     <div>
       <div style={{ display: "flex", flexWrap: "wrap", alignItems: "flex-end", gap: "20px 48px" }}>
-        {stats.map((s, i) => <Stat key={s.label} value={s.value} unit={s.unit} label={s.label} size={i === 0 ? 44 : 24} />)}
-        {detail.overview
-          .filter((o) => o.label === "Most active")
-          .map((o) => <Stat key={o.label} value={o.value} label={o.label} note={o.note} size={24} />)}
-      </div>
-      <Divider />
-      <SectionLabel>AI coding</SectionLabel>
-      <div style={{ display: "flex", flexWrap: "wrap", gap: "16px 44px" }}>
-        {detail.ai.map((s) => <Stat key={s.label} value={s.value} label={s.label} note={s.note} size={24} />)}
+        {stats.map((stat, index) => <Stat key={stat.label} value={stat.value} unit={stat.unit} label={stat.label} size={index === 0 ? 44 : 24} />)}
+        {data?.most_active_day ? <Stat value={data.most_active_day.text} label="Most active" note={data.most_active_day.date} size={24} /> : null}
       </div>
       <Divider />
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 40 }}>
         <div>
-          <SectionLabel>Agents · lines</SectionLabel>
-          <Bars rows={detail.agents} />
+          <SectionLabel>Languages · last 7 days</SectionLabel>
+          {languages.length ? <Bars rows={languages} /> : <div style={noteStyle}>No live language data.</div>}
         </div>
         <div>
-          <SectionLabel>Editors · time</SectionLabel>
-          <Bars rows={detail.editors} />
+          <SectionLabel>Editors · last 7 days</SectionLabel>
+          {data?.editors.length ? <Bars rows={data.editors} /> : <div style={noteStyle}>No live editor data.</div>}
         </div>
       </div>
       <Divider />
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 40 }}>
-        <div>
-          <SectionLabel>Languages · share</SectionLabel>
-          <Bars rows={languages.length ? languages : detail.languages7d} />
-        </div>
-        <div>
-          <SectionLabel>Projects · last 7 days</SectionLabel>
-          <div style={{ display: "flex", flexDirection: "column" }}>
-            {detail.projects.map((p, i) => (
-              <div key={p.name} style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 12, padding: "10px 0", borderTop: i === 0 ? "none" : "1px solid var(--border-1)" }}>
-                <div style={{ minWidth: 0 }}>
-                  <div style={{ fontFamily: MONO, fontSize: 12.5, color: "var(--text-1)" }}>{p.name}</div>
-                  <div style={{ marginTop: 2, fontFamily: MONO, fontSize: 10, color: "var(--text-faint)" }}>{p.meta}</div>
-                </div>
-                <div style={{ fontFamily: "var(--font-display)", fontSize: 18, fontWeight: 700, color: "var(--accent-text)", whiteSpace: "nowrap" }}>{p.time}</div>
+      <SectionLabel>Projects · last 7 days</SectionLabel>
+      {data?.projects.length ? (
+        <div style={{ display: "flex", flexDirection: "column" }}>
+          {data.projects.map((project, index) => (
+            <div key={project.name} style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 12, padding: "10px 0", borderTop: index === 0 ? "none" : "1px solid var(--border-1)" }}>
+              <div style={{ minWidth: 0 }}>
+                <div style={{ fontFamily: MONO, fontSize: 12.5, color: "var(--text-1)" }}>{project.name}</div>
+                <div style={{ marginTop: 2, fontFamily: MONO, fontSize: 10, color: "var(--text-faint)" }}>{project.percent}%</div>
               </div>
-            ))}
-          </div>
+              <div style={{ fontFamily: "var(--font-display)", fontSize: 18, fontWeight: 700, color: "var(--accent-text)", whiteSpace: "nowrap" }}>{project.text}</div>
+            </div>
+          ))}
         </div>
-      </div>
+      ) : <div style={noteStyle}>No live project data.</div>}
       <Divider />
       <div style={{ fontFamily: MONO, fontSize: 10.5, color: "var(--text-faint)" }}>
-        <span style={{ color: "var(--accent-text)" }}>&gt;</span> os: windows 100% · machine: {detail.machine} · source: wakatime dashboard
+        <span style={{ color: "var(--accent-text)" }}>&gt;</span> source: WakaTime · window: last 7 days
       </div>
     </div>
   );
 }
 
-export function GitHubDetailView({ stats, cells, detail }: { stats: Array<{ value: string; label: string }>; cells: number[]; detail: GitHubDetail }) {
-  const fallback = useMemo(() => heatCells(7 * 52, 311.7), []);
-  const graphCells = cells.length ? cells : fallback;
+export function GitHubDetailView({ stats, contributions, languages, detail }: { stats: Array<{ value: string; label: string }>; contributions: GitHubContributions | null; languages: NamedPercent[]; detail: GitHubDetail }) {
   const months = ["AUG", "SEP", "OCT", "NOV", "DEC", "JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL"];
   return (
     <div>
       <div style={{ display: "flex", flexWrap: "wrap", gap: "20px 44px" }}>
-        {stats.map((s) => <Stat key={s.label} value={s.value} label={s.label} size={30} />)}
-        <Stat value={detail.contributionsYear} label="Contributions · 1y" size={30} />
+        {stats.map((stat) => <Stat key={stat.label} value={stat.value} label={stat.label} size={30} />)}
+        {contributions ? <Stat value={String(contributions.total_contributions)} label="Contributions · 1y" size={30} /> : null}
       </div>
       <Divider />
       <SectionLabel>Streak</SectionLabel>
-      <div style={{ display: "flex", flexWrap: "wrap", alignItems: "flex-end", gap: "16px 48px" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-          <span aria-hidden="true" className="animate-pulse-glow" style={{ width: 8, height: 8, borderRadius: 9999, background: "var(--status-green)", boxShadow: "0 0 8px rgba(52,211,153,0.8)" }} />
-          <Stat value={detail.streak.current} unit=" days" label="Current streak" size={30} />
+      {contributions ? (
+        <div style={{ display: "flex", flexWrap: "wrap", alignItems: "flex-end", gap: "16px 48px" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+            <span aria-hidden="true" className="animate-pulse-glow" style={{ width: 8, height: 8, borderRadius: 9999, background: "var(--status-green)", boxShadow: "0 0 8px rgba(52,211,153,0.8)" }} />
+            <Stat value={String(contributions.current_streak)} unit=" days" label="Current streak" size={30} />
+          </div>
+          <Stat value={String(contributions.longest_streak)} unit=" days" label="Longest streak" size={24} />
+          <Stat value={contributions.last_contribution || "—"} label="Last contribution" size={24} />
         </div>
-        <Stat value={detail.streak.longest} unit=" days" label="Longest streak" size={24} />
-        <Stat value={detail.streak.last} label="Last contribution" size={24} />
-      </div>
+      ) : <div style={noteStyle}>No live contribution data.</div>}
       <Divider />
       <SectionLabel>Contribution graph · last 52 weeks</SectionLabel>
-      <div aria-hidden="true" style={{ display: "grid", gridAutoFlow: "column", gridTemplateRows: "repeat(7, 1fr)", gap: 3 }}>
-        {graphCells.map((level, i) => (
-          <span key={i} style={{ aspectRatio: "1", borderRadius: 2, backgroundColor: level === 0 ? "var(--border-1)" : `rgba(0,212,255,${HEAT[level]})` }} />
-        ))}
-      </div>
+      {contributions?.cells.length ? (
+        <div aria-hidden="true" style={{ display: "grid", gridAutoFlow: "column", gridTemplateRows: "repeat(7, 1fr)", gap: 3 }}>
+          {contributions.cells.map((level, index) => (
+            <span key={index} style={{ aspectRatio: "1", borderRadius: 2, backgroundColor: level === 0 ? "var(--border-1)" : `rgba(0,212,255,${HEAT[level]})` }} />
+          ))}
+        </div>
+      ) : <div style={noteStyle}>No live contribution graph data.</div>}
       <div style={{ marginTop: 8, display: "flex", justifyContent: "space-between", fontFamily: MONO, fontSize: 9, letterSpacing: "0.08em", color: "var(--text-faint)" }}>
-        {months.map((m) => <span key={m}>{m}</span>)}
+        {months.map((month) => <span key={month}>{month}</span>)}
       </div>
       <Divider />
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 40 }}>
         <div>
           <SectionLabel>Top languages · repos</SectionLabel>
-          <div aria-hidden="true" style={{ display: "flex", height: 8, overflow: "hidden", borderRadius: 9999, background: "var(--border-1)" }}>
-            {detail.topLanguages.map((l) => <span key={l.name} style={{ width: `${l.percent}%`, background: l.color }} />)}
-          </div>
-          <div style={{ marginTop: 12, display: "flex", flexDirection: "column", gap: 6 }}>
-            {detail.topLanguages.map((l) => (
-              <div key={l.name} style={{ display: "flex", alignItems: "center", gap: 8, fontFamily: MONO, fontSize: 11, color: "var(--text-body)" }}>
-                <span aria-hidden="true" style={{ width: 8, height: 8, borderRadius: 2, background: l.color, flexShrink: 0 }} />
-                <span style={{ flex: 1 }}>{l.name}</span>
-                <span style={{ color: "var(--accent-text)" }}>{l.percent}%</span>
-              </div>
-            ))}
-          </div>
+          {languages.length ? <Bars rows={languages} /> : <div style={noteStyle}>No live language data.</div>}
         </div>
         <div>
           <SectionLabel>Profile details</SectionLabel>
-          {detail.profile.map(([k, v]) => (
-            <div key={k} style={{ display: "flex", gap: 10, fontFamily: MONO, fontSize: 12, lineHeight: 2 }}>
-              <span style={{ color: "var(--accent-text)", minWidth: 92, flexShrink: 0 }}>{k}</span>
-              <span style={{ color: "var(--text-body)", minWidth: 0 }}>{v}</span>
+          {detail.profile.map(([key, value]) => (
+            <div key={key} style={{ display: "flex", gap: 10, fontFamily: MONO, fontSize: 12, lineHeight: 2 }}>
+              <span style={{ color: "var(--accent-text)", minWidth: 92, flexShrink: 0 }}>{key}</span>
+              <span style={{ color: "var(--text-body)", minWidth: 0 }}>{value}</span>
             </div>
           ))}
         </div>
