@@ -14,6 +14,7 @@ from app.schemas.experience import (
     ExperienceCreate,
     ExperienceListResponse,
     ExperienceResponse,
+    ExperienceTranslationCreate,
     ExperienceUpdate,
 )
 from app.services.admin_audit import record_admin_action
@@ -142,6 +143,37 @@ def update_experience(
         target_type="experience",
         target_id=experience_id,
         details={"title": updated_experience.title},
+    )
+    return updated_experience
+
+
+@router.post("/{experience_id}/translations", response_model=ExperienceResponse)
+def add_experience_translation(
+    experience_id: uuid.UUID,
+    translation_data: ExperienceTranslationCreate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_admin),
+):
+    """Create or update one experience translation (admin only)."""
+    updated_experience = experience_crud.add_experience_translation(
+        db,
+        experience_id=experience_id,
+        translation=translation_data,
+    )
+
+    if not updated_experience:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Experience not found",
+        )
+
+    record_admin_action(
+        db,
+        actor=current_user,
+        action="experience_translation.upsert",
+        target_type="experience",
+        target_id=experience_id,
+        details={"language": translation_data.language},
     )
     return updated_experience
 

@@ -1,5 +1,7 @@
 """Experiences endpoint tests."""
 
+from app.models.experience import ExperienceTranslation
+
 
 def test_get_experiences_public_and_grouped(client, create_experience):
     create_experience(title="Engineer", experience_type="work")
@@ -56,6 +58,105 @@ def test_create_update_delete_experience(client, admin_headers):
 
     deleted = client.delete(f"/api/v1/experiences/{experience_id}", headers=admin_headers)
     assert deleted.status_code == 204
+
+
+def test_update_experience_persists_translation_without_overwriting_base_fields(
+    client, admin_headers, create_experience, db_session
+):
+    experience = create_experience(
+        title="Software Engineering Intern",
+        organization="NETAŞ",
+        description="English base description",
+    )
+
+    response = client.put(
+        f"/api/v1/experiences/{experience.id}",
+        headers=admin_headers,
+        json={
+            "translations": [
+                {
+                    "language": "tr",
+                    "title": "Yazılım Mühendisliği Stajyeri",
+                    "organization": "NETAŞ",
+                    "location": "İstanbul, Türkiye",
+                    "description": "Türkçe deneyim açıklaması",
+                }
+            ]
+        },
+    )
+
+    assert response.status_code == 200
+    assert response.json()["title"] == "Software Engineering Intern"
+    translation = (
+        db_session.query(ExperienceTranslation)
+        .filter_by(experience_id=experience.id, language="tr")
+        .one()
+    )
+    assert translation.title == "Yazılım Mühendisliği Stajyeri"
+    assert translation.description == "Türkçe deneyim açıklaması"
+
+
+def test_experience_translation_endpoint_upserts_translation(
+    client, admin_headers, create_experience, db_session
+):
+    experience = create_experience()
+    payload = {
+        "language": "tr",
+        "title": "İlk başlık",
+        "organization": "İlk kurum",
+        "location": "İstanbul",
+        "description": "İlk açıklama",
+    }
+
+    created = client.post(
+        f"/api/v1/experiences/{experience.id}/translations",
+        headers=admin_headers,
+        json=payload,
+    )
+    updated = client.post(
+        f"/api/v1/experiences/{experience.id}/translations",
+        headers=admin_headers,
+        json={**payload, "title": "Güncel başlık"},
+    )
+
+    assert created.status_code == 200
+    assert updated.status_code == 200
+    assert (
+        db_session.query(ExperienceTranslation)
+        .filter_by(experience_id=experience.id, language="tr")
+        .count()
+        == 1
+    )
+    assert updated.json()["translations"][-1]["title"] == "Güncel başlık"
+
+
+def test_create_experience_rejects_duplicate_translation_languages(
+    client, admin_headers
+):
+    response = client.post(
+        "/api/v1/experiences/",
+        headers=admin_headers,
+        json={
+            "title": "Software Engineer",
+            "organization": "Example",
+            "experience_type": "work",
+            "start_date": "2025-01-01",
+            "translations": [
+                {
+                    "language": "tr",
+                    "title": "Yazılım Mühendisi",
+                    "organization": "Örnek",
+                },
+                {
+                    "language": "tr",
+                    "title": "Yazılım Mühendisi 2",
+                    "organization": "Örnek",
+                },
+            ],
+        },
+    )
+
+    assert response.status_code == 422
 
 
 def test_experience_admin_endpoints_require_admin(client, user_headers):
