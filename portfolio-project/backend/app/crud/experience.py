@@ -7,7 +7,11 @@ from typing import List, Optional
 import uuid
 
 from app.models.experience import Experience, ExperienceTranslation
-from app.schemas.experience import ExperienceCreate, ExperienceUpdate
+from app.schemas.experience import (
+    ExperienceCreate,
+    ExperienceTranslationCreate,
+    ExperienceUpdate,
+)
 
 
 def _apply_experience_translation(
