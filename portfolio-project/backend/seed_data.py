@@ -752,16 +752,34 @@ def seed_experiences(db: Session) -> None:
         {
             "title_en": "Software Engineering Intern",
             "title_tr": "Yazılım Mühendisliği Stajyeri",
-            "organization_en": "NETAŞ Telecommunications Inc.",
-            "organization_tr": "NETAŞ Telekomünikasyon A.Ş.",
+            "organization_en": "NETAŞ",
+            "organization_tr": "NETAŞ",
             "location_en": "Istanbul, Turkey",
             "location_tr": "İstanbul, Türkiye",
             "experience_type": "work",
             "start_date": date(2026, 1, 1),
             "end_date": date(2026, 2, 1),
             "is_current": False,
-            "description_en": "Contributed production-grade code and tests to an enterprise Java microservices platform. Identified a critical v1/v2 timezone mismatch through YAML configuration and ELK analysis, and documented remediation with 600+ lines of tests.",
-            "description_tr": "Kurumsal Java mikroservis platformunda üretim ortamına giden kod ve test katkısı sağladım. YAML yapılandırması ve ELK analiziyle kritik v1/v2 saat dilimi uyumsuzluğunu tespit edip çözümü 600'den fazla satır testle belgeledim.",
+            "description_en": (
+                "Within a six-person team, I contributed production-quality code and tests to the "
+                "KKTC e-Nüfus enterprise digitalization project.\n\n"
+                "I identified a critical UTC vs UTC+3 mismatch in the YAML structure and proved the "
+                "silent date-boundary defect with 600+ lines of tests.\n\n"
+                "I worked with Spring Cloud Config, Zuul Gateway, REST/SOAP, Redis, RabbitMQ, "
+                "PostgreSQL, ElasticSearch, and Kibana.\n\n"
+                "I optimized JSF/PrimeFaces queries and developed date-aware resolution, Vue formatting, "
+                "Turkish collation, i18n, and null-safety checks."
+            ),
+            "description_tr": (
+                "Altı kişilik ekip içinde KKTC e-Nüfus kurumsal dijitalleştirme projesine üretim kalitesinde "
+                "kod ve test katkısı sağladım.\n\n"
+                "YAML yapısındaki kritik UTC ve UTC+3 uyumsuzluğunu tespit ederek sessiz tarih-sınırı "
+                "hatasını 600+ satır test ile kanıtladım.\n\n"
+                "Spring Cloud Config, Zuul Gateway, REST/SOAP, Redis, RabbitMQ, PostgreSQL, ElasticSearch "
+                "ve Kibana ile çalıştım.\n\n"
+                "JSF/PrimeFaces sorgularını optimize ettim; tarih duyarlı çözümleme, Vue biçimlendirmesi, "
+                "Türkçe sıralama, i18n ve null güvenliği kontrolleri geliştirdim."
+            ),
         },
         {
             "title_en": "Project Management Intern (Remote)",
