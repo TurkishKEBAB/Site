@@ -164,6 +164,35 @@ def test_build_commit_query_aliases_years():
     assert '"2025-12-31T23:59:59Z"' in query
 
 
+def test_summarize_contribution_days_calculates_live_streak_metadata():
+    from app.services.github_service import _summarize_contribution_days
+
+    result = _summarize_contribution_days(
+        [
+            {"date": "2026-08-01", "contributionCount": 1},
+            {"date": "2026-08-02", "contributionCount": 2},
+            {"date": "2026-08-03", "contributionCount": 0},
+            {"date": "2026-08-04", "contributionCount": 1},
+            {"date": "2026-08-05", "contributionCount": 3},
+        ]
+    )
+
+    assert result == {
+        "current_streak": 2,
+        "longest_streak": 2,
+        "last_contribution": "2026-08-05",
+    }
+
+
+def test_summarize_repo_languages_returns_live_percentages():
+    from app.services.github_service import _summarize_repo_languages
+
+    assert _summarize_repo_languages({"Java": 2, "Python": 1}) == [
+        {"name": "Java", "percent": 66.7},
+        {"name": "Python", "percent": 33.3},
+    ]
+
+
 def test_github_stats_paginates_repo_stars(monkeypatch):
     from app.services.github_service import GitHubService
 

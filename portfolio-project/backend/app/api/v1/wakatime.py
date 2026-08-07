@@ -14,7 +14,7 @@ router = APIRouter()
 async def get_wakatime_stats():
     """
     Normalized WakaTime coding stats for the Command Center.
-    Public, cached 24h; 503 when unavailable (no API key / upstream error).
+    Public, cached for the configured short refresh window; 503 when unavailable.
     """
     stats = await WakaTimeService().fetch_stats()
     if stats is None:

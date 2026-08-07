@@ -2,7 +2,7 @@
 WakaTime Schemas
 Normalized coding-activity stats for the home-page Command Center.
 """
-from typing import List
+from typing import List, Optional
 
 from pydantic import BaseModel
 
@@ -11,6 +11,19 @@ class WakaTimeLanguage(BaseModel):
     """A single language slice in the weekly breakdown."""
     name: str
     percent: float
+
+
+class WakaTimeBreakdown(WakaTimeLanguage):
+    """A live WakaTime project/editor slice with duration metadata."""
+    seconds: int = 0
+    text: str = ""
+
+
+class WakaTimeDay(BaseModel):
+    """The most active day in the requested WakaTime window."""
+    date: str
+    seconds: int
+    text: str
 
 
 class WakaTimeStats(BaseModel):
@@ -22,4 +35,7 @@ class WakaTimeStats(BaseModel):
     daily_average_seconds: int
     daily_average_text: str
     languages: List[WakaTimeLanguage]
+    projects: List[WakaTimeBreakdown] = []
+    editors: List[WakaTimeBreakdown] = []
+    most_active_day: Optional[WakaTimeDay] = None
     range: str

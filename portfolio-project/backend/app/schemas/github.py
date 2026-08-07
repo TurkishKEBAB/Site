@@ -52,6 +52,13 @@ class GitHubRefreshResponse(BaseModel):
 GitHubSyncResponse = GitHubRefreshResponse
 
 
+class GitHubLanguage(BaseModel):
+    """Repository language share calculated from the live GitHub profile."""
+
+    name: str
+    percent: float
+
+
 class GitHubStats(BaseModel):
     """Aggregate GitHub profile stats for the Command Center."""
     public_repos: int
@@ -59,9 +66,13 @@ class GitHubStats(BaseModel):
     total_pull_requests: int
     total_commits: int
     commits_range: str
+    languages: List[GitHubLanguage] = []
 
 
 class GitHubContributions(BaseModel):
     """Contribution calendar flattened to week-major 0..4 heatmap levels."""
     total_contributions: int
     cells: List[int]
+    current_streak: int = 0
+    longest_streak: int = 0
+    last_contribution: Optional[str] = None

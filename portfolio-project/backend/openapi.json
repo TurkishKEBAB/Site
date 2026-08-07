@@ -2553,6 +2553,27 @@
             "title": "Cells",
             "type": "array"
           },
+          "current_streak": {
+            "default": 0,
+            "title": "Current Streak",
+            "type": "integer"
+          },
+          "last_contribution": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Contribution"
+          },
+          "longest_streak": {
+            "default": 0,
+            "title": "Longest Streak",
+            "type": "integer"
+          },
           "total_contributions": {
             "title": "Total Contributions",
             "type": "integer"
@@ -2563,6 +2584,25 @@
           "cells"
         ],
         "title": "GitHubContributions",
+        "type": "object"
+      },
+      "GitHubLanguage": {
+        "description": "Repository language share calculated from the live GitHub profile.",
+        "properties": {
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "percent": {
+            "title": "Percent",
+            "type": "number"
+          }
+        },
+        "required": [
+          "name",
+          "percent"
+        ],
+        "title": "GitHubLanguage",
         "type": "object"
       },
       "GitHubRefreshResponse": {
@@ -2715,6 +2755,14 @@
           "commits_range": {
             "title": "Commits Range",
             "type": "string"
+          },
+          "languages": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/GitHubLanguage"
+            },
+            "title": "Languages",
+            "type": "array"
           },
           "public_repos": {
             "title": "Public Repos",
@@ -4683,6 +4731,59 @@
         "title": "UserLogin",
         "type": "object"
       },
+      "WakaTimeBreakdown": {
+        "description": "A live WakaTime project/editor slice with duration metadata.",
+        "properties": {
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "percent": {
+            "title": "Percent",
+            "type": "number"
+          },
+          "seconds": {
+            "default": 0,
+            "title": "Seconds",
+            "type": "integer"
+          },
+          "text": {
+            "default": "",
+            "title": "Text",
+            "type": "string"
+          }
+        },
+        "required": [
+          "name",
+          "percent"
+        ],
+        "title": "WakaTimeBreakdown",
+        "type": "object"
+      },
+      "WakaTimeDay": {
+        "description": "The most active day in the requested WakaTime window.",
+        "properties": {
+          "date": {
+            "title": "Date",
+            "type": "string"
+          },
+          "seconds": {
+            "title": "Seconds",
+            "type": "integer"
+          },
+          "text": {
+            "title": "Text",
+            "type": "string"
+          }
+        },
+        "required": [
+          "date",
+          "seconds",
+          "text"
+        ],
+        "title": "WakaTimeDay",
+        "type": "object"
+      },
       "WakaTimeLanguage": {
         "description": "A single language slice in the weekly breakdown.",
         "properties": {
@@ -4721,6 +4822,14 @@
             "title": "Daily Average Text",
             "type": "string"
           },
+          "editors": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/WakaTimeBreakdown"
+            },
+            "title": "Editors",
+            "type": "array"
+          },
           "languages": {
             "items": {
               "$ref": "#/components/schemas/WakaTimeLanguage"
@@ -4735,6 +4844,24 @@
           "last_7_days_text": {
             "title": "Last 7 Days Text",
             "type": "string"
+          },
+          "most_active_day": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/WakaTimeDay"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "projects": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/WakaTimeBreakdown"
+            },
+            "title": "Projects",
+            "type": "array"
           },
           "range": {
             "title": "Range",

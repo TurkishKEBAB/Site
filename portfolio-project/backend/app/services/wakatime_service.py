@@ -1,6 +1,6 @@
 """
 WakaTime API Integration Service
-Fetches coding-activity stats with Redis caching (24h) for the
+Fetches coding-activity stats with Redis caching (1h by default) for the
 home-page Command Center. Uses the account Secret API Key (Basic auth).
 """
 
@@ -14,7 +14,7 @@ from app.config import settings
 from app.services.cache_service import get_cache_service
 
 WAKATIME_BASE_URL = "https://wakatime.com/api/v1"
-CACHE_KEY = "wakatime_stats"
+CACHE_KEY = "wakatime_stats_v2"
 TOP_LANGUAGES = 5
 
 
@@ -64,6 +64,41 @@ class WakaTimeService:
         return status_code == 202 or (
             isinstance(data, dict) and data.get("is_up_to_date") is False
         )
+
+    @staticmethod
+    def _summarize_breakdown(items: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+        """Normalize live WakaTime project/editor breakdowns for the UI."""
+        ranked = sorted(
+            (
+                {
+                    "name": item.get("name", "Unknown"),
+                    "percent": round(float(item.get("percent") or 0.0), 1),
+                    "seconds": int(item.get("total_seconds") or 0),
+                    "text": item.get("text")
+                    or item.get("human_readable_total")
+                    or "",
+                }
+                for item in items
+            ),
+            key=lambda item: item["percent"],
+            reverse=True,
+        )
+        return ranked
+
+    @staticmethod
+    def _find_most_active_day(days: List[Dict[str, Any]]) -> Optional[Dict[str, Any]]:
+        """Return the highest-activity day from the live WakaTime response."""
+        if not days:
+            return None
+
+        active_day = max(days, key=lambda item: int(item.get("total_seconds") or 0))
+        return {
+            "date": active_day.get("date", ""),
+            "seconds": int(active_day.get("total_seconds") or 0),
+            "text": active_day.get("text")
+            or active_day.get("human_readable_total")
+            or "",
+        }
 
     async def fetch_stats(
         self, force_refresh: bool = False
@@ -122,6 +157,9 @@ class WakaTimeService:
                 "daily_average_seconds": int(seven.get("daily_average") or 0),
                 "daily_average_text": seven.get("human_readable_daily_average") or "",
                 "languages": self._summarize_languages(seven.get("languages") or []),
+                "projects": self._summarize_breakdown(seven.get("projects") or []),
+                "editors": self._summarize_breakdown(seven.get("editors") or []),
+                "most_active_day": self._find_most_active_day(seven.get("days") or []),
                 "range": "last_7_days",
             }
 

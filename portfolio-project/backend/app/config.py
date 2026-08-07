@@ -37,11 +37,11 @@ class Settings(BaseSettings):
     # GitHub
     GITHUB_USERNAME: str = "TurkishKEBAB"
     GITHUB_API_TOKEN: Optional[str] = None
-    GITHUB_CACHE_HOURS: int = 24
+    GITHUB_CACHE_HOURS: int = 1
 
     # WakaTime
     WAKATIME_API_KEY: Optional[str] = None
-    WAKATIME_CACHE_HOURS: int = 24
+    WAKATIME_CACHE_HOURS: int = 1
 
     # Email (SMTP)
     SMTP_HOST: str = "smtp.gmail.com"
