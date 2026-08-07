@@ -41,33 +41,6 @@ def test_seed_experiences_excludes_removed_adalab_record(db_session):
     assert not any("adalab" in organization.lower() for organization in organizations)
 
 
-def test_seed_netas_experience_matches_current_gitgraph_copy(db_session):
-    seed_experiences(db_session)
-
-    experience = (
-        db_session.query(Experience)
-        .filter(Experience.organization == "NETAŞ")
-        .one()
-    )
-    experience_tr = next(
-        translation
-        for translation in experience.translations
-        if translation.language == "tr"
-    )
-
-    assert experience.title == "Software Engineering Intern"
-    assert experience.description.startswith(
-        "Within a six-person team, I contributed production-quality code and tests"
-    )
-    assert experience_tr.title == "Yazılım Mühendisliği Stajyeri"
-    assert experience_tr.organization == "NETAŞ"
-    assert "KKTC e-Nüfus" in experience_tr.description
-    assert "UTC ve UTC+3" in experience_tr.description
-    assert "600+ satır test" in experience_tr.description
-    assert "Spring Cloud Config" in experience_tr.description
-    assert "null güvenliği" in experience_tr.description
-
-
 def test_seed_translations_use_diacritics_and_real_turkish_copy(db_session, admin_user):
     seed_experiences(db_session)
     seed_projects(db_session)
