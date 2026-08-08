@@ -27,7 +27,7 @@ describe("SystemTerminal", () => {
 
     expect(screen.getByRole("img", { name: "Yiğit Okur" })).toHaveAttribute(
       "src",
-      "/profile.webp",
+      "/profile-zurich.webp",
     );
     expect(screen.getByRole("img", { name: "Yiğit Okur" })).toHaveAttribute(
       "fetchpriority",

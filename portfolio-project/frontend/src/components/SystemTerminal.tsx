@@ -129,7 +129,7 @@ const TABS: Array<[Tab, string]> = [["fetch", "yofetch"], ["java", "Profile.java
  * copy button and a Run that hands off to the shell. shell = a working toy
  * shell with history, tab completion and the house command set.
  */
-export default function SystemTerminal({ profileSrc = "/profile.webp", className = "" }: { profileSrc?: string; className?: string }) {
+export default function SystemTerminal({ profileSrc = "/profile-zurich.webp", className = "" }: { profileSrc?: string; className?: string }) {
   const [tab, setTab] = useState<Tab>("fetch");
   const [rawPhoto, setRawPhoto] = useState(false);
   // Keep the server and first client render identical; the live value starts

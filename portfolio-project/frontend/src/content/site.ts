@@ -140,7 +140,9 @@ export const siteConfig = {
   github: "https://github.com/TurkishKEBAB",
   linkedin: "https://www.linkedin.com/in/yigit-okur-050b5b278",
   twitter: "https://x.com/biznedenokuruz",
-  profileImage: "/profile.jpg",
+  // Public assets are served with a 24h browser cache, so a changed photo
+  // ships under a new filename instead of overwriting the old URL.
+  profileImage: "/profile-zurich.jpg",
   profileFallbackImage: "/profile-placeholder.png",
   ogImage: "/opengraph-image",
 };
