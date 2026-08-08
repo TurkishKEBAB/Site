@@ -39,6 +39,12 @@ async def test_send_email_passes_an_explicit_smtp_timeout(monkeypatch):
 
     monkeypatch.setattr("app.services.email_service.aiosmtplib.send", fake_send)
     monkeypatch.setattr("app.services.email_service.settings.EMAIL_ENABLED", True)
+    monkeypatch.setattr(
+        "app.services.email_service.settings.SMTP_USERNAME", "sender@example.com"
+    )
+    monkeypatch.setattr(
+        "app.services.email_service.settings.SMTP_PASSWORD", "smtp-password"
+    )
     monkeypatch.setattr("app.services.email_service.settings.SMTP_TIMEOUT_SECONDS", 5.0)
 
     sent = await EmailService().send_email("to@example.com", "subject", "body")
@@ -56,6 +62,12 @@ async def test_send_email_skips_delivery_when_disabled(monkeypatch):
 
     monkeypatch.setattr("app.services.email_service.aiosmtplib.send", fake_send)
     monkeypatch.setattr("app.services.email_service.settings.EMAIL_ENABLED", False)
+    monkeypatch.setattr(
+        "app.services.email_service.settings.SMTP_USERNAME", "sender@example.com"
+    )
+    monkeypatch.setattr(
+        "app.services.email_service.settings.SMTP_PASSWORD", "smtp-password"
+    )
 
     sent = await EmailService().send_email("to@example.com", "subject", "body")
 
