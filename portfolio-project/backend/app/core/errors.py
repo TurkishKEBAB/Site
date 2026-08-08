@@ -67,6 +67,17 @@ def _validation_fields(exc: RequestValidationError) -> Dict[str, str]:
     return fields
 
 
+def _json_safe(value: Any) -> Any:
+    """Convert validation details to values that JSONResponse can encode."""
+    if value is None or isinstance(value, (str, int, float, bool)):
+        return value
+    if isinstance(value, Mapping):
+        return {str(key): _json_safe(item) for key, item in value.items()}
+    if isinstance(value, (list, tuple, set)):
+        return [_json_safe(item) for item in value]
+    return str(value)
+
+
 def build_error_payload(
     *,
     code: str,
@@ -144,7 +155,7 @@ async def validation_exception_handler(
 ) -> JSONResponse:
     logger.warning("Validation error on {}: {}", request.url.path, exc.errors())
     fields = None if settings.is_production else _validation_fields(exc)
-    details = None if settings.is_production else exc.errors()
+    details = None if settings.is_production else _json_safe(exc.errors())
     return JSONResponse(
         status_code=422,
         content=build_error_payload(

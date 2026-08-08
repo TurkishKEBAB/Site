@@ -46,7 +46,7 @@ CORS_ORIGINS=http://localhost:3000,http://localhost:5173
 # ============================================
 GITHUB_USERNAME=TurkishKEBAB
 GITHUB_API_TOKEN=  # Optional, increases rate limit from 60 to 5000 req/hour
-GITHUB_CACHE_HOURS=24
+GITHUB_CACHE_HOURS=1
 
 # ============================================
 # EMAIL CONFIGURATION

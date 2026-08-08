@@ -67,6 +67,50 @@ def test_summarize_languages_folds_into_other():
     assert result[-1] == {"name": "Other", "percent": 7.0}
 
 
+def test_summarize_wakatime_breakdowns_keeps_live_detail_values():
+    result = WakaTimeService._summarize_breakdown(
+        [
+            {
+                "name": "Site",
+                "percent": 62.5,
+                "total_seconds": 3600,
+                "text": "1 hr",
+            },
+            {
+                "name": "Other project",
+                "percent": 37.5,
+                "total_seconds": 2160,
+                "text": "36 mins",
+            },
+        ]
+    )
+
+    assert result == [
+        {"name": "Site", "percent": 62.5, "seconds": 3600, "text": "1 hr"},
+        {
+            "name": "Other project",
+            "percent": 37.5,
+            "seconds": 2160,
+            "text": "36 mins",
+        },
+    ]
+
+
+def test_find_most_active_wakatime_day_uses_live_daily_totals():
+    result = WakaTimeService._find_most_active_day(
+        [
+            {"date": "2026-08-04", "total_seconds": 900, "text": "15 mins"},
+            {"date": "2026-08-05", "total_seconds": 3600, "text": "1 hr"},
+        ]
+    )
+
+    assert result == {
+        "date": "2026-08-05",
+        "seconds": 3600,
+        "text": "1 hr",
+    }
+
+
 def test_get_headers_uses_wakatime_basic_auth_username_format():
     service = WakaTimeService()
     service.api_key = "waka-secret"

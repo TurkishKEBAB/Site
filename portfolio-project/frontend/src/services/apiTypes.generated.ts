@@ -553,6 +553,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/experiences/{experience_id}/translations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Add Experience Translation
+         * @description Create or update one experience translation (admin only).
+         */
+        post: operations["add_experience_translation_api_v1_experiences__experience_id__translations_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/github/cache": {
         parameters: {
             query?: never;
@@ -1097,7 +1117,7 @@ export interface paths {
         /**
          * Get Wakatime Stats
          * @description Normalized WakaTime coding stats for the Command Center.
-         *     Public, cached 24h; 503 when unavailable (no API key / upstream error).
+         *     Public, cached for the configured short refresh window; 503 when unavailable.
          */
         get: operations["get_wakatime_stats_api_v1_wakatime_stats_get"];
         put?: never;
@@ -2118,6 +2138,8 @@ export interface components {
             start_date?: string | null;
             /** Title */
             title?: string | null;
+            /** Translations */
+            translations?: components["schemas"]["ExperienceTranslationCreate"][] | null;
         };
         /** FlowNode */
         FlowNode: {
@@ -2140,8 +2162,30 @@ export interface components {
         GitHubContributions: {
             /** Cells */
             cells: number[];
+            /**
+             * Current Streak
+             * @default 0
+             */
+            current_streak: number;
+            /** Last Contribution */
+            last_contribution?: string | null;
+            /**
+             * Longest Streak
+             * @default 0
+             */
+            longest_streak: number;
             /** Total Contributions */
             total_contributions: number;
+        };
+        /**
+         * GitHubLanguage
+         * @description Repository language share calculated from the live GitHub profile.
+         */
+        GitHubLanguage: {
+            /** Name */
+            name: string;
+            /** Percent */
+            percent: number;
         };
         /**
          * GitHubRefreshResponse
@@ -2222,6 +2266,11 @@ export interface components {
         GitHubStats: {
             /** Commits Range */
             commits_range: string;
+            /**
+             * Languages
+             * @default []
+             */
+            languages: components["schemas"]["GitHubLanguage"][];
             /** Public Repos */
             public_repos: number;
             /** Total Commits */
@@ -2965,6 +3014,38 @@ export interface components {
             password: string;
         };
         /**
+         * WakaTimeBreakdown
+         * @description A live WakaTime project/editor slice with duration metadata.
+         */
+        WakaTimeBreakdown: {
+            /** Name */
+            name: string;
+            /** Percent */
+            percent: number;
+            /**
+             * Seconds
+             * @default 0
+             */
+            seconds: number;
+            /**
+             * Text
+             * @default
+             */
+            text: string;
+        };
+        /**
+         * WakaTimeDay
+         * @description The most active day in the requested WakaTime window.
+         */
+        WakaTimeDay: {
+            /** Date */
+            date: string;
+            /** Seconds */
+            seconds: number;
+            /** Text */
+            text: string;
+        };
+        /**
          * WakaTimeLanguage
          * @description A single language slice in the weekly breakdown.
          */
@@ -2987,12 +3068,23 @@ export interface components {
             daily_average_seconds: number;
             /** Daily Average Text */
             daily_average_text: string;
+            /**
+             * Editors
+             * @default []
+             */
+            editors: components["schemas"]["WakaTimeBreakdown"][];
             /** Languages */
             languages: components["schemas"]["WakaTimeLanguage"][];
             /** Last 7 Days Seconds */
             last_7_days_seconds: number;
             /** Last 7 Days Text */
             last_7_days_text: string;
+            most_active_day?: components["schemas"]["WakaTimeDay"] | null;
+            /**
+             * Projects
+             * @default []
+             */
+            projects: components["schemas"]["WakaTimeBreakdown"][];
             /** Range */
             range: string;
         };
@@ -5945,6 +6037,95 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+            /** @description Bad request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Rate limited */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Internal server error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    add_experience_translation_api_v1_experiences__experience_id__translations_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                experience_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ExperienceTranslationCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Experience"];
+                };
             };
             /** @description Bad request */
             400: {

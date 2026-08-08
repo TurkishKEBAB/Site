@@ -57,10 +57,13 @@ def _serialize_project(project, language: str) -> dict:
     payload["translations"] = [
         {
             "id": str(trans.id),
+            "project_id": str(trans.project_id),
             "language": trans.language,
             "title": trans.title,
             "short_description": trans.short_description,
             "description": trans.description,
+            "created_at": trans.created_at.isoformat() if trans.created_at else None,
+            "updated_at": trans.updated_at.isoformat() if trans.updated_at else None,
         }
         for trans in project.translations
     ]

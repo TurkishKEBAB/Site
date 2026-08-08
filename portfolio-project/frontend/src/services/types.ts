@@ -230,6 +230,14 @@ export interface ExperienceTranslation {
   created_at: string;
 }
 
+export interface ExperienceTranslationCreate {
+  language: 'en' | 'tr';
+  title: string;
+  organization: string;
+  location?: string;
+  description?: string;
+}
+
 export interface Experience {
   id: string;
   title: string;
@@ -256,6 +264,7 @@ export interface ExperienceCreate {
   is_current?: boolean;
   description?: string;
   display_order?: number;
+  translations?: ExperienceTranslationCreate[];
 }
 
 export interface ExperienceListResponse {

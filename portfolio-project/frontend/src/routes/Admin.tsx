@@ -58,6 +58,10 @@ import {
 } from '../components/admin/TechnologyForms';
 import { useAdminModalFocusTrap } from '../lib/admin/useAdminModalFocusTrap';
 import { buildProjectPayload } from '../lib/admin/projectPayload';
+import {
+  buildExperienceCreatePayload,
+  buildExperienceUpdatePayload,
+} from '../lib/admin/experiencePayload';
 import { dossierService } from '../services/dossierService';
 import {
   DossierEditor,
@@ -380,14 +384,17 @@ export default function Admin() {
   const loadExperiences = useCallback(async () => {
     setExperiencesLoading(true);
     try {
-      const experiencesData = await experienceService.getExperiences({ limit: 100 });
+      const experiencesData = await experienceService.getExperiences({
+        limit: 100,
+        language: adminLanguage,
+      });
       setExperiences(Array.isArray(experiencesData) ? experiencesData : []);
     } catch (error) {
       handleApiError(error, 'Deneyimler yüklenirken bir hata oluştu.');
     } finally {
       setExperiencesLoading(false);
     }
-  }, [handleApiError]);
+  }, [adminLanguage, handleApiError]);
 
   const loadMessages = useCallback(async () => {
     setMessagesLoading(true);
@@ -1241,29 +1248,16 @@ export default function Admin() {
 
     try {
       if (experienceFormMode === 'create') {
-        await experienceService.createExperience({
-          title: values.title.trim(),
-          organization: values.organization.trim(),
-          location: values.location.trim() || undefined,
-          experience_type: values.experienceType,
-          start_date: values.startDate,
-          end_date: values.isCurrent ? undefined : (values.endDate || undefined),
-          is_current: values.isCurrent,
-          description: values.description.trim() || undefined,
-        });
+        await experienceService.createExperience(
+          buildExperienceCreatePayload(values, adminLanguage),
+        );
 
         showToast('success', 'Deneyim başarıyla oluşturuldu.');
       } else if (activeExperience) {
-        await experienceService.updateExperience(activeExperience.id, {
-          title: values.title.trim(),
-          organization: values.organization.trim(),
-          location: values.location.trim() || undefined,
-          experience_type: values.experienceType,
-          start_date: values.startDate,
-          end_date: values.isCurrent ? undefined : (values.endDate || undefined),
-          is_current: values.isCurrent,
-          description: values.description.trim() || undefined,
-        });
+        await experienceService.updateExperience(
+          activeExperience.id,
+          buildExperienceUpdatePayload(values, adminLanguage),
+        );
 
         showToast('success', 'Deneyim güncellendi.');
       }

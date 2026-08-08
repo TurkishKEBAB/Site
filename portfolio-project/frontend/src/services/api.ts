@@ -159,6 +159,7 @@ export const apiEndpoints = {
     detail: (id: string) => `/experiences/${id}`,
     create: '/experiences/',
     update: (id: string) => `/experiences/${id}`,
+    addTranslation: (id: string) => `/experiences/${id}/translations`,
     delete: (id: string) => `/experiences/${id}`,
   },
 

@@ -7,7 +7,11 @@ from typing import List, Optional
 import uuid
 
 from app.models.experience import Experience, ExperienceTranslation
-from app.schemas.experience import ExperienceCreate, ExperienceUpdate
+from app.schemas.experience import (
+    ExperienceCreate,
+    ExperienceTranslationCreate,
+    ExperienceUpdate,
+)
 
 
 def _apply_experience_translation(
@@ -152,15 +156,75 @@ def update_experience(
     if not db_experience:
         return None
     
-    update_data = experience_update.model_dump(exclude_unset=True)
+    update_data = experience_update.model_dump(
+        exclude_unset=True,
+        exclude={"translations"},
+    )
     
     for field, value in update_data.items():
         setattr(db_experience, field, value)
-    
+
+    if experience_update.translations:
+        for translation in experience_update.translations:
+            _upsert_experience_translation(
+                db,
+                experience_id=experience_id,
+                translation=translation,
+            )
+
     db.commit()
-    db.refresh(db_experience)
-    
-    return db_experience
+
+    return get_experience_by_id(db, experience_id=experience_id)
+
+
+def _upsert_experience_translation(
+    db: Session,
+    experience_id: uuid.UUID,
+    translation: ExperienceTranslationCreate,
+) -> ExperienceTranslation:
+    """Create or update one translation without committing the transaction."""
+    existing = db.query(ExperienceTranslation).filter(
+        ExperienceTranslation.experience_id == experience_id,
+        ExperienceTranslation.language == translation.language,
+    ).first()
+
+    if existing:
+        existing.title = translation.title
+        existing.organization = translation.organization
+        existing.location = translation.location
+        existing.description = translation.description
+        return existing
+
+    db_translation = ExperienceTranslation(
+        experience_id=experience_id,
+        language=translation.language,
+        title=translation.title,
+        organization=translation.organization,
+        location=translation.location,
+        description=translation.description,
+    )
+    db.add(db_translation)
+    return db_translation
+
+
+def add_experience_translation(
+    db: Session,
+    experience_id: uuid.UUID,
+    translation: ExperienceTranslationCreate,
+) -> Optional[Experience]:
+    """Create or update one translation and return the complete experience."""
+    experience = get_experience_by_id(db, experience_id=experience_id)
+    if not experience:
+        return None
+
+    _upsert_experience_translation(
+        db,
+        experience_id=experience_id,
+        translation=translation,
+    )
+    db.commit()
+
+    return get_experience_by_id(db, experience_id=experience_id)
 
 
 def delete_experience(db: Session, experience_id: uuid.UUID) -> bool:
