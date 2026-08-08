@@ -20,13 +20,70 @@ from app.schemas.contact import (
 from app.services.admin_audit import record_admin_action
 from app.services.captcha_service import verify_captcha_token
 from app.services.email_service import EmailService
-from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
+from fastapi import (
+    APIRouter,
+    BackgroundTasks,
+    Depends,
+    HTTPException,
+    Query,
+    Request,
+    status,
+)
 from loguru import logger
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 router = APIRouter()
 settings = get_settings()
+
+
+async def deliver_contact_emails(
+    *,
+    message_id: uuid.UUID,
+    name: str,
+    email: str,
+    subject: str,
+    message: str,
+) -> None:
+    """Send the confirmation and admin notification outside the request cycle.
+
+    Runs as a background task on purpose: two SMTP round-trips took ~11s in
+    production while browsers give up on the request at 10s, so a stored
+    message was reported back to the visitor as a failed submission. Delivery
+    problems are logged here and never surface to the sender, who already has
+    their message in the admin inbox.
+
+    Takes plain values rather than the ORM row because the request's database
+    session is already closed by the time this runs.
+    """
+    try:
+        email_service = EmailService()
+    except Exception:
+        logger.exception(
+            "Email service could not process contact message {}", message_id
+        )
+        return
+
+    try:
+        await email_service.send_contact_form_confirmation(
+            user_email=email,
+            user_name=name,
+            message_content=message[:100],
+        )
+    except Exception:
+        logger.exception("Contact confirmation email failed for message {}", message_id)
+
+    try:
+        await email_service.send_admin_notification(
+            user_name=name,
+            user_email=email,
+            subject=subject,
+            message_content=message,
+        )
+    except Exception:
+        logger.exception(
+            "Contact admin notification failed for message {}", message_id
+        )
 
 
 @router.post(
@@ -36,11 +93,13 @@ settings = get_settings()
 async def submit_contact_message(
     request: Request,
     message_data: ContactMessageCreate,
+    background_tasks: BackgroundTasks,
     db: Session = Depends(get_db),
 ):
     """
     Submit a contact form message (public endpoint)
-    Sends confirmation email to sender and notification to admin.
+    Stores the message, then queues the confirmation and admin notification
+    emails so slow SMTP never delays the response.
     """
     ip_address = request.client.host if request.client else None
     user_agent = request.headers.get("user-agent")
@@ -70,47 +129,24 @@ async def submit_contact_message(
         user_agent=user_agent,
     )
 
-    email_sent = False
-    try:
-        email_service = EmailService()
-        message_preview = message.message[:100]
-
-        try:
-            confirmation_sent = await email_service.send_contact_form_confirmation(
-                user_email=message.email,
-                user_name=message.name,
-                message_content=message_preview,
-            )
-        except Exception:
-            confirmation_sent = False
-            logger.exception(
-                "Contact confirmation email failed for message {}", message.id
-            )
-
-        try:
-            admin_notification_sent = await email_service.send_admin_notification(
-                user_name=message.name,
-                user_email=message.email,
-                subject=message.subject,
-                message_content=message.message,
-            )
-        except Exception:
-            admin_notification_sent = False
-            logger.exception(
-                "Contact admin notification failed for message {}", message.id
-            )
-
-        email_sent = confirmation_sent and admin_notification_sent
-    except Exception:
-        logger.exception(
-            "Email service could not process contact message {}", message.id
+    email_queued = bool(
+        settings.EMAIL_ENABLED and settings.SMTP_USERNAME and settings.SMTP_PASSWORD
+    )
+    if email_queued:
+        background_tasks.add_task(
+            deliver_contact_emails,
+            message_id=message.id,
+            name=message.name,
+            email=message.email,
+            subject=message.subject,
+            message=message.message,
         )
 
     return {
         "success": True,
         "message": "Your message has been received and is visible in the admin panel.",
         "message_id": message.id,
-        "email_sent": email_sent,
+        "email_queued": email_queued,
     }
 
 

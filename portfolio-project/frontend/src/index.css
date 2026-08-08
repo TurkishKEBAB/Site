@@ -434,6 +434,8 @@
 .nx-ps .ps-err { color: #ff9a9a; }
 .nx-ps .ps-dim { color: #8ea6d8; }
 .nx-ps .ps-ok { color: #9be08a; }
+.nx-ps .ps-link { color: #7fd4ff; text-decoration: underline; text-underline-offset: 2px; }
+.nx-ps .ps-link:hover { color: #a9e4ff; }
 .nx-ps .c-key { color: #9fb6e6; }
 .nx-ps .c-val { color: #ffffff; }
 .nx-ps .c-dim { color: #8ea6d8; }

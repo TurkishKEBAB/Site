@@ -3,6 +3,58 @@
 import pytest
 
 
+def enable_smtp(monkeypatch):
+    """Give the endpoint a configured mailbox so delivery gets scheduled."""
+    monkeypatch.setattr("app.api.v1.contact.settings.EMAIL_ENABLED", True)
+    monkeypatch.setattr("app.api.v1.contact.settings.SMTP_USERNAME", "site@example.com")
+    monkeypatch.setattr("app.api.v1.contact.settings.SMTP_PASSWORD", "app-password")
+
+
+def test_submit_contact_message_does_not_wait_for_smtp(client, monkeypatch):
+    """SMTP must never sit inside the request/response cycle.
+
+    Production spent ~11s on two timing-out SMTP sends while the browser client
+    aborts at 10s, so a message that was already stored came back to the visitor
+    as "the contact API is unavailable".
+    """
+    from fastapi import BackgroundTasks
+
+    sent_during_request = []
+    scheduled = []
+
+    class DummyEmailService:
+        async def send_contact_form_confirmation(self, **kwargs):
+            sent_during_request.append("confirmation")
+            return True
+
+        async def send_admin_notification(self, **kwargs):
+            sent_during_request.append("admin_notification")
+            return True
+
+    def record_task(self, func, *args, **kwargs):
+        scheduled.append((func, kwargs))
+
+    monkeypatch.setattr("app.api.v1.contact.EmailService", DummyEmailService)
+    monkeypatch.setattr(BackgroundTasks, "add_task", record_task)
+    enable_smtp(monkeypatch)
+
+    response = client.post(
+        "/api/v1/contact/",
+        json={
+            "name": "Async Sender",
+            "email": "async@example.com",
+            "subject": "Delivery timing",
+            "message": "The response must not block on the mail server.",
+        },
+    )
+
+    assert response.status_code == 201
+    assert response.json()["email_queued"] is True
+    assert sent_during_request == []
+    assert [task.__name__ for task, _ in scheduled] == ["deliver_contact_emails"]
+    assert scheduled[0][1]["email"] == "async@example.com"
+
+
 def test_submit_contact_message_success(client, monkeypatch):
     class DummyEmailService:
         async def send_contact_form_confirmation(self, **kwargs):
@@ -12,6 +64,7 @@ def test_submit_contact_message_success(client, monkeypatch):
             return True
 
     monkeypatch.setattr("app.api.v1.contact.EmailService", DummyEmailService)
+    enable_smtp(monkeypatch)
 
     response = client.post(
         "/api/v1/contact/",
@@ -29,7 +82,7 @@ def test_submit_contact_message_success(client, monkeypatch):
     assert payload["message"] == (
         "Your message has been received and is visible in the admin panel."
     )
-    assert payload["email_sent"] is True
+    assert payload["email_queued"] is True
 
 
 def test_submit_contact_message_email_failure_is_non_blocking(client, monkeypatch):
@@ -44,6 +97,7 @@ def test_submit_contact_message_email_failure_is_non_blocking(client, monkeypatc
             return True
 
     monkeypatch.setattr("app.api.v1.contact.EmailService", DummyEmailService)
+    enable_smtp(monkeypatch)
 
     response = client.post(
         "/api/v1/contact/",
@@ -56,7 +110,8 @@ def test_submit_contact_message_email_failure_is_non_blocking(client, monkeypatc
     )
 
     assert response.status_code == 201
-    assert response.json()["email_sent"] is False
+    assert response.json()["success"] is True
+    # A failed confirmation must not stop the admin notification behind it.
     assert notification_calls[0]["user_email"] == "jane@example.com"
 
 
@@ -71,6 +126,7 @@ def test_submit_contact_message_admin_notification_failure_is_non_blocking(
             raise RuntimeError("smtp admin notification down")
 
     monkeypatch.setattr("app.api.v1.contact.EmailService", DummyEmailService)
+    enable_smtp(monkeypatch)
 
     response = client.post(
         "/api/v1/contact/",
@@ -83,7 +139,7 @@ def test_submit_contact_message_admin_notification_failure_is_non_blocking(
     )
 
     assert response.status_code == 201
-    assert response.json()["email_sent"] is False
+    assert response.json()["success"] is True
 
 
 def test_submit_contact_message_handles_email_service_constructor_failure(
@@ -94,6 +150,7 @@ def test_submit_contact_message_handles_email_service_constructor_failure(
             raise RuntimeError("email service unavailable")
 
     monkeypatch.setattr("app.api.v1.contact.EmailService", FailingEmailService)
+    enable_smtp(monkeypatch)
 
     response = client.post(
         "/api/v1/contact/",
@@ -106,7 +163,7 @@ def test_submit_contact_message_handles_email_service_constructor_failure(
     )
 
     assert response.status_code == 201
-    assert response.json()["email_sent"] is False
+    assert response.json()["success"] is True
 
 
 def test_submit_contact_message_allows_blank_subject_and_stores_message(
@@ -131,7 +188,6 @@ def test_submit_contact_message_allows_blank_subject_and_stores_message(
     )
 
     assert response.status_code == 201
-    assert response.json()["email_sent"] is False
 
     messages = client.get("/api/v1/contact/", headers=admin_headers)
     assert messages.status_code == 200
@@ -142,28 +198,47 @@ def test_submit_contact_message_allows_blank_subject_and_stores_message(
     )
 
 
-def test_submit_contact_message_reports_smtp_success(client, monkeypatch):
+@pytest.mark.parametrize(
+    "email_enabled, username, password",
+    [
+        (False, "site@example.com", "app-password"),
+        (True, "", "app-password"),
+        (True, "site@example.com", ""),
+    ],
+)
+def test_submit_contact_message_skips_delivery_when_mail_is_unconfigured(
+    client, monkeypatch, email_enabled, username, password
+):
+    """No mailbox configured means nothing to queue, and the caller is told so."""
+    sends = []
+
     class DummyEmailService:
         async def send_contact_form_confirmation(self, **kwargs):
+            sends.append("confirmation")
             return True
 
         async def send_admin_notification(self, **kwargs):
+            sends.append("admin_notification")
             return True
 
     monkeypatch.setattr("app.api.v1.contact.EmailService", DummyEmailService)
+    monkeypatch.setattr("app.api.v1.contact.settings.EMAIL_ENABLED", email_enabled)
+    monkeypatch.setattr("app.api.v1.contact.settings.SMTP_USERNAME", username)
+    monkeypatch.setattr("app.api.v1.contact.settings.SMTP_PASSWORD", password)
 
     response = client.post(
         "/api/v1/contact/",
         json={
-            "name": "Delivered User",
-            "email": "delivered@example.com",
+            "name": "Unconfigured Mail",
+            "email": "unconfigured@example.com",
             "subject": "Delivery",
-            "message": "Both notification messages should report success.",
+            "message": "The message is stored even with no mailbox configured.",
         },
     )
 
     assert response.status_code == 201
-    assert response.json()["email_sent"] is True
+    assert response.json()["email_queued"] is False
+    assert sends == []
 
 
 def test_submit_contact_message_validation(client):

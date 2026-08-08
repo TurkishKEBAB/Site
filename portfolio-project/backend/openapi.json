@@ -998,8 +998,8 @@
       "ContactMessageResponse": {
         "description": "Public response after submitting contact form",
         "properties": {
-          "email_sent": {
-            "title": "Email Sent",
+          "email_queued": {
+            "title": "Email Queued",
             "type": "boolean"
           },
           "message": {
@@ -1020,7 +1020,7 @@
           "success",
           "message",
           "message_id",
-          "email_sent"
+          "email_queued"
         ],
         "title": "ContactMessageResponse",
         "type": "object"
@@ -7000,7 +7000,7 @@
         ]
       },
       "post": {
-        "description": "Submit a contact form message (public endpoint)\nSends confirmation email to sender and notification to admin.",
+        "description": "Submit a contact form message (public endpoint)\nStores the message, then queues the confirmation and admin notification\nemails so slow SMTP never delays the response.",
         "operationId": "submit_contact_message_api_v1_contact__post",
         "requestBody": {
           "content": {

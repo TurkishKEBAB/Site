@@ -189,6 +189,31 @@ describe("ContactForm", () => {
     expect(mocks.sendMessage.mock.calls[0][0]).not.toHaveProperty("captcha_token");
   });
 
+  it("does not blame the API when the form itself is invalid", async () => {
+    render(<ContactForm locale="tr" />);
+
+    fireEvent.change(screen.getByLabelText("Ad soyad"), {
+      target: { value: "A" },
+    });
+    fireEvent.change(screen.getByLabelText("E-posta adresi"), {
+      target: { value: "grace@example.com" },
+    });
+    fireEvent.change(screen.getByLabelText("Mesaj"), {
+      target: { value: "kısa" },
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: "Mesajı gönder" }));
+
+    expect(
+      await screen.findByText("Lütfen işaretli alanları düzeltip tekrar gönderin."),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByText(/İletişim API'si şu anda ulaşılamıyor/),
+    ).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Mesajı kopyala" })).not.toBeInTheDocument();
+    expect(mocks.sendMessage).not.toHaveBeenCalled();
+  });
+
   it("keeps the draft and shows fallback actions when submit fails", async () => {
     mocks.sendMessage.mockRejectedValueOnce(new Error("backend unavailable"));
 

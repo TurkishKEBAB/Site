@@ -350,7 +350,8 @@ export interface paths {
         /**
          * Submit Contact Message
          * @description Submit a contact form message (public endpoint)
-         *     Sends confirmation email to sender and notification to admin.
+         *     Stores the message, then queues the confirmation and admin notification
+         *     emails so slow SMTP never delays the response.
          */
         post: operations["submit_contact_message_api_v1_contact__post"];
         delete?: never;
@@ -1613,8 +1614,8 @@ export interface components {
          * @description Public response after submitting contact form
          */
         ContactMessageResponse: {
-            /** Email Sent */
-            email_sent: boolean;
+            /** Email Queued */
+            email_queued: boolean;
             /** Message */
             message: string;
             /**
