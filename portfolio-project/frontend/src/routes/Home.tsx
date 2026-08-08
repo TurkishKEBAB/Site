@@ -4,6 +4,7 @@ import { FiArrowRight, FiDownload, FiGithub, FiLinkedin, FiMail } from "react-ic
 
 import AnimatedSection from "@/components/AnimatedSection";
 import SystemTerminal from "@/components/SystemTerminal";
+import FieldPhoto from "@/components/nexus/FieldPhoto";
 import Magnetic from "@/components/nexus/Magnetic";
 import NxSectionHead from "@/components/nexus/NxSectionHead";
 import TechTicker from "@/components/nexus/TechTicker";
@@ -165,6 +166,10 @@ export default function Home({
           </div>
         </div>
       </section>
+
+      <AnimatedSection delay={0.05}>
+        <FieldPhoto locale={locale} />
+      </AnimatedSection>
 
       <TechTicker />
 
