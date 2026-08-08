@@ -7,7 +7,7 @@ from sqlalchemy import event
 
 from app.api.v1 import projects as projects_api
 from app.crud import project as project_crud
-from app.models.project import ProjectImage
+from app.models.project import ProjectImage, ProjectTranslation
 
 
 def _build_png_bytes(size: tuple[int, int] = (1, 1)) -> bytes:
@@ -67,6 +67,42 @@ def test_get_projects_public_and_slug_detail(client, create_project):
     )
     assert list_response.json()["total"] == 1
     assert detail_response.json()["slug"] == "public-project"
+
+
+def test_project_detail_includes_complete_translation_metadata(
+    client, db_session, create_project
+):
+    project = create_project(slug="translated-project")
+    db_session.add_all(
+        [
+            ProjectTranslation(
+                project_id=project.id,
+                language="en",
+                title="Translated Project",
+                short_description="English summary",
+                description="English description",
+            ),
+            ProjectTranslation(
+                project_id=project.id,
+                language="tr",
+                title="Çevrilmiş Proje",
+                short_description="Türkçe özet",
+                description="Türkçe açıklama",
+            ),
+        ]
+    )
+    db_session.commit()
+
+    response = client.get("/api/v1/projects/translated-project")
+
+    assert response.status_code == 200
+    translations = response.json()["translations"]
+    assert {translation["language"] for translation in translations} == {"en", "tr"}
+    assert all(
+        translation["project_id"] == str(project.id) for translation in translations
+    )
+    assert all(translation["created_at"] for translation in translations)
+    assert all(translation["updated_at"] for translation in translations)
 
 
 def test_public_project_list_omits_detail_collections(client, create_project):

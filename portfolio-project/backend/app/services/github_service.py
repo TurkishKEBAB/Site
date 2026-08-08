@@ -1,6 +1,6 @@
 """
 GitHub API Integration Service
-Fetches repository data with Redis caching (24h)
+Fetches repository data and profile telemetry with Redis caching (1h by default)
 """
 
 from datetime import datetime, timezone
@@ -32,7 +32,10 @@ query($login: String!, $repoCursor: String) {
                  after: $repoCursor,
                  orderBy: {field: STARGAZERS, direction: DESC}) {
       totalCount
-      nodes { stargazerCount }
+      nodes {
+        stargazerCount
+        primaryLanguage { name }
+      }
       pageInfo {
         hasNextPage
         endCursor
@@ -48,12 +51,66 @@ query($login: String!) {
     contributionsCollection {
       contributionCalendar {
         totalContributions
-        weeks { contributionDays { contributionLevel } }
+        weeks { contributionDays { date contributionCount contributionLevel } }
       }
     }
   }
 }
 """
+
+
+def _summarize_contribution_days(days: List[Dict[str, Any]]) -> Dict[str, Any]:
+    """Calculate current/longest streaks from GitHub's dated contribution days."""
+    counts = [int(day.get("contributionCount") or 0) for day in days]
+
+    current_streak = 0
+    for count in reversed(counts):
+        if count <= 0:
+            break
+        current_streak += 1
+
+    longest_streak = 0
+    running_streak = 0
+    for count in counts:
+        if count > 0:
+            running_streak += 1
+            longest_streak = max(longest_streak, running_streak)
+        else:
+            running_streak = 0
+
+    last_contribution = next(
+        (
+            day.get("date")
+            for day, count in zip(reversed(days), reversed(counts))
+            if count > 0 and day.get("date")
+        ),
+        None,
+    )
+
+    return {
+        "current_streak": current_streak,
+        "longest_streak": longest_streak,
+        "last_contribution": last_contribution,
+    }
+
+
+def _summarize_repo_languages(
+    language_counts: Dict[str, int]
+) -> List[Dict[str, Any]]:
+    """Convert repository language counts into a live percentage breakdown."""
+    total = sum(language_counts.values())
+    if total <= 0:
+        return []
+
+    return [
+        {
+            "name": name,
+            "percent": round(count / total * 100, 1),
+        }
+        for name, count in sorted(
+            language_counts.items(), key=lambda item: (-item[1], item[0])
+        )
+    ]
 
 
 def _build_commit_query(start_year: int, end_year: int) -> str:
@@ -79,8 +136,8 @@ class GitHubService:
         self.cache = get_cache_service()
         self.cache_key = f"github_repos_{self.username}"
         self.cache_ttl = settings.GITHUB_CACHE_HOURS * 3600  # Convert hours to seconds
-        self.stats_cache_key = "github_stats"
-        self.contrib_cache_key = "github_contributions"
+        self.stats_cache_key = "github_stats_v2"
+        self.contrib_cache_key = "github_contributions_v2"
 
     def get_headers(self) -> Dict[str, str]:
         """Get headers for GitHub API requests"""
@@ -257,6 +314,7 @@ class GitHubService:
             async with httpx.AsyncClient(timeout=30.0) as client:
                 repo_cursor = None
                 total_stars = 0
+                language_counts: Dict[str, int] = {}
                 user: Dict[str, Any] | None = None
                 repos: Dict[str, Any] | None = None
 
@@ -271,6 +329,12 @@ class GitHubService:
                     total_stars += sum(
                         node["stargazerCount"] for node in repos["nodes"]
                     )
+                    for node in repos["nodes"]:
+                        language = (node.get("primaryLanguage") or {}).get("name")
+                        if language:
+                            language_counts[language] = (
+                                language_counts.get(language, 0) + 1
+                            )
 
                     page_info = repos.get("pageInfo") or {}
                     next_cursor = page_info.get("endCursor")
@@ -297,6 +361,7 @@ class GitHubService:
                 "total_pull_requests": user["pullRequests"]["totalCount"],
                 "total_commits": total_commits,
                 "commits_range": "all_time",
+                "languages": _summarize_repo_languages(language_counts),
             }
             await self.cache.set(self.stats_cache_key, stats, ttl=self.cache_ttl)
             logger.info("Fetched and cached GitHub stats")
@@ -335,14 +400,19 @@ class GitHubService:
                 )
 
             calendar = data["user"]["contributionsCollection"]["contributionCalendar"]
-            cells: List[int] = [
-                _CONTRIB_LEVEL_MAP.get(day["contributionLevel"], 0)
+            days = [
+                day
                 for week in calendar["weeks"]
                 for day in week["contributionDays"]
+            ]
+            cells: List[int] = [
+                _CONTRIB_LEVEL_MAP.get(day["contributionLevel"], 0)
+                for day in days
             ]
             result = {
                 "total_contributions": calendar["totalContributions"],
                 "cells": cells,
+                **_summarize_contribution_days(days),
             }
             await self.cache.set(self.contrib_cache_key, result, ttl=self.cache_ttl)
             logger.info("Fetched and cached GitHub contributions")

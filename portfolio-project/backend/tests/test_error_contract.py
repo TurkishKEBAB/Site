@@ -56,6 +56,34 @@ def test_validation_errors_use_standard_contract(client):
     assert "email" in payload["error"]["fields"]
 
 
+def test_validation_error_context_is_json_serializable(client, admin_headers):
+    response = client.post(
+        "/api/v1/experiences/",
+        headers=admin_headers,
+        json={
+            "title": "Software Engineer",
+            "organization": "Example",
+            "experience_type": "work",
+            "start_date": "2025-01-01",
+            "translations": [
+                {
+                    "language": "tr",
+                    "title": "Yazılım Mühendisi",
+                    "organization": "Örnek",
+                },
+                {
+                    "language": "tr",
+                    "title": "Yazılım Mühendisi 2",
+                    "organization": "Örnek",
+                },
+            ],
+        },
+    )
+
+    assert response.status_code == 422
+    assert response.json()["error"]["fields"]["translations"]
+
+
 def test_rate_limit_handler_preserves_exception_headers():
     request = _build_request()
     request.state.request_id = "req-rate-1"

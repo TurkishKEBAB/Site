@@ -2,7 +2,7 @@
 Experience Schemas
 Education, work, volunteer activities with translations
 """
-from pydantic import BaseModel, Field, ConfigDict
+from pydantic import BaseModel, Field, ConfigDict, field_validator
 from typing import Optional, List
 from datetime import date, datetime
 import uuid
@@ -48,6 +48,16 @@ class ExperienceCreate(ExperienceBase):
     """Experience creation schema"""
     translations: Optional[List[ExperienceTranslationCreate]] = None
 
+    @field_validator("translations")
+    @classmethod
+    def validate_unique_translation_languages(cls, value):
+        if value is None:
+            return value
+        languages = [translation.language for translation in value]
+        if len(languages) != len(set(languages)):
+            raise ValueError("Each translation language may appear only once")
+        return value
+
 
 class ExperienceUpdate(BaseModel):
     """Experience update schema (all fields optional)"""
@@ -60,6 +70,17 @@ class ExperienceUpdate(BaseModel):
     is_current: Optional[bool] = None
     description: Optional[str] = None
     display_order: Optional[int] = None
+    translations: Optional[List[ExperienceTranslationCreate]] = None
+
+    @field_validator("translations")
+    @classmethod
+    def validate_unique_translation_languages(cls, value):
+        if value is None:
+            return value
+        languages = [translation.language for translation in value]
+        if len(languages) != len(set(languages)):
+            raise ValueError("Each translation language may appear only once")
+        return value
 
 
 class Experience(ExperienceBase):

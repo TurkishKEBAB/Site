@@ -1,11 +1,22 @@
 // Server-side data layer for the home-page Command Center.
 // Pulls live WakaTime + GitHub stats from the FastAPI backend and caches
-// them with ISR (24h). Every call degrades to `null` on failure so the
+// them with a short ISR window (15m). Every call degrades to `null` on failure so the
 // UI can render a muted "unavailable" state instead of fabricated data.
 
 export interface WakaTimeLanguage {
   name: string;
   percent: number;
+}
+
+export interface WakaTimeBreakdown extends WakaTimeLanguage {
+  seconds: number;
+  text: string;
+}
+
+export interface WakaTimeDay {
+  date: string;
+  seconds: number;
+  text: string;
 }
 
 export interface WakaTimeStats {
@@ -16,7 +27,15 @@ export interface WakaTimeStats {
   daily_average_seconds: number;
   daily_average_text: string;
   languages: WakaTimeLanguage[];
+  projects: WakaTimeBreakdown[];
+  editors: WakaTimeBreakdown[];
+  most_active_day: WakaTimeDay | null;
   range: string;
+}
+
+export interface GitHubLanguage {
+  name: string;
+  percent: number;
 }
 
 export interface GitHubStats {
@@ -25,14 +44,18 @@ export interface GitHubStats {
   total_pull_requests: number;
   total_commits: number;
   commits_range: string;
+  languages: GitHubLanguage[];
 }
 
 export interface GitHubContributions {
   total_contributions: number;
   cells: number[];
+  current_streak: number;
+  longest_streak: number;
+  last_contribution: string | null;
 }
 
-const REVALIDATE_SECONDS = 86400; // 24h — matches backend cache TTL
+const REVALIDATE_SECONDS = 900; // 15m; backend keeps upstream calls at a 1h TTL
 
 const getApiBaseUrl = () =>
   (process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000/api/v1").replace(/\/$/, "");
