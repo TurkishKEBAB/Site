@@ -67,14 +67,22 @@ export default function FieldPhoto({ locale }: Readonly<{ locale: Locale }>) {
     <section className="container-custom pb-2 pt-2">
       <figure className="relative m-0 overflow-hidden rounded border border-gray-200 shadow-xl dark:border-dark-600/70">
         <div className="relative aspect-[4/3] sm:aspect-[16/10] lg:aspect-[16/9]">
+          {/*
+            Phones are deliberately served below their device pixel ratio. This
+            band is decorative and below the fold, yet browsers prefetch lazy
+            images generously enough that it was pulling 142KB into the initial
+            mobile load; at this size the colour grade hides the softness. Wide
+            viewports get the honest measurement.
+          */}
           <img
-            src="/photo-zurich-1152.webp"
-            srcSet="/photo-zurich-768.webp 768w, /photo-zurich-1152.webp 1152w, /photo-zurich-1448.webp 1448w"
-            sizes="(min-width: 1280px) 1216px, (min-width: 640px) calc(100vw - 3rem), calc(100vw - 2.5rem)"
+            src="/photo-zurich-960.webp"
+            srcSet="/photo-zurich-480.webp 480w, /photo-zurich-640.webp 640w, /photo-zurich-768.webp 768w, /photo-zurich-960.webp 960w, /photo-zurich-1152.webp 1152w, /photo-zurich-1448.webp 1448w"
+            sizes="(min-width: 1280px) 1216px, (min-width: 640px) calc(100vw - 3rem), 65vw"
             alt={text.alt}
             width={1448}
             height={1086}
             loading="lazy"
+            fetchPriority="low"
             decoding="async"
             className="absolute inset-0 h-full w-full object-cover"
             style={{
