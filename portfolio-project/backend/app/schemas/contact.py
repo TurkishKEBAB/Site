@@ -44,7 +44,7 @@ class ContactMessageResponse(BaseModel):
     success: bool
     message: str
     message_id: uuid.UUID
-    email_sent: bool
+    email_queued: bool
 
 
 class ContactMessageUpdate(BaseModel):

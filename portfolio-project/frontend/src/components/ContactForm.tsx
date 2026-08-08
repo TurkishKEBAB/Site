@@ -33,6 +33,7 @@ export default function ContactForm({ locale, captchaSiteKey: captchaSiteKeyOver
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<Partial<Record<FieldName, string>>>({});
   const [submitError, setSubmitError] = useState("");
+  const [validationNotice, setValidationNotice] = useState("");
   const [copied, setCopied] = useState(false);
   const [captchaToken, setCaptchaToken] = useState("");
   const [captchaError, setCaptchaError] = useState(false);
@@ -96,6 +97,7 @@ export default function ContactForm({ locale, captchaSiteKey: captchaSiteKeyOver
     const field = name as FieldName;
 
     setFormData((prev) => ({ ...prev, [field]: value }));
+    setValidationNotice("");
     setErrors((prev) => {
       const next = { ...prev };
       const nextError = validateField(field, value);
@@ -110,12 +112,17 @@ export default function ContactForm({ locale, captchaSiteKey: captchaSiteKeyOver
 
     if (loading) return;
 
+    // A form the browser never sent is not an API outage, so it must not claim
+    // one or offer the copy/mailto fallback.
     const formErrors = validateForm();
     if (Object.keys(formErrors).length > 0) {
       setErrors(formErrors);
-      setSubmitError(text.failure);
+      setSubmitError("");
+      setValidationNotice(text.validationSummary);
       return;
     }
+
+    setValidationNotice("");
 
     // Only block on a widget that is actually working. When Turnstile itself
     // fails (revoked site key, provider outage) the message is still delivered
@@ -232,6 +239,12 @@ export default function ContactForm({ locale, captchaSiteKey: captchaSiteKeyOver
             </p>
           )}
         </div>
+      )}
+
+      {validationNotice && (
+        <p role="alert" className="text-sm text-red-500 dark:text-red-400">
+          {validationNotice}
+        </p>
       )}
 
       {submitError && (

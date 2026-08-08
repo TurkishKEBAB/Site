@@ -58,6 +58,7 @@ interface ContactLocaleContent {
   sending: string;
   success: string;
   failure: string;
+  validationSummary: string;
   captchaRequired: string;
   captchaUnavailable: string;
   validation: Record<ContactFieldKey, string>;
@@ -555,6 +556,10 @@ const contactDefinition = {
     "The contact API is unavailable right now. Your draft is still here so you can copy it or open an email draft instead.",
     "İletişim API'si şu anda ulaşılamıyor. Taslağınız sayfada tutuldu; kopyalayabilir veya e-posta taslağı açabilirsiniz.",
   ),
+  validationSummary: localized(
+    "Please fix the highlighted fields and send again.",
+    "Lütfen işaretli alanları düzeltip tekrar gönderin.",
+  ),
   captchaRequired: localized(
     "Please complete the security check before sending.",
     "L\u00fctfen g\u00f6ndermeden \u00f6nce g\u00fcvenlik kontrol\u00fcn\u00fc tamamlay\u0131n.",
@@ -585,6 +590,7 @@ const resolveContactContent = (locale: Locale): ContactLocaleContent => ({
   sending: getLocaleValue(contactDefinition.sending, locale),
   success: getLocaleValue(contactDefinition.success, locale),
   failure: getLocaleValue(contactDefinition.failure, locale),
+  validationSummary: getLocaleValue(contactDefinition.validationSummary, locale),
   captchaRequired: getLocaleValue(contactDefinition.captchaRequired, locale),
   captchaUnavailable: getLocaleValue(contactDefinition.captchaUnavailable, locale),
   validation: resolveLocalizedRecord(contactDefinition.validation, locale),
