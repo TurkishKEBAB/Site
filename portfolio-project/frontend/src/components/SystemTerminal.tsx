@@ -40,12 +40,26 @@ const JAVA_HTML = `<span class="j-kw">public class</span> <span class="j-type">P
 }`;
 
 const JAVA_LINES = JAVA_HTML.split("\n");
-/* Derived so the copy button can never drift from what is on screen. */
-const JAVA_PLAIN = JAVA_HTML
-  .replace(/<[^>]+>/g, "")
-  .replaceAll("&lt;", "<")
-  .replaceAll("&gt;", ">")
-  .replaceAll("&amp;", "&");
+/* What the copy button hands over. Reaching this string by stripping tags out
+   of JAVA_HTML with a regex is an unsafe way to sanitise markup, so the source
+   is spelled out instead and a test asserts it still matches what is rendered. */
+const JAVA_PLAIN = `public class Profile {
+    public static void main(String[] args) {
+        String[][] info = {
+            {"name",   "Yiğit Okur"},
+            {"role",   "Software Engineer"},
+            {"focus",  "Cloud & DevOps"},
+            {"edu",    "Işık University · SE '27"},
+            {"status", "[ available ]"},
+        };
+        System.out.println("> init system.profile");
+        for (String[] row : info) {
+            System.out.printf("%-9s %s%n", row[0], row[1]);
+        }
+        System.out.println("// part-time SWE & cloud roles");
+        System.out.println("> profile loaded");
+    }
+}`;
 
 const profileOutput = [
   '<span class="c-prompt">&gt;</span> <span class="c-dim">init</span> system.profile',

@@ -1,8 +1,16 @@
 import { cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { renderToStaticMarkup } from "react-dom/server";
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import SystemTerminal from "./SystemTerminal";
+
+const writeText = vi.fn();
+
+/** The source as the gutter-and-code rows actually render it. */
+const renderedSource = (panel: HTMLElement) =>
+  Array.from(panel.querySelectorAll("pre > div"))
+    .map((row) => row.children[1]?.textContent ?? "")
+    .join("\n");
 
 const openShell = () => {
   fireEvent.click(screen.getByRole("tab", { name: "shell" }));
@@ -16,6 +24,28 @@ const run = (input: HTMLElement, command: string) => {
 
 describe("SystemTerminal", () => {
   afterEach(() => cleanup());
+
+  beforeEach(() => {
+    writeText.mockReset();
+    Object.defineProperty(navigator, "clipboard", {
+      configurable: true,
+      value: { writeText },
+    });
+  });
+
+  it("copies exactly the source it renders", async () => {
+    render(<SystemTerminal />);
+    fireEvent.click(screen.getByRole("tab", { name: "Profile.java" }));
+
+    const onScreen = renderedSource(screen.getByRole("tabpanel"));
+    fireEvent.click(screen.getByRole("button", { name: "copy" }));
+
+    // The copied text is a hand-written constant rather than markup run
+    // through a tag-stripping regex, so this guards the two from drifting.
+    await waitFor(() => expect(writeText).toHaveBeenCalledWith(onScreen));
+    expect(onScreen).toContain('System.out.println("> profile loaded");');
+    expect(onScreen).not.toContain("<span");
+  });
   it("uses a stable uptime value for the initial server-safe render", () => {
     const html = renderToStaticMarkup(<SystemTerminal />);
 
